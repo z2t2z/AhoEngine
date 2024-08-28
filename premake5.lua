@@ -25,7 +25,8 @@ project "AhoEngine"
     }
 
     includedirs {
-        "%{prj.name}/Vendor/spdlog/include;"
+        "%{prj.name}/Vendor/spdlog/include",
+        "%{prj.name}/Source"
     }
 
     filter "system:windows" 

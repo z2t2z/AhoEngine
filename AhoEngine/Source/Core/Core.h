@@ -9,3 +9,6 @@
 #else
 	#error You are AHO!
 #endif
+
+
+#define BIT(x) (1 << x)
