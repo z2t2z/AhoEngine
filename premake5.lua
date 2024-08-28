@@ -1,5 +1,6 @@
 workspace "AhoEngine"
     architecture "x64"
+    startproject "Sandbox"
 
     configurations {
         "Debug",
@@ -29,17 +30,14 @@ project "AhoEngine"
 
     filter "system:windows" 
         cppdialect "C++20"
-        staticruntime "On"
+        staticruntime "Off"
         systemversion "latest"
 
         defines {
             "AHO_PLATFORM_WINDOWS",
             "AHO_BUILD_DLL",
-            "_WINDLL"
-        }
-
-        postbuildcommands {
-            ("{COPY} %{cfg.buildtarget.relpath} ../Bin" .. outputdir .. "/Sandbox")
+            "_DEBUG",
+            "_CONSOLE"
         }
 
     filter "configurations:Debug"
@@ -79,11 +77,19 @@ project "Sandbox"
 
     filter "system:windows" 
         cppdialect "C++20"
-        staticruntime "On"
+        staticruntime "Off"
         systemversion "latest"
 
         defines {
-            "AHO_PLATFORM_WINDOWS"        
+            "AHO_PLATFORM_WINDOWS",
+            "_DEBUG",
+            "_CONSOLE"                
+        }
+
+        postbuildcommands {
+            "{COPY} ../Bin/" .. outputdir .. "/AhoEngine/AhoEngine.dll %{cfg.targetdir}"
+            -- ("{COPYFILE} %{cfg.buildtarget.relpath} ../Bin" .. outputdir .. "/Sandbox"),
+            -- "echo Copying DLL to ../Bin/" .. outputdir .. "/Sandbox"
         }
 
     filter "configurations:Debug"
