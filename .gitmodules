@@ -1,0 +1,3 @@
+[submodule "AhoEngine/Vendor/spdlog"]
+	path = AhoEngine/Vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
