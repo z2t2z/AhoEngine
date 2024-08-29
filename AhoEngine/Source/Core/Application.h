@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Window.h"
 
 namespace Aho {
 
@@ -13,7 +14,9 @@ namespace Aho {
 		void Run();
 
 	private:
+		std::unique_ptr<Window> m_Window;
 
+		bool m_Running = true;
 
 	};
 

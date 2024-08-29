@@ -10,6 +10,12 @@ workspace "AhoEngine"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
+-- Include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
+
+include "AhoEngine/Vendor/GLFW"
+
 
 project "AhoEngine"
     location "AhoEngine"
@@ -29,7 +35,13 @@ project "AhoEngine"
 
     includedirs {
         "%{prj.name}/Vendor/spdlog/include",
-        "%{prj.name}/Source"
+        "%{prj.name}/Source",
+        "%{IncludeDir.GLFW}"
+    }
+
+    links {
+        "GLFW",
+        "opengl32.lib"
     }
 
     filter "system:windows" 
@@ -40,8 +52,8 @@ project "AhoEngine"
         defines {
             "AHO_PLATFORM_WINDOWS",
             "AHO_BUILD_DLL",
-            "_DEBUG",
-            "_CONSOLE"
+            -- "_DEBUG", ?
+            -- "_CONSOLE"
         }
 
     filter "configurations:Debug"
@@ -86,8 +98,8 @@ project "Sandbox"
 
         defines {
             "AHO_PLATFORM_WINDOWS",
-            "_DEBUG",
-            "_CONSOLE"                
+            -- "_DEBUG",
+            -- "_CONSOLE"                
         }
 
         postbuildcommands {

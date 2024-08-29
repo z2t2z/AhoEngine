@@ -38,6 +38,8 @@
     <ClInclude Include="Source\Log\Log.h">
       <Filter>Log</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Window.h" />
+    <ClInclude Include="Source\Platform\Windows\WindowsWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp" />
@@ -50,5 +52,6 @@
     <ClCompile Include="Source\Log\Log.cpp">
       <Filter>Log</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp" />
   </ItemGroup>
 </Project>
