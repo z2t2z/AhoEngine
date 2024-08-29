@@ -19,6 +19,9 @@ project "AhoEngine"
     targetdir ("Bin/" .. outputdir .. "/%{prj.name}")
     objdir ("Bin-Intermediate/" .. outputdir .. "/%{prj.name}")
 
+    pchheader "Ahopch.h"
+    pchsource "AhoEngine/Source/Ahopch.cpp"
+
     files {
         "%{prj.name}/Source/**.h",
         "%{prj.name}/Source/**.cpp"

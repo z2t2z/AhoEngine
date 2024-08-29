@@ -10,7 +10,7 @@ namespace Aho {
 	// Event system is currently blocking
 
 
-	// class关键字：强类型枚举，
+	// class关键字：强类型枚举
 	enum class EventType {
 		None = 0,
 		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved,

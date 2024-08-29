@@ -7,8 +7,12 @@
     <Filter Include="Core\Events">
       <UniqueIdentifier>{52201B74-BED5-9369-47CA-8D40B37E8A6D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Log">
+      <UniqueIdentifier>{E704880B-530E-887C-DC89-9E7C4892937C}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\Core\Application.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -30,20 +34,21 @@
     <ClInclude Include="Source\Core\Events\MouseEvent.h">
       <Filter>Core\Events</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Log.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\IamAho.h" />
+    <ClInclude Include="Source\Log\Log.h">
+      <Filter>Log</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Ahopch.cpp" />
     <ClCompile Include="Source\Core\Application.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Core.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Core\Log.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="Source\Log\Log.cpp">
+      <Filter>Log</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

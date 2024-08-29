@@ -76,7 +76,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;_DEBUG;_CONSOLE;AHO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -94,7 +95,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;_DEBUG;_CONSOLE;AHO_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -112,7 +114,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;_DEBUG;_CONSOLE;AHO_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -133,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\Core\Application.h" />
     <ClInclude Include="Source\Core\Core.h" />
     <ClInclude Include="Source\Core\EntryPoint.h" />
@@ -140,13 +144,16 @@
     <ClInclude Include="Source\Core\Events\Event.h" />
     <ClInclude Include="Source\Core\Events\KeyEvent.h" />
     <ClInclude Include="Source\Core\Events\MouseEvent.h" />
-    <ClInclude Include="Source\Core\Log.h" />
     <ClInclude Include="Source\IamAho.h" />
+    <ClInclude Include="Source\Log\Log.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Ahopch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source\Core\Application.cpp" />
     <ClCompile Include="Source\Core\Core.cpp" />
-    <ClCompile Include="Source\Core\Log.cpp" />
+    <ClCompile Include="Source\Log\Log.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
