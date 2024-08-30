@@ -51,6 +51,10 @@ namespace Aho {
 			return GetCategoryFlags() & category;
 		}
 
+		inline bool Handled() {
+			return m_Handled;
+		}
+
 	protected:
 		bool m_Handled = false;
 	};

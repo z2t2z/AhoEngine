@@ -7,8 +7,17 @@
     <Filter Include="Core\Events">
       <UniqueIdentifier>{52201B74-BED5-9369-47CA-8D40B37E8A6D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Layer">
+      <UniqueIdentifier>{7A9BAACD-6653-EC1A-CF5A-C576BB31870B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Log">
       <UniqueIdentifier>{E704880B-530E-887C-DC89-9E7C4892937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{2AC788B4-1694-E3BF-3FAD-D1672BD9184E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Windows">
+      <UniqueIdentifier>{64FBD71A-50F4-F66C-7926-DCF1657ED678}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -34,12 +43,22 @@
     <ClInclude Include="Source\Core\Events\MouseEvent.h">
       <Filter>Core\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Layer\Layer.h">
+      <Filter>Core\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Layer\LayerStack.h">
+      <Filter>Core\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Window.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="Source\IamAho.h" />
     <ClInclude Include="Source\Log\Log.h">
       <Filter>Log</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Window.h" />
-    <ClInclude Include="Source\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="Source\Platform\Windows\WindowsWindow.h">
+      <Filter>Platform\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp" />
@@ -49,9 +68,17 @@
     <ClCompile Include="Source\Core\Core.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\Layer\Layer.cpp">
+      <Filter>Core\Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Layer\LayerStack.cpp">
+      <Filter>Core\Layer</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Log\Log.cpp">
       <Filter>Log</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp">
+      <Filter>Platform\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

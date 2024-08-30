@@ -58,14 +58,17 @@ project "AhoEngine"
 
     filter "configurations:Debug"
         defines "AHO_DEBUG"
+        buildoptions "/MDd"
         symbols "On"
     
     filter "configurations:Release"
         defines "AHO_RELEASE"
+        buildoptions "/MD"
         symbols "On"
 
     filter "configurations:Dist"
         defines "AHO_DIST"
+        buildoptions "/MD"
         optimize "On"
 
     
@@ -110,12 +113,15 @@ project "Sandbox"
 
     filter "configurations:Debug"
         defines "AHO_DEBUG"
+        buildoptions "/MDd"
         symbols "On"
     
     filter "configurations:Release"
         defines "AHO_RELEASE"
+        buildoptions "/MD"
         symbols "On"
 
     filter "configurations:Dist"
         defines "AHO_DIST"
+        buildoptions "/MD"
         optimize "On"

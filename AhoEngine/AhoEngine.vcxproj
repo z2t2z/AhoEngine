@@ -84,6 +84,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -104,6 +105,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -127,6 +129,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/MD %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -147,6 +150,8 @@
     <ClInclude Include="Source\Core\Events\Event.h" />
     <ClInclude Include="Source\Core\Events\KeyEvent.h" />
     <ClInclude Include="Source\Core\Events\MouseEvent.h" />
+    <ClInclude Include="Source\Core\Layer\Layer.h" />
+    <ClInclude Include="Source\Core\Layer\LayerStack.h" />
     <ClInclude Include="Source\Core\Window.h" />
     <ClInclude Include="Source\IamAho.h" />
     <ClInclude Include="Source\Log\Log.h" />
@@ -158,6 +163,8 @@
     </ClCompile>
     <ClCompile Include="Source\Core\Application.cpp" />
     <ClCompile Include="Source\Core\Core.cpp" />
+    <ClCompile Include="Source\Core\Layer\Layer.cpp" />
+    <ClCompile Include="Source\Core\Layer\LayerStack.cpp" />
     <ClCompile Include="Source\Log\Log.cpp" />
     <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp" />
   </ItemGroup>
