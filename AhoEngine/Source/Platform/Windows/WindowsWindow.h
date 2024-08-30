@@ -25,11 +25,10 @@ namespace Aho {
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
 
-	protected: // or private?
+	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 
-	private:
 		GLFWwindow* m_Window;
 
 		struct WindowData {
