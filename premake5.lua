@@ -12,18 +12,21 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
+IncludeDir["ImGui"] = "AhoEngine/Vendor/ImGui"
 IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
+IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 
+include "AhoEngine/Vendor/ImGui"
 include "AhoEngine/Vendor/GLFW"
-
+include "AhoEngine/Vendor/Glad"
 
 project "AhoEngine"
     location "AhoEngine"
     kind "SharedLib"
     language "C++"
 
-    targetdir ("Bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("Bin-Intermediate/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
     pchheader "Ahopch.h"
     pchsource "AhoEngine/Source/Ahopch.cpp"
@@ -36,13 +39,19 @@ project "AhoEngine"
     includedirs {
         "%{prj.name}/Vendor/spdlog/include",
         "%{prj.name}/Source",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.ImGui}",
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}",
     }
 
     links {
+        "ImGui",
         "GLFW",
+        "Glad",
         "opengl32.lib"
     }
+
+    dependson { "ImGui" }
 
     filter "system:windows" 
         cppdialect "C++20"
@@ -52,6 +61,7 @@ project "AhoEngine"
         defines {
             "AHO_PLATFORM_WINDOWS",
             "AHO_BUILD_DLL",
+            "GLFW_INCLUDE_NONE"
             -- "_DEBUG", ?
             -- "_CONSOLE"
         }
@@ -77,8 +87,8 @@ project "Sandbox"
     kind "ConsoleApp"
     language "C++"
     
-    targetdir ("Bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("Bin-Intermediate/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
     files {
         "%{prj.name}/Source/**.h",
@@ -106,7 +116,7 @@ project "Sandbox"
         }
 
         postbuildcommands {
-            "{COPY} ../Bin/" .. outputdir .. "/AhoEngine/AhoEngine.dll %{cfg.targetdir}"
+            "{COPY} ../bin/" .. outputdir .. "/AhoEngine/AhoEngine.dll %{cfg.targetdir}"
             -- ("{COPYFILE} %{cfg.buildtarget.relpath} ../Bin" .. outputdir .. "/Sandbox"),
             -- "echo Copying DLL to ../Bin/" .. outputdir .. "/Sandbox"
         }

@@ -10,6 +10,8 @@ namespace Aho {
 
 	class AHO_API Application {
 	public:
+		//static Application* s_Instance;
+
 		Application();
 
 		virtual ~Application();
@@ -21,6 +23,14 @@ namespace Aho {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 
+		inline static Application& Get() {
+			return *s_Instance;
+		}
+		
+		inline Window& GetWindow() {
+			return *m_Window;
+		}
+
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 
@@ -29,6 +39,8 @@ namespace Aho {
 		bool m_Running = true;
 
 		LayerStack m_LayerStack;
+
+		static Application* s_Instance;
 
 	};
 

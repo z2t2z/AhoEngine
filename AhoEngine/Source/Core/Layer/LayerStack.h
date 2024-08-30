@@ -10,7 +10,7 @@
 
 namespace Aho {
 
-	class LayerStack {
+	class AHO_API LayerStack {
 	public:
 		LayerStack();
 		~LayerStack();

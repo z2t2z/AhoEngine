@@ -7,6 +7,7 @@
 #include "Core/Layer/Layer.h"
 
 #include "Log/Log.h"
+#include "Core/Gui/ImGuiLayer.h"
 
 // ==== Entry Point ===============
 #include "Core/EntryPoint.h"

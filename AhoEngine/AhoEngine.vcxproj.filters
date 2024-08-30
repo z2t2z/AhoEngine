@@ -7,6 +7,9 @@
     <Filter Include="Core\Events">
       <UniqueIdentifier>{52201B74-BED5-9369-47CA-8D40B37E8A6D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Gui">
+      <UniqueIdentifier>{821E99C2-6EEB-F3CD-9704-E2758330295C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Core\Layer">
       <UniqueIdentifier>{7A9BAACD-6653-EC1A-CF5A-C576BB31870B}</UniqueIdentifier>
     </Filter>
@@ -43,6 +46,9 @@
     <ClInclude Include="Source\Core\Events\MouseEvent.h">
       <Filter>Core\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Gui\ImGuiLayer.h">
+      <Filter>Core\Gui</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Core\Layer\Layer.h">
       <Filter>Core\Layer</Filter>
     </ClInclude>
@@ -67,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="Source\Core\Core.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Gui\ImGuiLayer.cpp">
+      <Filter>Core\Gui</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Layer\Layer.cpp">
       <Filter>Core\Layer</Filter>

@@ -13,7 +13,7 @@
 
 namespace Aho {
 
-	class Layer {
+	class AHO_API Layer {
 	public:
 		Layer(const std::string& name = "Layer");
 		virtual ~Layer();

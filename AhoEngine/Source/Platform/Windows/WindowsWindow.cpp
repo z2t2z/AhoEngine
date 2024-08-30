@@ -5,6 +5,8 @@
 #include "Core/Events/MouseEvent.h"
 #include "Core/Events/KeyEvent.h"
 
+#include <Glad/glad.h>
+
 namespace Aho {
 
 	static bool s_GLFWInitialized = false;
@@ -46,6 +48,9 @@ namespace Aho {
 		glfwMakeContextCurrent(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
+
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		AHO_CORE_ASSERT(status, "Failed to initialize Glad!");
 
 		// Set GLFW Callback
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {

@@ -7,7 +7,13 @@ namespace Aho {
 // std::bind(): Extract a member function from a class as a new function that can be directly called, while binding some parameters in advance
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
+	Application* Application::s_Instance = nullptr;
+
 	Application::Application() {
+		AHO_ASSERT(!s_Instance, "Application already exists!");
+
+		s_Instance = this;
+
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
@@ -50,10 +56,12 @@ namespace Aho {
 
 	void Application::PushLayer(Layer* layer) {
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* overlay) {
 		m_LayerStack.PushOverlay(overlay);
+		overlay->OnAttach();
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e) {
