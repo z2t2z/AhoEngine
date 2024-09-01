@@ -22,6 +22,9 @@
     <Filter Include="Platform\Windows">
       <UniqueIdentifier>{64FBD71A-50F4-F66C-7926-DCF1657ED678}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Input">
+      <UniqueIdentifier>{7b8617d9-c346-48b1-978f-7c8a30c561b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
@@ -62,9 +65,13 @@
     <ClInclude Include="Source\Log\Log.h">
       <Filter>Log</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Platform\Windows\WindowsWindow.h">
+    <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h">
       <Filter>Platform\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Input\Input.h">
+      <Filter>Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\Windows\Input\WindowsInput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp" />
@@ -86,8 +93,9 @@
     <ClCompile Include="Source\Log\Log.cpp">
       <Filter>Log</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp">
+    <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp">
       <Filter>Platform\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Platform\Windows\Input\WindowsInput.cpp" />
   </ItemGroup>
 </Project>

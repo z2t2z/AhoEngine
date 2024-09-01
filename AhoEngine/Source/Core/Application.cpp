@@ -1,6 +1,6 @@
 #include "Ahopch.h"
 #include "Application.h"
-
+#include "Core/Input/Input.h"
 
 namespace Aho {
 
@@ -29,6 +29,9 @@ namespace Aho {
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate();
 			}
+
+			auto [x, y] = Input::GetMousePosition();
+			AHO_CORE_TRACE("{0}, {1}", x, y);
 
 			m_Window->OnUpdate();
 		}

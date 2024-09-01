@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Core\Input\Input.h" />
     <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\Core\Application.h" />
     <ClInclude Include="Source\Core\Core.h" />
@@ -156,7 +157,8 @@
     <ClInclude Include="Source\Core\Window.h" />
     <ClInclude Include="Source\IamAho.h" />
     <ClInclude Include="Source\Log\Log.h" />
-    <ClInclude Include="Source\Platform\Windows\WindowsWindow.h" />
+    <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h" />
+    <ClInclude Include="Source\Platform\Windows\Input\WindowsInput.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -168,7 +170,8 @@
     <ClCompile Include="Source\Core\Layer\Layer.cpp" />
     <ClCompile Include="Source\Core\Layer\LayerStack.cpp" />
     <ClCompile Include="Source\Log\Log.cpp" />
-    <ClCompile Include="Source\Platform\Windows\WindowsWindow.cpp" />
+    <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp" />
+    <ClCompile Include="Source\Platform\Windows\Input\WindowsInput.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Vendor\ImGui\ImGui.vcxproj">
