@@ -11,7 +11,9 @@
 #endif
 
 
+// Some useful macros
 #define BIT(x) (1 << x)
+#define AHO_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
 
 
 // Assertions

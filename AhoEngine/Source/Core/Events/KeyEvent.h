@@ -49,4 +49,18 @@ namespace Aho {
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
 
+	class AHO_API KeyTypedEvent : public KeyEvent {
+	public:
+		KeyTypedEvent(unsigned int keycode) : KeyEvent(keycode) {}
+
+		std::string ToString() const override {
+			std::stringstream ss;
+			ss << "KeyTypedEvent:" << m_KeyCode;
+			return ss.str();
+		}
+
+		EVENT_CLASS_TYPE(KeyTyped)
+	};
+	
+
 } // namespace Aho

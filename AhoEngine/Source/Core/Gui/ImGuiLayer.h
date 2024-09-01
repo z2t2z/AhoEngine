@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Core/Layer/Layer.h"
+#include "Core/Events/MouseEvent.h"
+#include "Core/Events/KeyEvent.h"
+#include "Core/Events/ApplicationEvent.h"
 
 namespace Aho {
 
@@ -15,8 +18,25 @@ namespace Aho {
 		void OnEvent(Event& event) override;
 
 	private:
-		float m_Time;
+		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 
+		bool OnMouseScrolledEvent(MouseScrolledEvent& event);
+		
+		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
+
+		bool OnMouseMovedEvent(MouseMovedEvent& event);
+
+		bool OnKeyPressedEvent(KeyPressedEvent& event);
+		
+		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
+		
+		bool OnKeyTypedEvent(KeyTypedEvent& event);
+
+		bool OnWindowResizeEvent(WindowResizeEvent& event);
+
+	private:
+		float m_Time;
+	
 	};
 
 } 
