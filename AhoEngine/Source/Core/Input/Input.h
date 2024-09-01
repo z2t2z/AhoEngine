@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Input/KeyCodes.h"
+#include "Core/Input/MouseButtonCodes.h"
+
 
 namespace Aho {
 

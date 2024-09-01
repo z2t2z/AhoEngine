@@ -7,3 +7,6 @@
 [submodule "AhoEngine/Vendor/ImGui"]
 	path = AhoEngine/Vendor/ImGui
 	url = https://github.com/ocornut/imgui.git
+[submodule "AhoEngine/Vendor/glm"]
+	path = AhoEngine/Vendor/glm
+	url = https://github.com/g-truc/glm.git

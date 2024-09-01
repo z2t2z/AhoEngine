@@ -15,6 +15,7 @@ IncludeDir = {}
 IncludeDir["ImGui"] = "AhoEngine/Vendor/ImGui"
 IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
 IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
+IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 
 include "AhoEngine/Vendor/ImGui"
 include "AhoEngine/Vendor/GLFW"
@@ -33,7 +34,9 @@ project "AhoEngine"
 
     files {
         "%{prj.name}/Source/**.h",
-        "%{prj.name}/Source/**.cpp"
+        "%{prj.name}/Source/**.cpp",
+        "%{prj.name}/Vendor/glm/glm/**.inl",
+        "%{prj.name}/Vendor/glm/glm/**.hpp"
     }
 
     includedirs {
@@ -42,6 +45,7 @@ project "AhoEngine"
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
+        "%{IncludeDir.glm}",
     }
 
     links {
