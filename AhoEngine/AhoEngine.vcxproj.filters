@@ -1391,5 +1391,6 @@
     <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp">
       <Filter>Source\Platform\Windows\Window</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\Gui\ImGuiBuild.cpp" />
   </ItemGroup>
 </Project>

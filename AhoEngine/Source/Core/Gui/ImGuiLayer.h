@@ -5,6 +5,8 @@
 #include "Core/Events/KeyEvent.h"
 #include "Core/Events/ApplicationEvent.h"
 
+
+
 namespace Aho {
 
 	class AHO_API ImGuiLayer : public Layer {
@@ -12,27 +14,12 @@ namespace Aho {
 		ImGuiLayer();
 		~ImGuiLayer();
 
-		void OnAttach() override;
-		void OnDetach() override;
-		void OnUpdate() override;
-		void OnEvent(Event& event) override;
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnImGuiRender() override;
 
-	private:
-		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
-
-		bool OnMouseScrolledEvent(MouseScrolledEvent& event);
-		
-		bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& event);
-
-		bool OnMouseMovedEvent(MouseMovedEvent& event);
-
-		bool OnKeyPressedEvent(KeyPressedEvent& event);
-		
-		bool OnKeyReleasedEvent(KeyReleasedEvent& event);
-		
-		bool OnKeyTypedEvent(KeyTypedEvent& event);
-
-		bool OnWindowResizeEvent(WindowResizeEvent& event);
+		void Begin();
+		void End();
 
 	private:
 		float m_Time;

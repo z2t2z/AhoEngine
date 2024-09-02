@@ -2,6 +2,8 @@
 #include "Application.h"
 #include "Core/Input/Input.h"
 
+#include <glad/glad.h>
+
 namespace Aho {
 
 // std::bind(): Extract a member function from a class as a new function that can be directly called, while binding some parameters in advance
@@ -14,8 +16,9 @@ namespace Aho {
 
 		s_Instance = this;
 
+		m_ImGuiLayer = std::make_unique<ImGuiLayer>();
 		m_Window = std::unique_ptr<Window>(Window::Create());
-		
+
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 	}
 
@@ -26,12 +29,19 @@ namespace Aho {
 	void Application::Run() {
 
 		while (m_Running) {
+			glClearColor(1, 0, 1, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
+
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate();
 			}
-
-			auto [x, y] = Input::GetMousePosition();
-			AHO_CORE_TRACE("{0}, {1}", x, y);
+			
+			// Will be done on the render thread in the future
+			m_ImGuiLayer->Begin();
+			for (auto layer : m_LayerStack) {
+				layer->OnImGuiRender();
+			}
+			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}

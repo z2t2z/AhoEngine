@@ -4,7 +4,9 @@
 #include "Window.h"
 #include "Core/Events/ApplicationEvent.h"
 #include "Core/Events/Event.h"
+
 #include "Layer/LayerStack.h"
+#include "Core/Gui/ImGuiLayer.h"
 
 namespace Aho {
 
@@ -35,6 +37,7 @@ namespace Aho {
 		bool OnWindowClose(WindowCloseEvent& e);
 
 		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
 
 		bool m_Running = true;
 

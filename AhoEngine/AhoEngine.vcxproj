@@ -584,6 +584,7 @@
     </ClCompile>
     <ClCompile Include="Source\Core\Application.cpp" />
     <ClCompile Include="Source\Core\Core.cpp" />
+    <ClCompile Include="Source\Core\Gui\ImGuiBuild.cpp" />
     <ClCompile Include="Source\Core\Gui\ImGuiLayer.cpp" />
     <ClCompile Include="Source\Core\Layer\Layer.cpp" />
     <ClCompile Include="Source\Core\Layer\LayerStack.cpp" />
