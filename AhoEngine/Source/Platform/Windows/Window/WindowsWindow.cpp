@@ -5,7 +5,8 @@
 #include "Core/Events/MouseEvent.h"
 #include "Core/Events/KeyEvent.h"
 
-#include <Glad/glad.h>
+#include "Platform/OpenGL/OpenGLContext.h"
+
 
 namespace Aho {
 
@@ -24,7 +25,7 @@ namespace Aho {
 	}
 
 	WindowsWindow::~WindowsWindow() {
-
+		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props) {
@@ -45,12 +46,12 @@ namespace Aho {
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
+
+		m_Context = new OpenGLContext(m_Window);
+		m_Context->Init();
+
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
-
-		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		AHO_CORE_ASSERT(status, "Failed to initialize Glad!");
 
 		// Set GLFW Callback
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
@@ -140,7 +141,7 @@ namespace Aho {
 
 	void WindowsWindow::OnUpdate() { 
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled) {

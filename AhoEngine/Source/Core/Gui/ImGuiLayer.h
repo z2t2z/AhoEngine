@@ -12,7 +12,7 @@ namespace Aho {
 	class AHO_API ImGuiLayer : public Layer {
 	public:
 		ImGuiLayer();
-		~ImGuiLayer();
+		~ImGuiLayer() = default;
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -22,7 +22,7 @@ namespace Aho {
 		void End();
 
 	private:
-		float m_Time;
+		float m_Time = 0.0f;
 	
 	};
 

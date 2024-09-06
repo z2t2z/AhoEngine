@@ -17,14 +17,19 @@ IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
 IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 
-include "AhoEngine/Vendor/ImGui"
-include "AhoEngine/Vendor/GLFW"
-include "AhoEngine/Vendor/Glad"
+group "Dependencies"
+    include "AhoEngine/Vendor/GLFW"
+    include "AhoEngine/Vendor/Glad"
+    include "AhoEngine/Vendor/ImGui"
+
+group ""
 
 project "AhoEngine"
     location "AhoEngine"
-    kind "SharedLib"
+    kind "StaticLib"
     language "C++"
+    cppdialect "C++20"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -38,6 +43,10 @@ project "AhoEngine"
         "%{prj.name}/Vendor/glm/glm/**.inl",
         "%{prj.name}/Vendor/glm/glm/**.hpp"
     }
+	
+    defines {
+		"_CRT_SECURE_NO_WARNINGS"
+	}
 
     includedirs {
         "%{prj.name}/Vendor/spdlog/include",
@@ -49,48 +58,45 @@ project "AhoEngine"
     }
 
     links {
-        "ImGui",
         "GLFW",
         "Glad",
+        "ImGui",
         "opengl32.lib"
     }
 
-    dependson { "ImGui" }
-
     filter "system:windows" 
-        cppdialect "C++20"
-        staticruntime "Off"
         systemversion "latest"
 
         defines {
             "AHO_PLATFORM_WINDOWS",
             "AHO_BUILD_DLL",
             "GLFW_INCLUDE_NONE"
-            -- "_DEBUG", ?
-            -- "_CONSOLE"
         }
 
     filter "configurations:Debug"
         defines "AHO_DEBUG"
         buildoptions "/MDd"
-        symbols "On"
+        runtime "Debug"
+        symbols "on"
     
     filter "configurations:Release"
         defines "AHO_RELEASE"
-        buildoptions "/MD"
-        symbols "On"
+        runtime "Release"
+        symbols "on"
 
     filter "configurations:Dist"
         defines "AHO_DIST"
-        buildoptions "/MD"
-        optimize "On"
+        runtime "Release"
+        optimize "on"
 
     
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
-    
+	cppdialect "C++20"
+	staticruntime "on"
+
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -100,8 +106,10 @@ project "Sandbox"
     }
 
     includedirs {
+        "%{IncludeDir.ImGui}",
         "AhoEngine/Vendor/spdlog/include",
-        "AhoEngine/Source"
+        "AhoEngine/Source",
+        "%{IncludeDir.glm}"
     }
 
     links {
@@ -109,33 +117,24 @@ project "Sandbox"
     }
 
     filter "system:windows" 
-        cppdialect "C++20"
-        staticruntime "Off"
         systemversion "latest"
 
         defines {
-            "AHO_PLATFORM_WINDOWS",
-            -- "_DEBUG",
-            -- "_CONSOLE"                
-        }
-
-        postbuildcommands {
-            "{COPY} ../bin/" .. outputdir .. "/AhoEngine/AhoEngine.dll %{cfg.targetdir}"
-            -- ("{COPYFILE} %{cfg.buildtarget.relpath} ../Bin" .. outputdir .. "/Sandbox"),
-            -- "echo Copying DLL to ../Bin/" .. outputdir .. "/Sandbox"
+            "AHO_PLATFORM_WINDOWS",            
         }
 
     filter "configurations:Debug"
         defines "AHO_DEBUG"
+        runtime "Debug"
         buildoptions "/MDd"
         symbols "On"
     
     filter "configurations:Release"
         defines "AHO_RELEASE"
-        buildoptions "/MD"
-        symbols "On"
+        runtime "Release"
+        symbols "on"
 
     filter "configurations:Dist"
         defines "AHO_DIST"
-        buildoptions "/MD"
-        optimize "On"
+        runtime "Release"
+        optimize "on"

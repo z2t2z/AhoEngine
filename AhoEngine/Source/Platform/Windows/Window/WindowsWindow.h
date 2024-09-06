@@ -2,6 +2,8 @@
 
 #include "Log/Log.h"
 #include "Core/Window.h"
+#include "Core/Renderer/GraphicsContext.h"
+
 #include <GLFW/glfw3.h>
 
 
@@ -18,22 +20,18 @@ namespace Aho {
 		inline unsigned int GetHeight() const override { return m_Data.Height; }
 
 		// Windows Attributes
-		inline void SetEventCallback(const EventCallbackFn& callback) override { 
-			m_Data.EventCallback = callback; 
-		}
-
-		virtual void* GetNativeWindow() const override {
-			return m_Window;
-		}
-
+		inline void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
+
+		virtual void* GetNativeWindow() const override { return m_Window; }
 
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
 
 		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
 
 		struct WindowData {
 			std::string Title;

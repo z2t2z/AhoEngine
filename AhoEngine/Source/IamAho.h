@@ -6,6 +6,7 @@
 #include "Core/Application.h"
 #include "Core/Layer/Layer.h"
 
+#include "Core/Input/Input.h"
 #include "Core/Input/KeyCodes.h"
 #include "Core/Input/MouseButtonCodes.h"
 

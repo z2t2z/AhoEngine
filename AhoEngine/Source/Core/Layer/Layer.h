@@ -28,7 +28,7 @@ namespace Aho {
 			return m_DebugName;
 		}
 
-	private:
+	protected:
 		std::string m_DebugName;
 	};
 

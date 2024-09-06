@@ -2,9 +2,6 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Projs\Aho\bin\Debug-windows-x86_64\AhoEngine\AhoEngine.dll</FullPath>
-    </ProjectOutput>
-    <ProjectOutput>
       <FullPath>D:\Projs\Aho\bin\Debug-windows-x86_64\Sandbox\Sandbox.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>

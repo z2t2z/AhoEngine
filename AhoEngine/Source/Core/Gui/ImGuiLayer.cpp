@@ -6,16 +6,13 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+
 // Warning: These are temporary includes!
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 namespace Aho {
-	ImGuiLayer::ImGuiLayer() : Layer("ImGui Layer"), m_Time(0.0f) {
-
-	}
-
-	ImGuiLayer::~ImGuiLayer() {
+	ImGuiLayer::ImGuiLayer() : Layer("ImGui Layer") {
 
 	}
 
@@ -38,7 +35,7 @@ namespace Aho {
 		}
 		
 		Application& app = Application::Get();
-		GLFWwindow* window = static_cast<GLFWwindow*>(app.Get().GetWindow().GetNativeWindow());
+		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");

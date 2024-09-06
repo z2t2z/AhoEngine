@@ -8,43 +8,43 @@
 #include "Layer/LayerStack.h"
 #include "Core/Gui/ImGuiLayer.h"
 
+#include "Core/Renderer/Shader.h"
+#include "Core/Renderer/Buffer.h"
+#include "Core/Renderer/VertexArrayr.h"
+
 namespace Aho {
 
 	class AHO_API Application {
 	public:
-		//static Application* s_Instance;
-
 		Application();
-
-		virtual ~Application();
+		virtual ~Application() = default;
 
 		void Run();
 
 		void OnEvent(Event& e);
 
 		void PushLayer(Layer* layer);
-		void PushOverlay(Layer* overlay);
+		void PushOverlay(Layer* layer);
 
-		inline static Application& Get() {
-			return *s_Instance;
-		}
-		
-		inline Window& GetWindow() {
-			return *m_Window;
-		}
+		inline Window& GetWindow() { return *m_Window; }
 
+		inline static Application& Get() { return *s_Instance; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 
-		std::unique_ptr<Window> m_Window;
-		std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
-
+		std::shared_ptr<Window> m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
-
 		LayerStack m_LayerStack;
 
-		static Application* s_Instance;
+		std::shared_ptr<Shader> m_Shader;
+		std::shared_ptr<VertexArray> m_VertexArray;
 
+		std::shared_ptr<Shader> m_BlueShader;
+		std::shared_ptr<VertexArray> m_SquareVA;
+
+	private:
+		static Application* s_Instance;
 	};
 
 	// To be defined in the Client
