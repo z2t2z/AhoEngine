@@ -1,6 +1,6 @@
 workspace "AhoEngine"
     architecture "x64"
-    startproject "Sandbox"
+    startproject "AhoEditor"
 
     configurations {
         "Debug",
@@ -90,8 +90,8 @@ project "AhoEngine"
         optimize "on"
 
     
-project "Sandbox"
-    location "Sandbox"
+project "AhoEditor"
+    location "AhoEditor"
     kind "ConsoleApp"
     language "C++"
 	cppdialect "C++20"
@@ -138,3 +138,53 @@ project "Sandbox"
         defines "AHO_DIST"
         runtime "Release"
         optimize "on"
+
+
+        project "Sandbox"
+        location "Sandbox"
+        kind "ConsoleApp"
+        language "C++"
+        cppdialect "C++20"
+        staticruntime "on"
+    
+        targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+        objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    
+        files {
+            "%{prj.name}/Source/**.h",
+            "%{prj.name}/Source/**.cpp"
+        }
+    
+        includedirs {
+            "%{IncludeDir.ImGui}",
+            "AhoEngine/Vendor/spdlog/include",
+            "AhoEngine/Source",
+            "%{IncludeDir.glm}"
+        }
+    
+        links {
+            "AhoEngine"
+        }
+    
+        filter "system:windows" 
+            systemversion "latest"
+    
+            defines {
+                "AHO_PLATFORM_WINDOWS",            
+            }
+    
+        filter "configurations:Debug"
+            defines "AHO_DEBUG"
+            runtime "Debug"
+            buildoptions "/MDd"
+            symbols "On"
+        
+        filter "configurations:Release"
+            defines "AHO_RELEASE"
+            runtime "Release"
+            symbols "on"
+    
+        filter "configurations:Dist"
+            defines "AHO_DIST"
+            runtime "Release"
+            optimize "on"        

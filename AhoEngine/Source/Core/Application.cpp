@@ -1,8 +1,11 @@
 #include "Ahopch.h"
 #include "Application.h"
+
 #include "Core/Input/Input.h"
 
 #include "Core/Renderer/Renderer.h"
+#include "Platform/OpenGL/OpenGLShader.h"
+
 #include <glad/glad.h>
 
 namespace Aho {
@@ -98,7 +101,8 @@ namespace Aho {
 		)";
 
 
-		m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+		//m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+		m_Shader = std::make_shared<OpenGLShader>("temp", vertexSrc, fragmentSrc);
 
 		std::string blueShaderVertexSrc = R"(
 			#version 330 core
@@ -127,7 +131,9 @@ namespace Aho {
 			}
 		)";
 
-		m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+		//m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
+		m_BlueShader = std::make_shared<OpenGLShader>("blue", blueShaderVertexSrc, blueShaderFragmentSrc);
+		
 	}
 
 	void Application::Run() {
@@ -166,7 +172,8 @@ namespace Aho {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 
-		AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
+		/*   Log every event here in the console */
+		//AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
 
 		for (auto it = std::prev(m_LayerStack.end()); ; it--) {
 			(*it)->OnEvent(e);

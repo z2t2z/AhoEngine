@@ -17,7 +17,7 @@ namespace Aho {
 
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
-		void PopLayer(Layer* layer);
+		void PopLayer (Layer* layer);
 		void PopOverlay(Layer* layer);
 
 		std::vector<Layer*>::iterator begin() {
