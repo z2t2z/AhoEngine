@@ -27,11 +27,13 @@ namespace Aho {
         virtual void SetMat3(const std::string& name, const glm::mat3& mat) = 0;
         virtual void SetMat4(const std::string& name, const glm::mat4& mat) = 0;
 
+		inline uint32_t GerRendererID() { return m_RendererID; }
+
         virtual const std::string& GetName() const = 0;
         static std::shared_ptr<Shader> Create(const std::string& filepath);
 		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
-	//private:
-		//uint32_t m_RendererID;
+	private:
+		uint32_t m_RendererID;
 	};
 
 	class AHO_API ShaderLibrary {

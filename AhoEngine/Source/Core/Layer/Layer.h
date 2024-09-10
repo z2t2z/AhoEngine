@@ -3,6 +3,8 @@
 #include "Core/Core.h"
 #include "Core/Events/Event.h"
 
+#include "Core/Renderer/Framebuffer.h"
+//#include "Platform/OpenGL/OpenGLFramebuffer.h"
 
 /*
 	Layer类代表游戏引擎中的一个层。每个层可以看作是渲染、处理事件或更新逻辑的一部分。
@@ -23,6 +25,9 @@ namespace Aho {
 		virtual void OnUpdate() {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
+
+		// TO BE DELETED!
+		virtual void OnImGuiRender(std::shared_ptr<Framebuffer> m_Framebuffer) {}
 
 		inline const std::string& GetDebugName() {
 			return m_DebugName;

@@ -68,6 +68,7 @@ project "AhoEngine"
         systemversion "latest"
 
         defines {
+			"AHO_ENABLE_ASSERTS",
             "AHO_PLATFORM_WINDOWS",
             "AHO_BUILD_DLL",
             "GLFW_INCLUDE_NONE"

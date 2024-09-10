@@ -5,6 +5,7 @@
 
 #include "Core/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLFramebuffer.h"
 
 #include <glad/glad.h>
 
@@ -100,9 +101,7 @@ namespace Aho {
 			}
 		)";
 
-
-		//m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
-		m_Shader = std::make_shared<OpenGLShader>("temp", vertexSrc, fragmentSrc);
+		m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
 
 		std::string blueShaderVertexSrc = R"(
 			#version 330 core
@@ -131,16 +130,27 @@ namespace Aho {
 			}
 		)";
 
-		//m_BlueShader.reset(new Shader(blueShaderVertexSrc, blueShaderFragmentSrc));
-		m_BlueShader = std::make_shared<OpenGLShader>("blue", blueShaderVertexSrc, blueShaderFragmentSrc);
-		
+		m_BlueShader = Shader::Create("blue", blueShaderVertexSrc, blueShaderFragmentSrc);
+
+		// Temporary testing FBO
+
+		FramebufferSpecification fbSpec;
+		fbSpec.Width = 1280;
+		fbSpec.Height = 720;
+		auto rendererID = m_BlueShader->GerRendererID();
+		fbSpec.rendererID = rendererID;
+
+		m_Framebuffer = Framebuffer::Create(fbSpec);
+
 	}
 
 	void Application::Run() {
 
 		while (m_Running) {
+
 			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 			RenderCommand::Clear();
+			m_Framebuffer->Bind();
 
 			Renderer::BeginScene();
 
@@ -152,6 +162,8 @@ namespace Aho {
 
 			Renderer::EndScene();
 
+			m_Framebuffer->Unbind();
+
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate();
 			}
@@ -159,7 +171,7 @@ namespace Aho {
 			// Will be done on the render thread in the future
 			m_ImGuiLayer->Begin();
 			for (auto layer : m_LayerStack) {
-				layer->OnImGuiRender();
+				layer->OnImGuiRender(m_Framebuffer);
 			}
 			m_ImGuiLayer->End();
 

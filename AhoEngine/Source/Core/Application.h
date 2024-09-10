@@ -11,6 +11,7 @@
 #include "Core/Renderer/Shader.h"
 #include "Core/Renderer/Buffer.h"
 #include "Core/Renderer/VertexArrayr.h"
+#include "Core/Renderer/Framebuffer.h"
 
 namespace Aho {
 
@@ -42,6 +43,8 @@ namespace Aho {
 
 		std::shared_ptr<Shader> m_BlueShader;
 		std::shared_ptr<VertexArray> m_SquareVA;
+
+		std::shared_ptr<Framebuffer> m_Framebuffer;
 
 	private:
 		static Application* s_Instance;
