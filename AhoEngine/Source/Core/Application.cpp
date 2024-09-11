@@ -7,7 +7,6 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
 
-#include <glad/glad.h>
 
 namespace Aho {
 
@@ -45,6 +44,10 @@ namespace Aho {
 			m_Window->OnUpdate();
 		}
 
+	}
+
+	void Application::ShutDown() {
+		m_Running = false;
 	}
 
 	void Application::OnEvent(Event& e) {
