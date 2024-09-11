@@ -8,10 +8,6 @@
 #include "Layer/LayerStack.h"
 #include "Core/Gui/ImGuiLayer.h"
 
-#include "Core/Renderer/Shader.h"
-#include "Core/Renderer/Buffer.h"
-#include "Core/Renderer/VertexArrayr.h"
-#include "Core/Renderer/Framebuffer.h"
 
 namespace Aho {
 
@@ -38,13 +34,13 @@ namespace Aho {
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 
-		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_VertexArray;
+		//std::shared_ptr<Shader> m_Shader;
+		//std::shared_ptr<VertexArray> m_VertexArray;
 
-		std::shared_ptr<Shader> m_BlueShader;
-		std::shared_ptr<VertexArray> m_SquareVA;
+		//std::shared_ptr<Shader> m_BlueShader;
+		//std::shared_ptr<VertexArray> m_SquareVA;
 
-		std::shared_ptr<Framebuffer> m_Framebuffer;
+		//std::shared_ptr<Framebuffer> m_Framebuffer;
 
 	private:
 		static Application* s_Instance;

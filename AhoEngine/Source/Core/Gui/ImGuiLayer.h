@@ -20,7 +20,7 @@ namespace Aho {
 		virtual void OnDetach() override;
 		virtual void OnImGuiRender() override;
 
-		virtual void OnImGuiRender(std::shared_ptr<Framebuffer> m_Framebuffer) override;
+		//virtual void OnImGuiRender(std::shared_ptr<Framebuffer> m_Framebuffer) override;
 
 		void Begin();
 		void End();
