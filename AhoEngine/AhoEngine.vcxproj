@@ -171,7 +171,6 @@
     <ClInclude Include="Source\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="Source\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="Source\Platform\OpenGL\OpenGLVertexArray.h" />
-    <ClInclude Include="Source\Platform\Windows\Input\WindowsInput.h" />
     <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h" />
     <ClInclude Include="Vendor\glm\glm\common.hpp" />
     <ClInclude Include="Vendor\glm\glm\detail\_features.hpp" />

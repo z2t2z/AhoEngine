@@ -29,14 +29,15 @@ namespace Aho {
 
 	private:
 		uint32_t m_RendererID = 0;
+		uint32_t m_ColorAttachment;
+		uint32_t m_DepthAttachment = 0;
+
 		FramebufferSpecification m_Specification;
 
 		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;
 		FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;
 
 		std::vector<uint32_t> m_ColorAttachments;
-		uint32_t m_ColorAttachment;
-		uint32_t m_DepthAttachment = 0;
 	};
 
 }

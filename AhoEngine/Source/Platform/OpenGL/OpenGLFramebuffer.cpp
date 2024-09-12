@@ -73,7 +73,6 @@ namespace Aho {
 			AHO_CORE_ASSERT(false, "HazelFBTextureFormatToGL");
 			return 0;
 		}
-
 	}
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
@@ -95,6 +94,13 @@ namespace Aho {
 	}
 
 	void OpenGLFramebuffer::Invalidate() {
+		if (m_RendererID) {
+			glDeleteFramebuffers(1, &m_RendererID);
+			//glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
+			glDeleteTextures(1, &m_ColorAttachment);
+			glDeleteTextures(1, &m_DepthAttachment);
+		}
+
 		glCreateFramebuffers(1, &m_RendererID);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
@@ -132,6 +138,7 @@ namespace Aho {
 			AHO_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;
 		}
+		AHO_CORE_TRACE("Resizeing: {0}, {1}", width, height);
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 

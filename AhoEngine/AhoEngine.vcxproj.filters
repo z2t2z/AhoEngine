@@ -156,9 +156,6 @@
     <ClInclude Include="Source\Platform\OpenGL\OpenGLVertexArray.h">
       <Filter>Source\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Platform\Windows\Input\WindowsInput.h">
-      <Filter>Source\Platform\Windows\Input</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h">
       <Filter>Source\Platform\Windows\Window</Filter>
     </ClInclude>
