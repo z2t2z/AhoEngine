@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;..\AhoEngine\Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -97,7 +97,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;..\AhoEngine\Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -114,7 +114,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>AHO_PLATFORM_WINDOWS;AHO_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;..\AhoEngine\Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

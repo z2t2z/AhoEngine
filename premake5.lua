@@ -16,6 +16,7 @@ IncludeDir["ImGui"] = "AhoEngine/Vendor/ImGui"
 IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
 IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 IncludeDir["glm"] = "AhoEngine/Vendor/glm"
+IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
@@ -55,6 +56,7 @@ project "AhoEngine"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}",
     }
 
     links {
@@ -110,7 +112,8 @@ project "AhoEditor"
         "%{IncludeDir.ImGui}",
         "AhoEngine/Vendor/spdlog/include",
         "AhoEngine/Source",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}",
     }
 
     links {
@@ -160,7 +163,8 @@ project "AhoEditor"
             "%{IncludeDir.ImGui}",
             "AhoEngine/Vendor/spdlog/include",
             "AhoEngine/Source",
-            "%{IncludeDir.glm}"
+            "%{IncludeDir.glm}",
+            "%{IncludeDir.entt}",
         }
     
         links {

@@ -1,16 +1,6 @@
 #pragma once
 
-#include "Core/Layer/Layer.h"
-#include "Core/Layer/LayerStack.h"
-
-#include "Core/Events/KeyEvent.h"
-
-#include "Core/Renderer/RenderCommand.h"
-#include "Core/Renderer/Renderer.h"
-#include "Core/Renderer/Shader.h"
-#include "Core/Renderer/Buffer.h"
-#include "Core/Renderer/VertexArrayr.h"
-#include "Core/Renderer/Framebuffer.h"
+#include "IamAho.h"
 
 
 namespace Aho {
@@ -34,19 +24,18 @@ namespace Aho {
 	private:
 		//Hazel::OrthographicCameraController m_CameraController;
 
-		// Temp
-		//std::shared_ptr<VertexArray> m_SquareVA;
-		//std::shared_ptr<Shader> m_FlatColorShader;
-		//std::shared_ptr<Framebuffer> m_Framebuffer;
 
 		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_VertexArray;
-
 		std::shared_ptr<Shader> m_BlueShader;
+		// Temp
+		std::shared_ptr<VertexArray> m_VertexArray;
 		std::shared_ptr<VertexArray> m_SquareVA;
-
 		std::shared_ptr<Framebuffer> m_Framebuffer;
 
+		std::shared_ptr<Scene> m_ActiveScene;
+		std::shared_ptr<Scene> m_EditorScene;
+
+		Entity m_Test;
 		//Ref<Scene> m_ActiveScene;
 		//Entity m_SquareEntity;
 		//Entity m_CameraEntity;

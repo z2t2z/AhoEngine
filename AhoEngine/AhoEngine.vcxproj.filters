@@ -40,6 +40,9 @@
     <Filter Include="Source\Platform\Windows\Window">
       <UniqueIdentifier>{0BA9727D-F7CE-3CE4-E014-C2AFCCD961B0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Scene">
+      <UniqueIdentifier>{F300E3F2-DF63-7297-88E9-AA4D742B3E1A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Vendor">
       <UniqueIdentifier>{935FDCD7-7F01-07AE-68BC-1A0254FD8DFE}</UniqueIdentifier>
     </Filter>
@@ -158,6 +161,15 @@
     </ClInclude>
     <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h">
       <Filter>Source\Platform\Windows\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Components.h">
+      <Filter>Source\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Entity.h">
+      <Filter>Source\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Scene.h">
+      <Filter>Source\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Vendor\glm\glm\common.hpp">
       <Filter>Vendor\glm\glm</Filter>
@@ -1477,6 +1489,12 @@
     </ClCompile>
     <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp">
       <Filter>Source\Platform\Windows\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Entity.cpp">
+      <Filter>Source\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Scene.cpp">
+      <Filter>Source\Scene</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

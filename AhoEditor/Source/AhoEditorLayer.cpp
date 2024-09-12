@@ -1,6 +1,5 @@
 #include "AhoEditorLayer.h"
 
-#include "Core/Application.h"
 #include <imgui.h>
 
 namespace Aho {
@@ -122,8 +121,13 @@ namespace Aho {
 		fbSpec.Height = 720;
 		auto rendererID = m_BlueShader->GerRendererID();
 		fbSpec.rendererID = rendererID;
-
 		m_Framebuffer = Framebuffer::Create(fbSpec);
+
+		m_ActiveScene = std::make_shared<Scene>();
+		// Entity
+		m_Test = m_ActiveScene->CreateEntity("Test");
+		//m_Test.AddComponent<TagComponent>();
+
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -225,6 +229,15 @@ namespace Aho {
 			AHO_WARN("Resizeing viewport to: {0} {1}", width, height);
 			m_Framebuffer->Resize(width, height);
 		}
+
+		// testing out the entity system
+		AHO_ASSERT(m_Test.HasComponent<TagComponent>());
+		if (m_Test.HasComponent<TagComponent>()) {
+			ImGui::Separator();
+			ImGui::Text(m_Test.GetComponent<TagComponent>().Tag.c_str());
+			ImGui::Separator();
+		}
+
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image((void*)textureID, ImVec2{ width, height });
 		ImGui::End();
