@@ -1,133 +1,124 @@
 #include "AhoEditorLayer.h"
 
 #include <imgui.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
+	std::string vertexSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec3 a_Normal;
+
+			out vec3 v_Position;
+			out vec3 v_Normal;
+
+			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Model; // TODO
+			
+			void main()
+			{
+				v_Position = (u_Model * vec4(a_Position, 1.0)).xyz;
+				gl_Position = u_ViewProjection * vec4(v_Position, 1.0);
+				v_Normal = a_Normal;
+			}
+		)";
+
+	std::string fragmentSrc = R"(
+			#version 330 core
+			
+			layout(location = 0) out vec4 color;
+
+			in vec3 v_Position;
+			in vec3 v_Normal;
+
+			uniform vec4 u_color;
+
+			void main()
+			{
+				//color = vec4(v_Position * 0.5 + 0.5, 1.0);
+				//color = vec4(1.0, 0.0, 0.0, 0.0);
+				color = u_color;
+			}
+		)";
 	AhoEditorLayer::AhoEditorLayer() {
 	}
 
 	// What if put this in the constructor?
 	void AhoEditorLayer::OnAttach() {
-		m_VertexArray.reset(VertexArray::Create());
+		// Set the active scene
+		m_ActiveScene = std::make_shared<Scene>();
+		
+		// Temporary init shader here
+		m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
+		Renderer::Init(m_Shader);
+		m_Color = glm::vec4(0);
+		// Temporary setting up viewport FBO
+		FramebufferSpecification fbSpec;
+		fbSpec.Width = 1280;
+		fbSpec.Height = 720;
+		auto rendererID = m_Shader->GerRendererID();
+		fbSpec.rendererID = rendererID;
+		m_Framebuffer = Framebuffer::Create(fbSpec);
 
-		float vertices[3 * 7] = {
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-			 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+		// Temporary setting up Cube VAO
+		m_CubeVA.reset(VertexArray::Create());
+		float vertices[8 * 6] = {
+			// Front face
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
+			// Back face
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
 		};
-
 		std::shared_ptr<VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 		BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" }
+			{ ShaderDataType::Float3, "a_Normal" }
 		};
 		vertexBuffer->SetLayout(layout);
-		m_VertexArray->AddVertexBuffer(vertexBuffer);
-
-		uint32_t indices[3] = { 0, 1, 2 };
+		m_CubeVA->AddVertexBuffer(vertexBuffer);
+		
+		unsigned int indices[] = {
+			// Front face
+			0, 1, 2,   
+			2, 3, 0,   
+			// Back face
+			4, 5, 6,   
+			6, 7, 4,   
+			// Left face
+			4, 0, 3,   
+			3, 7, 4,   
+			// Right face
+			1, 5, 6,   
+			6, 2, 1,   
+			// Top face
+			3, 2, 6,   
+			6, 7, 3,   
+			// Bottom face
+			0, 4, 5,   
+			5, 1, 0    
+		};
 		std::shared_ptr<IndexBuffer> indexBuffer;
 		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
-		m_VertexArray->SetIndexBuffer(indexBuffer);
+		m_CubeVA->SetIndexBuffer(indexBuffer);
 
-		m_SquareVA.reset(VertexArray::Create());
-
-		float squareVertices[3 * 4] = {
-			-0.75f, -0.75f, 0.0f,
-			 0.75f, -0.75f, 0.0f,
-			 0.75f,  0.75f, 0.0f,
-			-0.75f,  0.75f, 0.0f
-		};
-
-		std::shared_ptr<VertexBuffer> squareVB;
-		squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
-		squareVB->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" }
-			});
-		m_SquareVA->AddVertexBuffer(squareVB);
-
-		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<IndexBuffer> squareIB;
-		squareIB.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t)));
-		m_SquareVA->SetIndexBuffer(squareIB);
-
-		std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec4 a_Color;
-
-			out vec3 v_Position;
-			out vec4 v_Color;
-
-			void main()
-			{
-				v_Position = a_Position;
-				v_Color = a_Color;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec3 v_Position;
-			in vec4 v_Color;
-
-			void main()
-			{
-				color = vec4(v_Position * 0.5 + 0.5, 1.0);
-				color = v_Color;
-			}
-		)";
-
-		m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
-
-		std::string blueShaderVertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-
-			out vec3 v_Position;
-
-			void main()
-			{
-				v_Position = a_Position;
-				gl_Position = vec4(a_Position, 1.0);	
-			}
-		)";
-
-		std::string blueShaderFragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec3 v_Position;
-
-			void main()
-			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
-			}
-		)";
-
-		m_BlueShader = Shader::Create("blue", blueShaderVertexSrc, blueShaderFragmentSrc);
-
-		// Temporary testing FBO
-
-		FramebufferSpecification fbSpec;
-		fbSpec.Width = 1280;
-		fbSpec.Height = 720;
-		auto rendererID = m_BlueShader->GerRendererID();
-		fbSpec.rendererID = rendererID;
-		m_Framebuffer = Framebuffer::Create(fbSpec);
-
-		m_ActiveScene = std::make_shared<Scene>();
-		// Entity
-		m_Test = m_ActiveScene->CreateEntity("Test");
+		// Entities
+		//m_Test = m_ActiveScene->CreateEntity("Test");
 		//m_Test.AddComponent<TagComponent>();
-
+		m_Cube = m_ActiveScene->CreateEntity("Cube");
+		m_Cube.AddComponent<TransformComponent>();
+		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
+		
+		m_Camera = new Camera();
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
+		m_CameraEntity.AddComponent<TransformComponent>();
+		m_CameraEntity.AddComponent<CameraComponent>(m_Camera, true);
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -138,15 +129,7 @@ namespace Aho {
 		RenderCommand::Clear();
 		m_Framebuffer->Bind();
 
-		Renderer::BeginScene();
-
-		m_BlueShader->Bind();
-		Renderer::Submit(m_SquareVA);
-
-		m_Shader->Bind();
-		Renderer::Submit(m_VertexArray);
-
-		Renderer::EndScene();
+		m_ActiveScene->OnUpdateEditor(m_Camera, m_Shader, m_Color);
 
 		m_Framebuffer->Unbind();
 	}
@@ -219,8 +202,18 @@ namespace Aho {
 		}
 		ImGui::End();
 
+		// Editor panel
+		ImGui::Begin("Editor Panel");
+		ImGui::Text("This is the editor panel");
+		auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
+		auto& translation = tc.Translation;
+		auto transform = tc.GetTransform();
+		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(translation), -10.0f, 10.0f);
+		ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
+		tc.Translation = translation;
+		ImGui::End();
 
-		// Viewport Window resizeing, seems incorrect?
+		// Viewport Window, resizeing, seems incorrect?
 		ImGui::Begin("Viewport");
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		auto [width, height] = ImGui::GetContentRegionAvail();
@@ -228,14 +221,6 @@ namespace Aho {
 		if (spec.Width != width || spec.Height != height) {
 			AHO_WARN("Resizeing viewport to: {0} {1}", width, height);
 			m_Framebuffer->Resize(width, height);
-		}
-
-		// testing out the entity system
-		AHO_ASSERT(m_Test.HasComponent<TagComponent>());
-		if (m_Test.HasComponent<TagComponent>()) {
-			ImGui::Separator();
-			ImGui::Text(m_Test.GetComponent<TagComponent>().Tag.c_str());
-			ImGui::Separator();
 		}
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();

@@ -23,25 +23,26 @@ namespace Aho {
 
 	private:
 		//Hazel::OrthographicCameraController m_CameraController;
-
-
-		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<Shader> m_BlueShader;
 		// Temp
-		std::shared_ptr<VertexArray> m_VertexArray;
-		std::shared_ptr<VertexArray> m_SquareVA;
+		std::shared_ptr<Shader> m_Shader;
+		std::shared_ptr<VertexArray> m_CubeVA;
+		
 		std::shared_ptr<Framebuffer> m_Framebuffer;
 
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;
 
 		Entity m_Test;
+		Entity m_CameraEntity;
+		Entity m_Cube;
+		Camera* m_Camera;
+		glm::vec4 m_Color; // for debug
 		//Ref<Scene> m_ActiveScene;
 		//Entity m_SquareEntity;
 		//Entity m_CameraEntity;
 		//Entity m_SecondCamera;
 
-		bool m_PrimaryCamera = true;
+		//bool m_PrimaryCamera = true;
 
 		//EditorCamera m_EditorCamera;
 

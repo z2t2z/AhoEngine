@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Camera/Camera.h"
+
 #include <string>
 
 #include <glm/glm.hpp>
@@ -34,5 +36,24 @@ namespace Aho{
 		}
 	};
 
+	struct CameraComponent {
+		Camera* camera;
+		bool Primary = false;
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
+		CameraComponent(Camera* _camera, bool primary) : camera(_camera), Primary(primary) {}
+	};
+
+
+	// Temporary, consider how to design this
+	struct MeshComponent {
+		std::shared_ptr<VertexArray> vertexArray;
+
+		MeshComponent() = default;
+		MeshComponent(std::shared_ptr<VertexArray>& _vertexArray)
+			: vertexArray(_vertexArray) {}
+		MeshComponent(const MeshComponent&) = default;
+	};
 
 }

@@ -142,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\Core\Application.h" />
+    <ClInclude Include="Source\Core\Camera\Camera.h" />
     <ClInclude Include="Source\Core\Core.h" />
     <ClInclude Include="Source\Core\EntryPoint.h" />
     <ClInclude Include="Source\Core\Events\ApplicationEvent.h" />
