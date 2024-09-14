@@ -37,12 +37,11 @@ namespace Aho {
 				break;
 			}
 		}
-		AHO_ASSERT(transform != nullptr, "Doesn't have a main camera!");
+		AHO_ASSERT(transform != nullptr, "Main camera does not exist!");
+		assert(mainCamera != nullptr);
 		auto mat = *transform;
 
 		Renderer::BeginScene(camera, *transform, color);
-		auto v = glm::vec3(mat[3][0], mat[3][1], mat[3][2]);
-		AHO_TRACE("({0}, {1}, {2})", v.x, v.y, v.z);
 		{
 			auto view = m_Registry.group<MeshComponent, TransformComponent>();
 			for (const auto& e : view) {

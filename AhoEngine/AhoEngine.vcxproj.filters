@@ -1420,6 +1420,7 @@
       <Filter>Vendor\glm\glm</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Camera\Camera.h" />
+    <ClInclude Include="Source\Core\Debugr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

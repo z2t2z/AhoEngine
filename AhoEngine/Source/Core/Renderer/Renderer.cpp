@@ -31,7 +31,6 @@ namespace Aho {
 	}
 
 	void Renderer::BeginScene(const Camera* camera, const glm::mat4& transform, glm::vec4& color) {
-		AHO_CORE_INFO("Color:{},{},{}", color.x, color.y, color.z);
 		glm::mat4 viewMat = camera->GetProjection() * glm::inverse(transform);
 		s_Data.shader->Bind();
 		s_Data.shader->SetMat4("u_ViewProjection", viewMat);

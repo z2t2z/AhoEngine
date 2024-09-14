@@ -125,10 +125,10 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate() {
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		RenderCommand::Clear();
 		m_Framebuffer->Bind();
 
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_Camera, m_Shader, m_Color);
 
 		m_Framebuffer->Unbind();
@@ -206,11 +206,8 @@ namespace Aho {
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
 		auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
-		auto& translation = tc.Translation;
-		auto transform = tc.GetTransform();
-		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(translation), -10.0f, 10.0f);
+		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -2.0f, 2.0f);
 		ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
-		tc.Translation = translation;
 		ImGui::End();
 
 		// Viewport Window, resizeing, seems incorrect?
