@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -120,7 +120,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -633,9 +633,9 @@
     <ProjectReference Include="Vendor\ImGui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Source\ShaderSrc\shader.glsl" />
+    <ProjectReference Include="Vendor\assimp\Assimp.vcxproj">
+      <Project>{5234E0A7-3ED6-0A7E-2791-1ED213D291CE}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

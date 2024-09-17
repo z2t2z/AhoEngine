@@ -10,3 +10,9 @@
 [submodule "AhoEngine/Vendor/glm"]
 	path = AhoEngine/Vendor/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "AhoEngine/Vendor/Assimp"]
+	path = AhoEngine/Vendor/Assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "AhoEngine/Vendor/assimp/assimp"]
+	path = AhoEngine/Vendor/assimp/assimp
+	url = https://github.com/assimp/assimp.git

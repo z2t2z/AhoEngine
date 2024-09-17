@@ -7,6 +7,9 @@
     <Filter Include="Source\Core">
       <UniqueIdentifier>{6E95150F-DA4A-8E04-633F-88DBCFF38408}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Core\Camera">
+      <UniqueIdentifier>{2602F93F-12E6-B995-7B46-B4E86749A417}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Core\Events">
       <UniqueIdentifier>{92191B46-7EFD-DB9B-E75D-D6EED360C61D}</UniqueIdentifier>
     </Filter>
@@ -72,7 +75,13 @@
     <ClInclude Include="Source\Core\Application.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Camera\Camera.h">
+      <Filter>Source\Core\Camera</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Core\Core.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Debugr.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\EntryPoint.h">
@@ -1419,8 +1428,6 @@
     <ClInclude Include="Vendor\glm\glm\vector_relational.hpp">
       <Filter>Vendor\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Camera\Camera.h" />
-    <ClInclude Include="Source\Core\Debugr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1498,8 +1505,5 @@
     <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Source\Scene</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Source\ShaderSrc\shader.glsl" />
   </ItemGroup>
 </Project>

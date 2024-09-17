@@ -17,12 +17,13 @@ IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
 IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
+IncludeDir["Assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
     include "AhoEngine/Vendor/Glad"
     include "AhoEngine/Vendor/ImGui"
-
+    include "AhoEngine/Vendor/assimp"
 group ""
 
 project "AhoEngine"
@@ -57,12 +58,14 @@ project "AhoEngine"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.Assimp}"
     }
 
     links {
         "GLFW",
         "Glad",
         "ImGui",
+        "Assimp",
         "opengl32.lib"
     }
 
@@ -114,6 +117,7 @@ project "AhoEditor"
         "AhoEngine/Source",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.Assimp}",
     }
 
     links {
