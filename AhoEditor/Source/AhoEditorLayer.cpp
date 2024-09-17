@@ -1,5 +1,7 @@
 #include "AhoEditorLayer.h"
 
+#include <filesystem>
+
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -42,6 +44,7 @@ namespace Aho {
 			}
 		)";
 	AhoEditorLayer::AhoEditorLayer() {
+		m_Color = glm::vec4(1.0f);
 	}
 
 	// What if put this in the constructor?
@@ -50,7 +53,12 @@ namespace Aho {
 		m_ActiveScene = std::make_shared<Scene>();
 		
 		// Temporary init shader here
-		m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
+		//m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
+		AHO_TRACE(path);
+		m_Shader = Shader::Create(path);
+
 		Renderer::Init(m_Shader);
 		m_Color = glm::vec4(0);
 		// Temporary setting up viewport FBO
@@ -63,17 +71,42 @@ namespace Aho {
 
 		// Temporary setting up Cube VAO
 		m_CubeVA.reset(VertexArray::Create());
-		float vertices[8 * 6] = {
+		float vertices[] = {
 			// Front face
-			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
-			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
-			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
-			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,  
+			-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
+			 0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
+
 			// Back face
-			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
-			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
-			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
-			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+			 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+			 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+			-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+
+			// Left face
+			-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f, -1.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, -1.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+
+			// Right face
+			 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+
+			 // Bottom face
+			 -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+			  0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+			  0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f,
+			 -0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f,
+
+			 // Top face
+			 -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			  0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			  0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f,
+			 -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f
 		};
 		std::shared_ptr<VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
@@ -86,31 +119,29 @@ namespace Aho {
 		
 		unsigned int indices[] = {
 			// Front face
-			0, 1, 2,   
-			2, 3, 0,   
+			0, 1, 2,
+			2, 3, 0,
 			// Back face
-			4, 5, 6,   
-			6, 7, 4,   
+			4, 5, 6,
+			6, 7, 4,
 			// Left face
-			4, 0, 3,   
-			3, 7, 4,   
+			8, 9, 10,
+			10, 11, 8,
 			// Right face
-			1, 5, 6,   
-			6, 2, 1,   
-			// Top face
-			3, 2, 6,   
-			6, 7, 3,   
+			12, 13, 14,
+			14, 15, 12,
 			// Bottom face
-			0, 4, 5,   
-			5, 1, 0    
+			16, 17, 18,
+			18, 19, 16,
+			// Top face
+			20, 21, 22,
+			22, 23, 20
 		};
 		std::shared_ptr<IndexBuffer> indexBuffer;
 		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_CubeVA->SetIndexBuffer(indexBuffer);
 
 		// Entities
-		//m_Test = m_ActiveScene->CreateEntity("Test");
-		//m_Test.AddComponent<TagComponent>();
 		m_Cube = m_ActiveScene->CreateEntity("Cube");
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
@@ -206,7 +237,7 @@ namespace Aho {
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
 		auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
-		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -2.0f, 2.0f);
+		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -10.0f, 10.0f);
 		ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
 		ImGui::End();
 

@@ -28,8 +28,8 @@ namespace Aho {
 		//Utils::CreateCacheDirectoryIfNeeded();
 
 		std::string source = ReadFile(filepath);
-		auto shaderSources = PreProcess(source);
-
+		//auto shaderSources = PreProcess(source);
+		m_OpenGLSourceCode = PreProcess(source);
 		/*{
 			Timer timer;
 			CompileOrGetVulkanBinaries(shaderSources);
@@ -44,15 +44,83 @@ namespace Aho {
 		auto lastDot = filepath.rfind('.');
 		auto count = (lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash);
 		m_Name = filepath.substr(lastSlash, count);
+		CompileFromSource();
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) {
 		//HZ_PROFILE_FUNCTION();
 
-		std::unordered_map<GLenum, std::string> sources;
-		sources[GL_VERTEX_SHADER] = vertexSrc;
-		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
+		//std::unordered_map<GLenum, std::string> sources;
+		m_Name = name;
+		m_OpenGLSourceCode[GL_VERTEX_SHADER] = vertexSrc;
+		m_OpenGLSourceCode[GL_FRAGMENT_SHADER] = fragmentSrc;
+		CompileFromSource();
 
+	}
+
+	OpenGLShader::~OpenGLShader() {
+		glDeleteProgram(m_RendererID);
+	}
+
+	void OpenGLShader::Bind() const {
+		glUseProgram(m_RendererID);
+	}
+
+	void OpenGLShader::Unbind() const {
+		glUseProgram(0);
+	}
+
+	std::string OpenGLShader::ReadFile(const std::string& filepath)
+	{
+		std::string result;
+		std::ifstream in(filepath, std::ios::in | std::ios::binary); // ifstream closes itself due to RAII
+		if (in) {
+			in.seekg(0, std::ios::end);
+			size_t size = in.tellg();
+			if (size != -1) {
+				result.resize(size);
+				in.seekg(0, std::ios::beg);
+				in.read(&result[0], size);
+			} else {
+				AHO_CORE_ERROR("Could not read from file '{0}'", filepath);
+			}
+		} else {
+			AHO_CORE_ERROR("Could not open file '{0}'", filepath);
+		}
+
+		return result;
+	}
+
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
+		//HZ_PROFILE_FUNCTION();
+
+		std::unordered_map<GLenum, std::string> shaderSources;
+
+		const char* typeToken = "#type";
+		size_t typeTokenLength = strlen(typeToken);
+		size_t pos = source.find(typeToken, 0); //Start of shader type declaration line
+		while (pos != std::string::npos) {
+			size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
+			AHO_CORE_ASSERT(eol != std::string::npos, "Syntax error");
+			size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
+			std::string type = source.substr(begin, eol - begin);
+			AHO_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type specified");
+
+			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
+			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
+			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
+
+			shaderSources[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+		}
+
+		return shaderSources;
+	}
+
+	void OpenGLShader::CompileFromSource() {
+		std::string vertexSrc = m_OpenGLSourceCode[GL_VERTEX_SHADER];
+		std::string fragmentSrc = m_OpenGLSourceCode[GL_FRAGMENT_SHADER];
+		AHO_CORE_TRACE(vertexSrc);
+		AHO_CORE_TRACE(fragmentSrc);
 		//CompileOrGetVulkanBinaries(sources);
 		//CompileOrGetOpenGLBinaries();
 		//CreateProgram();
@@ -157,64 +225,6 @@ namespace Aho {
 		glDetachShader(program, vertexShader);
 		glDetachShader(program, fragmentShader);
 
-	}
-
-	OpenGLShader::~OpenGLShader() {
-		glDeleteProgram(m_RendererID);
-	}
-
-	void OpenGLShader::Bind() const {
-		glUseProgram(m_RendererID);
-	}
-
-	void OpenGLShader::Unbind() const {
-		glUseProgram(0);
-	}
-
-	std::string OpenGLShader::ReadFile(const std::string& filepath)
-	{
-		std::string result;
-		std::ifstream in(filepath, std::ios::in | std::ios::binary); // ifstream closes itself due to RAII
-		if (in) {
-			in.seekg(0, std::ios::end);
-			size_t size = in.tellg();
-			if (size != -1) {
-				result.resize(size);
-				in.seekg(0, std::ios::beg);
-				in.read(&result[0], size);
-			} else {
-				AHO_CORE_ERROR("Could not read from file '{0}'", filepath);
-			}
-		} else {
-			AHO_CORE_ERROR("Could not open file '{0}'", filepath);
-		}
-
-		return result;
-	}
-
-	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
-		//HZ_PROFILE_FUNCTION();
-
-		std::unordered_map<GLenum, std::string> shaderSources;
-
-		const char* typeToken = "#type";
-		size_t typeTokenLength = strlen(typeToken);
-		size_t pos = source.find(typeToken, 0); //Start of shader type declaration line
-		while (pos != std::string::npos) {
-			size_t eol = source.find_first_of("\r\n", pos); //End of shader type declaration line
-			AHO_CORE_ASSERT(eol != std::string::npos, "Syntax error");
-			size_t begin = pos + typeTokenLength + 1; //Start of shader type name (after "#type " keyword)
-			std::string type = source.substr(begin, eol - begin);
-			AHO_CORE_ASSERT(Utils::ShaderTypeFromString(type), "Invalid shader type specified");
-
-			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
-			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
-			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
-
-			shaderSources[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
-		}
-
-		return shaderSources;
 	}
 
 	void OpenGLShader::CreateProgram() {

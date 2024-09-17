@@ -35,7 +35,7 @@ namespace Aho {
 		Entity m_Test;
 		Entity m_CameraEntity;
 		Entity m_Cube;
-		Camera* m_Camera;
+		Camera* m_Camera{ nullptr };
 		glm::vec4 m_Color; // for debug
 		//Ref<Scene> m_ActiveScene;
 		//Entity m_SquareEntity;

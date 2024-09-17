@@ -37,14 +37,13 @@ namespace Aho{
 	};
 
 	struct CameraComponent {
-		Camera* camera;
-		bool Primary = false;
+		Camera* camera{ nullptr };
+		bool Primary{ false };
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 		CameraComponent(Camera* _camera, bool primary) : camera(_camera), Primary(primary) {}
 	};
-
 
 	// Temporary, consider how to design this
 	struct MeshComponent {
@@ -54,6 +53,17 @@ namespace Aho{
 		MeshComponent(std::shared_ptr<VertexArray>& _vertexArray)
 			: vertexArray(_vertexArray) {}
 		MeshComponent(const MeshComponent&) = default;
+	};
+
+	// Temporary, think about how to design light class
+	struct PointLightComponent {
+		glm::vec3 color;
+		float intensity;
+
+		PointLightComponent() = default;
+		PointLightComponent(glm::vec3 _color, float _intensity = 1.0f) 
+			: color(_color), intensity(_intensity) {}
+		PointLightComponent(const PointLightComponent&) = default;
 	};
 
 }

@@ -1499,4 +1499,7 @@
       <Filter>Source\Scene</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\ShaderSrc\shader.glsl" />
+  </ItemGroup>
 </Project>
