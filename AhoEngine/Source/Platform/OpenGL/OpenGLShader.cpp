@@ -119,8 +119,8 @@ namespace Aho {
 	void OpenGLShader::CompileFromSource() {
 		std::string vertexSrc = m_OpenGLSourceCode[GL_VERTEX_SHADER];
 		std::string fragmentSrc = m_OpenGLSourceCode[GL_FRAGMENT_SHADER];
-		AHO_CORE_TRACE(vertexSrc);
-		AHO_CORE_TRACE(fragmentSrc);
+		//AHO_CORE_TRACE(vertexSrc);
+		//AHO_CORE_TRACE(fragmentSrc);
 		//CompileOrGetVulkanBinaries(sources);
 		//CompileOrGetOpenGLBinaries();
 		//CreateProgram();

@@ -7,43 +7,6 @@
 
 
 namespace Aho {
-	std::string vertexSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 1) in vec3 a_Normal;
-
-			out vec3 v_Position;
-			out vec3 v_Normal;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Model; // TODO
-			
-			void main()
-			{
-				v_Position = (u_Model * vec4(a_Position, 1.0)).xyz;
-				gl_Position = u_ViewProjection * vec4(v_Position, 1.0);
-				v_Normal = a_Normal;
-			}
-		)";
-
-	std::string fragmentSrc = R"(
-			#version 330 core
-			
-			layout(location = 0) out vec4 color;
-
-			in vec3 v_Position;
-			in vec3 v_Normal;
-
-			uniform vec4 u_color;
-
-			void main()
-			{
-				//color = vec4(v_Position * 0.5 + 0.5, 1.0);
-				//color = vec4(1.0, 0.0, 0.0, 0.0);
-				color = u_color;
-			}
-		)";
 	AhoEditorLayer::AhoEditorLayer() {
 		m_Color = glm::vec4(1.0f);
 	}
@@ -54,7 +17,6 @@ namespace Aho {
 		m_ActiveScene = std::make_shared<Scene>();
 		
 		// Temporary init shader here
-		//m_Shader = Shader::Create("temp", vertexSrc, fragmentSrc);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
 		AHO_TRACE(path);
@@ -151,6 +113,11 @@ namespace Aho {
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<TransformComponent>();
 		m_CameraEntity.AddComponent<CameraComponent>(m_Camera, true);
+
+		// temporary
+		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		m_Test = m_ActiveScene->CreateEntity("Sponza");
+		m_Test.AddComponent<MeshesComponent>(filePath);
 	}
 
 	void AhoEditorLayer::OnDetach() {

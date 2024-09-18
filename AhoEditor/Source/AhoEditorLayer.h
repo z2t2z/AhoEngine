@@ -32,6 +32,7 @@ namespace Aho {
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;
 
+
 		Entity m_Test;
 		Entity m_CameraEntity;
 		Entity m_Cube;
@@ -50,7 +51,7 @@ namespace Aho {
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
-		glm::vec2 m_ViewportBounds[2];
+		//glm::vec2 m_ViewportBounds[2];
 
 		glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 

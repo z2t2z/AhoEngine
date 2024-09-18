@@ -42,10 +42,14 @@ namespace Aho {
 
 		Renderer::BeginScene(camera, *transform, color);
 		{
-			auto view = m_Registry.group<MeshComponent, TransformComponent>();
+			//auto view = m_Registry.group<MeshComponent, TransformComponent>();
+			auto view = m_Registry.view<MeshesComponent>();
 			for (const auto& e : view) {
-				auto& mc = view.get<MeshComponent>(e);
-				Renderer::Submit(mc.vertexArray);
+				auto& mc = view.get<MeshesComponent>(e);
+				//Renderer::Submit(mc.model);
+				for (auto e : mc.model) {
+					Renderer::Submit(e);
+				}
 			}
 		}
 		Renderer::EndScene();

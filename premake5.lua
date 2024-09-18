@@ -17,7 +17,7 @@ IncludeDir["GLFW"] = "AhoEngine/Vendor/GLFW/include"
 IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
-IncludeDir["Assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
+IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
@@ -58,14 +58,14 @@ project "AhoEngine"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.Assimp}"
+        "%{IncludeDir.assimp}"
     }
 
     links {
         "GLFW",
         "Glad",
         "ImGui",
-        "Assimp",
+        "assimp",
         "opengl32.lib"
     }
 
@@ -117,7 +117,7 @@ project "AhoEditor"
         "AhoEngine/Source",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.Assimp}",
+        "%{IncludeDir.assimp}",
     }
 
     links {
@@ -148,52 +148,53 @@ project "AhoEditor"
         optimize "on"
 
 
-        project "Sandbox"
-        location "Sandbox"
-        kind "ConsoleApp"
-        language "C++"
-        cppdialect "C++20"
-        staticruntime "on"
-    
-        targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-        objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-    
-        files {
-            "%{prj.name}/Source/**.h",
-            "%{prj.name}/Source/**.cpp"
+project "Sandbox"
+    location "Sandbox"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "on"
+
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    files {
+        "%{prj.name}/Source/**.h",
+        "%{prj.name}/Source/**.cpp"
+    }
+
+    includedirs {
+        "%{IncludeDir.ImGui}",
+        "AhoEngine/Vendor/spdlog/include",
+        "AhoEngine/Source",
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.assimp}",
+    }
+
+    links {
+        "AhoEngine"
+    }
+
+    filter "system:windows" 
+        systemversion "latest"
+
+        defines {
+            "AHO_PLATFORM_WINDOWS",            
         }
+
+    filter "configurations:Debug"
+        defines "AHO_DEBUG"
+        runtime "Debug"
+        buildoptions "/MDd"
+        symbols "On"
     
-        includedirs {
-            "%{IncludeDir.ImGui}",
-            "AhoEngine/Vendor/spdlog/include",
-            "AhoEngine/Source",
-            "%{IncludeDir.glm}",
-            "%{IncludeDir.entt}",
-        }
-    
-        links {
-            "AhoEngine"
-        }
-    
-        filter "system:windows" 
-            systemversion "latest"
-    
-            defines {
-                "AHO_PLATFORM_WINDOWS",            
-            }
-    
-        filter "configurations:Debug"
-            defines "AHO_DEBUG"
-            runtime "Debug"
-            buildoptions "/MDd"
-            symbols "On"
-        
-        filter "configurations:Release"
-            defines "AHO_RELEASE"
-            runtime "Release"
-            symbols "on"
-    
-        filter "configurations:Dist"
-            defines "AHO_DIST"
-            runtime "Release"
-            optimize "on"        
+    filter "configurations:Release"
+        defines "AHO_RELEASE"
+        runtime "Release"
+        symbols "on"
+
+    filter "configurations:Dist"
+        defines "AHO_DIST"
+        runtime "Release"
+        optimize "on"        

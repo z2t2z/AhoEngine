@@ -22,6 +22,9 @@
     <Filter Include="Source\Core\Layer">
       <UniqueIdentifier>{BA6CF076-2683-EE0C-6FFA-792EDB4FBF94}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Core\Model">
+      <UniqueIdentifier>{2ED90977-9AEF-070D-E366-932E4FBCD894}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Core\Renderer">
       <UniqueIdentifier>{D4D44230-C063-CCF9-6982-E0F455F0DC9F}</UniqueIdentifier>
     </Filter>
@@ -116,6 +119,9 @@
     </ClInclude>
     <ClInclude Include="Source\Core\Layer\LayerStack.h">
       <Filter>Source\Core\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Model\Model.h">
+      <Filter>Source\Core\Model</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Renderer\Buffer.h">
       <Filter>Source\Core\Renderer</Filter>
@@ -1450,6 +1456,9 @@
     </ClCompile>
     <ClCompile Include="Source\Core\Layer\LayerStack.cpp">
       <Filter>Source\Core\Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Model\Model.cpp">
+      <Filter>Source\Core\Model</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Renderer\Buffer.cpp">
       <Filter>Source\Core\Renderer</Filter>

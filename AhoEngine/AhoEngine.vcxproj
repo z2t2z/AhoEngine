@@ -156,6 +156,7 @@
     <ClInclude Include="Source\Core\Input\MouseButtonCodes.h" />
     <ClInclude Include="Source\Core\Layer\Layer.h" />
     <ClInclude Include="Source\Core\Layer\LayerStack.h" />
+    <ClInclude Include="Source\Core\Model\Model.h" />
     <ClInclude Include="Source\Core\Renderer\Buffer.h" />
     <ClInclude Include="Source\Core\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Core\Renderer\GraphicsContext.h" />
@@ -604,6 +605,7 @@
     <ClCompile Include="Source\Core\Gui\ImGuiLayer.cpp" />
     <ClCompile Include="Source\Core\Layer\Layer.cpp" />
     <ClCompile Include="Source\Core\Layer\LayerStack.cpp" />
+    <ClCompile Include="Source\Core\Model\Model.cpp" />
     <ClCompile Include="Source\Core\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Core\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Core\Renderer\RenderCommand.cpp" />

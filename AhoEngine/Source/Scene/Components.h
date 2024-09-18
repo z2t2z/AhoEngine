@@ -2,6 +2,8 @@
 
 #include "Core/Camera/Camera.h"
 
+#include "Core/Model/Model.h"
+
 #include <string>
 
 #include <glm/glm.hpp>
@@ -53,6 +55,16 @@ namespace Aho{
 		MeshComponent(std::shared_ptr<VertexArray>& _vertexArray)
 			: vertexArray(_vertexArray) {}
 		MeshComponent(const MeshComponent&) = default;
+	};
+
+	struct MeshesComponent {
+		Model model;
+
+		MeshesComponent() = default;
+		MeshesComponent(const std::string& path) 
+			: model(path) {
+		}
+		MeshesComponent(const MeshesComponent&) = default;
 	};
 
 	// Temporary, think about how to design light class
