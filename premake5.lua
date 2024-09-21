@@ -18,6 +18,7 @@ IncludeDir["Glad"] = "AhoEngine/Vendor/Glad/include"
 IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
 IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
+IncludeDir["stb_image"] = "AhoEngine/Vendor/stb_image"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
@@ -43,7 +44,9 @@ project "AhoEngine"
         "%{prj.name}/Source/**.h",
         "%{prj.name}/Source/**.cpp",
         "%{prj.name}/Vendor/glm/glm/**.inl",
-        "%{prj.name}/Vendor/glm/glm/**.hpp"
+        "%{prj.name}/Vendor/glm/glm/**.hpp",
+        "%{prj.name}/Vendor/stb_image/**.h",
+        "%{prj.name}/Vendor/stb_image/**.cpp"
     }
 	
     defines {
@@ -58,7 +61,9 @@ project "AhoEngine"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.assimp}"
+        "%{IncludeDir.assimp}",
+        "%{IncludeDir.stb_image}",
+        "AhoEditor/Source/Camera"
     }
 
     links {

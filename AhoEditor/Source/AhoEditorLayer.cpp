@@ -1,5 +1,7 @@
 #include "AhoEditorLayer.h"
 
+#include "Camera/EditorCamera.h"
+
 #include <filesystem>
 
 #include <imgui.h>
@@ -19,7 +21,7 @@ namespace Aho {
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
-		AHO_TRACE(path);
+		//AHO_TRACE(path);
 		m_Shader = Shader::Create(path);
 
 		Renderer::Init(m_Shader);
@@ -109,7 +111,7 @@ namespace Aho {
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 		
-		m_Camera = new Camera();
+		m_Camera = new EditorCamera();
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
 		m_CameraEntity.AddComponent<TransformComponent>();
 		m_CameraEntity.AddComponent<CameraComponent>(m_Camera, true);
@@ -121,14 +123,15 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnDetach() {
+
 	}
 
-	void AhoEditorLayer::OnUpdate() {
+	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_Framebuffer->Bind();
 
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
-		m_ActiveScene->OnUpdateEditor(m_Camera, m_Shader, m_Color);
+		m_ActiveScene->OnUpdateEditor(m_Shader);
 
 		m_Framebuffer->Unbind();
 	}
@@ -225,6 +228,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
+
 	}
 
 	bool AhoEditorLayer::OnKeyPressed(KeyPressedEvent& e) {

@@ -12,8 +12,8 @@ namespace Aho {
 	class Renderer {
 	public:
 		static void Init(std::shared_ptr<Shader>& shader);
-		static void BeginScene(const Camera* camera, const glm::mat4& transform);
-		static void BeginScene(const Camera* camera, const glm::mat4& transform, glm::vec4& color);
+		static void BeginScene(std::shared_ptr<Camera>& camera, const glm::mat4& transform);
+		static void BeginScene(std::shared_ptr<Camera>& camera);
 		static void EndScene();
 
 		static void Submit(const std::shared_ptr<VertexArray>& vertexArray);

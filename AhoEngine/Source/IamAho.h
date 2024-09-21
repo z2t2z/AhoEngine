@@ -18,6 +18,8 @@
 #include "Core/Renderer/RendererAPI.h"
 #include "Core/Renderer/RenderCommand.h"
 
+#include "Core/Camera/Camera.h"
+
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"

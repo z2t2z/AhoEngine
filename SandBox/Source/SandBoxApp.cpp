@@ -7,7 +7,7 @@ class ExampleLayer : public Aho::Layer {
 public:
 	ExampleLayer() : Layer("Example Layer") {}
 
-	void OnUpdate() override {
+	void OnUpdate(float deltaTime) override {
 		AHO_INFO("Example Layer Update");
 	}
 

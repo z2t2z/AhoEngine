@@ -7,13 +7,7 @@
 
 
 namespace Aho {
-	Scene::Scene() {
-
-	}
-
-	Scene::~Scene() {
-
-	}
+	Scene::Scene(CameraManager& cameraManager) : m_CameraManager(cameraManager) {}
 
 	Entity Scene::CreateEntity(const std::string& name) {
 		Entity entity { m_Registry.create(), this };
@@ -23,40 +17,24 @@ namespace Aho {
 	}
 
 	
-	void Scene::OnUpdateEditor(Camera* camera, std::shared_ptr<Shader>& shader, glm::vec4& color) {
-		const auto& view = m_Registry.view<CameraComponent, TransformComponent>();
-		glm::mat4* transform = nullptr;
-		Camera* mainCamera = nullptr;
-		for (const auto& e : view) {
-			auto cc = view.get<CameraComponent>(e);
-			if (cc.Primary) {
-				mainCamera = cc.camera;
-				auto tct = view.get<TransformComponent>(e).GetTransform();
-				transform = &tct;
-				break;
-			}
-		}
-		AHO_ASSERT(transform != nullptr, "Main camera does not exist!");
-		assert(mainCamera != nullptr);
-		auto mat = *transform;
+	void Scene::OnUpdateRuntime(std::shared_ptr<Shader>& shader) {
+		// TODO
+	}
 
-		Renderer::BeginScene(camera, *transform, color);
-		{
-			//auto view = m_Registry.group<MeshComponent, TransformComponent>();
-			auto view = m_Registry.view<MeshesComponent>();
-			for (const auto& e : view) {
-				auto& mc = view.get<MeshesComponent>(e);
-				//Renderer::Submit(mc.model);
-				for (auto e : mc.model) {
-					Renderer::Submit(e);
-				}
+	void Scene::OnUpdateEditor(std::shared_ptr<Shader>& shader) {
+		RenderScene(shader);
+	}
+
+	void Scene::RenderScene(std::shared_ptr<Shader>& shader) {
+		auto camera = m_CameraManager.GetCurrentCamera();
+		Renderer::BeginScene(camera);
+		auto view = m_Registry.view<MeshesComponent>();
+		for (const auto& e : view) {
+			auto& mc = view.get<MeshesComponent>(e);
+			for (const auto& e : mc.model) {
+				Renderer::Submit(e);
 			}
 		}
 		Renderer::EndScene();
-	}
-
-	void Scene::RenderScene(Camera* camera, std::shared_ptr<Shader>& shader) {
-
-
 	}
 }

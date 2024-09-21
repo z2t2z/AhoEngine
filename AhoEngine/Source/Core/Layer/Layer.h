@@ -5,12 +5,6 @@
 
 #include "Core/Renderer/Framebuffer.h"
 
-/*
-	Layer类代表游戏引擎中的一个层。每个层可以看作是渲染、处理事件或更新逻辑的一部分。
-	例如，在游戏中，可能会有一个UI层、一个游戏逻辑层、一个背景层等。
-	通过这种方式，不同的功能模块可以分离成不同的层次，更加便于管理和调试。
-*/
-
 namespace Aho {
 
 	class AHO_API Layer {
@@ -20,7 +14,7 @@ namespace Aho {
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
 

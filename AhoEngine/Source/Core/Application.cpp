@@ -7,6 +7,7 @@
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
 
+#include <GLFW/glfw3.h>
 
 namespace Aho {
 
@@ -27,11 +28,13 @@ namespace Aho {
 	}
 
 	void Application::Run() {
-
 		while (m_Running) {
+			float currTime = (float)glfwGetTime();
+			float deltaTime = currTime - m_LastFrameTime;
+			m_LastFrameTime = currTime;
 
 			for (auto layer : m_LayerStack) {
-				layer->OnUpdate();
+				layer->OnUpdate(deltaTime);
 			}
 			
 			// Will be done on the render thread in the future

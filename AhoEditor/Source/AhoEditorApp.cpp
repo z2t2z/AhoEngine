@@ -4,25 +4,21 @@
 #include "Core/EntryPoint.h"
 
 namespace Aho {
+	class AhoEditor : public Application {
+	public:
+		AhoEditor() {
+			PushLayer(new AhoEditorLayer());
+		}
 
-}
+		~AhoEditor() {
 
-class AhoEditor : public Aho::Application {
-public:
+		}
 
-	AhoEditor() {
-		PushLayer(new Aho::AhoEditorLayer());
+	private:
+
+	};
+
+	Application* CreateApplication() {
+		return new AhoEditor();
 	}
-
-	~AhoEditor() {
-
-	}
-
-private:
-
-};
-
-
-Aho::Application* Aho::CreateApplication() {
-	return new AhoEditor();
 }

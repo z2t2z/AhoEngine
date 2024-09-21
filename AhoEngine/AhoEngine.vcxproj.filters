@@ -70,6 +70,9 @@
     <Filter Include="Vendor\glm\glm\gtx">
       <UniqueIdentifier>{9362E3A8-7F46-A4FE-E8A6-9E51D4A98E80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor\stb_image">
+      <UniqueIdentifier>{EDE315D3-D9DC-3425-020F-1AAAEE661431}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h">
@@ -79,6 +82,12 @@
       <Filter>Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Camera\Camera.h">
+      <Filter>Source\Core\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Camera\CameraManager.h">
+      <Filter>Source\Core\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Camera\RuntimeCamera.h">
       <Filter>Source\Core\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Core.h">
@@ -132,6 +141,9 @@
     <ClInclude Include="Source\Core\Renderer\GraphicsContext.h">
       <Filter>Source\Core\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Renderer\Material.h">
+      <Filter>Source\Core\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Core\Renderer\RenderCommand.h">
       <Filter>Source\Core\Renderer</Filter>
     </ClInclude>
@@ -142,6 +154,9 @@
       <Filter>Source\Core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Renderer\Shader.h">
+      <Filter>Source\Core\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Renderer\Texture.h">
       <Filter>Source\Core\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Renderer\VertexArrayr.h">
@@ -169,6 +184,9 @@
       <Filter>Source\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Platform\OpenGL\OpenGLShader.h">
+      <Filter>Source\Platform\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Platform\OpenGL\OpenGLTexture.h">
       <Filter>Source\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Platform\OpenGL\OpenGLVertexArray.h">
@@ -1434,6 +1452,9 @@
     <ClInclude Include="Vendor\glm\glm\vector_relational.hpp">
       <Filter>Vendor\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="Vendor\stb_image\stb_image.h">
+      <Filter>Vendor\stb_image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1466,6 +1487,9 @@
     <ClCompile Include="Source\Core\Renderer\Framebuffer.cpp">
       <Filter>Source\Core\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Core\Renderer\Material.cpp">
+      <Filter>Source\Core\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Core\Renderer\RenderCommand.cpp">
       <Filter>Source\Core\Renderer</Filter>
     </ClCompile>
@@ -1476,6 +1500,9 @@
       <Filter>Source\Core\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Renderer\Shader.cpp">
+      <Filter>Source\Core\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Renderer\Texture.cpp">
       <Filter>Source\Core\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Renderer\VertexArrayr.cpp">
@@ -1499,6 +1526,9 @@
     <ClCompile Include="Source\Platform\OpenGL\OpenGLShader.cpp">
       <Filter>Source\Platform\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Platform\OpenGL\OpenGLTexture.cpp">
+      <Filter>Source\Platform\OpenGL</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Platform\OpenGL\OpenGLVertexArray.cpp">
       <Filter>Source\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1513,6 +1543,9 @@
     </ClCompile>
     <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Source\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Vendor\stb_image\stb_image.cpp">
+      <Filter>Vendor\stb_image</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

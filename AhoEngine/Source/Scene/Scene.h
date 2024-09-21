@@ -2,7 +2,7 @@
 
 #include "entt.hpp"
 
-#include "Core/Camera/Camera.h"
+#include "Core/Camera/CameraManager.h"
 #include "Core/Renderer/Shader.h"
 
 namespace Aho {
@@ -10,16 +10,18 @@ namespace Aho {
 
 	class AHO_API Scene {
 	public:
-		Scene();
-		~Scene();
+		Scene(CameraManager& cameraManager);
+		~Scene() = default;
 
 		Entity CreateEntity(const std::string& name = std::string());
 		
-		void OnUpdateEditor(Camera* camera, std::shared_ptr<Shader>& shader, glm::vec4& color);
+		void OnUpdateRuntime(std::shared_ptr<Shader>& shader);
+		void OnUpdateEditor(std::shared_ptr<Shader>& shader);
 
-		void RenderScene(Camera* camera, std::shared_ptr<Shader>& shader);
+		void RenderScene(std::shared_ptr<Shader>& shader);
 
 	private:
+		CameraManager& m_CameraManager;
 		entt::registry m_Registry;
 		friend class Entity;
 
