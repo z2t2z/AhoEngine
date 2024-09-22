@@ -17,8 +17,8 @@
 #include "Core/Renderer/VertexArrayr.h"
 #include "Core/Renderer/RendererAPI.h"
 #include "Core/Renderer/RenderCommand.h"
-
 #include "Core/Camera/Camera.h"
+#include "Core/Camera/CameraManager.h"
 
 #include "Scene/Components.h"
 #include "Scene/Entity.h"

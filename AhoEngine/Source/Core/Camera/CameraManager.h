@@ -14,43 +14,24 @@ namespace Aho {
 
     class CameraManager {
     public:
-        CameraManager(float editorFOV, float gameFOV, float aspectRatio, float nearPlane, float farPlane)
-            : m_CurrentMode(CameraMode::Editor),
-            m_EditorCamera(std::make_shared<EditorCamera>(editorFOV, aspectRatio, nearPlane, farPlane)),
-            m_RuntimeCamera(std::make_shared<RuntimeCamera>(gameFOV, aspectRatio, nearPlane, farPlane)) {
+        CameraManager() {
+            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.01f, 1000.0f);
+            m_Cameras.push_back(cam);
         }
+        ~CameraManager() = default;
 
-        void SetCameraMode(CameraMode mode) {
-            m_CurrentMode = mode;
-        }
-
-        CameraMode GetCameraMode() const {
-            return m_CurrentMode;
-        }
-
-        std::shared_ptr<Camera> GetCurrentCamera() const {
-            switch (m_CurrentMode) {
-                case CameraMode::Editor:
-                    return m_EditorCamera;
-                case CameraMode::Runtime:
-                    return m_RuntimeCamera;
-            }
-        }
-
+        int AddCamera(std::shared_ptr<Camera> cam) { m_Cameras.push_back(cam); return m_Cameras.size(); }
+        
         void Update(float deltaTime) {
-            switch (m_CurrentMode) {
-            case CameraMode::Editor:
-                m_EditorCamera->Update(deltaTime);
-                break;
-            case CameraMode::Runtime:
-                m_RuntimeCamera->Update(deltaTime);
-                break;
+            for (auto& cam : m_Cameras) {
+                cam->Update(deltaTime);
             }
         }
+
+        std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }
+        //std::shared_ptr<Camera> GetMainRuntimeCamera();
 
     private:
-        CameraMode m_CurrentMode = Editor;
-        std::shared_ptr<EditorCamera> m_EditorCamera;
-        std::shared_ptr<RuntimeCamera> m_RuntimeCamera;
+        std::vector<std::shared_ptr<Camera>> m_Cameras;
     };
 } // namespace Aho

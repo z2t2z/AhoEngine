@@ -33,11 +33,11 @@ namespace Aho {
 			float deltaTime = currTime - m_LastFrameTime;
 			m_LastFrameTime = currTime;
 
+			// Will be done on the render thread in the future
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);
 			}
 			
-			// Will be done on the render thread in the future
 			m_ImGuiLayer->Begin();
 			for (auto layer : m_LayerStack) {
 				layer->OnImGuiRender();

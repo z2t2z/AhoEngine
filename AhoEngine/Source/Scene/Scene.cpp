@@ -7,8 +7,6 @@
 
 
 namespace Aho {
-	Scene::Scene(CameraManager& cameraManager) : m_CameraManager(cameraManager) {}
-
 	Entity Scene::CreateEntity(const std::string& name) {
 		Entity entity { m_Registry.create(), this };
 		auto& tag = entity.AddComponent<TagComponent>();
@@ -26,7 +24,7 @@ namespace Aho {
 	}
 
 	void Scene::RenderScene(std::shared_ptr<Shader>& shader) {
-		auto camera = m_CameraManager.GetCurrentCamera();
+		auto camera = m_CameraManager->GetMainEditorCamera();
 		Renderer::BeginScene(camera);
 		auto view = m_Registry.view<MeshesComponent>();
 		for (const auto& e : view) {

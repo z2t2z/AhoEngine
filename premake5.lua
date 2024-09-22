@@ -63,7 +63,6 @@ project "AhoEngine"
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.stb_image}",
-        "AhoEditor/Source/Camera"
     }
 
     links {
@@ -113,10 +112,13 @@ project "AhoEditor"
 
     files {
         "%{prj.name}/Source/**.h",
-        "%{prj.name}/Source/**.cpp"
+        "%{prj.name}/Source/**.cpp",
+        "%{prj.name}/Source/Camera/**.h",
+        "%{prj.name}/Source/Camera/**.cpp",
     }
 
     includedirs {
+        "%{prj.name}/Source",
         "%{IncludeDir.ImGui}",
         "AhoEngine/Vendor/spdlog/include",
         "AhoEngine/Source",

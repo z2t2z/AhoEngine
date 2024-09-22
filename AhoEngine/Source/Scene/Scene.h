@@ -2,15 +2,17 @@
 
 #include "entt.hpp"
 
-#include "Core/Camera/CameraManager.h"
 #include "Core/Renderer/Shader.h"
+#include "Core/Camera/CameraManager.h"
+#include <memory>
 
 namespace Aho {
 	class Entity;
 
-	class AHO_API Scene {
+	class Scene {
 	public:
-		Scene(CameraManager& cameraManager);
+		Scene(std::unique_ptr<CameraManager> cameraManager) 
+			: m_CameraManager(std::move(cameraManager)) {}
 		~Scene() = default;
 
 		Entity CreateEntity(const std::string& name = std::string());
@@ -21,11 +23,8 @@ namespace Aho {
 		void RenderScene(std::shared_ptr<Shader>& shader);
 
 	private:
-		CameraManager& m_CameraManager;
-		entt::registry m_Registry;
 		friend class Entity;
-
+		std::unique_ptr<CameraManager> m_CameraManager;
+		entt::registry m_Registry;
 	};
-
-
 }

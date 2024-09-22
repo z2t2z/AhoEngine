@@ -1,6 +1,7 @@
 #pragma once
 
-#include "IamAho.h"
+#include "Core/Camera/Camera.h"
+#include <glm/glm.hpp>
 
 namespace Aho {
     class EditorCamera : public Camera {
@@ -28,8 +29,8 @@ namespace Aho {
         glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
         glm::vec3 m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
-        //float m_Yaw;
-        //float m_Pitch;
+        float m_Yaw;
+        float m_Pitch;
         float m_Fov;
         float m_AspectRatio;
         float m_NearPlane;

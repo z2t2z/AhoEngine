@@ -10,7 +10,6 @@
 
 
 namespace Aho {
-
 	class AHO_API Application {
 	public:
 		Application();
@@ -45,5 +44,5 @@ namespace Aho {
 	// To be defined in the Client
 	Application* CreateApplication();
 
-} // Namespace Aho
+} // namespace Aho
 

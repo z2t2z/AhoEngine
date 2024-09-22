@@ -1,3 +1,5 @@
+#include "Ahopch.h"
+#include "Camera.h"
 #include "EditorCamera.h"
 
 #include <glm/glm.hpp>

@@ -1,7 +1,6 @@
+#include "IamAho.h"
+
 #include "AhoEditorLayer.h"
-
-#include "Camera/EditorCamera.h"
-
 #include <filesystem>
 
 #include <imgui.h>
@@ -16,12 +15,12 @@ namespace Aho {
 	// What if put this in the constructor?
 	void AhoEditorLayer::OnAttach() {
 		// Set the active scene
-		m_ActiveScene = std::make_shared<Scene>();
+		std::unique_ptr<CameraManager> camManager = std::make_unique<CameraManager>();
+		m_ActiveScene = std::make_shared<Scene>(std::move(camManager));
 		
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
-		//AHO_TRACE(path);
 		m_Shader = Shader::Create(path);
 
 		Renderer::Init(m_Shader);
@@ -110,11 +109,6 @@ namespace Aho {
 		m_Cube = m_ActiveScene->CreateEntity("Cube");
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
-		
-		m_Camera = new EditorCamera();
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera");
-		m_CameraEntity.AddComponent<TransformComponent>();
-		m_CameraEntity.AddComponent<CameraComponent>(m_Camera, true);
 
 		// temporary
 		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
@@ -129,8 +123,10 @@ namespace Aho {
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_Framebuffer->Bind();
 
+		// TODO : This seems should not be here
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
+
 		m_ActiveScene->OnUpdateEditor(m_Shader);
 
 		m_Framebuffer->Unbind();
@@ -207,9 +203,9 @@ namespace Aho {
 		// Editor panel
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
-		auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
-		ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -10.0f, 10.0f);
-		ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
+		//auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
+		//ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -10.0f, 10.0f);
+		//ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
 		ImGui::End();
 
 		// Viewport Window, resizeing, seems incorrect?

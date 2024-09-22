@@ -15,6 +15,9 @@ namespace Aho {
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
 		virtual void OnUpdate(float deltaTime) {}
+		// TODO:
+		// virtual void OnLogicUpdate() {}
+		// virtual void OnLogicUpdate() {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
 

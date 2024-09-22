@@ -87,6 +87,9 @@
     <ClInclude Include="Source\Core\Camera\CameraManager.h">
       <Filter>Source\Core\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Camera\EditorCamera.h">
+      <Filter>Source\Core\Camera</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Core\Camera\RuntimeCamera.h">
       <Filter>Source\Core\Camera</Filter>
     </ClInclude>
@@ -1462,6 +1465,9 @@
     </ClCompile>
     <ClCompile Include="Source\Core\Application.cpp">
       <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Camera\EditorCamera.cpp">
+      <Filter>Source\Core\Camera</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Core.cpp">
       <Filter>Source\Core</Filter>

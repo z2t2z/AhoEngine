@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Camera/Camera.h"
-
+#include "Core/Camera/RuntimeCamera.h"
 #include "Core/Model/Model.h"
 
 #include <string>
@@ -38,13 +38,13 @@ namespace Aho{
 		}
 	};
 
-	struct CameraComponent {
-		Camera* camera{ nullptr };
+	struct RuntimeCameraComponent {
+		RuntimeCamera* camera{ nullptr };
 		bool Primary{ false };
 
-		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(Camera* _camera, bool primary) : camera(_camera), Primary(primary) {}
+		RuntimeCameraComponent() = default;
+		RuntimeCameraComponent(const RuntimeCameraComponent&) = default;
+		RuntimeCameraComponent(RuntimeCamera* _camera, bool primary) : camera(_camera), Primary(primary) {}
 	};
 
 	// Temporary, consider how to design this

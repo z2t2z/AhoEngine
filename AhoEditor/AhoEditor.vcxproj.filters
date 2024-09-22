@@ -7,15 +7,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\AhoEditorLayer.h" />
-    <ClInclude Include="Source\Camera\EditorCamera.h">
-      <Filter>Camera</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AhoEditorApp.cpp" />
     <ClCompile Include="Source\AhoEditorLayer.cpp" />
-    <ClCompile Include="Source\Camera\EditorCamera.cpp">
-      <Filter>Camera</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
