@@ -111,9 +111,9 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		//std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
-		std::string filePath = "D:/tcd/Sem2/unselectedresources/58-building-luxury/building luxury/Luxurious glass building.obj";
-		m_Test = m_ActiveScene->CreateEntity("Sponza");
+		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		//std::string filePath = "D:/Projs/Piccolo/bin/asset/objects/basic/cube.obj";
+		m_Test = m_ActiveScene->CreateEntity("Cube");
 		m_Test.AddComponent<MeshesComponent>(filePath);
 	}
 
@@ -231,7 +231,6 @@ namespace Aho {
 
 	void AhoEditorLayer::OnEvent(Event& e) {
 		EventDispatcher eventDispatcher(e);
-
 	}
 
 }

@@ -96,7 +96,7 @@ namespace Aho {
 	void OpenGLFramebuffer::Invalidate() {
 		if (m_RendererID) {
 			glDeleteFramebuffers(1, &m_RendererID);
-			//glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
+			glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
 			glDeleteTextures(1, &m_ColorAttachment);
 			glDeleteTextures(1, &m_DepthAttachment);
 		}

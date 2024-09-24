@@ -27,7 +27,7 @@ namespace Aho {
 		float m_LastRenderTime = 0.0f;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
-		std::unique_ptr<EditorCamera> m_Camera;
+		//std::unique_ptr<EditorCamera> m_Camera;
 		std::shared_ptr<Scene> m_ActiveScene;
 
 	};

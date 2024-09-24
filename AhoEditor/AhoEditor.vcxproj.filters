@@ -7,13 +7,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\AhoEditorLayer.h" />
-    <ClInclude Include="Source\RayTracingLayer.h" />
-    <ClInclude Include="Source\CPURenderer.h" />
+    <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h" />
+    <ClInclude Include="Source\CPURayTracing\CPURenderer.h" />
+    <ClInclude Include="Source\CPURayTracing\CPUScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AhoEditorApp.cpp" />
     <ClCompile Include="Source\AhoEditorLayer.cpp" />
-    <ClCompile Include="Source\RayTracingLayer.cpp" />
-    <ClCompile Include="Source\CPURenderer.cpp" />
+    <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp" />
+    <ClCompile Include="Source\CPURayTracing\CPURenderer.cpp" />
   </ItemGroup>
 </Project>

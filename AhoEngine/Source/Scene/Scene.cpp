@@ -26,12 +26,13 @@ namespace Aho {
 
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
 		Renderer::BeginScene(camera);
-		auto view = m_Registry.view<MeshesComponent>();
+		auto view = m_Registry.view<MeshComponent>();
 		for (const auto& e : view) {
-			auto& mc = view.get<MeshesComponent>(e);
-			for (const auto& e : mc.model) {
-				Renderer::Submit(e);
-			}
+			auto& mc = view.get<MeshComponent>(e);
+			Renderer::Submit(mc.vertexArray);
+			//for (const auto& e : mc.model) {
+			//	Renderer::Submit(e);
+			//}
 		}
 		Renderer::EndScene();
 	}

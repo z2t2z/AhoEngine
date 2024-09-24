@@ -7,12 +7,13 @@ layout(location = 1) in vec3 a_Normal;
 out vec3 v_Position;
 out vec3 v_Normal;
 
-uniform mat4 u_ViewProjection;
+uniform mat4 u_View;                           // 视图矩阵
+uniform mat4 u_Projection;                      // 投影矩阵
 uniform mat4 u_Model; // TODO
 
 void main() {
-	v_Position = (u_Model * vec4(a_Position, 0.0)).xyz;
-	gl_Position = u_ViewProjection * vec4(v_Position, 1.0);
+	v_Position = vec3(u_Model * vec4(a_Position, 1.0));
+	gl_Position = u_Projection * u_View * vec4(v_Position, 1.0);
 	v_Normal = mat3(transpose(inverse(u_Model))) * a_Normal;
 }
 
@@ -48,6 +49,7 @@ void main() {
 	// Combination
 	vec3 result = (ambient + diffuse + specular) * u_Color;
 
-	color = vec4(norm, 1.0);
+	color = vec4(diffuse, 1.0);
+	//color = vec4(1.0, 0.0, 1.0, 1.0);
 	//color = vec4(1.0);
 }

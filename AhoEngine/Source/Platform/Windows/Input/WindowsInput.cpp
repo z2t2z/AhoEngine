@@ -15,7 +15,7 @@ namespace Aho {
 
 	bool Input::IsMouseButtonPressed(int keycode) {
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		auto state = glfwGetKey(window, keycode);
+		auto state = glfwGetMouseButton(window, keycode);
 		return state == GLFW_PRESS;
 	}
 

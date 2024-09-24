@@ -6,14 +6,16 @@
 
 namespace Aho {
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearPlane, float farPlane) 
-		  : m_Speed(10.0f),
+			: m_Speed(10.0f),
+			m_RotateSpeed(0.1f),
 			m_Fov(fov), 
 			m_AspectRatio(aspectRatio), 
 			m_NearPlane(nearPlane), 
 			m_FarPlane(farPlane),
 			m_Position{ 0.0f, 0.0f, 0.0f },
 			m_Up{ 0.0f, 1.0f, 0.0f },
-			m_Front{ 0.0f, 0.0f, -1.0f } {
+			m_Front{ 0.0f, 0.0f, -1.0f },
+			m_Right{ 1.0f, 0.0f, 0.0f } {
 		RecalculateViewMatrix();
 		RecalculateProjectionMatrix();
 	}
@@ -27,7 +29,14 @@ namespace Aho {
 	}
 	
 	void EditorCamera::Update(float deltaTime, glm::vec3& movement) {
-		m_Position += movement * m_Speed * deltaTime;
+		if (glm::length(movement) == 0) {
+			return;
+		}
+		//AHO_CORE_INFO("{}", m_AspectRatio);
+		//AHO_CORE_INFO("{}", m_Fov);
+		//AHO_CORE_INFO("{}", m_NearPlane);
+		//AHO_CORE_INFO("{}", m_FarPlane);
+		m_Position += glm::normalize(movement) * m_Speed * deltaTime;
 		RecalculateViewMatrix();
 	}
 

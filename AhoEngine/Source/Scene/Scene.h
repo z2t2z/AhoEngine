@@ -13,7 +13,7 @@ namespace Aho {
 	public:
 		Scene() = default;
 		Scene(std::shared_ptr<CameraManager> cameraManager) 
-			: m_CameraManager(std::move(cameraManager)) {}
+			: m_CameraManager(m_CameraManager) {}
 		~Scene() = default;
 
 		Entity CreateEntity(const std::string& name = std::string());

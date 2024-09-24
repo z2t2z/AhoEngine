@@ -1,6 +1,8 @@
 #pragma once
 #include <filesystem> 
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #ifdef AHO_PLATFORM_WINDOWS
 	#ifdef AHO_DYNAMIC_LINK
 		#ifdef AHO_BUILD_DLL

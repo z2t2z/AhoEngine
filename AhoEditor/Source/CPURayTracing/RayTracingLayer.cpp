@@ -9,7 +9,7 @@ namespace Aho {
 
 	void RayTracingLayer::OnAttach() {
 		AHO_TRACE("Attaching raytracing layer");
-		m_Camera = std::make_unique<EditorCamera>(45, 16.0f / 9.0f, 0.01f, 100.0f);
+		//m_Camera = std::make_unique<EditorCamera>(45, 16.0f / 9.0f, 0.01f, 100.0f);
 	}
 
 	void RayTracingLayer::OnUpdate(float deltaTime) {

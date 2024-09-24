@@ -14,6 +14,8 @@ namespace Aho {
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
 

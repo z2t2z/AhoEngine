@@ -1,9 +1,8 @@
 #pragma once
 #include "IamAho.h"
 
-#include <glm/glm.hpp>
+#include "CPUScene.h"
 #include <memory>
-
 
 namespace Aho {
 	class CPURenderer {
@@ -16,14 +15,15 @@ namespace Aho {
 		CPURenderer();
 
 		void OnResize(uint32_t width, uint32_t height);
-		//void Render(const Scene& scene, const Camera& camera);
+		void Render(const CPUScene& scene);
 
-		//std::shared_ptr<Texture2D> GetFinalImage() const { return m_FinalImage; }
+		std::shared_ptr<Texture2D> GetFinalImage() const { return m_FinalImage; }
 
 		void ResetFrameIndex() { m_FrameIndex = 1; }
 		Settings& GetSettings() { return m_Settings; }
 	private:
-		struct HitPayload {
+
+		struct HitInfo {
 			float HitDistance;
 			glm::vec3 WorldPosition;
 			glm::vec3 WorldNormal;
@@ -31,20 +31,21 @@ namespace Aho {
 			int ObjectIndex;
 		};
 
-		//glm::vec4 PerPixel(uint32_t x, uint32_t y); // RayGen
+		glm::vec4 PerPixelShading(uint32_t x, uint32_t y); // RayGen
 
-		//HitPayload TraceRay(const Ray& ray);
-		//HitPayload ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
-		//HitPayload Miss(const Ray& ray);
+		HitInfo TraceSingleRay(const Ray& ray);
+		//HitInfo ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
+		//HitInfo Miss(const Ray& ray);
 	private:
 		TextureSpecification m_TexSpec;
-		//std::shared_ptr<Texture2D> m_FinalImage;
+		std::shared_ptr<Texture2D> m_FinalImage;
 		Settings m_Settings;
 
-		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter;
+		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter; // multi-threading
 
-		const Scene* m_ActiveScene = nullptr;
-		const Camera* m_ActiveCamera = nullptr;
+		const CPUScene* m_ActiveScene = nullptr;
+
+		//CameraManager m_CameraManager;
 
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;
