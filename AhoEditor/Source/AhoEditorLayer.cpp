@@ -12,11 +12,10 @@ namespace Aho {
 		m_Color = glm::vec4(1.0f);
 	}
 
-	// What if put this in the constructor?
 	void AhoEditorLayer::OnAttach() {
 		// Set the active scene
-		std::unique_ptr<CameraManager> camManager = std::make_unique<CameraManager>();
-		m_ActiveScene = std::make_shared<Scene>(std::move(camManager));
+		m_CameraManager = std::make_shared<CameraManager>();
+		m_ActiveScene = std::make_shared<Scene>();
 		
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -25,6 +24,7 @@ namespace Aho {
 
 		Renderer::Init(m_Shader);
 		m_Color = glm::vec4(0);
+
 		// Temporary setting up viewport FBO
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1280;
@@ -111,7 +111,8 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		//std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		std::string filePath = "D:/tcd/Sem2/unselectedresources/58-building-luxury/building luxury/Luxurious glass building.obj";
 		m_Test = m_ActiveScene->CreateEntity("Sponza");
 		m_Test.AddComponent<MeshesComponent>(filePath);
 	}
@@ -121,13 +122,17 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
+		m_CameraManager->Update(deltaTime);
+
+		//AHO_TRACE("{}", deltaTime);
+		m_DeltaTime = deltaTime;
 		m_Framebuffer->Bind();
 
 		// TODO : This seems should not be here
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
 
-		m_ActiveScene->OnUpdateEditor(m_Shader);
+		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
 
 		m_Framebuffer->Unbind();
 	}
@@ -214,8 +219,8 @@ namespace Aho {
 		auto [width, height] = ImGui::GetContentRegionAvail();
 		auto spec = m_Framebuffer->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
-			AHO_WARN("Resizeing viewport to: {0} {1}", width, height);
 			m_Framebuffer->Resize(width, height);
+			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.0001f, 10000.0f);
 		}
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
@@ -223,12 +228,10 @@ namespace Aho {
 		ImGui::End();
 	}
 
+
 	void AhoEditorLayer::OnEvent(Event& e) {
+		EventDispatcher eventDispatcher(e);
 
-	}
-
-	bool AhoEditorLayer::OnKeyPressed(KeyPressedEvent& e) {
-		return false;
 	}
 
 }

@@ -138,7 +138,7 @@ namespace Aho {
 			AHO_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;
 		}
-		AHO_CORE_TRACE("Resizeing: {0}, {1}", width, height);
+		//AHO_CORE_TRACE("Resizeing: {0}, {1}", width, height);
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 
@@ -162,6 +162,5 @@ namespace Aho {
 		glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
 			Utils::HazelFBTextureFormatToGL(spec.TextureFormat), GL_INT, &value);
 	}
-
 
 }

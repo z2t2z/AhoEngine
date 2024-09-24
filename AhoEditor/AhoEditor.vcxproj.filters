@@ -7,9 +7,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\AhoEditorLayer.h" />
+    <ClInclude Include="Source\RayTracingLayer.h" />
+    <ClInclude Include="Source\CPURenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AhoEditorApp.cpp" />
     <ClCompile Include="Source\AhoEditorLayer.cpp" />
+    <ClCompile Include="Source\RayTracingLayer.cpp" />
+    <ClCompile Include="Source\CPURenderer.cpp" />
   </ItemGroup>
 </Project>

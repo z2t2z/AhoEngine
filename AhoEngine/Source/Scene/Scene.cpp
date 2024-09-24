@@ -15,16 +15,16 @@ namespace Aho {
 	}
 
 	
-	void Scene::OnUpdateRuntime(std::shared_ptr<Shader>& shader) {
+	void Scene::OnUpdateRuntime(std::shared_ptr<Shader>& shader, float deltaTime) {
 		// TODO
 	}
 
-	void Scene::OnUpdateEditor(std::shared_ptr<Shader>& shader) {
-		RenderScene(shader);
+	void Scene::OnUpdateEditor(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader, float deltaTime) {
+		//m_CameraManager->Update(deltaTime);
+		RenderScene(camera, shader);
 	}
 
-	void Scene::RenderScene(std::shared_ptr<Shader>& shader) {
-		auto camera = m_CameraManager->GetMainEditorCamera();
+	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
 		Renderer::BeginScene(camera);
 		auto view = m_Registry.view<MeshesComponent>();
 		for (const auto& e : view) {

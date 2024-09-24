@@ -27,8 +27,12 @@ namespace Aho {
 		virtual const glm::mat4& GetView() const = 0;
 		virtual void SetProjection(const glm::mat4& projection) = 0;
 		virtual void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) = 0;
-		virtual void Update(float deltaTime) = 0;
-		//static Create();
+		virtual void Update(float deltaTime, glm::vec3& movement) = 0;
+
+		virtual void MoveForward(float deltaTime)	= 0;
+		virtual void MoveBackward(float deltaTime)	= 0;
+		virtual void MoveLeft(float deltaTime)		= 0;
+		virtual void MoveRight(float deltaTime)		= 0;
 	};
 	
 

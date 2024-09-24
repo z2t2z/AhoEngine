@@ -14,7 +14,7 @@ namespace Aho {
 
         inline void SetProjection(const glm::mat4& projection) override { m_ProjectionMatrix = projection; }
         void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) override {}
-        void Update(float deltaTime) override {}
+        void Update(float deltaTime, glm::vec3& movement) override {}
 
     private:
         void RecalculateViewMatrix() {}

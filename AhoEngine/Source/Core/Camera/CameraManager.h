@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Input/Input.h"
+
 #include "Camera.h"
 #include "RuntimeCamera.h"
 #include "EditorCamera.h"
@@ -23,13 +25,24 @@ namespace Aho {
         int AddCamera(std::shared_ptr<Camera> cam) { m_Cameras.push_back(cam); return m_Cameras.size(); }
         
         void Update(float deltaTime) {
-            for (auto& cam : m_Cameras) {
-                cam->Update(deltaTime);
+            glm::vec3 movement(0.0f);
+            if (Input::IsKeyPressed(AHO_KEY_W)) {
+                movement.z += 1.0f;
             }
+            if (Input::IsKeyPressed(AHO_KEY_S)) {
+                movement.z -= 1.0f;
+            }
+            if (Input::IsKeyPressed(AHO_KEY_A)) {
+                movement.x -= 1.0f;
+            }
+            if (Input::IsKeyPressed(AHO_KEY_D)) {
+                movement.x += 1.0f;
+                
+            }
+            GetMainEditorCamera()->Update(deltaTime, movement);
         }
 
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }
-        //std::shared_ptr<Camera> GetMainRuntimeCamera();
 
     private:
         std::vector<std::shared_ptr<Camera>> m_Cameras;

@@ -27,7 +27,7 @@ namespace Aho {
 	// Temporary use for debugging
 	void Renderer::BeginScene(std::shared_ptr<Camera>& camera) {
 		s_Data.shader->Bind();
-		s_Data.shader->SetMat4("u_ViewProjection", camera->GetProjection());
+		s_Data.shader->SetMat4("u_ViewProjection", camera->GetView() * camera->GetProjection());
 		s_Data.shader->SetVec3("u_ViewPosition", camera->GetPosition());
 		s_Data.shader->SetVec3("u_LightPosition", glm::vec3(0.0f, 0.0, 0.0f));
 		s_Data.shader->SetVec3("u_Color", glm::vec3(1.0f));

@@ -48,6 +48,6 @@ void main() {
 	// Combination
 	vec3 result = (ambient + diffuse + specular) * u_Color;
 
-	color = vec4(result, 1.0);
+	color = vec4(norm, 1.0);
 	//color = vec4(1.0);
 }

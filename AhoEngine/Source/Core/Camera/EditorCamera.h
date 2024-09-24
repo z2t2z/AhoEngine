@@ -16,7 +16,13 @@ namespace Aho {
 
         inline void SetProjection(const glm::mat4& projection) override { m_ProjectionMatrix = projection; }
         void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) override;
-        void Update(float deltaTime) override;
+        void Update(float deltaTime, glm::vec3& movement) override;
+
+        void MoveForward(float deltaTime) override { m_Position += deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
+        void MoveBackward(float deltaTime) override { m_Position -= deltaTime * m_Speed * m_Front; RecalculateViewMatrix();}
+        void MoveLeft(float deltaTime) override { m_Position -= deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
+        void MoveRight(float deltaTime) override { m_Position += deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
+
 
     private:
         void RecalculateViewMatrix();
@@ -27,8 +33,10 @@ namespace Aho {
 
         glm::vec3 m_Position = glm::vec3(0.0f);
         glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 m_Right = glm::vec3(1.0f, 0.0f, 0.0f);
         glm::vec3 m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
+        float m_Speed;
         float m_Yaw;
         float m_Pitch;
         float m_Fov;

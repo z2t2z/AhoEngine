@@ -6,7 +6,8 @@
 
 namespace Aho {
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearPlane, float farPlane) 
-		  : m_Fov(fov), 
+		  : m_Speed(10.0f),
+			m_Fov(fov), 
 			m_AspectRatio(aspectRatio), 
 			m_NearPlane(nearPlane), 
 			m_FarPlane(farPlane),
@@ -25,8 +26,9 @@ namespace Aho {
 		RecalculateProjectionMatrix();
 	}
 	
-	void EditorCamera::Update(float deltaTime) {
-
+	void EditorCamera::Update(float deltaTime, glm::vec3& movement) {
+		m_Position += movement * m_Speed * deltaTime;
+		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::RecalculateViewMatrix() {
