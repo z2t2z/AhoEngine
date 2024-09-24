@@ -20,7 +20,7 @@ namespace Aho {
     class CameraManager {
     public:
         CameraManager() {
-            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.01f, 1000.0f);
+            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
             m_Cameras.push_back(cam);
         }
         ~CameraManager() = default;
@@ -33,7 +33,6 @@ namespace Aho {
             }
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
-            //AHO_TRACE("{},{}", mouseX, mouseY);
             glm::vec2 delta = 0.002f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
@@ -44,11 +43,11 @@ namespace Aho {
                 float yawDelta = delta.x * cam->GetRotationSpeed();
 
                 glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, cam->GetRight()), glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
-                //cam->SetForwardRotation(q);
+                cam->SetForwardRotation(q);
             }
 
             // Handle WASD movement
-            glm::vec3 movement(0.0f);
+            glm::vec3 movement(0.0f, 0.0f, 0.0f);
             if (Input::IsKeyPressed(AHO_KEY_W)) {
                 movement.z -= 1.0f;
             }
@@ -63,13 +62,6 @@ namespace Aho {
                 
             }
             GetMainEditorCamera()->Update(deltaTime, movement);
-
-            auto pos = GetMainEditorCamera()->GetPosition();
-            auto front = GetMainEditorCamera()->GetFront();
-            auto right = GetMainEditorCamera()->GetRight();
-            AHO_TRACE("Position: {}, {}, {}", pos.x, pos.y, pos.z);
-            AHO_TRACE("Front: {}, {}, {}", front.x, front.y, front.z);
-            AHO_TRACE("Right: {}, {}, {}", right.x, right.y, right.z);
         }
 
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }

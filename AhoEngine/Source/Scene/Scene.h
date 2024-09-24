@@ -12,8 +12,6 @@ namespace Aho {
 	class Scene {
 	public:
 		Scene() = default;
-		Scene(std::shared_ptr<CameraManager> cameraManager) 
-			: m_CameraManager(m_CameraManager) {}
 		~Scene() = default;
 
 		Entity CreateEntity(const std::string& name = std::string());
@@ -25,7 +23,6 @@ namespace Aho {
 
 	private:
 		friend class Entity;
-		std::shared_ptr<CameraManager> m_CameraManager;
 		entt::registry m_Registry;
 	};
 }

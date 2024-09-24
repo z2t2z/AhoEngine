@@ -22,11 +22,13 @@ namespace Aho {
 	class AHO_API Camera {
 	public:
 		virtual ~Camera() = default;
-		virtual const glm::vec3& GetPosition() const = 0;
-		virtual const glm::mat4& GetProjection() const = 0;
-		virtual const glm::mat4& GetView() const = 0;
-		virtual const glm::vec3& GetFront() const = 0;
-		virtual const glm::vec3& GetRight() const = 0;
+		virtual glm::vec3 GetPosition() const = 0;
+		virtual glm::mat4 GetProjection() const = 0;
+		virtual glm::mat4 GetProjectionInv() const = 0;
+		virtual glm::mat4 GetView() const = 0;
+		virtual glm::mat4 GetViewInv() const = 0;
+		virtual glm::vec3 GetFront() const = 0;
+		virtual glm::vec3 GetRight() const = 0;
 		virtual const float GetMoveSpeed() const = 0;
 		virtual const float GetRotationSpeed() const = 0;
 

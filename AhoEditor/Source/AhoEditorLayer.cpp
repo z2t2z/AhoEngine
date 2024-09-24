@@ -220,7 +220,7 @@ namespace Aho {
 		auto spec = m_Framebuffer->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
 			m_Framebuffer->Resize(width, height);
-			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.0001f, 10000.0f);
+			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();

@@ -38,14 +38,14 @@ namespace Aho{
 		}
 	};
 
-	struct RuntimeCameraComponent {
-		RuntimeCamera* camera{ nullptr };
-		bool Primary{ false };
+	//struct RuntimeCameraComponent {
+	//	RuntimeCamera* camera{ nullptr };
+	//	bool Primary{ false };
 
-		RuntimeCameraComponent() = default;
-		RuntimeCameraComponent(const RuntimeCameraComponent&) = default;
-		RuntimeCameraComponent(RuntimeCamera* _camera, bool primary) : camera(_camera), Primary(primary) {}
-	};
+	//	RuntimeCameraComponent() = default;
+	//	RuntimeCameraComponent(const RuntimeCameraComponent&) = default;
+	//	RuntimeCameraComponent(RuntimeCamera* _camera, bool primary) : camera(_camera), Primary(primary) {}
+	//};
 
 	// Temporary, consider how to design this
 	struct MeshComponent {

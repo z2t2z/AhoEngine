@@ -27,9 +27,8 @@ namespace Aho {
 	// Temporary use for debugging
 	void Renderer::BeginScene(std::shared_ptr<Camera>& camera) {
 		s_Data.shader->Bind();
-		//s_Data.shader->SetMat4("u_ViewProjection", camera->GetView() * camera->GetProjection());
 		s_Data.shader->SetMat4("u_View", camera->GetView());
-		s_Data.shader->SetMat4("u_Projection", camera->GetView());
+		s_Data.shader->SetMat4("u_Projection", camera->GetProjection());
 		s_Data.shader->SetMat4("u_Model", glm::mat4(1.0f));
 
 		s_Data.shader->SetVec3("u_ViewPosition", camera->GetPosition());
@@ -49,7 +48,7 @@ namespace Aho {
 	}
 
 	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) {
-		shader->Bind();
+		s_Data.shader->Bind();
 		vertexArray->Bind();
 		RenderCommand::DrawIndexed(vertexArray);
 	}

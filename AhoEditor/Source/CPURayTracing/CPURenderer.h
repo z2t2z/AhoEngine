@@ -3,6 +3,7 @@
 
 #include "CPUScene.h"
 #include <memory>
+#include <unordered_map>
 
 namespace Aho {
 	class CPURenderer {
@@ -15,7 +16,7 @@ namespace Aho {
 		CPURenderer();
 
 		void OnResize(uint32_t width, uint32_t height);
-		void Render(const CPUScene& scene);
+		void Render(const CPUScene& scene, const CameraManager& cameraManager);
 
 		std::shared_ptr<Texture2D> GetFinalImage() const { return m_FinalImage; }
 
@@ -32,11 +33,13 @@ namespace Aho {
 		};
 
 		glm::vec4 PerPixelShading(uint32_t x, uint32_t y); // RayGen
-
+		Ray RayCasting(uint32_t x, uint32_t y);
 		HitInfo TraceSingleRay(const Ray& ray);
-		//HitInfo ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
-		//HitInfo Miss(const Ray& ray);
+		HitInfo ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
+		HitInfo Miss(const Ray& ray);
 	private:
+		std::unordered_map<uint32_t, Ray> m_Memo;
+
 		TextureSpecification m_TexSpec;
 		std::shared_ptr<Texture2D> m_FinalImage;
 		Settings m_Settings;
@@ -45,7 +48,7 @@ namespace Aho {
 
 		const CPUScene* m_ActiveScene = nullptr;
 
-		//CameraManager m_CameraManager;
+		CameraManager m_CameraManager;
 
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;

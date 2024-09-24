@@ -15,6 +15,8 @@ namespace Aho {
 		void OnUpdate(float deltaTime) override;
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override {}
+
+		void Render();
 	private:
 		bool m_CameraControlActive = false;
 		bool OnMouseRightButtonPressed(MouseButtonPressedEvent& e) {}
@@ -23,13 +25,11 @@ namespace Aho {
 
 	private:
 		CPURenderer m_Renderer;
+		CameraManager m_CameraManager;
 
 		float m_LastRenderTime = 0.0f;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
-
-		//std::unique_ptr<EditorCamera> m_Camera;
-		std::shared_ptr<Scene> m_ActiveScene;
-
+		CPUScene m_Scene;
 	};
 
 

@@ -13,32 +13,36 @@ namespace Aho {
         EditorCamera(float fov, float aspectRatio, float nearPlane, float farPlane);
         ~EditorCamera() override = default;
 
-        const glm::vec3& GetPosition()       const override { return m_Position; }
-        const glm::mat4& GetProjection()     const override { return m_ProjectionMatrix; }
-        const glm::mat4& GetView()           const override { return m_ViewMatrix; }
-        const glm::vec3& GetFront()          const override { return m_Front; }
-        const glm::vec3& GetRight()          const override { return m_Right; }
+        glm::vec3 GetPosition()       const override { return m_Position; }
+        glm::mat4 GetProjection()     const override { return m_ProjectionMatrix; }
+        glm::mat4 GetProjectionInv()     const override { return m_ProjectionMatrixInv; }
+        glm::mat4 GetView()           const override { return m_ViewMatrix; }
+        glm::mat4 GetViewInv()           const override { return m_ViewMatrixInv; }
+        glm::vec3 GetFront()          const override { return m_Front; }
+        glm::vec3 GetRight()          const override { return m_Right; }
 
         const float GetMoveSpeed()                  const override { return m_Speed; }
         const float GetRotationSpeed()              const override { return m_RotateSpeed; }
 
         void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) override;
         void SetProjection(const glm::mat4& projection) override { m_ProjectionMatrix = projection; }
-        void SetForwardRotation (const glm::quat& q) override { m_Front = glm::rotate(q, m_Front); }
+        void SetForwardRotation(const glm::quat& q) override { m_Front = glm::rotate(q, m_Front); }
 
         void Update(float deltaTime, glm::vec3& movement) override;
 
-        void MoveForward(float deltaTime)   override { return; m_Position += deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
-        void MoveBackward(float deltaTime)  override { return; m_Position -= deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
-        void MoveLeft(float deltaTime)      override { return; m_Position -= deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
-        void MoveRight(float deltaTime)     override { return; m_Position += deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
+        void MoveForward(float deltaTime)   override { m_Position += deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
+        void MoveBackward(float deltaTime)  override { m_Position -= deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
+        void MoveLeft(float deltaTime)      override { m_Position -= deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
+        void MoveRight(float deltaTime)     override { m_Position += deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
 
     private:
         void RecalculateViewMatrix();
         void RecalculateProjectionMatrix();
 
         glm::mat4 m_ViewMatrix;
+        glm::mat4 m_ViewMatrixInv;
         glm::mat4 m_ProjectionMatrix;
+        glm::mat4 m_ProjectionMatrixInv;
 
         glm::vec3 m_Position = glm::vec3(0.0f);
         glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -51,8 +55,8 @@ namespace Aho {
         float m_Yaw;
         float m_Pitch;
         float m_AspectRatio;
-        float m_NearPlane;
-        float m_FarPlane;
+        float m_NearPlane = 0.1f;
+        float m_FarPlane = 1000.0f;
     };
 
 } // namespace Aho
