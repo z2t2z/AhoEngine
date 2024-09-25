@@ -48,22 +48,9 @@ namespace Aho {
 	}
 
 	void ImGuiLayer::OnImGuiRender() {
-		static bool show = false;
-		ImGui::ShowDemoWindow(&show);
+		//static bool show = false;
+		//ImGui::ShowDemoWindow(&show);
 	}
-
-	//void ImGuiLayer::OnImGuiRender(std::shared_ptr<Framebuffer> m_Framebuffer) {
-	//	/*static bool show = false;
-	//	ImGui::ShowDemoWindow(&show);*/
-
-	//	ImGui::Begin("Test");
-	//	ImGui::Text("Hello World");
-
-	//	uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-	//	ImGui::Image((void*)textureID, ImVec2{ 320.0f, 180.0f });
-
-	//	ImGui::End();
-	//}
 
 	void ImGuiLayer::Begin() {
 		ImGui_ImplOpenGL3_NewFrame();

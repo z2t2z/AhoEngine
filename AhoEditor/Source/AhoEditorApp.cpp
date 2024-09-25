@@ -9,6 +9,7 @@ namespace Aho {
 	public:
 		AhoEditor() {
 			PushLayer(new RayTracingLayer());
+			//PushLayer(new AhoEditorLayer());
 		}
 
 		~AhoEditor() {

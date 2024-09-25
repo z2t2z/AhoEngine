@@ -5,7 +5,6 @@
 
 namespace Aho {
 	RayTracingLayer::RayTracingLayer() {
-		//m_CameraManager;
 		Material& pinkSphere = m_Scene.Materials.emplace_back();
 		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
 		pinkSphere.Roughness = 0.0f;
@@ -47,21 +46,86 @@ namespace Aho {
 
 	void RayTracingLayer::OnAttach() {
 		AHO_TRACE("Attaching raytracing layer");
-		m_CameraManager.GetMainEditorCamera()->MoveBackward(.5f);
+		m_Scene.m_CameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 	}
 
 	void RayTracingLayer::OnUpdate(float deltaTime) {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 1.0f, 1 });
 		RenderCommand::Clear();
-		m_LastRenderTime = deltaTime;
 	}
 
 	void RayTracingLayer::OnImGuiRender() {
-		ImGui::Begin("Settings");
-		ImGui::Text("Last render: %.3fms", m_LastRenderTime);
-		if (ImGui::Button("Render")) {
-			Render();
+		{
+			static bool opt_fullscreen = true;
+			static bool opt_padding = false;
+			static bool open = true;
+			bool* p_open = &open;
+
+			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+			if (opt_fullscreen) {
+				const ImGuiViewport* viewport = ImGui::GetMainViewport();
+				ImGui::SetNextWindowPos(viewport->WorkPos);
+				ImGui::SetNextWindowSize(viewport->WorkSize);
+				ImGui::SetNextWindowViewport(viewport->ID);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+				window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+				window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+			}
+			else {
+				dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+			}
+
+			if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+				window_flags |= ImGuiWindowFlags_NoBackground;
+
+			if (!opt_padding)
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			ImGui::Begin("DockSpace Demo", p_open, window_flags);
+			if (!opt_padding)
+				ImGui::PopStyleVar();
+
+			if (opt_fullscreen)
+				ImGui::PopStyleVar(2);
+
+			// Submit the DockSpace
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+				ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+			}
+
+
+			if (ImGui::BeginMenuBar()) {
+				if (ImGui::BeginMenu("Options")) {
+					// Disabling fullscreen would allow the window to be moved to the front of other windows,
+					// which we can't undo at the moment without finer window depth/z control.
+					ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+					ImGui::MenuItem("Padding", NULL, &opt_padding);
+					ImGui::Separator();
+
+					if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
+					if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
+					if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
+					if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
+					if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
+					if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
+					ImGui::Separator();
+
+					if (ImGui::MenuItem("Exit"))
+						Application::Get().ShutDown();
+
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenuBar();
+			}
+			ImGui::End();
 		}
+
+		ImGui::Begin("Settings");
+		ImGui::Text("Last frame render time: %.3fms", m_Timer.GetElapsedTime());
 
 		ImGui::Checkbox("Accumulate", &m_Renderer.GetSettings().Accumulate);
 
@@ -119,12 +183,8 @@ namespace Aho {
 	}
 
 	void RayTracingLayer::Render() {
-		//Timer timer;
-
+		m_Timer.reset();
 		m_Renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
-		m_CameraManager.GetMainEditorCamera()->SetProjection(45.0f, (float)m_ViewportWidth / m_ViewportHeight, 0.1f, 1000.0f);
-		m_Renderer.Render(m_Scene, m_CameraManager);
-
-		//m_LastRenderTime = timer.ElapsedMillis();
+		m_Renderer.Render(m_Scene);
 	}
 } // namespace Aho

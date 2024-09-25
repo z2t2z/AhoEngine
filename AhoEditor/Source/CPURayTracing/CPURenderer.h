@@ -16,7 +16,7 @@ namespace Aho {
 		CPURenderer();
 
 		void OnResize(uint32_t width, uint32_t height);
-		void Render(const CPUScene& scene, const CameraManager& cameraManager);
+		void Render(const CPUScene& scene);
 
 		std::shared_ptr<Texture2D> GetFinalImage() const { return m_FinalImage; }
 
@@ -32,10 +32,10 @@ namespace Aho {
 			int ObjectIndex;
 		};
 
-		glm::vec4 PerPixelShading(uint32_t x, uint32_t y); // RayGen
-		Ray RayCasting(uint32_t x, uint32_t y);
-		HitInfo TraceSingleRay(const Ray& ray);
-		HitInfo ClosestHit(const Ray& ray, float hitDistance, int objectIndex);
+		glm::vec4 PerPixelShading(const CPUScene& scene, uint32_t x, uint32_t y); // RayGen
+		Ray RayCasting(const std::shared_ptr<Camera>& cam, uint32_t x, uint32_t y);
+		HitInfo TraceSingleRay(const CPUScene& scene, const Ray& ray);
+		HitInfo ClosestHit(const CPUScene& scene, const Ray& ray, float hitDistance, int objectIndex);
 		HitInfo Miss(const Ray& ray);
 	private:
 		std::unordered_map<uint32_t, Ray> m_Memo;
@@ -45,10 +45,6 @@ namespace Aho {
 		Settings m_Settings;
 
 		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter; // multi-threading
-
-		const CPUScene* m_ActiveScene = nullptr;
-
-		CameraManager m_CameraManager;
 
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;

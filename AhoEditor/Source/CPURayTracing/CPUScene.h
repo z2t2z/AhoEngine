@@ -29,5 +29,11 @@ namespace Aho {
 	struct CPUScene {
 		std::vector<Sphere> Spheres;
 		std::vector<Material> Materials;
+		CameraManager* m_CameraManager;
+
+		CPUScene() : m_CameraManager(new CameraManager()) {}
+		~CPUScene() {
+			delete m_CameraManager; 
+		}
 	};
 } // namespace Aho

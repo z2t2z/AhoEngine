@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <execution>
 
 namespace Aho {
 	namespace Utils {
@@ -24,9 +25,7 @@ namespace Aho {
 	}
 	
 	CPURenderer::CPURenderer() {
-		m_TexSpec.Width = 128;
-		m_TexSpec.Height = 96;
-		m_TexSpec.GenerateMips = false;
+		//m_TexSpec.GenerateMips = false;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
 	}
 
@@ -34,7 +33,7 @@ namespace Aho {
 		if (m_FinalImage and m_FinalImage->GetWidth() == width and m_FinalImage->GetHeight() == height) {
 			return;
 		}
-		//return;
+
 		m_TexSpec.Width = width;
 		m_TexSpec.Height = height;
 		m_TexSpec.GenerateMips = false;
@@ -45,40 +44,52 @@ namespace Aho {
 
 		delete[] m_AccumulationData;
 		m_AccumulationData = new glm::vec4[width * height];
+
+		m_ImageHorizontalIter.resize(width);
+		m_ImageVerticalIter.resize(height);
+		
+		std::iota(m_ImageHorizontalIter.begin(), m_ImageHorizontalIter.end(), 0);
+		std::iota(m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(), 0);
 	}
 
-	void CPURenderer::Render(const CPUScene& scene, const CameraManager& cameraManager) {
-		//AHO_TRACE("{}, {}", m_Memo.size(), m_FinalImage->GetWidth() * m_FinalImage->GetHeight());
-		//AHO_ASSERT(m_FinalImage->GetWidth() * m_FinalImage->GetHeight() == m_Memo.size());
-		m_ActiveScene = &scene;
-		m_CameraManager = cameraManager;
-
+	void CPURenderer::Render(const CPUScene& scene) {
 		uint32_t width = m_FinalImage->GetWidth();
 		uint32_t height = m_FinalImage->GetHeight();
-
-		//AHO_TRACE("{}, {}", width, height);
-
-		//PerPixelShading(width / 2, height / 2);
-		//return;
 
 		if (m_FrameIndex == 1) {
 			memset(m_AccumulationData, 0, width * height * sizeof(glm::vec4));
 		}
 
-		for (uint32_t x = 0; x < width; x += 1) {
-			for (uint32_t y = 0; y < height; y += 1) {
-				glm::vec4 color = PerPixelShading(x, y);
+#define MUTITHREADING 1
+#if MUTITHREADING
+		std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
+			[&](uint32_t y) {
+				std::for_each(std::execution::par, m_ImageHorizontalIter.begin(), m_ImageHorizontalIter.end(),
+					[&](uint32_t x) {
+						glm::vec4 color = PerPixelShading(scene, x, y);
+						m_AccumulationData[x + y * m_FinalImage->GetWidth()] += color;
+
+						glm::vec4 accumulatedColor = m_AccumulationData[x + y * m_FinalImage->GetWidth()];
+						accumulatedColor /= (float)m_FrameIndex;
+
+						accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+						m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
+					});
+	});
+#else
+		for (uint32_t y = 0; y < height; y += 1) {
+			for (uint32_t x = 0; x < width; x += 1) {
+				glm::vec4 color = PerPixelShading(scene, x, y);
 				m_AccumulationData[x + y * width] += color;
 
 				glm::vec4 accumulatedColor = m_AccumulationData[x + y * width];
 				accumulatedColor /= (float)m_FrameIndex;
 
 				accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
-				//m_ImageData[x + y * width] = Utils::ConvertToRGBA(glm::vec4(Utils::GenerateRandomVec3(), 1.0f));
 				m_ImageData[x + y * width] = Utils::ConvertToRGBA(accumulatedColor);
 			}
 		}
-
+#endif
 		m_FinalImage->SetData(m_ImageData, width * height * 4);
 
 		if (m_Settings.Accumulate)
@@ -87,23 +98,19 @@ namespace Aho {
 			m_FrameIndex = 1;
 	}
 
-	glm::vec4 CPURenderer::PerPixelShading(uint32_t x, uint32_t y) {
-		auto cam = m_CameraManager.GetMainEditorCamera();
-		Ray ray = RayCasting(x, y);
-
-		//AHO_INFO("{}, {}", x, y);
-		//AHO_INFO("{},{},{}", ray.Origin.x, ray.Origin.y, ray.Origin.z);
-		//AHO_INFO("{},{},{}", ray.Direction.x, ray.Direction.y, ray.Direction.z);
-		//return glm::vec4(1.0f);
+	glm::vec4 CPURenderer::PerPixelShading(const CPUScene& scene, uint32_t x, uint32_t y) {
+		auto cam = scene.m_CameraManager->GetMainEditorCamera();
+		Ray ray = RayCasting(cam, x, y);
 
 		glm::vec3 color(0.0f);
 		glm::vec3 contribution(1.0f);
 
 		float multiplier = 1.0f;
 
-		int MAX_BOUNCE = 4;
+		int MAX_BOUNCE = 2;
 		for (int i = 0; i < MAX_BOUNCE; i++) {
-			CPURenderer::HitInfo hitInfo = TraceSingleRay(ray);
+			CPURenderer::HitInfo hitInfo = TraceSingleRay(scene, ray);
+
 			if (hitInfo.HitDistance < 0.0f) {
 				glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
 				color += skyColor * multiplier;
@@ -114,8 +121,8 @@ namespace Aho {
 
 			float lightIntensity = glm::max(glm::dot(hitInfo.WorldNormal, -lightDir), 0.0f); // == cos(angle)
 
-			const Sphere& sphere = m_ActiveScene->Spheres[hitInfo.ObjectIndex];
-			const Material& material = m_ActiveScene->Materials[sphere.MaterialIndex];
+			const Sphere& sphere = scene.Spheres[hitInfo.ObjectIndex];
+			const Material& material = scene.Materials[sphere.MaterialIndex];
 
 			contribution *= material.Albedo;
 
@@ -130,15 +137,11 @@ namespace Aho {
 		return glm::vec4(color, 1.0f);
 	}
 
-	Ray CPURenderer::RayCasting(uint32_t x, uint32_t y) {
-		if (m_Memo.contains(x * 100000 + y)) {
-			return m_Memo[x * 100000 + y];
-		}
-
-		auto cam = m_CameraManager.GetMainEditorCamera();
+	// TODO: Caching the rays for every screen pixel
+	Ray CPURenderer::RayCasting(const std::shared_ptr<Camera>& cam, uint32_t x, uint32_t y) {
 		Ray ray;
 		ray.Origin = cam->GetPosition();
-
+		
 		// Image space to screen space
 		uint32_t width = m_FinalImage->GetWidth();
 		uint32_t height = m_FinalImage->GetHeight();
@@ -156,15 +159,14 @@ namespace Aho {
 		glm::vec3 ws = cam->GetViewInv() * vs;
 		ray.Direction = glm::normalize(ws);
 
-		m_Memo[x * 100000 + y] = ray;
 		return ray;
 	}
 
-	CPURenderer::HitInfo CPURenderer::TraceSingleRay(const Ray& ray) {
+	CPURenderer::HitInfo CPURenderer::TraceSingleRay(const CPUScene& scene, const Ray& ray) {
 		int closestSphere = -1;
 		float hitDistance = std::numeric_limits<float>::max();
-		for (size_t i = 0; i < m_ActiveScene->Spheres.size(); i++) {
-			const Sphere& sphere = m_ActiveScene->Spheres[i];
+		for (size_t i = 0; i < scene.Spheres.size(); i++) {
+			const Sphere& sphere = scene.Spheres[i];
 			glm::vec3 origin = ray.Origin - sphere.Position;
 
 			float a = glm::dot(ray.Direction, ray.Direction);
@@ -192,15 +194,15 @@ namespace Aho {
 			return Miss(ray);
 		}
 
-		return ClosestHit(ray, hitDistance, closestSphere);
+		return ClosestHit(scene, ray, hitDistance, closestSphere);
 	}
 
-	CPURenderer::HitInfo CPURenderer::ClosestHit(const Ray& ray, float hitDistance, int objectIndex) {
+	CPURenderer::HitInfo CPURenderer::ClosestHit(const CPUScene& scene, const Ray& ray, float hitDistance, int objectIndex) {
 		CPURenderer::HitInfo hitInfo;
 		hitInfo.HitDistance = hitDistance;
 		hitInfo.ObjectIndex = objectIndex;
 
-		const Sphere& closestSphere = m_ActiveScene->Spheres[objectIndex];
+		const Sphere& closestSphere = scene.Spheres[objectIndex];
 
 		glm::vec3 origin = ray.Origin - closestSphere.Position;
 		hitInfo.WorldPosition = origin + ray.Direction * hitDistance;

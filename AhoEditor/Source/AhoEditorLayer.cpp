@@ -213,7 +213,7 @@ namespace Aho {
 		//ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
 		ImGui::End();
 
-		// Viewport Window, resizeing, seems incorrect?
+		// Viewport Window
 		ImGui::Begin("Viewport");
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		auto [width, height] = ImGui::GetContentRegionAvail();
