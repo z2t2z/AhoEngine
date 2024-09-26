@@ -8,35 +8,23 @@
 namespace Aho {
 
 	namespace Utils {
-
 		static GLenum ShaderTypeFromString(const std::string& type) {
 			if (type == "vertex")
 				return GL_VERTEX_SHADER;
 			if (type == "fragment" || type == "pixel")
 				return GL_FRAGMENT_SHADER;
+			if (type == "compute")
+				return GL_COMPUTE_SHADER;
 
 			AHO_CORE_ASSERT(false, "Unknown shader type: " + type);
 			return 0;
 		}
-
 	} // namespace Aho::Utils
 
 
 	OpenGLShader::OpenGLShader(const std::string& filepath) : m_FilePath(filepath) {
-		//HZ_PROFILE_FUNCTION();
-
-		//Utils::CreateCacheDirectoryIfNeeded();
-
 		std::string source = ReadFile(filepath);
-		//auto shaderSources = PreProcess(source);
 		m_OpenGLSourceCode = PreProcess(source);
-		/*{
-			Timer timer;
-			CompileOrGetVulkanBinaries(shaderSources);
-			CompileOrGetOpenGLBinaries();
-			CreateProgram();
-			HZ_CORE_WARN("Shader creation took {0} ms", timer.ElapsedMillis());
-		}*/
 
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
@@ -48,14 +36,10 @@ namespace Aho {
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) {
-		//HZ_PROFILE_FUNCTION();
-
-		//std::unordered_map<GLenum, std::string> sources;
 		m_Name = name;
 		m_OpenGLSourceCode[GL_VERTEX_SHADER] = vertexSrc;
 		m_OpenGLSourceCode[GL_FRAGMENT_SHADER] = fragmentSrc;
 		CompileFromSource();
-
 	}
 
 	OpenGLShader::~OpenGLShader() {
@@ -117,88 +101,40 @@ namespace Aho {
 	}
 
 	void OpenGLShader::CompileFromSource() {
-		std::string vertexSrc = m_OpenGLSourceCode[GL_VERTEX_SHADER];
-		std::string fragmentSrc = m_OpenGLSourceCode[GL_FRAGMENT_SHADER];
-		//AHO_CORE_TRACE(vertexSrc);
-		//AHO_CORE_TRACE(fragmentSrc);
-		//CompileOrGetVulkanBinaries(sources);
-		//CompileOrGetOpenGLBinaries();
-		//CreateProgram();
-
-		/* Temporary !! */
-
-		// Create an empty vertex shader handle
-		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-		// Send the vertex shader source code to GL
-		// Note that std::string's .c_str is NULL character terminated.
-		const GLchar* source = vertexSrc.c_str();
-		glShaderSource(vertexShader, 1, &source, 0);
-
-		// Compile the vertex shader
-		glCompileShader(vertexShader);
-
-		GLint isCompiled = 0;
-		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &isCompiled);
-		if (isCompiled == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-			// The maxLength includes the NULL character
-			std::vector<GLchar> infoLog(maxLength);
-			glGetShaderInfoLog(vertexShader, maxLength, &maxLength, &infoLog[0]);
-
-			// We don't need the shader anymore.
-			glDeleteShader(vertexShader);
-
-			AHO_CORE_ERROR("{0}", infoLog.data());
-			AHO_CORE_ASSERT(false, "Vertex shader compilation failure!");
-			return;
+		bool ComputeFlag = false;
+		bool NormalFlag = false;
+		std::vector<GLuint> shaderHandles;
+		for (const auto& [shaderType, Source] : m_OpenGLSourceCode) {
+			(shaderType == GL_COMPUTE_SHADER ? ComputeFlag : NormalFlag) = true;
+			GLuint shader = glCreateShader(shaderType);
+			const GLchar* source = Source.c_str();
+			glShaderSource(shader, 1, &source, 0);
+			glCompileShader(shader);
+			GLint isCompiled = 0;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+			if (isCompiled == GL_FALSE) {
+				GLint maxLength = 0;
+				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+				// The maxLength includes the NULL character
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				// We don't need the shader anymore.
+				glDeleteShader(shader);
+				AHO_CORE_ERROR("{0}", infoLog.data());
+				AHO_CORE_ASSERT(false, "Shader compilation failure!");
+				return;
+			}
+			shaderHandles.push_back(shader);
 		}
 
-		// Create an empty fragment shader handle
-		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		AHO_CORE_ASSERT(!(ComputeFlag && NormalFlag), "Can not have normal shader and compute shader at the same time.");
 
-		// Send the fragment shader source code to GL
-		// Note that std::string's .c_str is NULL character terminated.
-		source = fragmentSrc.c_str();
-		glShaderSource(fragmentShader, 1, &source, 0);
-
-		// Compile the fragment shader
-		glCompileShader(fragmentShader);
-
-		glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &isCompiled);
-		if (isCompiled == GL_FALSE) {
-			GLint maxLength = 0;
-			glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-			// The maxLength includes the NULL character
-			std::vector<GLchar> infoLog(maxLength);
-			glGetShaderInfoLog(fragmentShader, maxLength, &maxLength, &infoLog[0]);
-
-			// We don't need the shader anymore.
-			glDeleteShader(fragmentShader);
-			// Either of them. Don't leak shaders.
-			glDeleteShader(vertexShader);
-
-			AHO_CORE_ERROR("{0}", infoLog.data());
-			AHO_CORE_ASSERT(false, "Fragment shader compilation failure!");
-			return;
-		}
-
-		// Vertex and fragment shaders are successfully compiled. 
-		// Now time to link them together into a program.
-		// Get a program object.
 		m_RendererID = glCreateProgram();
 		GLuint program = m_RendererID;
-
-		// Attach our shaders to our program
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, fragmentShader);
-
-		// Link our program
+		for (const auto& handle : shaderHandles) {
+			glAttachShader(program, handle);
+		}
 		glLinkProgram(program);
-
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
 		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
@@ -213,18 +149,18 @@ namespace Aho {
 			// We don't need the program anymore.
 			glDeleteProgram(program);
 			// Don't leak shaders either.
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
-
+			for (const auto& handle : shaderHandles) {
+				glDeleteShader(handle);
+			}
 			AHO_CORE_ERROR("{0}", infoLog.data());
 			AHO_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
 
 		// Always detach shaders after a successful link.
-		glDetachShader(program, vertexShader);
-		glDetachShader(program, fragmentShader);
-
+		for (const auto& handle : shaderHandles) {
+			glDeleteShader(handle);
+		}
 	}
 
 	void OpenGLShader::CreateProgram() {

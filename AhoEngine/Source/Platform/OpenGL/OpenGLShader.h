@@ -44,11 +44,10 @@ namespace Aho {
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void CompileFromSource();
 
-		//void CompileOrGetVulkanBinaries(const std::unordered_map<GLenum, std::string>& shaderSources);
-		//void CompileOrGetOpenGLBinaries();
 		void CreateProgram();
-		//void Reflect(GLenum stage, const std::vector<uint32_t>& shaderData);
+
 	private:
+		bool m_IsCompute = false;
 		uint32_t m_RendererID;
 		std::string m_FilePath;
 		std::string m_Name;

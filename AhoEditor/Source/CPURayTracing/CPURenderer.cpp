@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <execution>
+#include <random>
 
 namespace Aho {
 	namespace Utils {
@@ -15,12 +16,14 @@ namespace Aho {
 			uint32_t result = (a << 24) | (b << 16) | (g << 8) | r;
 			return result;
 		}
+		thread_local std::mt19937 rng(std::random_device{}());
+		std::uniform_real_distribution<float> dist(-0.5f, 0.5f);
 
 		glm::vec3 GenerateRandomVec3() {
-			float x = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
-			float y = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
-			float z = static_cast<float>(rand()) / RAND_MAX - 0.5f;
-			return glm::vec3(x, y, z);
+			//float x = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
+			//float y = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
+			//float z = static_cast<float>(rand()) / RAND_MAX - 0.5f;
+			return glm::vec3(dist(rng), dist(rng), dist(rng));
 		}
 	}
 	

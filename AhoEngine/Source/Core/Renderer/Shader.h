@@ -10,6 +10,12 @@ namespace Aho {
 	template <typename T>
 	using Ref = std::shared_ptr<T>;
 
+	enum class ShaderType {
+		Normal, // vertex + pixel
+		Compute,
+		None
+	};
+
 	class AHO_API Shader {
 	public:
 		virtual ~Shader() = default;
@@ -27,6 +33,7 @@ namespace Aho {
         virtual void SetMat2(const std::string& name, const glm::mat2& mat) = 0;
         virtual void SetMat3(const std::string& name, const glm::mat3& mat) = 0;
         virtual void SetMat4(const std::string& name, const glm::mat4& mat) = 0;
+		virtual ShaderType GetShaderType() { return m_Type; }
 
 		inline uint32_t GerRendererID() { return m_RendererID; }
 
@@ -34,6 +41,7 @@ namespace Aho {
         static std::shared_ptr<Shader> Create(const std::string& filepath);
 		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
 	private:
+		ShaderType m_Type;
 		uint32_t m_RendererID;
 	};
 
