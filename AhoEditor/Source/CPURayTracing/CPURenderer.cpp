@@ -75,7 +75,7 @@ namespace Aho {
 						accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
 						m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
 					});
-	});
+		});
 #else
 		for (uint32_t y = 0; y < height; y += 1) {
 			for (uint32_t x = 0; x < width; x += 1) {

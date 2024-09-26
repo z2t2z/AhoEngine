@@ -36,5 +36,18 @@ namespace Aho {
 		return (float)ypos;
 	}
 	
+	void Input::LockCursor() {
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 
+	void Input::UnlockCursor() {
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	bool Input::IsCursorLocked() {
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+	}
 }

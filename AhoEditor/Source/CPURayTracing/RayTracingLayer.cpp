@@ -52,10 +52,13 @@ namespace Aho {
 	void RayTracingLayer::OnUpdate(float deltaTime) {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 1.0f, 1 });
 		RenderCommand::Clear();
+
+		m_Scene.m_CameraManager->Update(deltaTime);
 	}
 
 	void RayTracingLayer::OnImGuiRender() {
 		{
+			// Dockspace
 			static bool opt_fullscreen = true;
 			static bool opt_padding = false;
 			static bool open = true;
@@ -185,6 +188,10 @@ namespace Aho {
 	void RayTracingLayer::Render() {
 		m_Timer.reset();
 		m_Renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
+		if (m_Scene.m_CameraManager->GetMainEditorCamera()->GetAspectRatio() != (float)m_ViewportWidth / m_ViewportHeight) {
+			m_Scene.m_CameraManager->GetMainEditorCamera()->SetProjection(45, (float)m_ViewportWidth / m_ViewportHeight, 0.1f, 100.0f);
+		}
+
 		m_Renderer.Render(m_Scene);
 	}
 } // namespace Aho

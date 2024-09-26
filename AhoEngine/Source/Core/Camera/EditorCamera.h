@@ -20,13 +20,15 @@ namespace Aho {
         glm::mat4 GetViewInv()           const override { return m_ViewMatrixInv; }
         glm::vec3 GetFront()          const override { return m_Front; }
         glm::vec3 GetRight()          const override { return m_Right; }
-
+        virtual float GetFOV() const override { return m_Fov; }
+        virtual float GetAspectRatio() const override { return m_AspectRatio; }
+        
         const float GetMoveSpeed()                  const override { return m_Speed; }
         const float GetRotationSpeed()              const override { return m_RotateSpeed; }
 
         void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) override;
         void SetProjection(const glm::mat4& projection) override { m_ProjectionMatrix = projection; }
-        void SetForwardRotation(const glm::quat& q) override { m_Front = glm::rotate(q, m_Front); }
+        void SetForwardRotation(const glm::quat& q) override { m_Front = glm::rotate(q, m_Front); RecalculateViewMatrix(); }
 
         void Update(float deltaTime, glm::vec3& movement) override;
 

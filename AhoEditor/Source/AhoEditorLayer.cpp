@@ -15,6 +15,7 @@ namespace Aho {
 	void AhoEditorLayer::OnAttach() {
 		// Set the active scene
 		m_CameraManager = std::make_shared<CameraManager>();
+		m_CameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 		m_ActiveScene = std::make_shared<Scene>();
 		
 		// Temporary init shader here
@@ -208,9 +209,6 @@ namespace Aho {
 		// Editor panel
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
-		//auto& tc = m_CameraEntity.GetComponent<TransformComponent>();
-		//ImGui::SliderFloat3("Camera Trnasform", glm::value_ptr(tc.Translation), -10.0f, 10.0f);
-		//ImGui::SliderFloat4("Debug Color", glm::value_ptr(m_Color), 0.0f, 1.0f);
 		ImGui::End();
 
 		// Viewport Window

@@ -33,11 +33,15 @@ namespace Aho {
 			return;
 		}
 
-		m_Position += glm::normalize(movement) * m_Speed * deltaTime;
+		//m_Position += glm::normalize(movement * m_Front) * m_Speed * deltaTime;
+		m_Position.z += movement.z * m_Speed * deltaTime;
+		m_Position.x += movement.x * m_Speed * deltaTime;
 		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::RecalculateViewMatrix() {
+		m_Right = glm::normalize(glm::cross(m_Front, glm::vec3(0.0f, 1.0f, 0.0f))); 
+		m_Up = glm::normalize(glm::cross(m_Right, m_Front));
 		m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
 		m_ViewMatrixInv = glm::inverse(m_ViewMatrix);
 	}

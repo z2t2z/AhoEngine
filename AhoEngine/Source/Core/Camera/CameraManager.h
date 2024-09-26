@@ -28,15 +28,20 @@ namespace Aho {
         int AddCamera(std::shared_ptr<Camera> cam) { m_Cameras.push_back(cam); return m_Cameras.size(); }
         
         void Update(float deltaTime) {
-            if (!Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
-                return;
-            }
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
             glm::vec2 delta = 0.002f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
+
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
-            
+
+            if (!Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
+                Input::UnlockCursor();
+                return;
+            }
+
+            Input::LockCursor();
+
             auto cam = GetMainEditorCamera();
             if (delta.x != 0 || delta.y != 0) {
                 float pitchDelta = delta.y * cam->GetRotationSpeed();
@@ -49,19 +54,22 @@ namespace Aho {
             // Handle WASD movement
             glm::vec3 movement(0.0f, 0.0f, 0.0f);
             if (Input::IsKeyPressed(AHO_KEY_W)) {
-                movement.z -= 1.0f;
+                cam->MoveForward(deltaTime);
+                //movement.z -= 1.0f;
             }
-            if (Input::IsKeyPressed(AHO_KEY_S)) {
-                movement.z += 1.0f;
+            else if (Input::IsKeyPressed(AHO_KEY_S)) {
+                cam->MoveBackward(deltaTime);
+                //movement.z += 1.0f;
             }
-            if (Input::IsKeyPressed(AHO_KEY_A)) {
-                movement.x -= 1.0f;
+            else if (Input::IsKeyPressed(AHO_KEY_A)) {
+                cam->MoveLeft(deltaTime);
+                //movement.x -= 1.0f;
             }
-            if (Input::IsKeyPressed(AHO_KEY_D)) {
-                movement.x += 1.0f;
-                
+            else if (Input::IsKeyPressed(AHO_KEY_D)) {
+                cam->MoveRight(deltaTime);
+                //movement.x += 1.0f;
             }
-            GetMainEditorCamera()->Update(deltaTime, movement);
+            //GetMainEditorCamera()->Update(deltaTime, movement);
         }
 
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }

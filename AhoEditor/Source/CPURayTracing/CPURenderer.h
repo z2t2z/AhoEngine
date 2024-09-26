@@ -48,7 +48,6 @@ namespace Aho {
 
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;
-
 		uint32_t m_FrameIndex = 1;
 	};
 
