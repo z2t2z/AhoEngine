@@ -73,15 +73,6 @@ namespace Aho {
 	void* OpenGLShaderStorageBuffer::GetData() {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_RendererID);
 		void* data = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-
-		//if (data != nullptr) {
-		//	uint32_t* typedData = static_cast<uint32_t*>(data);
-		//	for (size_t i = 0; i < 100; ++i) {
-		//		AHO_CORE_TRACE("{}", typedData[i]);
-		//	}
-		//}
-
-
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		return data;
 	}

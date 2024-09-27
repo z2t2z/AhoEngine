@@ -16,6 +16,7 @@ namespace Aho {
 			uint32_t result = (a << 24) | (b << 16) | (g << 8) | r;
 			return result;
 		}
+
 		thread_local std::mt19937 rng(std::random_device{}());
 		std::uniform_real_distribution<float> dist(-0.5f, 0.5f);
 
@@ -69,9 +70,33 @@ namespace Aho {
 #if COMPUTE_SHADER_ENABLED
 		m_SSBO->Bind(0);
 		m_ComputeShader->Bind();
-		m_ComputeShader->DispatchCompute(50, 50, 1);
+		m_ComputeShader->SetInt("u_Width", width);
+		m_ComputeShader->SetInt("u_Height", height);
 
-		m_FinalImage->SetData(m_SSBO->GetData(), width * height * 4);
+		m_ComputeShader->SetVec3("u_CamPos", scene.m_CameraManager->GetMainEditorCamera()->GetPosition());
+		m_ComputeShader->SetMat4("u_ViewInv", scene.m_CameraManager->GetMainEditorCamera()->GetViewInv());
+		m_ComputeShader->SetMat4("u_ProjInv", scene.m_CameraManager->GetMainEditorCamera()->GetProjectionInv());
+		
+		m_ComputeShader->SetVec3("u_Sphere0.Position", scene.Spheres[0].Position);
+		m_ComputeShader->SetFloat("u_Sphere0.Radius", scene.Spheres[0].Radius);
+		m_ComputeShader->SetFloat("u_Sphere0.MaterialIndex", scene.Spheres[0].MaterialIndex);
+
+		m_ComputeShader->SetVec3("u_Sphere1.Position", scene.Spheres[1].Position);
+		m_ComputeShader->SetFloat("u_Sphere1.Radius", scene.Spheres[1].Radius);
+		m_ComputeShader->SetFloat("u_Sphere1.MaterialIndex", scene.Spheres[1].MaterialIndex);
+
+		m_ComputeShader->SetVec3("u_Mt0.Albedo", scene.Materials[0].Albedo);
+		m_ComputeShader->SetFloat("u_Mt0.Roughness", scene.Materials[0].Roughness);
+
+		m_ComputeShader->SetVec3("u_Mt1.Albedo", scene.Materials[1].Albedo);
+		m_ComputeShader->SetFloat("u_Mt1.Roughness", scene.Materials[1].Roughness);
+
+		uint32_t workGroupCountX = (width + 32 - 1) / 32;
+		uint32_t workGroupCountY = (height + 32 - 1) / 32;
+		m_ComputeShader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
+		auto data = m_SSBO->GetData();
+
+		m_FinalImage->SetData(data, width * height * 4);
 		
 #else
 		if (m_FrameIndex == 1) {
