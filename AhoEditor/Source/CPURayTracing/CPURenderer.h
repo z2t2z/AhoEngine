@@ -38,6 +38,11 @@ namespace Aho {
 		HitInfo ClosestHit(const CPUScene& scene, const Ray& ray, float hitDistance, int objectIndex);
 		HitInfo Miss(const Ray& ray);
 	private:
+		/*  Temporary! */
+		std::shared_ptr<Shader> m_ComputeShader;
+		std::shared_ptr<ShaderStorageBuffer> m_SSBO;
+		/*  Temporary! */
+
 		std::unordered_map<uint32_t, Ray> m_Memo;
 
 		TextureSpecification m_TexSpec;

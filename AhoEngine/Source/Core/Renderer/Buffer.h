@@ -121,4 +121,17 @@ namespace Aho {
 		static IndexBuffer* Create(uint32_t* indices, uint32_t size);
 	};
 
+	class ShaderStorageBuffer {
+	public:
+		virtual ~ShaderStorageBuffer() = default;
+
+		virtual void Bind(uint32_t bindingPoint) const = 0;
+		virtual void Unbind() const = 0;
+
+		virtual void SetData(const void* data, uint32_t size) = 0;
+
+		virtual void* GetData() = 0;
+
+		static ShaderStorageBuffer* Create(uint32_t size, const void* data = nullptr);
+	};
 }

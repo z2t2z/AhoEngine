@@ -54,8 +54,7 @@ namespace Aho {
 		glUseProgram(0);
 	}
 
-	std::string OpenGLShader::ReadFile(const std::string& filepath)
-	{
+	std::string OpenGLShader::ReadFile(const std::string& filepath) {
 		std::string result;
 		std::ifstream in(filepath, std::ios::in | std::ios::binary); // ifstream closes itself due to RAII
 		if (in) {
@@ -76,8 +75,6 @@ namespace Aho {
 	}
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
-		//HZ_PROFILE_FUNCTION();
-
 		std::unordered_map<GLenum, std::string> shaderSources;
 
 		const char* typeToken = "#type";
@@ -235,6 +232,12 @@ namespace Aho {
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value) {
 		UploadUniformMat4(name, value);
+	}
+
+	void OpenGLShader::DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const {
+		glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+		// TODO: customizable flags
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
 	}
 
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value) {

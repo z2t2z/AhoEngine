@@ -33,9 +33,6 @@ namespace Aho {
 			float deltaTime = currTime - m_LastFrameTime;
 			m_LastFrameTime = currTime;
 
-			//int fps = 1.0f / (deltaTime == 0.0f ? 1.0f : deltaTime);
-			//AHO_CORE_TRACE("{}", fps);
-			
 			// Will be done on the render thread in the future
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);

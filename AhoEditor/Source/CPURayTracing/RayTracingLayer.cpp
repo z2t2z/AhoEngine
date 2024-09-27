@@ -47,12 +47,6 @@ namespace Aho {
 	void RayTracingLayer::OnAttach() {
 		AHO_TRACE("Attaching raytracing layer");
 		m_Scene.m_CameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
-
-		std::filesystem::path currentPath = std::filesystem::current_path();
-		std::string path = currentPath.string() + "\\ShaderSrc\\compute.glsl";
-		auto test = Shader::Create(path);
-
-
 	}
 
 	void RayTracingLayer::OnUpdate(float deltaTime) {

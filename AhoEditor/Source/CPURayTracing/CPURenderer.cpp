@@ -30,13 +30,19 @@ namespace Aho {
 	CPURenderer::CPURenderer() {
 		//m_TexSpec.GenerateMips = false;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::string path = currentPath.string() + "\\ShaderSrc\\compute.glsl";
+		m_ComputeShader = Shader::Create(path);
+		// TODO
+		m_SSBO.reset(ShaderStorageBuffer::Create(1000 * 1000 * sizeof(uint32_t)));
 	}
 
 	void CPURenderer::OnResize(uint32_t width, uint32_t height) {
 		if (m_FinalImage and m_FinalImage->GetWidth() == width and m_FinalImage->GetHeight() == height) {
 			return;
 		}
-
+		// Leakage?
+		m_SSBO.reset(ShaderStorageBuffer::Create(width * height * sizeof(uint32_t)));
 		m_TexSpec.Width = width;
 		m_TexSpec.Height = height;
 		m_TexSpec.GenerateMips = false;
@@ -59,10 +65,18 @@ namespace Aho {
 		uint32_t width = m_FinalImage->GetWidth();
 		uint32_t height = m_FinalImage->GetHeight();
 
+#define COMPUTE_SHADER_ENABLED 1
+#if COMPUTE_SHADER_ENABLED
+		m_SSBO->Bind(0);
+		m_ComputeShader->Bind();
+		m_ComputeShader->DispatchCompute(50, 50, 1);
+
+		m_FinalImage->SetData(m_SSBO->GetData(), width * height * 4);
+		
+#else
 		if (m_FrameIndex == 1) {
 			memset(m_AccumulationData, 0, width * height * sizeof(glm::vec4));
 		}
-
 #define MUTITHREADING 1
 #if MUTITHREADING
 		std::for_each(std::execution::par, m_ImageVerticalIter.begin(), m_ImageVerticalIter.end(),
@@ -99,6 +113,7 @@ namespace Aho {
 			m_FrameIndex++;
 		else
 			m_FrameIndex = 1;
+#endif
 	}
 
 	glm::vec4 CPURenderer::PerPixelShading(const CPUScene& scene, uint32_t x, uint32_t y) {

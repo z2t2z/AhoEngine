@@ -46,8 +46,8 @@ namespace Aho {
 		bool OnKeyPressed(KeyPressedEvent& e) {}
 
 	private:
-		Timer m_Timer;
 		CPURenderer m_Renderer;
+		Timer m_Timer;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 		CPUScene m_Scene;
 	};

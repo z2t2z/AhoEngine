@@ -7,7 +7,6 @@
 namespace Aho {
 
 	/* ==================================== class : Shader ===================================== */
-
 	std::shared_ptr<Shader> Shader::Create(const std::string& filepath) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
@@ -29,7 +28,6 @@ namespace Aho {
 	}
 
 	/* ==================================== class : ShaderLibrary ===================================== */
-
 	void ShaderLibrary::Add(const std::string& name, const std::shared_ptr<Shader>& shader) {
 		AHO_CORE_ASSERT(!Exists(name), "Shader already exists!");
 		m_Shaders[name] = shader;

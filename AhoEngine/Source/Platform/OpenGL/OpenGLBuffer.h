@@ -33,5 +33,20 @@ namespace Aho {
 		uint32_t m_Count;
 	};
 
+    class OpenGLShaderStorageBuffer : public ShaderStorageBuffer {
+    public:
+        OpenGLShaderStorageBuffer(uint32_t size, const void* data = nullptr);
+        virtual ~OpenGLShaderStorageBuffer();
+
+		void Bind(uint32_t bindingPoint) const override;
+		void Unbind() const override;
+
+		void SetData(const void* data, uint32_t size);
+		void* GetData() override;
+
+    private:
+        uint32_t m_RendererID;
+    };
+
 
 }

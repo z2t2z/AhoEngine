@@ -33,8 +33,11 @@ namespace Aho {
         virtual void SetMat2(const std::string& name, const glm::mat2& mat) = 0;
         virtual void SetMat3(const std::string& name, const glm::mat3& mat) = 0;
         virtual void SetMat4(const std::string& name, const glm::mat4& mat) = 0;
-		virtual ShaderType GetShaderType() { return m_Type; }
 
+		// For compute shader
+		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const = 0;
+
+		virtual ShaderType GetShaderType() { return m_Type; }
 		inline uint32_t GerRendererID() { return m_RendererID; }
 
         virtual const std::string& GetName() const = 0;
