@@ -27,7 +27,7 @@ namespace Aho {
 
         int AddCamera(std::shared_ptr<Camera> cam) { m_Cameras.push_back(cam); return m_Cameras.size(); }
         
-        void Update(float deltaTime) {
+        bool Update(float deltaTime) {
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
             glm::vec2 delta = 0.002f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
@@ -37,7 +37,7 @@ namespace Aho {
 
             if (!Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
                 Input::UnlockCursor();
-                return;
+                return false;
             }
 
             Input::LockCursor();
@@ -70,6 +70,7 @@ namespace Aho {
                 //movement.x += 1.0f;
             }
             //GetMainEditorCamera()->Update(deltaTime, movement);
+            return true;
         }
 
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }

@@ -67,7 +67,7 @@ namespace Aho {
 	void OpenGLShaderStorageBuffer::SetData(const void* data, uint32_t size) {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_RendererID);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size, data);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
 	void* OpenGLShaderStorageBuffer::GetData() {
@@ -76,4 +76,14 @@ namespace Aho {
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		return data;
 	}
+
+	void OpenGLShaderStorageBuffer::ClearSSBO(uint32_t size) {
+		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_RendererID);
+		//glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED, GL_UNSIGNED_INT, nullptr);
+		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_RendererID);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, size, nullptr, GL_DYNAMIC_COPY);
+		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
 }

@@ -36,6 +36,7 @@ namespace Aho {
 		m_ComputeShader = Shader::Create(path);
 		// TODO
 		m_SSBO.reset(ShaderStorageBuffer::Create(1000 * 1000 * sizeof(uint32_t)));
+		m_SSBOAccumulate.reset(ShaderStorageBuffer::Create(1000 * 1000 * sizeof(glm::vec4)));
 	}
 
 	void CPURenderer::OnResize(uint32_t width, uint32_t height) {
@@ -44,6 +45,7 @@ namespace Aho {
 		}
 		// Leakage?
 		m_SSBO.reset(ShaderStorageBuffer::Create(width * height * sizeof(uint32_t)));
+		m_SSBOAccumulate.reset(ShaderStorageBuffer::Create(width * height * sizeof(glm::vec4)));
 		m_TexSpec.Width = width;
 		m_TexSpec.Height = height;
 		m_TexSpec.GenerateMips = false;
@@ -69,10 +71,15 @@ namespace Aho {
 #define COMPUTE_SHADER_ENABLED 1
 #if COMPUTE_SHADER_ENABLED
 		m_SSBO->Bind(0);
+		m_SSBOAccumulate->Bind(1);
+		if (m_FrameIndex == 1) {
+			m_SSBOAccumulate->ClearSSBO(width * height * sizeof(glm::vec4));
+		}
+		//AHO_CORE_TRACE("{}", m_FrameIndex);
 		m_ComputeShader->Bind();
 		m_ComputeShader->SetInt("u_Width", width);
 		m_ComputeShader->SetInt("u_Height", height);
-
+		m_ComputeShader->SetInt("u_FrameIndex", m_FrameIndex);
 		m_ComputeShader->SetVec3("u_CamPos", scene.m_CameraManager->GetMainEditorCamera()->GetPosition());
 		m_ComputeShader->SetMat4("u_ViewInv", scene.m_CameraManager->GetMainEditorCamera()->GetViewInv());
 		m_ComputeShader->SetMat4("u_ProjInv", scene.m_CameraManager->GetMainEditorCamera()->GetProjectionInv());
@@ -133,12 +140,11 @@ namespace Aho {
 		}
 #endif
 		m_FinalImage->SetData(m_ImageData, width * height * 4);
-
+#endif
 		if (m_Settings.Accumulate)
 			m_FrameIndex++;
 		else
 			m_FrameIndex = 1;
-#endif
 	}
 
 	glm::vec4 CPURenderer::PerPixelShading(const CPUScene& scene, uint32_t x, uint32_t y) {

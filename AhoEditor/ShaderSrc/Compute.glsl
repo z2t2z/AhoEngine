@@ -3,8 +3,12 @@
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-layout(std430, binding = 0) buffer DataBuffer {
+layout(std430, binding = 0) buffer DataBuffer0 {
     uint data[];
+};
+
+layout(std430, binding = 1) buffer DataBuffer1 {
+	vec4 accumulateData[];
 };
 
 struct Ray {
@@ -33,6 +37,8 @@ struct Material {
 	//float EmissionPower;
 };
 
+uniform bool u_Accumulate;
+uniform int u_FrameIndex;
 uniform int u_Width;
 uniform int u_Height;
 uniform vec3 u_CamPos;
@@ -53,9 +59,38 @@ uint ConvertToRGBA(vec4 color) {
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
+vec4 ConvertToVec4(uint value) {
+	float r = float(value & 0xFF) / 255.0;        
+	float g = float((value >> 8) & 0xFF) / 255.0; 
+	float b = float((value >> 16) & 0xFF) / 255.0;
+	float a = float((value >> 24) & 0xFF) / 255.0;
+
+	vec4 color = vec4(r, g, b, a);
+	return color;
+}
+
+uint PCG_Hash(uint seed) {
+	uint state = seed * 747796405u + 2891336453u;
+	uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+	return (word >> 22u) ^ word;
+}
+
+float RandomFloat(uint seed) {
+	seed = PCG_Hash(seed);
+	float inf = 1.0 / 0.0;
+	return float(seed) / inf;
+}
+
 vec3 GenerateRandomVec3(uint seed) {
-	float randomValue = fract(sin(seed) * 43758.5453);
-	return vec3(randomValue - 0.5, randomValue - 0.5, randomValue - 0.5);
+	//float randomValue = fract(sin(seed) * 43758.5453);
+	//return vec3(randomValue - 0.5, randomValue - 0.5, randomValue - 0.5);
+	seed = PCG_Hash(seed);
+	float r = RandomFloat(seed) * 2.0f - 1.0f;
+	seed = PCG_Hash(seed);
+	float g = RandomFloat(seed) * 2.0f - 1.0f;
+	seed = PCG_Hash(seed);
+	float b = RandomFloat(seed) * 2.0f - 1.0f;
+	return normalize(vec3(r, g, b));
 }
 
 HitInfo ClosestHit(const Ray ray, float hitDistance, int objectIndex) {
@@ -123,11 +158,14 @@ Ray RayCasting(uint x, uint y) {
 	vec2 ndc = vec2(ssx * 2.0f - 1.0f, ssy * 2.0f - 1.0f);
 	// NDC to view space
 	vec4 vs = u_ProjInv * vec4(ndc, 1.0f, 1.0f);
-	vs.z = -1.0f;
-	vs.w = 0.0f;
-	// View space to world space
-	vec3 ws = vec3(u_ViewInv * vs);
-	ray.Direction = normalize(ws);
+
+	vec3 rayDirection = vec3(u_ViewInv * vec4(normalize(vec3(vs) / vs.w), 0)); // World space
+	ray.Direction = rayDirection;
+	//vs.z = -1.0f;
+	//vs.w = 0.0f;
+	//// View space to world space
+	//vec3 ws = vec3(u_ViewInv * vs);
+	//ray.Direction = normalize(ws);
 	return ray;
 }
 
@@ -171,10 +209,21 @@ vec4 PerpixelShading(uint x, uint y) {
 void main() {
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
-    
-	vec4 color = PerpixelShading(x, y);
-    data[y * u_Width + x] = ConvertToRGBA(color);
-	//0xFFFFFFFF white
+	if (x < u_Width && y < u_Height) {
+		vec4 color = PerpixelShading(x, y);
+		uint index = y * u_Width + x;
+		if (u_FrameIndex == 1) {
+			accumulateData[index] = vec4(0.0f);
+		}
+		accumulateData[index] += color;
+		vec4 nColor = accumulateData[index];
+		if (u_FrameIndex > 1) {
+			nColor /= u_FrameIndex;
+		}
+		nColor = clamp(nColor, vec4(0.0), vec4(1.0));
+		data[index] = ConvertToRGBA(nColor);
+		//0xFFFFFFFF white
+	}
 }
 
 

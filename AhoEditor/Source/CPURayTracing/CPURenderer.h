@@ -41,6 +41,7 @@ namespace Aho {
 		/*  Temporary! */
 		std::shared_ptr<Shader> m_ComputeShader;
 		std::shared_ptr<ShaderStorageBuffer> m_SSBO;
+		std::shared_ptr<ShaderStorageBuffer> m_SSBOAccumulate;
 		/*  Temporary! */
 
 		std::unordered_map<uint32_t, Ray> m_Memo;

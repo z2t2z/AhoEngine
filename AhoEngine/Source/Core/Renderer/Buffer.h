@@ -129,6 +129,7 @@ namespace Aho {
 		virtual void Unbind() const = 0;
 
 		virtual void SetData(const void* data, uint32_t size) = 0;
+		virtual void ClearSSBO(uint32_t size) = 0;
 
 		virtual void* GetData() = 0;
 

@@ -41,6 +41,7 @@ namespace Aho {
 		void Bind(uint32_t bindingPoint) const override;
 		void Unbind() const override;
 
+		void ClearSSBO(uint32_t size) override;
 		void SetData(const void* data, uint32_t size);
 		void* GetData() override;
 
