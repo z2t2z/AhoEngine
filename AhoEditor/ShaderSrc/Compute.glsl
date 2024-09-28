@@ -41,6 +41,7 @@ uniform bool u_Accumulate;
 uniform int u_FrameIndex;
 uniform int u_Width;
 uniform int u_Height;
+uniform int u_Time;
 uniform vec3 u_CamPos;
 uniform mat4 u_ViewInv;
 uniform mat4 u_ProjInv;
@@ -70,27 +71,37 @@ vec4 ConvertToVec4(uint value) {
 }
 
 uint PCG_Hash(uint seed) {
-	uint state = seed * 747796405u + 2891336453u;
-	uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-	return (word >> 22u) ^ word;
+	//uint state = seed * 747796405u + 2891336453u;
+	//uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+	//return (word >> 22u) ^ word;
+	seed = (seed ^ 61) ^ (seed >> 16);
+	seed *= 9;
+	seed = seed ^ (seed >> 4);
+	seed *= 0x27d4eb2d;
+	seed = seed ^ (seed >> 15);
+	return seed;
 }
 
 float RandomFloat(uint seed) {
-	seed = PCG_Hash(seed);
-	float inf = 1.0 / 0.0;
-	return float(seed) / inf;
+	float PHI = 1.61803398874989484820459;  // ¦µ = Golden Ratio
+	uint x = gl_GlobalInvocationID.x;
+	uint y = gl_GlobalInvocationID.y;
+	vec2 xy = vec2(x, y);
+	return fract(sin(dot(xy.xy, vec2(12.9898, 78.233))) * 43758.5453 * seed);
 }
 
 vec3 GenerateRandomVec3(uint seed) {
 	//float randomValue = fract(sin(seed) * 43758.5453);
-	//return vec3(randomValue - 0.5, randomValue - 0.5, randomValue - 0.5);
+	//return vec3(randomValue * 2.0 - 0.5, randomValue * 2.0 - 0.5, randomValue * 2.0 - 0.5);
+	//seed = PCG_Hash(seed);
+	seed = u_Time;
+	float r = RandomFloat(seed);
 	seed = PCG_Hash(seed);
-	float r = RandomFloat(seed) * 2.0f - 1.0f;
+	float g = RandomFloat(seed);
 	seed = PCG_Hash(seed);
-	float g = RandomFloat(seed) * 2.0f - 1.0f;
-	seed = PCG_Hash(seed);
-	float b = RandomFloat(seed) * 2.0f - 1.0f;
-	return normalize(vec3(r, g, b));
+	float b = RandomFloat(seed);
+	//return normalize(vec3(r, g, b));
+	return vec3(r, g, b);
 }
 
 HitInfo ClosestHit(const Ray ray, float hitDistance, int objectIndex) {
@@ -199,9 +210,12 @@ vec4 PerpixelShading(uint x, uint y) {
 		vec3 sphereColor = material.Albedo;
 		sphereColor *= lightIntensity;
 		color += sphereColor * attenuation;
+		attenuation *= 0.5f;
 
 		ray.Origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
-		ray.Direction = reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * GenerateRandomVec3(y * u_Width + x));
+		//uint seed = (y * u_Width + x) * u_FrameIndex + i + u_Time;
+		uint seed = u_Time + i + y * u_Width + x;
+		ray.Direction = reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * GenerateRandomVec3(seed));
 	}
 	return vec4(color, 1.0f);
 }

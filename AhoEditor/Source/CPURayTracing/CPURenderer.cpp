@@ -77,6 +77,7 @@ namespace Aho {
 		}
 		//AHO_CORE_TRACE("{}", m_FrameIndex);
 		m_ComputeShader->Bind();
+		m_ComputeShader->SetInt("u_Time", time(0));
 		m_ComputeShader->SetInt("u_Width", width);
 		m_ComputeShader->SetInt("u_Height", height);
 		m_ComputeShader->SetInt("u_FrameIndex", m_FrameIndex);
@@ -156,7 +157,7 @@ namespace Aho {
 
 		float multiplier = 1.0f;
 
-		int MAX_BOUNCE = 2;
+		int MAX_BOUNCE = 4;
 		for (int i = 0; i < MAX_BOUNCE; i++) {
 			CPURenderer::HitInfo hitInfo = TraceSingleRay(scene, ray);
 
