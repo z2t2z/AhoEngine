@@ -181,9 +181,11 @@
     <ClInclude Include="Source\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="Source\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h" />
+    <ClInclude Include="Source\Scene\Asset\Asset.h" />
     <ClInclude Include="Source\Scene\Components.h" />
     <ClInclude Include="Source\Scene\AObject.h" />
     <ClInclude Include="Source\Scene\Scene.h" />
+    <ClInclude Include="Source\Scene\UUID.h" />
     <ClInclude Include="Vendor\glm\glm\common.hpp" />
     <ClInclude Include="Vendor\glm\glm\detail\_features.hpp" />
     <ClInclude Include="Vendor\glm\glm\detail\_fixes.hpp" />
@@ -635,6 +637,7 @@
     <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp" />
     <ClCompile Include="Source\Scene\AObject.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
+    <ClCompile Include="Source\Scene\UUID.cpp" />
     <ClCompile Include="Vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
