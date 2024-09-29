@@ -107,14 +107,14 @@ namespace Aho {
 		m_CubeVA->SetIndexBuffer(indexBuffer);
 
 		// Entities
-		m_Cube = m_ActiveScene->CreateEntity("Cube");
+		m_Cube = m_ActiveScene->CreateAObject("Cube");
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
 		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
 		//std::string filePath = "D:/Projs/Piccolo/bin/asset/objects/basic/cube.obj";
-		m_Test = m_ActiveScene->CreateEntity("Cube");
+		m_Test = m_ActiveScene->CreateAObject("Cube");
 		m_Test.AddComponent<MeshesComponent>(filePath);
 	}
 

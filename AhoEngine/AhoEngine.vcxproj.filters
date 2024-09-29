@@ -201,7 +201,7 @@
     <ClInclude Include="Source\Scene\Components.h">
       <Filter>Source\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\Entity.h">
+    <ClInclude Include="Source\Scene\AObject.h">
       <Filter>Source\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene\Scene.h">
@@ -1544,7 +1544,7 @@
     <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp">
       <Filter>Source\Platform\Windows\Window</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\Entity.cpp">
+    <ClCompile Include="Source\Scene\AObject.cpp">
       <Filter>Source\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\Scene.cpp">

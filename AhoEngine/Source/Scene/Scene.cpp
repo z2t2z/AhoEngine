@@ -2,15 +2,15 @@
 #include "Scene.h"
 
 #include "Core/Renderer/Renderer.h"
-#include "Entity.h"
+#include "AObject.h"
 #include "Components.h"
 
 
 namespace Aho {
-	Entity Scene::CreateEntity(const std::string& name) {
-		Entity entity { m_Registry.create(), this };
+	AObject Scene::CreateAObject(const std::string& name) {
+		AObject entity { m_Registry.create(), this };
 		auto& tag = entity.AddComponent<TagComponent>();
-		tag.Tag = name.empty() ? "Entity" : name;
+		tag.Tag = name.empty() ? "IamAnAObject" : name;
 		return entity;
 	}
 

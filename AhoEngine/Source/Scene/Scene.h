@@ -7,14 +7,14 @@
 #include <memory>
 
 namespace Aho {
-	class Entity;
+	class AObject;
 
 	class Scene {
 	public:
 		Scene() = default;
 		~Scene() = default;
 
-		Entity CreateEntity(const std::string& name = std::string());
+		AObject CreateAObject(const std::string& name = std::string());
 		
 		void OnUpdateRuntime(std::shared_ptr<Shader>& shader, float deltaTime);
 		void OnUpdateEditor(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader, float deltaTime);
@@ -22,7 +22,7 @@ namespace Aho {
 		void RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader);
 
 	private:
-		friend class Entity;
+		friend class AObject;
 		entt::registry m_Registry;
 	};
 }

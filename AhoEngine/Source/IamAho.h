@@ -22,7 +22,7 @@
 #include "Core/Camera/CameraManager.h"
 
 #include "Scene/Components.h"
-#include "Scene/Entity.h"
+#include "Scene/AObject.h"
 #include "Scene/Scene.h"
 
 #include "Core/Model/Model.h"

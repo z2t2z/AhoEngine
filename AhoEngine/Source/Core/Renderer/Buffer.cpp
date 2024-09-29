@@ -4,7 +4,6 @@
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Aho {
-
 	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;

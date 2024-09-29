@@ -30,9 +30,9 @@ namespace Aho {
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;
 
-		Entity m_Test;
-		Entity m_CameraEntity;
-		Entity m_Cube;
+		AObject m_Test;
+		AObject m_CameraAObject;
+		AObject m_Cube;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
