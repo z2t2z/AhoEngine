@@ -18,6 +18,7 @@ namespace Aho {
 
 	class Asset {
 	public:
+		Asset() = default;
 		Asset(const std::string& path) : m_MatadataPath(path) {}
 		//Asset(std::string& path) {
 		//	m_MatadataPath = path;
@@ -32,8 +33,8 @@ namespace Aho {
 	protected:
 		UUID m_Handle;
 		AssetType m_Type;
-		std::string m_Path;
 		std::string m_MatadataPath;
+		std::string m_Path;
 	};
 
 }

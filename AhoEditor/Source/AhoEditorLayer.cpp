@@ -112,10 +112,13 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		//std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
 		//std::string filePath = "D:/Projs/Piccolo/bin/asset/objects/basic/cube.obj";
-		m_Test = m_ActiveScene->CreateAObject("Cube");
-		m_Test.AddComponent<MeshesComponent>(filePath);
+		m_Manager = new AssetManagerEditor();
+		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/Beriev_A50/BerievA50.obj";
+		m_Manager->CreateAssetFromFile(t);
+		//m_Test = m_ActiveScene->CreateAObject("Cube");
+		//m_Test.AddComponent<MeshesComponent>(filePath);
 	}
 
 	void AhoEditorLayer::OnDetach() {

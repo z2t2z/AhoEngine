@@ -12,6 +12,8 @@
 
 #include "Core/Renderer/Buffer.h"
 #include "Core/Renderer/Texture.h"
+#include "Core/Renderer/Material.h"
+#include "Scene/Asset/AssetManagerEditor.h"
 #include "Core/Renderer/Renderer.h"
 #include "Core/Renderer/Framebuffer.h"
 #include "Core/Renderer/Shader.h"

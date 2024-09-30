@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Asset.h"
+#include "Core/Renderer/Material.h"
+#include "Core/Renderer/Texture.h"
 #include "MeshAsset.h"
 #include "TextureAsset.h"
 #include "SceneAsset.h"
@@ -16,24 +18,28 @@ namespace Aho {
 		static std::shared_ptr<Asset> Import(const AssetType type, const std::filesystem::path& filePath);
 	};
 
+	class TextureImporter {
+	public:
+		static std::shared_ptr<Asset>ImportTexture(const std::filesystem::path& filePath) {
+			return std::make_shared<TextureAsset>(filePath.string(), Texture2D::Create(filePath.string()));
+		}
+	};
 
 	static class MeshImporter {
 		using VertexArrayList = std::vector<std::shared_ptr<VertexArray>>;
-		using MeterialList = std::vector<std::shared_ptr<Material>>;
+		using MeterialList = std::vector<std::shared_ptr<MaterialAsset>>;
 	public:
 		static std::shared_ptr<Asset>ImportMesh(const std::filesystem::path& filePath) {
-
 			VertexArrayList VAOs;
 			MeterialList Materials;
-
 			if (!LoadModel(filePath, VAOs, Materials)) {
 				AHO_CORE_ERROR("Failed to load mesh");
 				return nullptr;
 			}
 			std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(filePath.string(), std::move(VAOs), std::move(Materials));
-			return meshAsset;
 		}
 	private:
+		// BIG TODO!!!!!
 		static bool LoadModel(const std::filesystem::path& filePath, VertexArrayList& VAOs, MeterialList& Materials) {
 			Assimp::Importer importer;
 			auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
@@ -42,8 +48,25 @@ namespace Aho {
 				AHO_CORE_ERROR(importer.GetErrorString());
 				return false;
 			}
-
-			auto ProcessMaterials = [&]() -> bool {
+			std::string directory = filePath.string().substr(0, filePath.string().find_last_of('/'));
+			std::array<aiTextureType, 4> TextureTypes = { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_SPECULAR, aiTextureType_HEIGHT };
+			std::unordered_map<std::string, std::shared_ptr<TextureAsset>> Loaded;
+			auto ProcessMaterials = [&](aiMaterial* aiMat) -> bool {
+				std::shared_ptr<MaterialAsset> matAsset = std::make_shared<MaterialAsset>(directory, std::make_shared<Material>());
+				for (const auto& type : TextureTypes) {
+					for (size_t i = 0; i < aiMat->GetTextureCount(type); i++) {
+						aiString str;
+						aiMat->GetTexture(type, i, &str);
+						std::string cppstr = std::string(str.C_Str());
+						if (Loaded.contains(cppstr)) {
+							continue;
+						}
+						auto textureAsset = std::make_shared<TextureAsset>(cppstr, Texture2D::Create(cppstr));
+						Loaded[cppstr] = textureAsset;
+						textureAsset->GetTexture()->SetTextureType(i == 0 ? TextureType::Diffuse : TextureType::Normal);
+						matAsset->GetMaterial()->AddTexture(textureAsset->GetTexture());
+					}
+				}
 				return false;
 			};
 
@@ -100,6 +123,9 @@ namespace Aho {
 				indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
 				vertexArray->SetIndexBuffer(indexBuffer);
 				VAOs.push_back(vertexArray);
+				if (!ProcessMaterials(scene->mMaterials[mesh->mMaterialIndex])) {
+					return false;
+				}
 				return true;
 			};
 
@@ -124,12 +150,6 @@ namespace Aho {
 
 			return ProcessNode(scene->mRootNode, scene);
 		}
-	};
-
-
-	class TextureImporter {
-	public:
-
 	};
 
 	class MaterialImporter {

@@ -20,6 +20,8 @@ namespace Aho {
 	private:
 		float m_DeltaTime = 0.0f;
 
+		AssetManagerEditor* m_Manager{ nullptr };
+
 		std::shared_ptr<CameraManager> m_CameraManager;
 
 		std::shared_ptr<Shader> m_Shader;

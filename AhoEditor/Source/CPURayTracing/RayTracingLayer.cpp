@@ -2,26 +2,25 @@
 
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
-
-
+#include <memory>
 #include "Scene/Asset/AssetManagerEditor.h"
+
 
 namespace Aho {
 	RayTracingLayer::RayTracingLayer() {
-
 		auto manager = new AssetManagerEditor();
-		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/cube.obj";
+		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/Beriev_A50/BerievA50.obj";
 		manager->CreateAssetFromFile(t);
 
-		Material& pinkSphere = m_Scene.Materials.emplace_back();
+		CPU::Material& pinkSphere = m_Scene.Materials.emplace_back();
 		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
 		pinkSphere.Roughness = 0.0f;
 
-		Material& blueSphere = m_Scene.Materials.emplace_back();
+		CPU::Material& blueSphere = m_Scene.Materials.emplace_back();
 		blueSphere.Albedo = { 0.2f, 0.3f, 1.0f };
 		blueSphere.Roughness = 0.1f;
 
-		Material& orangeSphere = m_Scene.Materials.emplace_back();
+		CPU::Material& orangeSphere = m_Scene.Materials.emplace_back();
 		orangeSphere.Albedo = { 0.8f, 0.5f, 0.2f };
 		orangeSphere.Roughness = 0.1f;
 		orangeSphere.EmissionColor = orangeSphere.Albedo;
@@ -164,7 +163,7 @@ namespace Aho {
 		for (size_t i = 0; i < m_Scene.Materials.size(); i++) {
 			ImGui::PushID(i);
 
-			Material& material = m_Scene.Materials[i];
+			CPU::Material& material = m_Scene.Materials[i];
 			ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo));
 			ImGui::DragFloat("Roughness", &material.Roughness, 0.05f, 0.0f, 1.0f);
 			ImGui::DragFloat("Metallic", &material.Metallic, 0.05f, 0.0f, 1.0f);

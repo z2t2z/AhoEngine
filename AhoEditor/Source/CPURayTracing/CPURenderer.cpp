@@ -172,7 +172,7 @@ namespace Aho {
 			float lightIntensity = glm::max(glm::dot(hitInfo.WorldNormal, -lightDir), 0.0f); // == cos(angle)
 
 			const Sphere& sphere = scene.Spheres[hitInfo.ObjectIndex];
-			const Material& material = scene.Materials[sphere.MaterialIndex];
+			const CPU::Material& material = scene.Materials[sphere.MaterialIndex];
 
 			contribution *= material.Albedo;
 

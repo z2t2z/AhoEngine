@@ -4,16 +4,17 @@
 #include <vector>
 
 namespace Aho {
-	struct Material {
-		glm::vec3 Albedo{ 1.0f };
-		float Roughness = 1.0f;
-		float Metallic = 0.0f;
-		glm::vec3 EmissionColor{ 0.0f };
-		float EmissionPower = 0.0f;
+	namespace CPU {
+		struct Material {
+			glm::vec3 Albedo{ 1.0f };
+			float Roughness = 1.0f;
+			float Metallic = 0.0f;
+			glm::vec3 EmissionColor{ 0.0f };
+			float EmissionPower = 0.0f;
 
-		glm::vec3 GetEmission() const { return EmissionColor * EmissionPower; }
-	};
-
+			glm::vec3 GetEmission() const { return EmissionColor * EmissionPower; }
+		};
+	}
 	struct Ray {
 		glm::vec3 Origin;
 		glm::vec3 Direction;
@@ -28,7 +29,7 @@ namespace Aho {
 
 	struct CPUScene {
 		std::vector<Sphere> Spheres;
-		std::vector<Material> Materials;
+		std::vector<CPU::Material> Materials;
 		CameraManager* m_CameraManager;
 
 		CPUScene() : m_CameraManager(new CameraManager()) {}
