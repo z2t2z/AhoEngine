@@ -16,7 +16,7 @@ namespace Aho {
 		None
 	};
 
-	class AHO_API Shader {
+	class Shader {
 	public:
 		virtual ~Shader() = default;
         

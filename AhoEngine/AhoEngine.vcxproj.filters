@@ -1460,6 +1460,15 @@
     </ClInclude>
     <ClInclude Include="Source\Scene\UUID.h" />
     <ClInclude Include="Source\Scene\Asset\Asset.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetImporter.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetMetadata.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetManagerBase.h" />
+    <ClInclude Include="Source\Scene\Asset\MeshImporter.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetManagerEditor.h" />
+    <ClInclude Include="Source\Scene\Asset\MeshAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\MaterialAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\SceneAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\TextureAsset.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1556,5 +1565,8 @@
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\UUID.cpp" />
+    <ClCompile Include="Source\Scene\Asset\Asset.cpp" />
+    <ClCompile Include="Source\Scene\Asset\AssetImporter.cpp" />
+    <ClCompile Include="Source\Scene\Asset\AssetManagerEditor.cpp" />
   </ItemGroup>
 </Project>

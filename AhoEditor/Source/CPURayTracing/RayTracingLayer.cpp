@@ -3,8 +3,16 @@
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#include "Scene/Asset/AssetManagerEditor.h"
+
 namespace Aho {
 	RayTracingLayer::RayTracingLayer() {
+
+		auto manager = new AssetManagerEditor();
+		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/cube.obj";
+		manager->CreateAssetFromFile(t);
+
 		Material& pinkSphere = m_Scene.Materials.emplace_back();
 		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
 		pinkSphere.Roughness = 0.0f;

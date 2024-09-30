@@ -182,6 +182,15 @@
     <ClInclude Include="Source\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="Source\Platform\Windows\Window\WindowsWindow.h" />
     <ClInclude Include="Source\Scene\Asset\Asset.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetImporter.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetManagerBase.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetManagerEditor.h" />
+    <ClInclude Include="Source\Scene\Asset\AssetMetadata.h" />
+    <ClInclude Include="Source\Scene\Asset\MaterialAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\MeshAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\MeshImporter.h" />
+    <ClInclude Include="Source\Scene\Asset\SceneAsset.h" />
+    <ClInclude Include="Source\Scene\Asset\TextureAsset.h" />
     <ClInclude Include="Source\Scene\Components.h" />
     <ClInclude Include="Source\Scene\AObject.h" />
     <ClInclude Include="Source\Scene\Scene.h" />
@@ -636,6 +645,9 @@
     <ClCompile Include="Source\Platform\Windows\Input\WindowsInput.cpp" />
     <ClCompile Include="Source\Platform\Windows\Window\WindowsWindow.cpp" />
     <ClCompile Include="Source\Scene\AObject.cpp" />
+    <ClCompile Include="Source\Scene\Asset\Asset.cpp" />
+    <ClCompile Include="Source\Scene\Asset\AssetImporter.cpp" />
+    <ClCompile Include="Source\Scene\Asset\AssetManagerEditor.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\UUID.cpp" />
     <ClCompile Include="Vendor\stb_image\stb_image.cpp" />
