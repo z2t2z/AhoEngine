@@ -54,7 +54,7 @@ namespace Aho {
 		Material(std::string& filepath) { m_Shader = Shader::Create(filepath); }
 		~Material() = default;
 
-		void Apply();
+		void Apply(const std::shared_ptr<Shader>& shader);
 		void AddTexture(std::shared_ptr<Texture2D> texture) { m_Textures.push_back(texture); }
 		std::shared_ptr<Shader> GetShader() const { return m_Shader; }
 		void SetShader(std::shared_ptr<Shader> shader) { m_Shader = shader; }

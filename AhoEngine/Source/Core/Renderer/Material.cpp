@@ -2,21 +2,25 @@
 #include "Material.h"
 
 namespace Aho {
-    void Material::Apply() {
-        m_Shader->Bind();
+    void Material::Apply(const std::shared_ptr<Shader>& shader) {
+        shader->Bind();
         // Binding textures
         for (size_t i = 0; i < m_Textures.size(); i++) {
             const auto& texture = m_Textures[i];
             auto type = texture->GetTextureType();
             switch (type) {
                 case TextureType::Diffuse:
-                    m_Shader->SetInt("u_Diffuse", i);
+                    shader->SetInt("u_Diffuse", i);
+                    break;
                 case TextureType::Normal:
-                    m_Shader->SetInt("u_Normal", i);
+                    shader->SetInt("u_Normal", i);
+                    break;
                 case TextureType::Specular:
-                    m_Shader->SetInt("u_Specular", i);
+                    shader->SetInt("u_Specular", i);
+                    break;
                 case TextureType::Roughness:
-                    m_Shader->SetInt("u_Roughness", i);
+                    shader->SetInt("u_Roughness", i);
+                    break;
             }
             texture->Bind();
         }
@@ -24,12 +28,12 @@ namespace Aho {
         // Big TODO
         for (const auto& para : m_Parameters) {
             if (para->GetName() == "vec3") {
-                m_Shader->SetVec3("u_" + para->GetName(), *static_cast<glm::vec3*>(para->GetValue()));
+                shader->SetVec3("u_" + para->GetName(), *static_cast<glm::vec3*>(para->GetValue()));
             }
             if (para->GetName() == "float") {
-                m_Shader->SetFloat("u_" + para->GetName(), *static_cast<float*>(para->GetValue()));
+                shader->SetFloat("u_" + para->GetName(), *static_cast<float*>(para->GetValue()));
             }
         }
-        m_Shader->Unbind();
+        //m_Shader->Unbind();
     }
 }

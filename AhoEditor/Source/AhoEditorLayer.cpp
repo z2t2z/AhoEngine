@@ -112,11 +112,17 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		//std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
 		//std::string filePath = "D:/Projs/Piccolo/bin/asset/objects/basic/cube.obj";
 		m_Manager = new AssetManagerEditor();
 		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/Beriev_A50/BerievA50.obj";
-		m_Manager->CreateAssetFromFile(t);
+		std::string filePath = "D:/tcd/Sem2/Real-time-rendering/source/resources/models/sponza/sponza.obj";
+		auto asset = m_Manager->CreateAssetFromFile(filePath);
+		if (asset->GetType() == AssetType::Mesh) {
+			
+			m_Plane = m_ActiveScene->CreateAObject("Test");
+			m_Plane.AddComponent<MeshesComponent>(static_pointer_cast<MeshAsset>(asset));
+			m_Plane.AddComponent<TransformComponent>();
+		}
 		//m_Test = m_ActiveScene->CreateAObject("Cube");
 		//m_Test.AddComponent<MeshesComponent>(filePath);
 	}

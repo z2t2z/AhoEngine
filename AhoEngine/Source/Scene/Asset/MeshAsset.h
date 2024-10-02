@@ -17,8 +17,8 @@ namespace Aho{
 		}
 		std::vector<std::shared_ptr<VertexArray>>::iterator begin() { return m_VAOs.begin(); }
 		std::vector<std::shared_ptr<VertexArray>>::iterator end() { return m_VAOs.end(); }
-	private:
 		std::vector<std::shared_ptr<VertexArray>> m_VAOs;
 		std::vector<std::shared_ptr<MaterialAsset>> m_Materials;
+	private:
 	};
 }

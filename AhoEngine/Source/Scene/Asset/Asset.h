@@ -24,6 +24,7 @@ namespace Aho {
 		//	m_MatadataPath = path;
 		//}
 		virtual ~Asset() = default;
+		virtual void SetType(AssetType type) { m_Type = type; }
 		virtual AssetType GetType() const { return m_Type; }
 		virtual UUID GetUUID() const { return m_Handle; }
 		virtual void SetUUID(UUID id) { m_Handle = id; }

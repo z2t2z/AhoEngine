@@ -32,6 +32,7 @@ namespace Aho {
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;
 
+		AObject m_Plane;
 		AObject m_Test;
 		AObject m_CameraAObject;
 		AObject m_Cube;

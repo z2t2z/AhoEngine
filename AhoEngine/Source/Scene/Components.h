@@ -3,7 +3,7 @@
 #include "Core/Camera/Camera.h"
 #include "Core/Camera/RuntimeCamera.h"
 #include "Core/Model/Model.h"
-
+#include "Scene/Asset/MeshAsset.h"
 #include <string>
 
 #include <glm/glm.hpp>
@@ -58,12 +58,10 @@ namespace Aho{
 	};
 
 	struct MeshesComponent {
-		Model model;
-
+		std::shared_ptr<MeshAsset> meshAsset;
 		MeshesComponent() = default;
-		MeshesComponent(const std::string& path) 
-			: model(path) {
-		}
+		MeshesComponent(const std::shared_ptr<MeshAsset> _meshAsset)
+			: meshAsset(_meshAsset) {}
 		MeshesComponent(const MeshesComponent&) = default;
 	};
 
