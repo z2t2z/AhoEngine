@@ -58,11 +58,11 @@ namespace Aho{
 	};
 
 	struct MeshesComponent {
-		std::shared_ptr<MeshAsset> meshAsset;
-		MeshesComponent() = default;
-		MeshesComponent(const std::shared_ptr<MeshAsset> _meshAsset)
-			: meshAsset(_meshAsset) {}
-		MeshesComponent(const MeshesComponent&) = default;
+		//std::shared_ptr<MeshAsset> meshAsset;
+		//MeshesComponent() = default;
+		//MeshesComponent(const std::shared_ptr<MeshAsset> _meshAsset)
+		//	: meshAsset(_meshAsset) {}
+		//MeshesComponent(const MeshesComponent&) = default;
 	};
 
 	// Temporary, think about how to design light class

@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;Vendor\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;Vendor\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -120,7 +120,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;Vendor\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -141,14 +141,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
+    <ClInclude Include="Source\IamAho.h" />
     <ClInclude Include="Source\Runtime\Core\App\Application.h" />
-    <ClInclude Include="Source\Runtime\Function\Camera\Camera.h" />
-    <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h" />
-    <ClInclude Include="Source\Runtime\Function\Camera\EditorCamera.h" />
-    <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h" />
+    <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
     <ClInclude Include="Source\Runtime\Core\Core.h" />
     <ClInclude Include="Source\Runtime\Core\Debugger.h" />
-    <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
     <ClInclude Include="Source\Runtime\Core\Events\ApplicationEvent.h" />
     <ClInclude Include="Source\Runtime\Core\Events\Event.h" />
     <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h" />
@@ -159,7 +156,16 @@
     <ClInclude Include="Source\Runtime\Core\Input\MouseButtonCodes.h" />
     <ClInclude Include="Source\Runtime\Core\Layer\Layer.h" />
     <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h" />
-    <ClInclude Include="Source\Runtime\Resource\Model\Model.h" />
+    <ClInclude Include="Source\Runtime\Core\Log\Log.h" />
+    <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h" />
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
+    <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h" />
+    <ClInclude Include="Source\Runtime\Core\Window\Window.h" />
+    <ClInclude Include="Source\Runtime\Function\Camera\Camera.h" />
+    <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Camera\EditorCamera.h" />
+    <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
@@ -170,9 +176,6 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h" />
-    <ClInclude Include="Source\Runtime\Core\Window\Window.h" />
-    <ClInclude Include="Source\IamAho.h" />
-    <ClInclude Include="Source\Runtime\Core\Log\Log.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLFramebuffer.h" />
@@ -182,7 +185,8 @@
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetImporter.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerBase.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerEditor.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetMetadata.h" />
@@ -191,8 +195,9 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\MeshImporter.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\SceneAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h" />
-    <ClInclude Include="Source\Runtime\Resource\EcS\Components.h" />
     <ClInclude Include="Source\Runtime\Resource\EcS\AObject.h" />
+    <ClInclude Include="Source\Runtime\Resource\EcS\Components.h" />
+    <ClInclude Include="Source\Runtime\Resource\Model\Model.h" />
     <ClInclude Include="Source\Runtime\Resource\Scene\Scene.h" />
     <ClInclude Include="Source\Runtime\Resource\UUID\UUID.h" />
     <ClInclude Include="Vendor\glm\glm\common.hpp" />
@@ -611,6 +616,7 @@
     <ClInclude Include="Vendor\glm\glm\vec3.hpp" />
     <ClInclude Include="Vendor\glm\glm\vec4.hpp" />
     <ClInclude Include="Vendor\glm\glm\vector_relational.hpp" />
+    <ClInclude Include="Vendor\json\json.hpp" />
     <ClInclude Include="Vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
@@ -618,13 +624,13 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\Runtime\Core\Core.cpp" />
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiBuild.cpp" />
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiLayer.cpp" />
     <ClCompile Include="Source\Runtime\Core\Layer\Layer.cpp" />
     <ClCompile Include="Source\Runtime\Core\Layer\LayerStack.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp" />
+    <ClCompile Include="Source\Runtime\Core\Log\Log.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
@@ -634,7 +640,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp" />
-    <ClCompile Include="Source\Runtime\Core\Log\Log.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLFramebuffer.cpp" />
@@ -644,10 +649,11 @@
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Input\WindowsInput.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\EcS\AObject.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\AssetImporter.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\EcS\AObject.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Scene\Scene.cpp" />
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp" />
     <ClCompile Include="Vendor\stb_image\stb_image.cpp" />

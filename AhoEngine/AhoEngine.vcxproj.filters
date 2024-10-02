@@ -4,50 +4,74 @@
     <Filter Include="Source">
       <UniqueIdentifier>{56EB95D1-428D-C0A7-2B48-D4FB178947F8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core">
-      <UniqueIdentifier>{6E95150F-DA4A-8E04-633F-88DBCFF38408}</UniqueIdentifier>
+    <Filter Include="Source\Runtime">
+      <UniqueIdentifier>{89EE4F15-75BC-431B-5E50-B4414ABD1F80}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Camera">
-      <UniqueIdentifier>{2602F93F-12E6-B995-7B46-B4E86749A417}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core">
+      <UniqueIdentifier>{8190802D-EDF1-5D3B-765F-A4EDE2BF94FA}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Events">
-      <UniqueIdentifier>{92191B46-7EFD-DB9B-E75D-D6EED360C61D}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\App">
+      <UniqueIdentifier>{31D28124-9D09-CABB-A613-2EDF12CAF0B4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Gui">
-      <UniqueIdentifier>{C29FB921-2E2B-27E6-373C-AADAA34683E6}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Events">
+      <UniqueIdentifier>{4581E0DD-3191-8CAE-9A4A-F1CC86797B47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Input">
-      <UniqueIdentifier>{ED1FC176-5936-BF0C-A2AD-4A2E0E039094}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Gui">
+      <UniqueIdentifier>{55EC8124-C123-CABB-CA2D-2EDF36E4F0B4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Layer">
-      <UniqueIdentifier>{BA6CF076-2683-EE0C-6FFA-792EDB4FBF94}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Input">
+      <UniqueIdentifier>{40DDCE4C-AC9F-02D7-F54F-91636151DBB4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Model">
-      <UniqueIdentifier>{2ED90977-9AEF-070D-E366-932E4FBCD894}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Layer">
+      <UniqueIdentifier>{0D2AFE4C-79EC-31D7-C29C-C0632E9E0AB5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Core\Renderer">
-      <UniqueIdentifier>{D4D44230-C063-CCF9-6982-E0F455F0DC9F}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Log">
+      <UniqueIdentifier>{D2008224-3E38-CABB-4742-2EDFB3F8F0B4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Log">
-      <UniqueIdentifier>{27BEC236-1376-0484-7C7D-DDDF68549F74}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Core\Window">
+      <UniqueIdentifier>{48E2F606-34F2-A2D7-9DAB-07F689DA9170}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Platform">
-      <UniqueIdentifier>{6A48A913-D6D3-16D8-DFE4-99CC4BEF72D8}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Function">
+      <UniqueIdentifier>{FE69D2AD-6AA1-1A45-73AB-7E68DF61413E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Platform\OpenGL">
-      <UniqueIdentifier>{5E160775-4A10-30C7-337D-C6D71F169633}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Function\Camera">
+      <UniqueIdentifier>{B61487DC-A23A-5143-8B80-D60E7745760F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Platform\Windows">
-      <UniqueIdentifier>{A4BC056E-10F4-4D05-19FE-B12885B474FE}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Function\Renderer">
+      <UniqueIdentifier>{64CB9F28-501C-8B6A-7980-792C65301ED4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Platform\Windows\Input">
-      <UniqueIdentifier>{A357BBA5-0F70-A2CF-D81C-326944F43669}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Platform">
+      <UniqueIdentifier>{FD947116-69CC-B9AD-72D6-1DD1DE8CE0A6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Platform\Windows\Window">
-      <UniqueIdentifier>{0BA9727D-F7CE-3CE4-E014-C2AFCCD961B0}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Platform\OpenGL">
+      <UniqueIdentifier>{911FCFBB-7D45-9922-668B-1EEE5250BEEE}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Scene">
-      <UniqueIdentifier>{F300E3F2-DF63-7297-88E9-AA4D742B3E1A}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Platform\Windows">
+      <UniqueIdentifier>{37ECCE8D-A3CF-DDCD-ACD2-0B0A1835A41E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Platform\Windows\Input">
+      <UniqueIdentifier>{76A91CDD-E26D-1BCD-ABD3-4B971757B702}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Platform\Windows\Window">
+      <UniqueIdentifier>{3E35FEA0-2A87-D590-13A6-12A1FF96EE79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource">
+      <UniqueIdentifier>{C03AC8FD-2C72-1095-357C-74B8A132378E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\Asset">
+      <UniqueIdentifier>{4FFFB413-BB17-9C3D-84C4-2BD7F09B30D7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\EcS">
+      <UniqueIdentifier>{2A9302C9-96A0-30AF-1F87-2C9A8B93FC65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\Model">
+      <UniqueIdentifier>{00B48B14-6CCC-723E-3579-02D8A15007D8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\Scene">
+      <UniqueIdentifier>{DDB7F114-49D0-D83E-127D-68D87E546DD8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\UUID">
+      <UniqueIdentifier>{E6815DE9-D23C-4D95-7BF4-C5DF678E9725}</UniqueIdentifier>
     </Filter>
     <Filter Include="Vendor">
       <UniqueIdentifier>{935FDCD7-7F01-07AE-68BC-1A0254FD8DFE}</UniqueIdentifier>
@@ -70,6 +94,9 @@
     <Filter Include="Vendor\glm\glm\gtx">
       <UniqueIdentifier>{9362E3A8-7F46-A4FE-E8A6-9E51D4A98E80}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor\json">
+      <UniqueIdentifier>{3CABE415-A860-5D0B-3155-57E29D09540F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Vendor\stb_image">
       <UniqueIdentifier>{EDE315D3-D9DC-3425-020F-1AAAEE661431}</UniqueIdentifier>
     </Filter>
@@ -78,134 +105,170 @@
     <ClInclude Include="Source\Ahopch.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\App\Application.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Camera\Camera.h">
-      <Filter>Source\Core\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h">
-      <Filter>Source\Core\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Camera\EditorCamera.h">
-      <Filter>Source\Core\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h">
-      <Filter>Source\Core\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Core.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Debugger.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Events\ApplicationEvent.h">
-      <Filter>Source\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Events\Event.h">
-      <Filter>Source\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h">
-      <Filter>Source\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h">
-      <Filter>Source\Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h">
-      <Filter>Source\Core\Gui</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Input\Input.h">
-      <Filter>Source\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Input\KeyCodes.h">
-      <Filter>Source\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Input\MouseButtonCodes.h">
-      <Filter>Source\Core\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Layer\Layer.h">
-      <Filter>Source\Core\Layer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h">
-      <Filter>Source\Core\Layer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\Model\Model.h">
-      <Filter>Source\Core\Model</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Material.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Window\Window.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\IamAho.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\App\Application.h">
+      <Filter>Source\Runtime\Core\App</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h">
+      <Filter>Source\Runtime\Core\App</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Core.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Debugger.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\ApplicationEvent.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\Event.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h">
+      <Filter>Source\Runtime\Core\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Input\Input.h">
+      <Filter>Source\Runtime\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Input\KeyCodes.h">
+      <Filter>Source\Runtime\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Input\MouseButtonCodes.h">
+      <Filter>Source\Runtime\Core\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Layer\Layer.h">
+      <Filter>Source\Runtime\Core\Layer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h">
+      <Filter>Source\Runtime\Core\Layer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Log\Log.h">
-      <Filter>Source\Log</Filter>
+      <Filter>Source\Runtime\Core\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Window\Window.h">
+      <Filter>Source\Runtime\Core\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Camera\Camera.h">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Camera\EditorCamera.h">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Material.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLContext.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLFramebuffer.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLRendererAPI.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLShader.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLTexture.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.h">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.h">
-      <Filter>Source\Platform\Windows\Window</Filter>
+      <Filter>Source\Runtime\Platform\Windows\Window</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\EcS\Components.h">
-      <Filter>Source\Scene</Filter>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerBase.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerEditor.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetMetadata.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\MeshAsset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\MeshImporter.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\SceneAsset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\EcS\AObject.h">
-      <Filter>Source\Scene</Filter>
+      <Filter>Source\Runtime\Resource\EcS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\EcS\Components.h">
+      <Filter>Source\Runtime\Resource\EcS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Model\Model.h">
+      <Filter>Source\Runtime\Resource\Model</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Scene\Scene.h">
-      <Filter>Source\Scene</Filter>
+      <Filter>Source\Runtime\Resource\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\UUID\UUID.h">
+      <Filter>Source\Runtime\Resource\UUID</Filter>
     </ClInclude>
     <ClInclude Include="Vendor\glm\glm\common.hpp">
       <Filter>Vendor\glm\glm</Filter>
@@ -1455,118 +1518,122 @@
     <ClInclude Include="Vendor\glm\glm\vector_relational.hpp">
       <Filter>Vendor\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="Vendor\json\json.hpp">
+      <Filter>Vendor\json</Filter>
+    </ClInclude>
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\UUID\UUID.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetImporter.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetMetadata.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerBase.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\MeshImporter.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerEditor.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\MeshAsset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\SceneAsset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h" />
+    <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h" />
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h" />
+    <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp">
-      <Filter>Source\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp">
-      <Filter>Source\Core\Camera</Filter>
+      <Filter>Source\Runtime\Core\App</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Core.cpp">
-      <Filter>Source\Core</Filter>
+      <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiBuild.cpp">
-      <Filter>Source\Core\Gui</Filter>
+      <Filter>Source\Runtime\Core\Gui</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiLayer.cpp">
-      <Filter>Source\Core\Gui</Filter>
+      <Filter>Source\Runtime\Core\Gui</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Layer\Layer.cpp">
-      <Filter>Source\Core\Layer</Filter>
+      <Filter>Source\Runtime\Core\Layer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Layer\LayerStack.cpp">
-      <Filter>Source\Core\Layer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp">
-      <Filter>Source\Core\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
-      <Filter>Source\Core\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp">
-      <Filter>Source\Core\Renderer</Filter>
+      <Filter>Source\Runtime\Core\Layer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp">
-      <Filter>Source\Log</Filter>
+      <Filter>Source\Runtime\Core\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLContext.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLFramebuffer.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLRendererAPI.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLShader.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLTexture.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.cpp">
-      <Filter>Source\Platform\OpenGL</Filter>
+      <Filter>Source\Runtime\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\Windows\Input\WindowsInput.cpp">
-      <Filter>Source\Platform\Windows\Input</Filter>
+      <Filter>Source\Runtime\Platform\Windows\Input</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp">
-      <Filter>Source\Platform\Windows\Window</Filter>
+      <Filter>Source\Runtime\Platform\Windows\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\EcS\AObject.cpp">
-      <Filter>Source\Scene</Filter>
+      <Filter>Source\Runtime\Resource\EcS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp">
+      <Filter>Source\Runtime\Resource\Model</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Scene\Scene.cpp">
-      <Filter>Source\Scene</Filter>
+      <Filter>Source\Runtime\Resource\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">
+      <Filter>Source\Runtime\Resource\UUID</Filter>
     </ClCompile>
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\AssetImporter.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
   </ItemGroup>
 </Project>

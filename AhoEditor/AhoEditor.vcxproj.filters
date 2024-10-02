@@ -27,7 +27,4 @@
       <Filter>CPURayTracing</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ShaderSrc\Compute.glsl" />
-  </ItemGroup>
 </Project>

@@ -6,9 +6,9 @@
 
 namespace Aho {
 	RayTracingLayer::RayTracingLayer() {
-		auto manager = new AssetManagerEditor();
-		std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/Beriev_A50/BerievA50.obj";
-		manager->CreateAssetFromFile(t);
+		//auto manager = new AssetManagerEditor();
+		//std::string t = "D:/tcd/Sem2/Real-time-rendering/sem2/resources/models/Beriev_A50/BerievA50.obj";
+		//manager->CreateAssetFromFile(t);
 
 		CPU::Material& pinkSphere = m_Scene.Materials.emplace_back();
 		pinkSphere.Albedo = { 1.0f, 0.0f, 1.0f };
@@ -106,7 +106,6 @@ namespace Aho {
 				ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 			}
-
 
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {

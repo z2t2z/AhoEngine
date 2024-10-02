@@ -19,6 +19,7 @@ IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
 IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
 IncludeDir["stb_image"] = "AhoEngine/Vendor/stb_image"
+IncludeDir["json"] = "AhoEngine/Vendor/json"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
@@ -46,7 +47,8 @@ project "AhoEngine"
         "%{prj.name}/Vendor/glm/glm/**.inl",
         "%{prj.name}/Vendor/glm/glm/**.hpp",
         "%{prj.name}/Vendor/stb_image/**.h",
-        "%{prj.name}/Vendor/stb_image/**.cpp"
+        "%{prj.name}/Vendor/stb_image/**.cpp",
+        "%{prj.name}/Vendor/json/**.hpp"
     }
 	
     defines {
@@ -63,6 +65,7 @@ project "AhoEngine"
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.stb_image}",
+        "%{IncludeDir.json}"
     }
 
     links {
@@ -125,6 +128,7 @@ project "AhoEditor"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
+        "%{IncludeDir.json}"
     }
 
     links {
@@ -177,6 +181,7 @@ project "Sandbox"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
+        "%{IncludeDir.json}"
     }
 
     links {

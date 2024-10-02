@@ -24,6 +24,7 @@
 #include "Runtime/Function/Camera/CameraManager.h"
 
 #include "Runtime/Resource/Asset/AssetManagerEditor.h"
+#include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Resource/Model/Model.h"
 #include "Runtime/Resource/Ecs/Components.h"
 #include "Runtime/Resource/Ecs/AObject.h"
