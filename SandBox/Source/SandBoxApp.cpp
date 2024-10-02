@@ -1,7 +1,7 @@
 #include "IamAho.h"
 
 #include "imgui.h"
-#include "Core/EntryPoint.h"
+#include "Runtime/Core/App/EntryPoint.h"
 
 class ExampleLayer : public Aho::Layer {
 public:

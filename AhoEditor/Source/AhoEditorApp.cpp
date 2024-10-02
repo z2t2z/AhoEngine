@@ -2,14 +2,14 @@
 
 #include "AhoEditorLayer.h"
 #include "CPURayTracing/RayTracingLayer.h"
-#include "Core/EntryPoint.h"
+#include "Runtime/Core/App/EntryPoint.h"
 
 namespace Aho {
 	class AhoEditor : public Application {
 	public:
 		AhoEditor() {
-			//PushLayer(new RayTracingLayer());
-			PushLayer(new AhoEditorLayer());
+			PushLayer(new RayTracingLayer());
+			//PushLayer(new AhoEditorLayer());
 		}
 
 		~AhoEditor() {

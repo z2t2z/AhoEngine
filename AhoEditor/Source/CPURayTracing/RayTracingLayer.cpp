@@ -3,8 +3,6 @@
 #include <imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "Scene/Asset/AssetManagerEditor.h"
-
 
 namespace Aho {
 	RayTracingLayer::RayTracingLayer() {

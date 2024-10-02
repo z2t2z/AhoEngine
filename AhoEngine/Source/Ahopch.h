@@ -16,7 +16,7 @@
 #include <chrono>
 #include <random>
 
-#include "Log/Log.h"
+#include "Runtime/Core/Log/Log.h"
 
 #ifdef AHO_PLATFORM_WINDOWS
 	#include <Windows.h>
