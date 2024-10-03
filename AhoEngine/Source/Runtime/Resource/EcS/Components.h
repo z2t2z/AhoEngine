@@ -12,7 +12,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-namespace Aho{
+namespace Aho {
 	struct TagComponent {
 		std::string Tag;
 		TagComponent() = default;
@@ -47,14 +47,30 @@ namespace Aho{
 	//	RuntimeCameraComponent(RuntimeCamera* _camera, bool primary) : camera(_camera), Primary(primary) {}
 	//};
 
+	struct MaterialComponent {
+		std::shared_ptr<VertexArray> vertexArray;
+		MaterialComponent() = default;
+		MaterialComponent(std::shared_ptr<VertexArray>& _vertexArray)
+			: vertexArray(_vertexArray) {}
+		MaterialComponent(const MaterialComponent&) = default;
+	};
+
 	// Temporary, consider how to design this
 	struct MeshComponent {
 		std::shared_ptr<VertexArray> vertexArray;
-
 		MeshComponent() = default;
-		MeshComponent(std::shared_ptr<VertexArray>& _vertexArray)
+		MeshComponent(const std::shared_ptr<VertexArray>& _vertexArray)
 			: vertexArray(_vertexArray) {}
 		MeshComponent(const MeshComponent&) = default;
+	};
+	
+	struct MultiMeshComponent {
+		std::vector<MeshComponent> meshes;
+		MultiMeshComponent() = default;
+		MultiMeshComponent(const std::vector<MeshComponent>& _meshes)
+			: meshes(_meshes) {
+		}
+		MultiMeshComponent(const MultiMeshComponent&) = default;
 	};
 
 	struct MeshesComponent {

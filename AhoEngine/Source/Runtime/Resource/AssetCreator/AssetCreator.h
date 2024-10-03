@@ -5,6 +5,7 @@
 #include "Runtime/Resource/ResourceType/ResourceType.h"
 #include "Runtime/Resource/Serializer/Serializer.h"
 #include <queue>
+#include <cstdlib>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -12,26 +13,41 @@
 namespace Aho {
 	class AssetCreater {
 	public:
-		static bool MeshAssetCreater(std::string& filePath) {
+		static std::shared_ptr<StaticMesh> MeshAssetCreater(const std::string& filePath) {
 			Assimp::Importer importer;
 			auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
 			const aiScene* scene = importer.ReadFile(filePath, Flags);
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 				AHO_CORE_ERROR(importer.GetErrorString());
-				return false;
+				return nullptr;
 			}
+
+			auto ProcessMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
+				MaterialInfo info;
+				aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+				for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_HEIGHT }) {
+					for (size_t i = 0; i < std::min(1U, material->GetTextureCount(type)); i++) {
+						aiString str;
+						material->GetTexture(type, i, &str);
+						info.hasMaterial = true;
+						(type == aiTextureType_HEIGHT ? info.Normal : info.Albedo) = std::string(str.data);
+					}
+				}
+				return info;
+			};
+
+			std::vector<std::shared_ptr<MeshInfo>> subMesh;
 			auto ProcessSubMesh = [&](aiMesh* mesh, const aiScene* scene) -> bool {
-				int normal_cnt = 0;
-				int texcoords_cnt = 0;
-				RawMesh rawMesh;
-				auto& vertexBuffer = rawMesh.vertexBuffer;
+				std::vector<Vertex> vertexBuffer;
+				vertexBuffer.reserve(mesh->mNumVertices);
+				bool hasNormal = mesh->HasNormals();
 				for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 					Vertex vertex;
 					vertex.x = mesh->mVertices[i].x;
 					vertex.y = mesh->mVertices[i].y;
 					vertex.z = mesh->mVertices[i].z;
 					// Normals
-					if (mesh->HasNormals()) {
+					if (hasNormal) {
 						vertex.nx = mesh->mNormals[i].x;
 						vertex.ny = mesh->mNormals[i].y;
 						vertex.nz = mesh->mNormals[i].z;
@@ -49,13 +65,16 @@ namespace Aho {
 					}
 					vertexBuffer.push_back(vertex);
 				}
-				auto& indexBuffer = rawMesh.indexBuffer;
+				//indexBuffer.reserve(mesh->mNumVertices);
+				std::vector<uint32_t> indexBuffer;
 				for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
 					aiFace face = mesh->mFaces[i];
 					for (uint32_t j = 0; j < face.mNumIndices; j++) {
 						indexBuffer.push_back(face.mIndices[j]);
 					}
 				}
+				subMesh.emplace_back(std::make_shared<MeshInfo>(vertexBuffer, indexBuffer, hasNormal, ProcessMaterial(mesh, scene)));
+				return true;
 			};
 
 			auto ProcessNode = [&](aiNode* node, const aiScene* scene) -> bool {
@@ -76,8 +95,9 @@ namespace Aho {
 				}
 				return true;
 			};
+			ProcessNode(scene->mRootNode, scene);
 
-			return ProcessNode(scene->mRootNode, scene);
+			return std::make_shared<StaticMesh>(subMesh);
 		}
 	};
 

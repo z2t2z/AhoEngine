@@ -41,7 +41,7 @@ namespace Aho {
 				return;
 			}
 
-			s_AssetDeserializer.at(Type)(jsonObject, assetOut);
+			//s_AssetDeserializer.at(Type)(jsonObject, assetOut);
 		}
 
 		template<typename AssetType>

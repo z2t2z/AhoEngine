@@ -9,13 +9,14 @@ out vec3 v_Position;
 out vec3 v_Normal;
 out vec2 v_TexCoords;
 
-uniform mat4 u_View;                           // 视图矩阵
-uniform mat4 u_Projection;                      // 投影矩阵
-uniform mat4 u_Model; // TODO
+uniform mat4 u_View;
+uniform mat4 u_Projection;
+uniform mat4 u_Model;
 
 void main() {
 	v_Position = vec3(u_Model * vec4(a_Position, 1.0));
-	gl_Position = u_Projection * u_View * vec4(v_Position, 1.0);
+	gl_Position = u_Projection * u_View * u_Model * vec4(v_Position, 1.0);
+	//v_Position = vec3(gl_Position);
 	v_Normal = mat3(transpose(inverse(u_Model))) * a_Normal;
 	v_TexCoords = a_TexCoords;
 }
@@ -56,5 +57,6 @@ void main() {
 	vec3 result = (ambient + diffuse + specular) * u_Color;
 
 	//color = vec4(v_TexCoords.x, v_TexCoords.y, 0.0, 1.0);
-	color = texture(u_Diffuse, v_TexCoords);
+	//color = texture(u_Diffuse, v_TexCoords);
+	color = vec4(0.5, 0.1, 0.2, 1.0);
 }

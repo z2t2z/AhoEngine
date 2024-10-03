@@ -49,7 +49,7 @@ namespace Aho {
 
                 //glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, cam->GetRight()), glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
                 glm::quat q = glm::normalize(glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f)) *
-                    glm::angleAxis(pitchDelta, cam->GetRight()));
+                    glm::angleAxis(-pitchDelta, cam->GetRight()));
 
                 cam->SetForwardRotation(q);
             }

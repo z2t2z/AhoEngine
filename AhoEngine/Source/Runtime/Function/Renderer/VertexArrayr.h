@@ -1,16 +1,15 @@
 #pragma once
 
+#include "Runtime/Resource/ResourceType/ResourceType.h"
 #include <vector>
 #include <memory>
-
 #include "Buffer.h"
 
 namespace Aho {
-
-
 	class VertexArray {
 	public:
 		virtual ~VertexArray() {}
+		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) = 0;
 
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
@@ -23,5 +22,4 @@ namespace Aho {
 
 		static VertexArray* Create();
 	};
-
 }

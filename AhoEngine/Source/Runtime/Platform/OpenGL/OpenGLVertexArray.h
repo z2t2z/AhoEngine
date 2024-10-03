@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Runtime/Function/Renderer/VertexArrayr.h"
+#include "Runtime/Function/Renderer/Buffer.h"
 
 namespace Aho {
 	class OpenGLVertexArray : public VertexArray {
@@ -8,6 +9,7 @@ namespace Aho {
 		OpenGLVertexArray();
 		virtual ~OpenGLVertexArray();
 
+		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 

@@ -1,6 +1,5 @@
 #include "Ahopch.h"
 #include "OpenGLVertexArray.h"
-
 #include <glad/glad.h>
 
 namespace Aho {
@@ -30,6 +29,42 @@ namespace Aho {
 
 	OpenGLVertexArray::~OpenGLVertexArray() {
 		glDeleteVertexArrays(1, &m_RendererID);
+	}
+
+	void OpenGLVertexArray::Init(const std::shared_ptr<MeshInfo>& meshInfo) {
+		std::vector<float> vertices;
+		vertices.reserve(meshInfo->vertexBuffer.size() * 14u);
+		for (const auto& vertex : meshInfo->vertexBuffer) {
+			vertices.push_back(vertex.x);
+			vertices.push_back(vertex.y);
+			vertices.push_back(vertex.z);
+			vertices.push_back(vertex.nx);
+			vertices.push_back(vertex.ny);
+			vertices.push_back(vertex.nz);
+			vertices.push_back(vertex.tx);
+			vertices.push_back(vertex.ty);
+			vertices.push_back(vertex.tz);
+			vertices.push_back(vertex.btx);
+			vertices.push_back(vertex.bty);
+			vertices.push_back(vertex.btz);
+			vertices.push_back(vertex.u);
+			vertices.push_back(vertex.v);
+		}
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+		BufferLayout layout = {
+			{ ShaderDataType::Float3, "a_Position" }
+		};
+		layout.Push({ ShaderDataType::Float3, "a_Normal" });
+		layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
+		layout.Push({ ShaderDataType::Float3, "a_Tangent" });
+		layout.Push({ ShaderDataType::Float3, "a_Bitangent" });
+		vertexBuffer->SetLayout(layout);
+		AddVertexBuffer(vertexBuffer);
+		
+		std::shared_ptr<IndexBuffer> indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(meshInfo->indexBuffer.data(), meshInfo->indexBuffer.size()));
+		SetIndexBuffer(indexBuffer);
 	}
 
 	void OpenGLVertexArray::Bind() const {

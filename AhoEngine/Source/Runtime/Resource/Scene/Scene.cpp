@@ -8,7 +8,7 @@
 
 namespace Aho {
 	AObject Scene::CreateAObject(const std::string& name) {
-		AObject entity { m_Registry.create(), this };
+		AObject entity { m_Registry.create(), this, };
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "IamAnAObject" : name;
 		return entity;
@@ -27,15 +27,12 @@ namespace Aho {
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
 		shader->Bind();
 		Renderer::BeginScene(camera);
-		auto view = m_Registry.view<MeshComponent>();
+		auto view = m_Registry.view<MultiMeshComponent>();
 		for (const auto& e : view) {
-			//for (const auto& e : *mc.meshAsset) {
-			//	Renderer::Submit(e);
-			//}
-			//Renderer::Submit(mc.vertexArray);
-			//for (const auto& e : mc.model) {
-			//	Renderer::Submit(e);
-			//}
+			auto& meshComponent = m_Registry.get<MultiMeshComponent>(e);
+			for (const auto& mc : meshComponent.meshes) {
+				Renderer::Submit(mc.vertexArray);
+			}
 		}
 		Renderer::EndScene();
 	}
