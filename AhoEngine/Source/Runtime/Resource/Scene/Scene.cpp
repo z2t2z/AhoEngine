@@ -25,13 +25,24 @@ namespace Aho {
 	}
 
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
-		shader->Bind();
+		//shader->Bind();
 		Renderer::BeginScene(camera);
-		auto view = m_Registry.view<MultiMeshComponent>();
-		for (const auto& e : view) {
-			auto& meshComponent = m_Registry.get<MultiMeshComponent>(e);
-			for (const auto& mc : meshComponent.meshes) {
-				Renderer::Submit(mc.vertexArray);
+		auto view = m_Registry.view<EntityComponent>();
+		for (const auto& entity : view) {
+			auto& meshentities = m_Registry.get<EntityComponent>(entity);
+			for (const auto& meshEntity : meshentities.meshEntities) {
+				auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
+				auto materialComponent = m_Registry.try_get<MaterialComponent>(meshEntity);
+				if (materialComponent && materialComponent->material) {
+					materialComponent->material->Apply(shader);
+				}
+
+				mesh.vertexArray->Bind();
+				Renderer::Submit(mesh.vertexArray);
+				mesh.vertexArray->Unbind();
+				if (materialComponent && materialComponent->material) {
+					materialComponent->material->Unbind(shader);
+				}
 			}
 		}
 		Renderer::EndScene();

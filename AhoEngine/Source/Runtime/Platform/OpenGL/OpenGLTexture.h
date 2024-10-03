@@ -34,7 +34,7 @@ namespace Aho {
 		std::string m_Path;
 		bool m_IsLoaded = false;
 		uint32_t m_Width, m_Height;
-		uint32_t m_RendererID;
+		uint32_t m_RendererID; // texture ID
 		GLenum m_InternalFormat, m_DataFormat;
 	};
 }

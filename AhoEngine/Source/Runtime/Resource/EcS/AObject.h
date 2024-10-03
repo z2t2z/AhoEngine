@@ -33,8 +33,9 @@ namespace Aho {
 		}
 
 		operator bool() const { return m_AObjectHandle != entt::null; }
-		UUID GetAssetUUID() { return m_AssetUUID; }
 
+		UUID GetAssetUUID() { return m_AssetUUID; }
+		entt::entity GetEntityHandle() { return m_AObjectHandle; }
 	private:
 		entt::entity m_AObjectHandle{ entt::null };
 		Scene* m_Scene{ nullptr };

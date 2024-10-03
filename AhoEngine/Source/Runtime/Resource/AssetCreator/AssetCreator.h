@@ -41,6 +41,7 @@ namespace Aho {
 				std::vector<Vertex> vertexBuffer;
 				vertexBuffer.reserve(mesh->mNumVertices);
 				bool hasNormal = mesh->HasNormals();
+				bool hasUVs = mesh->HasTextureCoords(0);
 				for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 					Vertex vertex;
 					vertex.x = mesh->mVertices[i].x;
@@ -53,15 +54,15 @@ namespace Aho {
 						vertex.nz = mesh->mNormals[i].z;
 					}
 					// Texture coords, tangent and bitangent
-					if (mesh->HasTextureCoords(0)) {
+					if (hasUVs) {
 						vertex.u = mesh->mTextureCoords[0][i].x;
 						vertex.v = mesh->mTextureCoords[0][i].y;
 						vertex.tx = mesh->mTangents[i].x;
 						vertex.ty = mesh->mTangents[i].y;
 						vertex.tz = mesh->mTangents[i].z;
-						vertex.btx = mesh->mTangents[i].x;
-						vertex.bty = mesh->mTangents[i].y;
-						vertex.btz = mesh->mTangents[i].z;
+						vertex.btx = mesh->mBitangents[i].x;
+						vertex.bty = mesh->mBitangents[i].y;
+						vertex.btz = mesh->mBitangents[i].z;
 					}
 					vertexBuffer.push_back(vertex);
 				}
@@ -73,7 +74,7 @@ namespace Aho {
 						indexBuffer.push_back(face.mIndices[j]);
 					}
 				}
-				subMesh.emplace_back(std::make_shared<MeshInfo>(vertexBuffer, indexBuffer, hasNormal, ProcessMaterial(mesh, scene)));
+				subMesh.emplace_back(std::make_shared<MeshInfo>(vertexBuffer, indexBuffer, hasNormal, hasUVs, ProcessMaterial(mesh, scene)));
 				return true;
 			};
 
@@ -98,6 +99,10 @@ namespace Aho {
 			ProcessNode(scene->mRootNode, scene);
 
 			return std::make_shared<StaticMesh>(subMesh);
+		}
+
+		static std::shared_ptr<MaterialAsset> MaterialAssetCreater(const std::string& filePath) {
+
 		}
 	};
 

@@ -4,8 +4,8 @@
 #include "Runtime/Function/Camera/RuntimeCamera.h"
 #include "Runtime/Resource/Model/Model.h"
 #include "Runtime/Resource/Asset/MeshAsset.h"
+#include "Runtime/Resource/EcS/AObject.h"
 #include <string>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,6 +19,15 @@ namespace Aho {
 		TagComponent(const TagComponent&) = default;
 		TagComponent(const std::string& tag) : Tag(tag) {}
 	};
+
+	struct EntityComponent {
+		std::vector<entt::entity> meshEntities;
+		EntityComponent() = default;
+		EntityComponent(const EntityComponent&) = default;
+		EntityComponent(const std::vector<entt::entity>& _meshEntities)
+			: meshEntities(_meshEntities) {}
+	};
+
 
 	struct TransformComponent {
 		glm::vec3 Translation{ 0.0f, 0.0f, 0.0f };
@@ -38,20 +47,11 @@ namespace Aho {
 		}
 	};
 
-	//struct RuntimeCameraComponent {
-	//	RuntimeCamera* camera{ nullptr };
-	//	bool Primary{ false };
-
-	//	RuntimeCameraComponent() = default;
-	//	RuntimeCameraComponent(const RuntimeCameraComponent&) = default;
-	//	RuntimeCameraComponent(RuntimeCamera* _camera, bool primary) : camera(_camera), Primary(primary) {}
-	//};
-
 	struct MaterialComponent {
-		std::shared_ptr<VertexArray> vertexArray;
+		std::shared_ptr<Material> material;
 		MaterialComponent() = default;
-		MaterialComponent(std::shared_ptr<VertexArray>& _vertexArray)
-			: vertexArray(_vertexArray) {}
+		MaterialComponent(std::shared_ptr<Material>& _material)
+			: material(_material) {}
 		MaterialComponent(const MaterialComponent&) = default;
 	};
 
@@ -68,17 +68,8 @@ namespace Aho {
 		std::vector<MeshComponent> meshes;
 		MultiMeshComponent() = default;
 		MultiMeshComponent(const std::vector<MeshComponent>& _meshes)
-			: meshes(_meshes) {
-		}
+			: meshes(_meshes) {}
 		MultiMeshComponent(const MultiMeshComponent&) = default;
-	};
-
-	struct MeshesComponent {
-		//std::shared_ptr<MeshAsset> meshAsset;
-		//MeshesComponent() = default;
-		//MeshesComponent(const std::shared_ptr<MeshAsset> _meshAsset)
-		//	: meshAsset(_meshAsset) {}
-		//MeshesComponent(const MeshesComponent&) = default;
 	};
 
 	// Temporary, think about how to design light class

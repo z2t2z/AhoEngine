@@ -1,5 +1,5 @@
 #type vertex
-#version 430 core
+#version 450 core
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
@@ -16,13 +16,12 @@ uniform mat4 u_Model;
 void main() {
 	v_Position = vec3(u_Model * vec4(a_Position, 1.0));
 	gl_Position = u_Projection * u_View * u_Model * vec4(v_Position, 1.0);
-	//v_Position = vec3(gl_Position);
 	v_Normal = mat3(transpose(inverse(u_Model))) * a_Normal;
 	v_TexCoords = a_TexCoords;
 }
 
 #type fragment
-#version 430 core
+#version 450 core
 
 layout(location = 0) out vec4 color;
 
@@ -57,6 +56,6 @@ void main() {
 	vec3 result = (ambient + diffuse + specular) * u_Color;
 
 	//color = vec4(v_TexCoords.x, v_TexCoords.y, 0.0, 1.0);
-	//color = texture(u_Diffuse, v_TexCoords);
-	color = vec4(0.5, 0.1, 0.2, 1.0);
+	color = texture(u_Diffuse, v_TexCoords);
+	//color = vec4(0.5, 0.1, 0.2, 1.0);
 }

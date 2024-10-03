@@ -112,20 +112,38 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		std::filesystem::path newPath = currentPath / "Asset" / "Beriev_A50" / "BerievA50.obj";
+		std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
 		std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
 		AssetManager::LoadAsset<StaticMesh>(newPath, *res);
-		m_Plane = m_ActiveScene->CreateAObject("Plane");
 
-		std::vector<MeshComponent> meshes;
-		meshes.reserve(res->size());
-		for (const auto& a : *res) {
+		m_Plane = m_ActiveScene->CreateAObject("Plane");
+		m_Plane.AddComponent<EntityComponent>();
+		for (const auto& meshInfo : *res) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
-			vao->Init(a);
-			meshes.emplace_back(vao);
+			vao->Init(meshInfo);
+			auto meshEntity = m_ActiveScene->CreateAObject();
+			meshEntity.AddComponent<MeshComponent>(vao);
+			if (meshInfo->materialInfo.HasMaterial()) {
+				auto matEntity = m_ActiveScene->CreateAObject();
+				std::shared_ptr<Material> mat = std::make_shared<Material>();
+				if (!meshInfo->materialInfo.Albedo.empty()) {
+					std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
+					tex->SetTextureType(TextureType::Diffuse);
+					if (tex->IsLoaded()) {
+						mat->AddTexture(tex);
+						//testID = (tex->GetRendererID());
+					}
+				}
+				if (!meshInfo->materialInfo.Normal.empty()) {
+					std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
+					tex->SetTextureType(TextureType::Normal);
+					if (tex->IsLoaded()) mat->AddTexture(tex);
+				}
+				meshEntity.AddComponent<MaterialComponent>(mat);
+			}
+			m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 		}
-		m_Plane.AddComponent<MultiMeshComponent>(meshes);
 	}
 
 	void AhoEditorLayer::OnDetach() {
