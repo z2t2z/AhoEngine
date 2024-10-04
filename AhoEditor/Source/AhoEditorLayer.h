@@ -29,7 +29,8 @@ namespace Aho {
 		
 		std::shared_ptr<Framebuffer> m_Framebuffer;
 
-		std::shared_ptr<Framebuffer> m_FBOMousepicking;
+		std::shared_ptr<Shader> m_PickingShader;
+		std::shared_ptr<Framebuffer> m_PickingFBO;
 
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;

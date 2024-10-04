@@ -19,11 +19,34 @@ namespace Aho {
 		// TODO
 	}
 
+	void Scene::SecondPass(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
+		Renderer::Init(shader);
+		Renderer::BeginScene(camera);
+		auto view = m_Registry.view<EntityComponent>();
+		for (const auto& entity : view) {
+			auto& meshentities = Scene::m_Registry.get<EntityComponent>(entity);
+			for (const auto& meshEntity : meshentities.meshEntities) {
+				auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
+				shader->SetInt("u_ID", mesh.meshID);
+				mesh.vertexArray->Bind();
+				Renderer::Submit(mesh.vertexArray);
+				mesh.vertexArray->Unbind();
+			}
+		}
+		Renderer::EndScene();
+	}
+
 	void Scene::OnUpdateEditor(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader, float deltaTime) {
-		RenderScene(camera, shader);
+		if (deltaTime == -1.0f) {
+			SecondPass(camera, shader);
+		}
+		else {
+			RenderScene(camera, shader);
+		}
 	}
 
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
+		Renderer::Init(shader);
 		Renderer::BeginScene(camera);
 		auto view = m_Registry.view<EntityComponent>();
 		for (const auto& entity : view) {

@@ -77,7 +77,7 @@ namespace Aho {
 		}
 		//AHO_CORE_TRACE("{}", m_FrameIndex);
 		m_ComputeShader->Bind();
-		m_ComputeShader->SetInt("u_Time", time(0));
+		m_ComputeShader->SetInt("u_Time", std::chrono::steady_clock::now().time_since_epoch().count());
 		m_ComputeShader->SetInt("u_Width", width);
 		m_ComputeShader->SetInt("u_Height", height);
 		m_ComputeShader->SetInt("u_FrameIndex", m_FrameIndex);

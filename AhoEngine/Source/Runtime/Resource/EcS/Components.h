@@ -57,10 +57,11 @@ namespace Aho {
 
 	// Temporary, consider how to design this
 	struct MeshComponent {
+		uint32_t meshID{ 0u };
 		std::shared_ptr<VertexArray> vertexArray;
 		MeshComponent() = default;
-		MeshComponent(const std::shared_ptr<VertexArray>& _vertexArray)
-			: vertexArray(_vertexArray) {}
+		MeshComponent(const std::shared_ptr<VertexArray>& _vertexArray, const uint32_t& id)
+			: vertexArray(_vertexArray), meshID(id) {}
 		MeshComponent(const MeshComponent&) = default;
 	};
 	

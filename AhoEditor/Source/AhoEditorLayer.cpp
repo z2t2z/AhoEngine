@@ -23,6 +23,8 @@ namespace Aho {
 		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
 		m_Shader = Shader::Create(path);
 
+		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+
 		Renderer::Init(m_Shader);
 		m_Color = glm::vec4(0);
 
@@ -33,7 +35,9 @@ namespace Aho {
 		auto rendererID = m_Shader->GerRendererID();
 		fbSpec.rendererID = rendererID;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
-		m_FBOMousepicking = Framebuffer::Create(fbSpec);
+		auto fbSpec0 = fbSpec;
+		fbSpec0.rendererID = m_PickingShader->GerRendererID();
+		m_PickingFBO = Framebuffer::Create(fbSpec0);
 
 		// Temporary setting up Cube VAO
 		m_CubeVA.reset(VertexArray::Create());
@@ -82,7 +86,7 @@ namespace Aho {
 		};
 		vertexBuffer->SetLayout(layout);
 		m_CubeVA->AddVertexBuffer(vertexBuffer);
-		
+
 		unsigned int indices[] = {
 			// Front face
 			0, 1, 2,
@@ -110,7 +114,7 @@ namespace Aho {
 		// Entities
 		m_Cube = m_ActiveScene->CreateAObject("Cube");
 		m_Cube.AddComponent<TransformComponent>();
-		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
+		m_Cube.AddComponent<MeshComponent>(m_CubeVA, 0u);
 
 		// temporary
 		//std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
@@ -146,18 +150,19 @@ namespace Aho {
 		//}
 
 		{
-			std::filesystem::path newPath = currentPath / "Asset" / "Beriev_A50" / "BerievA50.obj";
+			std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
 			AssetManager::LoadAsset<StaticMesh>(newPath, *res);
-
 			AObject plane = m_ActiveScene->CreateAObject("Plane");
 			plane.AddComponent<EntityComponent>();
+			uint32_t Mesh_ID = 278'255'360;
 			for (const auto& meshInfo : *res) {
 				std::shared_ptr<VertexArray> vao;
 				vao.reset(VertexArray::Create());
 				vao->Init(meshInfo);
 				auto meshEntity = m_ActiveScene->CreateAObject();
-				meshEntity.AddComponent<MeshComponent>(vao);
+				meshEntity.AddComponent<MeshComponent>(vao, Mesh_ID);
+				Mesh_ID += 10;
 				if (meshInfo->materialInfo.HasMaterial()) {
 					auto matEntity = m_ActiveScene->CreateAObject();
 					std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -186,7 +191,6 @@ namespace Aho {
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_CameraManager->Update(deltaTime);
-
 		//AHO_TRACE("{}", deltaTime);
 		m_DeltaTime = deltaTime;
 		// Pass 1: Normal rendering
@@ -195,14 +199,18 @@ namespace Aho {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
-		m_Framebuffer->Unbind();
 
-		// Pass 2: For mouse picking
-		m_FBOMousepicking->Bind();
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		// temporary second render pass here
+		m_PickingFBO->Bind();
+		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
 		RenderCommand::Clear();
-		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
-		m_FBOMousepicking->Unbind();
+		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
+		// testing mouse picking:
+		const auto& [x, y] = Input::GetMousePosition();
+		if (x >= 0 && y >= 0) {
+			m_PickingFBO->ReadPixel(0, x, m_PickingFBO->GetSpecification().Height - y + 50);
+		}
+		m_PickingFBO->Unbind();
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
@@ -287,10 +295,11 @@ namespace Aho {
 		auto spec = m_Framebuffer->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
 			m_Framebuffer->Resize(width, height);
+			m_PickingFBO->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
 
-		uint32_t textureID = m_FBOMousepicking->GetColorAttachmentRendererID();
+		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image((void*)textureID, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 	}

@@ -23,8 +23,13 @@ namespace Aho {
 
 		virtual bool CreateShaderStorageBuffer() = 0;
 		virtual bool CreateIndexBuffer() = 0;
+
+		// RenderCommand
 		virtual void SetClearColor(const glm::vec4& color) = 0;
 		virtual void Clear() = 0;
 		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
+
+	private:
+		static RendererAPI* s_RendererAPI;
 	};
 } // namespace Aho 

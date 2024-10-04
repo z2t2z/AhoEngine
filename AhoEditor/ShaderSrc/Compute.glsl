@@ -71,15 +71,15 @@ vec4 ConvertToVec4(uint value) {
 }
 
 uint PCG_Hash(uint seed) {
-	//uint state = seed * 747796405u + 2891336453u;
-	//uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-	//return (word >> 22u) ^ word;
-	seed = (seed ^ 61) ^ (seed >> 16);
-	seed *= 9;
-	seed = seed ^ (seed >> 4);
-	seed *= 0x27d4eb2d;
-	seed = seed ^ (seed >> 15);
-	return seed;
+	uint state = seed * 747796405u + 2891336453u;
+	uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+	return (word >> 22u) ^ word;
+	//seed = (seed ^ 61) ^ (seed >> 16);
+	//seed *= 9;
+	//seed = seed ^ (seed >> 4);
+	//seed *= 0x27d4eb2d;
+	//seed = seed ^ (seed >> 15);
+	//return seed;
 }
 
 float RandomFloat(uint seed) {
@@ -185,7 +185,7 @@ vec4 PerpixelShading(uint x, uint y) {
 	vec3 color = vec3(0.0f);
 	vec3 contribution = vec3(1.0f);
 	float attenuation = 1.0f;
-	int MAX_BOUNCE = 2;
+	int MAX_BOUNCE = 4;
 	for (int i = 0; i < MAX_BOUNCE; i++) {
 		HitInfo hitInfo = TraceSingleRay(ray);
 

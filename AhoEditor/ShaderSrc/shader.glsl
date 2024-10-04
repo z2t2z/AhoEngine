@@ -57,5 +57,5 @@ void main() {
 
 	//color = vec4(v_TexCoords.x, v_TexCoords.y, 0.0, 1.0);
 	color = texture(u_Diffuse, v_TexCoords);
-	//color = vec4(0.5, 0.1, 0.2, 1.0);
+	//color = vec4(1.0, 0.0, 0.0, 1.0);
 }
