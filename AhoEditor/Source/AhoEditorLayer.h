@@ -18,7 +18,7 @@ namespace Aho {
 		bool m_CameraControlActive = false;
 
 	private:
-		float m_DeltaTime = 0.0f;
+		float m_DeltaTime{ 0.0f };
 
 		//AssetManagerEditor* m_Manager{ nullptr };
 
@@ -28,6 +28,8 @@ namespace Aho {
 		std::shared_ptr<VertexArray> m_CubeVA;
 		
 		std::shared_ptr<Framebuffer> m_Framebuffer;
+
+		std::shared_ptr<Framebuffer> m_FBOMousepicking;
 
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;
@@ -39,8 +41,9 @@ namespace Aho {
 
 		uint32_t testID;
 
-		bool m_ViewportFocused = false, m_ViewportHovered = false;
-		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		bool m_ViewportFocused{ false };
+		bool m_ViewportHovered{ false };
+		glm::vec2 m_ViewportSize{ 0.0f, 0.0f };
 		glm::vec4 m_Color; // for debug
 	};
 

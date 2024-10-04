@@ -5,7 +5,6 @@
 struct GLFWwindow;
 
 namespace Aho {
-
 	class OpenGLContext : public GraphicsContext {
 	public:
 		OpenGLContext(GLFWwindow* windowHandle);
@@ -15,6 +14,4 @@ namespace Aho {
 	private:
 		GLFWwindow* m_WindowHandle;
 	};
-
-
 }

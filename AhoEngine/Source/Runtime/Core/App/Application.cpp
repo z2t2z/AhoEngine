@@ -18,7 +18,7 @@ namespace Aho {
 
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
-
+		m_Window->SetVSync(false);
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 	}
@@ -28,12 +28,10 @@ namespace Aho {
 			float currTime = (float)glfwGetTime();
 			float deltaTime = currTime - m_LastFrameTime;
 			m_LastFrameTime = currTime;
-
 			// Will be done on the render thread in the future
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);
 			}
-			
 			m_ImGuiLayer->Begin();
 			for (auto layer : m_LayerStack) {
 				layer->OnImGuiRender();
@@ -42,7 +40,6 @@ namespace Aho {
 
 			m_Window->OnUpdate();
 		}
-
 	}
 
 	void Application::ShutDown() {
@@ -52,21 +49,17 @@ namespace Aho {
 	void Application::OnEvent(Event& e) {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
-
 		/*   Log every event here in the console */
 		//AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
-
 		for (auto it = std::prev(m_LayerStack.end()); ; it--) {
 			(*it)->OnEvent(e);
 			if (e.Handled()) {
 				break;
 			}
-
 			if (it == m_LayerStack.begin()) {
 				break;
 			}
 		}
-
 	}
 
 	void Application::PushLayer(Layer* layer) {

@@ -33,6 +33,7 @@ namespace Aho {
 		auto rendererID = m_Shader->GerRendererID();
 		fbSpec.rendererID = rendererID;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
+		m_FBOMousepicking = Framebuffer::Create(fbSpec);
 
 		// Temporary setting up Cube VAO
 		m_CubeVA.reset(VertexArray::Create());
@@ -112,37 +113,70 @@ namespace Aho {
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA);
 
 		// temporary
-		std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
-		std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
-		AssetManager::LoadAsset<StaticMesh>(newPath, *res);
+		//std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
+		//std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
+		//AssetManager::LoadAsset<StaticMesh>(newPath, *res);
 
-		m_Plane = m_ActiveScene->CreateAObject("Plane");
-		m_Plane.AddComponent<EntityComponent>();
-		for (const auto& meshInfo : *res) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			auto meshEntity = m_ActiveScene->CreateAObject();
-			meshEntity.AddComponent<MeshComponent>(vao);
-			if (meshInfo->materialInfo.HasMaterial()) {
-				auto matEntity = m_ActiveScene->CreateAObject();
-				std::shared_ptr<Material> mat = std::make_shared<Material>();
-				if (!meshInfo->materialInfo.Albedo.empty()) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
-					tex->SetTextureType(TextureType::Diffuse);
-					if (tex->IsLoaded()) {
-						mat->AddTexture(tex);
-						//testID = (tex->GetRendererID());
+		//m_Plane = m_ActiveScene->CreateAObject("sponza");
+		//m_Plane.AddComponent<EntityComponent>();
+		//for (const auto& meshInfo : *res) {
+		//	std::shared_ptr<VertexArray> vao;
+		//	vao.reset(VertexArray::Create());
+		//	vao->Init(meshInfo);
+		//	auto meshEntity = m_ActiveScene->CreateAObject();
+		//	meshEntity.AddComponent<MeshComponent>(vao);
+		//	if (meshInfo->materialInfo.HasMaterial()) {
+		//		auto matEntity = m_ActiveScene->CreateAObject();
+		//		std::shared_ptr<Material> mat = std::make_shared<Material>();
+		//		if (!meshInfo->materialInfo.Albedo.empty()) {
+		//			std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
+		//			tex->SetTextureType(TextureType::Diffuse);
+		//			if (tex->IsLoaded()) {
+		//				mat->AddTexture(tex);
+		//			}
+		//		}
+		//		if (!meshInfo->materialInfo.Normal.empty()) {
+		//			std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
+		//			tex->SetTextureType(TextureType::Normal);
+		//			if (tex->IsLoaded()) mat->AddTexture(tex);
+		//		}
+		//		meshEntity.AddComponent<MaterialComponent>(mat);
+		//	}
+		//	m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
+		//}
+
+		{
+			std::filesystem::path newPath = currentPath / "Asset" / "Beriev_A50" / "BerievA50.obj";
+			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
+			AssetManager::LoadAsset<StaticMesh>(newPath, *res);
+
+			AObject plane = m_ActiveScene->CreateAObject("Plane");
+			plane.AddComponent<EntityComponent>();
+			for (const auto& meshInfo : *res) {
+				std::shared_ptr<VertexArray> vao;
+				vao.reset(VertexArray::Create());
+				vao->Init(meshInfo);
+				auto meshEntity = m_ActiveScene->CreateAObject();
+				meshEntity.AddComponent<MeshComponent>(vao);
+				if (meshInfo->materialInfo.HasMaterial()) {
+					auto matEntity = m_ActiveScene->CreateAObject();
+					std::shared_ptr<Material> mat = std::make_shared<Material>();
+					if (!meshInfo->materialInfo.Albedo.empty()) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
+						tex->SetTextureType(TextureType::Diffuse);
+						if (tex->IsLoaded()) {
+							mat->AddTexture(tex);
+						}
 					}
+					if (!meshInfo->materialInfo.Normal.empty()) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
+						tex->SetTextureType(TextureType::Normal);
+						if (tex->IsLoaded()) mat->AddTexture(tex);
+					}
+					meshEntity.AddComponent<MaterialComponent>(mat);
 				}
-				if (!meshInfo->materialInfo.Normal.empty()) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
-					tex->SetTextureType(TextureType::Normal);
-					if (tex->IsLoaded()) mat->AddTexture(tex);
-				}
-				meshEntity.AddComponent<MaterialComponent>(mat);
+				plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 			}
-			m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 		}
 	}
 
@@ -155,15 +189,20 @@ namespace Aho {
 
 		//AHO_TRACE("{}", deltaTime);
 		m_DeltaTime = deltaTime;
+		// Pass 1: Normal rendering
 		m_Framebuffer->Bind();
-
 		// TODO : This seems should not be here
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
-
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
-
 		m_Framebuffer->Unbind();
+
+		// Pass 2: For mouse picking
+		m_FBOMousepicking->Bind();
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		RenderCommand::Clear();
+		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
+		m_FBOMousepicking->Unbind();
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
@@ -251,7 +290,7 @@ namespace Aho {
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
 
-		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		uint32_t textureID = m_FBOMousepicking->GetColorAttachmentRendererID();
 		ImGui::Image((void*)textureID, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 	}

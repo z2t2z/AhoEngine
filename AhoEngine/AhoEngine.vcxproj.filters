@@ -1528,6 +1528,7 @@
     <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h" />
     <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

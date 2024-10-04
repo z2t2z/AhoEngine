@@ -17,10 +17,12 @@ namespace Aho {
 		AHO_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glEnable(GL_DEPTH_TEST);
 
-		/*AHO_CORE_INFO("OpenGL Info:");
+		/*
+		AHO_CORE_INFO("OpenGL Info:");
 		AHO_CORE_INFO("  Vendor: {0}", glGetString(GL_VENDOR));
 		AHO_CORE_INFO("  Renderer: {0}", glGetString(GL_RENDERER));
-		AHO_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));*/
+		AHO_CORE_INFO("  Version: {0}", glGetString(GL_VERSION));
+		*/
 
 	}
 

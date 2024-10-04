@@ -20,12 +20,10 @@ namespace Aho {
 	}
 
 	void Scene::OnUpdateEditor(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader, float deltaTime) {
-		//m_CameraManager->Update(deltaTime);
 		RenderScene(camera, shader);
 	}
 
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
-		//shader->Bind();
 		Renderer::BeginScene(camera);
 		auto view = m_Registry.view<EntityComponent>();
 		for (const auto& entity : view) {

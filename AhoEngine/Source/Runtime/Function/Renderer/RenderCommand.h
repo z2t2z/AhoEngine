@@ -4,7 +4,6 @@
 #include "VertexArrayr.h"
 
 namespace Aho {
-
 	class RenderCommand {
 	public:
 		inline static void SetClearColor(const glm::vec4& color) {

@@ -157,6 +157,7 @@
     <ClInclude Include="Source\Runtime\Core\Layer\Layer.h" />
     <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h" />
     <ClInclude Include="Source\Runtime\Core\Log\Log.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
     <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h" />
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
