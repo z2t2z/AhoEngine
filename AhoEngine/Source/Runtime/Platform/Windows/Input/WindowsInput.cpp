@@ -46,6 +46,10 @@ namespace Aho {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
+	bool Input::GetCursorState() {
+		return true;
+	}
+
 	bool Input::IsCursorLocked() {
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		return glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;

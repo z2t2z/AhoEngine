@@ -2,11 +2,10 @@
 #include "ImGuiLayer.h"
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/App/Application.h"
-
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-
+#include "ImGuizmo.h"
 // TODO: To support other libraries and graphics api, these are just temporary includes!
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -56,6 +55,7 @@ namespace Aho {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void ImGuiLayer::End() {

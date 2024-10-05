@@ -2,14 +2,13 @@
 
 #include "AhoEditorLayer.h"
 #include <filesystem>
-
 #include <imgui.h>
+#include <ImGuizmo.h>
 #include <glm/gtc/type_ptr.hpp>
 
 
 namespace Aho {
 	AhoEditorLayer::AhoEditorLayer() {
-		m_Color = glm::vec4(1.0f);
 	}
 
 	void AhoEditorLayer::OnAttach() {
@@ -17,7 +16,8 @@ namespace Aho {
 		m_CameraManager = std::make_shared<CameraManager>();
 		m_CameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 		m_ActiveScene = std::make_shared<Scene>();
-		
+		m_Panel = std::make_unique<SceneHierarchyPanel>(m_ActiveScene);
+
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
@@ -26,7 +26,6 @@ namespace Aho {
 		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
 
 		Renderer::Init(m_Shader);
-		m_Color = glm::vec4(0);
 
 		// Temporary setting up viewport FBO
 		FramebufferSpecification fbSpec;
@@ -148,7 +147,8 @@ namespace Aho {
 		//	}
 		//	m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 		//}
-
+#define LOAD_MODEL 0
+#if LOAD_MODEL
 		{
 			std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
@@ -161,8 +161,8 @@ namespace Aho {
 				vao.reset(VertexArray::Create());
 				vao->Init(meshInfo);
 				auto meshEntity = m_ActiveScene->CreateAObject();
-				meshEntity.AddComponent<MeshComponent>(vao, Mesh_ID);
-				Mesh_ID += 10;
+				meshEntity.AddComponent<MeshComponent>(vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
+				meshEntity.AddComponent<TransformComponent>();
 				if (meshInfo->materialInfo.HasMaterial()) {
 					auto matEntity = m_ActiveScene->CreateAObject();
 					std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -183,6 +183,7 @@ namespace Aho {
 				plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 			}
 		}
+#endif
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -199,21 +200,20 @@ namespace Aho {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
+		m_Framebuffer->Unbind();
 
 		// temporary second render pass here
 		m_PickingFBO->Bind();
 		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
-		// testing mouse picking:
-		const auto& [x, y] = Input::GetMousePosition();
-		if (x >= 0 && y >= 0) {
-			m_PickingFBO->ReadPixel(0, x, m_PickingFBO->GetSpecification().Height - y + 50);
-		}
 		m_PickingFBO->Unbind();
 	}
 
+	glm::mat4 transf = glm::mat4(1.0f);
+
 	void AhoEditorLayer::OnImGuiRender() {
+		// Dock space settings
 		{
 			// Dockspace
 			static bool opt_fullscreen = true;
@@ -283,6 +283,9 @@ namespace Aho {
 			ImGui::End();
 		}
 
+
+		m_Panel->OnImGuiRender();
+
 		// Editor panel
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
@@ -298,9 +301,37 @@ namespace Aho {
 			m_PickingFBO->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
-
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image((void*)textureID, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		// Gizmos
+		{
+			if (Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_1)) {
+				m_PickingFBO->Bind();
+				const auto& [x, y] = Input::GetMousePosition();
+				if (x >= 0 && y >= 0 && x < width && y < height) {
+					m_Selected = static_cast<entt::entity>(m_PickingFBO->ReadPixel(0, x, m_PickingFBO->GetSpecification().Height - y + 50));
+				}
+				else {
+				}
+				m_Selected = entt::null;
+
+				m_PickingFBO->Unbind();
+			}
+			if (m_Selected != entt::null) {
+				ImGuizmo::SetOrthographic(false);
+				ImGuizmo::SetDrawlist();
+				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
+
+				const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
+				const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
+				auto transform = m_ActiveScene->m_Registry.get<TransformComponent>(m_Selected).GetTransform();
+				ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transf));
+
+				// Is snapping
+				bool snapping = Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL);
+			}
+		}
 		ImGui::End();
 	}
 

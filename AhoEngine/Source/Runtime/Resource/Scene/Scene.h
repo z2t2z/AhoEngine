@@ -22,8 +22,8 @@ namespace Aho {
 		void RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader);
 
 		void SecondPass(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader);
+		entt::registry m_Registry;
 	private:
 		friend class AObject;
-		entt::registry m_Registry;
 	};
 }

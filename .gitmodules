@@ -16,3 +16,6 @@
 [submodule "AhoEngine/Vendor/assimp/assimp"]
 	path = AhoEngine/Vendor/assimp/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "AhoEngine/Vendor/ImGuizmo"]
+	path = AhoEngine/Vendor/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git

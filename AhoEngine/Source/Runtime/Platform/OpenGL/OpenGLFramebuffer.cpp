@@ -146,12 +146,9 @@ namespace Aho {
 
 	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) {
 		//AHO_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "out of bound");
-		Bind();
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		uint32_t pixelData{ 1u };
 		glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixelData);
-		AHO_CORE_INFO("{}, {}, {}", x, y, pixelData);
-		Unbind();
 		return pixelData;
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IamAho.h"
+#include "SceneHierarchyPanel/SceneHierarchyPanel.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -40,12 +41,12 @@ namespace Aho {
 		AObject m_CameraAObject;
 		AObject m_Cube;
 
-		uint32_t testID;
+		entt::entity m_Selected{ entt::null };
 
 		bool m_ViewportFocused{ false };
 		bool m_ViewportHovered{ false };
 		glm::vec2 m_ViewportSize{ 0.0f, 0.0f };
-		glm::vec4 m_Color; // for debug
+		std::unique_ptr<SceneHierarchyPanel> m_Panel;
 	};
 
 }

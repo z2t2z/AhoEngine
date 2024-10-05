@@ -61,20 +61,38 @@
     <Filter Include="Source\Runtime\Resource\Asset">
       <UniqueIdentifier>{4FFFB413-BB17-9C3D-84C4-2BD7F09B30D7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Resource\Asset\Importer">
+      <UniqueIdentifier>{30DE8BD9-1C30-63C9-054F-A0D9F13F7CB2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\AssetCreator">
+      <UniqueIdentifier>{7FA65513-6B8D-170B-14DE-7D2800A49071}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Resource\EcS">
       <UniqueIdentifier>{2A9302C9-96A0-30AF-1F87-2C9A8B93FC65}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\Model">
       <UniqueIdentifier>{00B48B14-6CCC-723E-3579-02D8A15007D8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Resource\ResourceType">
+      <UniqueIdentifier>{B9E97780-A5D0-3978-4E21-A0953AE7B2DE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\ResourceType\Mesh">
+      <UniqueIdentifier>{155BDA97-8175-3D39-CA97-4DCD36F16440}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Resource\Scene">
       <UniqueIdentifier>{DDB7F114-49D0-D83E-127D-68D87E546DD8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\Serializer">
+      <UniqueIdentifier>{C907171D-B543-1A87-1E56-327E0AB1C2A1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\UUID">
       <UniqueIdentifier>{E6815DE9-D23C-4D95-7BF4-C5DF678E9725}</UniqueIdentifier>
     </Filter>
     <Filter Include="Vendor">
       <UniqueIdentifier>{935FDCD7-7F01-07AE-68BC-1A0254FD8DFE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\ImGuizmo">
+      <UniqueIdentifier>{530792E3-BF92-FFA7-C8A3-829C34AE5BA8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Vendor\glm">
       <UniqueIdentifier>{627B7327-4E33-B574-B73A-8ED0A3115065}</UniqueIdentifier>
@@ -180,6 +198,9 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
@@ -225,9 +246,6 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.h">
-      <Filter>Source\Runtime\Resource\Asset</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
@@ -239,6 +257,9 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetMetadata.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.h">
+      <Filter>Source\Runtime\Resource\Asset\Importer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
@@ -255,6 +276,9 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h">
+      <Filter>Source\Runtime\Resource\AssetCreator</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\EcS\AObject.h">
       <Filter>Source\Runtime\Resource\EcS</Filter>
     </ClInclude>
@@ -264,11 +288,23 @@
     <ClInclude Include="Source\Runtime\Resource\Model\Model.h">
       <Filter>Source\Runtime\Resource\Model</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h">
+      <Filter>Source\Runtime\Resource\ResourceType\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h">
+      <Filter>Source\Runtime\Resource\ResourceType</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Scene\Scene.h">
       <Filter>Source\Runtime\Resource\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h">
+      <Filter>Source\Runtime\Resource\Serializer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\UUID\UUID.h">
       <Filter>Source\Runtime\Resource\UUID</Filter>
+    </ClInclude>
+    <ClInclude Include="Vendor\ImGuizmo\ImGuizmo.h">
+      <Filter>Vendor\ImGuizmo</Filter>
     </ClInclude>
     <ClInclude Include="Vendor\glm\glm\common.hpp">
       <Filter>Vendor\glm\glm</Filter>
@@ -1524,11 +1560,6 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h" />
-    <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h" />
-    <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
-    <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1615,11 +1646,11 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp">
-      <Filter>Source\Runtime\Resource\Asset</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp">
       <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp">
+      <Filter>Source\Runtime\Resource\Asset\Importer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\EcS\AObject.cpp">
       <Filter>Source\Runtime\Resource\EcS</Filter>
@@ -1632,6 +1663,9 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">
       <Filter>Source\Runtime\Resource\UUID</Filter>
+    </ClCompile>
+    <ClCompile Include="Vendor\ImGuizmo\ImGuizmo.cpp">
+      <Filter>Vendor\ImGuizmo</Filter>
     </ClCompile>
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>

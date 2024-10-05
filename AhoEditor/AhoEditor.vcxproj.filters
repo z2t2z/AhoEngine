@@ -1,33 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="CPURayTracing">
-      <UniqueIdentifier>{C1817233-2D42-EE69-F67C-37E762FC3246}</UniqueIdentifier>
+    <Filter Include="AhoEngine">
+      <UniqueIdentifier>{13D2E889-7F3C-9D00-C87A-4EA634247B55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AhoEngine\Vendor">
+      <UniqueIdentifier>{F0E059D0-DCD9-7822-050C-5EA7F163582E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AhoEngine\Vendor\ImGuizmo">
+      <UniqueIdentifier>{5061A783-BC23-DB0D-05D4-699A71D5B3EB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{56EB95D1-428D-C0A7-2B48-D4FB178947F8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\CPURayTracing">
+      <UniqueIdentifier>{01CB5585-ED59-DF4E-9678-F34982E6EFF4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\AhoEditorLayer.h" />
+    <ClInclude Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.h">
+      <Filter>AhoEngine\Vendor\ImGuizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AhoEditorLayer.h">
+      <Filter>Source</Filter>
+    </ClInclude>
     <ClInclude Include="Source\CPURayTracing\CPURenderer.h">
-      <Filter>CPURayTracing</Filter>
+      <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
     <ClInclude Include="Source\CPURayTracing\CPUScene.h">
-      <Filter>CPURayTracing</Filter>
+      <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
-      <Filter>CPURayTracing</Filter>
+      <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
+    <ClInclude Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\AhoEditorApp.cpp" />
-    <ClCompile Include="Source\AhoEditorLayer.cpp" />
+    <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
+      <Filter>AhoEngine\Vendor\ImGuizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AhoEditorApp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AhoEditorLayer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="Source\CPURayTracing\CPURenderer.cpp">
-      <Filter>CPURayTracing</Filter>
+      <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
-      <Filter>CPURayTracing</Filter>
+      <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ShaderSrc\MousePicking.glsl" />
+    <ClCompile Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.cpp" />
   </ItemGroup>
 </Project>

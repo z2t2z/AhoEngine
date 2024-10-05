@@ -20,6 +20,7 @@ IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
 IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/assimp/include"
 IncludeDir["stb_image"] = "AhoEngine/Vendor/stb_image"
 IncludeDir["json"] = "AhoEngine/Vendor/json"
+IncludeDir["ImGuizmo"] = "AhoEngine/Vendor/ImGuizmo"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
@@ -48,7 +49,9 @@ project "AhoEngine"
         "%{prj.name}/Vendor/glm/glm/**.hpp",
         "%{prj.name}/Vendor/stb_image/**.h",
         "%{prj.name}/Vendor/stb_image/**.cpp",
-        "%{prj.name}/Vendor/json/**.hpp"
+        "%{prj.name}/Vendor/json/**.hpp",
+        "%{prj.name}/Vendor/ImGuizmo/ImGuizmo.h",
+        "%{prj.name}/Vendor/ImGuizmo/ImGuizmo.cpp"
     }
 	
     defines {
@@ -65,7 +68,8 @@ project "AhoEngine"
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.stb_image}",
-        "%{IncludeDir.json}"
+        "%{IncludeDir.json}",
+        "%{IncludeDir.ImGuizmo}"
     }
 
     links {
@@ -118,6 +122,8 @@ project "AhoEditor"
         "%{prj.name}/Source/**.cpp",
         "%{prj.name}/Source/Camera/**.h",
         "%{prj.name}/Source/Camera/**.cpp",
+        "AhoEngine/Vendor/ImGuizmo/ImGuizmo.h",
+        "AhoEngine/Vendor/ImGuizmo/ImGuizmo.cpp"
     }
 
     includedirs {
@@ -128,7 +134,8 @@ project "AhoEditor"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
-        "%{IncludeDir.json}"
+        "%{IncludeDir.json}",
+        "%{IncludeDir.ImGuizmo}"
     }
 
     links {

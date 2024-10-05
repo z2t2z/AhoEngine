@@ -24,6 +24,7 @@ namespace Aho {
                     chosenShader->SetInt("u_Diffuse", i);
                     break;
                 case TextureType::Normal:
+                    assert(false);
                     chosenShader->SetInt("u_Normal", i);
                     break;
                 case TextureType::Specular:
