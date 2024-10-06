@@ -14,17 +14,17 @@ namespace Aho {
     void Material::Apply(const std::shared_ptr<Shader>& shader) {
         auto& chosenShader = shader == nullptr ? m_Shader : shader;
         AHO_CORE_ASSERT(chosenShader);
-        //chosenShader->Bind();
+        chosenShader->Bind();
         // Binding textures
         for (size_t i = 0; i < m_Textures.size(); i++) {
             const auto& texture = m_Textures[i];
+            texture->Bind(i);
             auto type = texture->GetTextureType();
             switch (type) {
                 case TextureType::Diffuse:
                     chosenShader->SetInt("u_Diffuse", i);
                     break;
                 case TextureType::Normal:
-                    assert(false);
                     chosenShader->SetInt("u_Normal", i);
                     break;
                 case TextureType::Specular:
@@ -33,8 +33,9 @@ namespace Aho {
                 case TextureType::Roughness:
                     chosenShader->SetInt("u_Roughness", i);
                     break;
+                default:
+                    continue;
             }
-            texture->Bind(i);
         }
         // Binding Parameters
         // Big TODO
@@ -46,6 +47,6 @@ namespace Aho {
                 chosenShader->SetFloat("u_" + para->GetName(), *static_cast<float*>(para->GetValue()));
             }
         }
-        //chosenShader->Unbind();
+        chosenShader->Unbind();
     }
 }

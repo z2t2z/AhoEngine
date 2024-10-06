@@ -39,6 +39,7 @@ namespace Aho {
 		virtual ~Texture() = default;
 		virtual const TextureSpecification& GetSpecification() const = 0;
 
+		virtual void Reload(const std::string& path) = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetRendererID() const = 0;
@@ -60,6 +61,6 @@ namespace Aho {
 	class Texture2D : public Texture {
 	public:
 		static std::shared_ptr<Texture2D> Create(const TextureSpecification& specification);
-		static std::shared_ptr<Texture2D> Create(const std::string& path);
+		static std::shared_ptr<Texture2D> Create(const std::string& path, bool FilpOnLoad = false);
 	};
 }

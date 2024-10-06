@@ -22,15 +22,15 @@ namespace Aho {
 				return nullptr;
 			}
 
-			auto ProcessMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
+			// TODO
+			auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
 				MaterialInfo info;
 				aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-				for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_HEIGHT }) {
-					for (size_t i = 0; i < std::min(1U, material->GetTextureCount(type)); i++) {
+				for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS }) {
+					for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 						aiString str;
 						material->GetTexture(type, i, &str);
-						info.hasMaterial = true;
-						(type == aiTextureType_HEIGHT ? info.Normal : info.Albedo) = std::string(str.data);
+						(type == aiTextureType_NORMALS ? info.Normal : info.Albedo).push_back(std::string(str.data));
 					}
 				}
 				return info;
@@ -74,7 +74,7 @@ namespace Aho {
 						indexBuffer.push_back(face.mIndices[j]);
 					}
 				}
-				subMesh.emplace_back(std::make_shared<MeshInfo>(vertexBuffer, indexBuffer, hasNormal, hasUVs, ProcessMaterial(mesh, scene)));
+				subMesh.emplace_back(std::make_shared<MeshInfo>(vertexBuffer, indexBuffer, hasNormal, hasUVs, RetrieveMaterial(mesh, scene)));
 				return true;
 			};
 

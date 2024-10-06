@@ -24,8 +24,10 @@ namespace Aho {
 
 	OpenGLShader::OpenGLShader(const std::string& filepath) : m_FilePath(filepath) {
 		std::string source = ReadFile(filepath);
+		if (source.empty()) {
+			return;
+		}
 		m_OpenGLSourceCode = PreProcess(source);
-
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
 		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
@@ -70,13 +72,14 @@ namespace Aho {
 		} else {
 			AHO_CORE_ERROR("Could not open file '{0}'", filepath);
 		}
-
+		if (result.empty()) {
+			AHO_CORE_ERROR("No content from file:" + filepath);
+		}
 		return result;
 	}
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
 		std::unordered_map<GLenum, std::string> shaderSources;
-
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
 		size_t pos = source.find(typeToken, 0); //Start of shader type declaration line
@@ -90,10 +93,8 @@ namespace Aho {
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
 			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
-
 			shaderSources[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
-
 		return shaderSources;
 	}
 
@@ -118,7 +119,7 @@ namespace Aho {
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
 				AHO_CORE_ERROR("{0}", infoLog.data());
-				AHO_CORE_ASSERT(false, "Shader compilation failure!");
+				//AHO_CORE_ASSERT(false, "Shader compilation failure!");
 				return;
 			}
 			shaderHandles.push_back(shader);
@@ -138,7 +139,6 @@ namespace Aho {
 		if (isLinked == GL_FALSE) {
 			GLint maxLength = 0;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
 			// The maxLength includes the NULL character
 			std::vector<GLchar> infoLog(maxLength);
 			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
@@ -150,7 +150,7 @@ namespace Aho {
 				glDeleteShader(handle);
 			}
 			AHO_CORE_ERROR("{0}", infoLog.data());
-			AHO_CORE_ASSERT(false, "Shader link failure!");
+			//AHO_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
 
@@ -158,6 +158,7 @@ namespace Aho {
 		for (const auto& handle : shaderHandles) {
 			glDeleteShader(handle);
 		}
+		m_Compiled = true;
 	}
 
 	void OpenGLShader::CreateProgram() {

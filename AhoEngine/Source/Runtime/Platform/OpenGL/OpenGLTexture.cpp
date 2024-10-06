@@ -42,22 +42,15 @@ namespace Aho {
 	}
 
 	// Big TODO
-	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
-		: m_Path(path) {
-
+	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool flipOnLoad) : m_Path(path) {
 		int width, height, channels;
-		//stbi_set_flip_vertically_on_load(1);
+		stbi_set_flip_vertically_on_load(flipOnLoad);
 		stbi_uc* data = nullptr;
-		{
-			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-		}
-
+		data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		if (data) {
 			m_IsLoaded = true;
-
 			m_Width = width;
 			m_Height = height;
-
 			GLenum internalFormat = 0, dataFormat = 0;
 			if (channels == 4) {
 				internalFormat = GL_RGBA8;
@@ -67,14 +60,12 @@ namespace Aho {
 				internalFormat = GL_RGB8;
 				dataFormat = GL_RGB;
 			}
-
 			m_InternalFormat = internalFormat;
 			m_DataFormat = dataFormat;
 
 			AHO_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-			//glBindTexture(GL_TEXTURE_2D, m_RendererID);
 			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
 
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -89,7 +80,7 @@ namespace Aho {
 			stbi_image_free(data);
 		}
 		else {
-			//AHO_CORE_ASSERT(false);
+			AHO_CORE_ERROR("Loading texture failed from path: " + path);
 		}
 	}
 

@@ -9,6 +9,7 @@
 
 namespace Aho {
 	AhoEditorLayer::AhoEditorLayer() {
+	
 	}
 
 	void AhoEditorLayer::OnAttach() {
@@ -20,13 +21,12 @@ namespace Aho {
 
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
-		std::string path = currentPath.string() + "\\ShaderSrc\\shader.glsl";
-		m_Shader = Shader::Create(path);
-
+		m_Shader = Shader::Create(currentPath / "ShaderSrc" / "Shader.glsl");
+		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
 		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+		//m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "MousePicking.glsl");
 
 		Renderer::Init(m_Shader);
-
 		// Temporary setting up viewport FBO
 		FramebufferSpecification fbSpec;
 		fbSpec.Width = 1280;
@@ -111,7 +111,7 @@ namespace Aho {
 		m_CubeVA->SetIndexBuffer(indexBuffer);
 
 		// Entities
-		m_Cube = m_ActiveScene->CreateAObject("Cube");
+		m_Cube = m_ActiveScene->CreateAObject("TestCube");
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA, 0u);
 
@@ -147,15 +147,14 @@ namespace Aho {
 		//	}
 		//	m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
 		//}
-#define LOAD_MODEL 0
+#define LOAD_MODEL 1
 #if LOAD_MODEL
 		{
-			std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
+			std::filesystem::path newPath = currentPath / "Asset" / "sponzaFBX" / "sponza.fbx";
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
 			AssetManager::LoadAsset<StaticMesh>(newPath, *res);
 			AObject plane = m_ActiveScene->CreateAObject("Plane");
 			plane.AddComponent<EntityComponent>();
-			uint32_t Mesh_ID = 278'255'360;
 			for (const auto& meshInfo : *res) {
 				std::shared_ptr<VertexArray> vao;
 				vao.reset(VertexArray::Create());
@@ -166,17 +165,21 @@ namespace Aho {
 				if (meshInfo->materialInfo.HasMaterial()) {
 					auto matEntity = m_ActiveScene->CreateAObject();
 					std::shared_ptr<Material> mat = std::make_shared<Material>();
-					if (!meshInfo->materialInfo.Albedo.empty()) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
+					for (const auto& albedo : meshInfo->materialInfo.Albedo) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
 						tex->SetTextureType(TextureType::Diffuse);
+						mat->AddTexture(tex);
 						if (tex->IsLoaded()) {
-							mat->AddTexture(tex);
+							// TODO: Cache the loaded texture
 						}
 					}
-					if (!meshInfo->materialInfo.Normal.empty()) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
+					for (const auto& normal : meshInfo->materialInfo.Normal) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal);
 						tex->SetTextureType(TextureType::Normal);
-						if (tex->IsLoaded()) mat->AddTexture(tex);
+						mat->AddTexture(tex);
+						if (tex->IsLoaded()) {
+
+						}
 					}
 					meshEntity.AddComponent<MaterialComponent>(mat);
 				}
@@ -192,7 +195,6 @@ namespace Aho {
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_CameraManager->Update(deltaTime);
-		//AHO_TRACE("{}", deltaTime);
 		m_DeltaTime = deltaTime;
 		// Pass 1: Normal rendering
 		m_Framebuffer->Bind();
@@ -201,13 +203,21 @@ namespace Aho {
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
 		m_Framebuffer->Unbind();
-
 		// temporary second render pass here
 		m_PickingFBO->Bind();
 		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
 		m_PickingFBO->Unbind();
+	
+		// FileWatcher
+		const auto& FileName = m_FileWatcher.Poll();
+		if (!FileName.empty()) {
+			auto newShader = Shader::Create(FileName);
+			if (newShader->IsCompiled()) {
+				m_Shader = std::move(newShader);
+			}
+		}
 	}
 
 	glm::mat4 transf = glm::mat4(1.0f);

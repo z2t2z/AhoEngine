@@ -2,6 +2,7 @@
 
 #include "IamAho.h"
 #include "SceneHierarchyPanel/SceneHierarchyPanel.h"
+#include "FileWatcher/FileWatcher.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -22,6 +23,7 @@ namespace Aho {
 		float m_DeltaTime{ 0.0f };
 
 		//AssetManagerEditor* m_Manager{ nullptr };
+		FileWatcher m_FileWatcher;
 
 		std::shared_ptr<CameraManager> m_CameraManager;
 

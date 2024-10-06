@@ -8,11 +8,12 @@ namespace Aho {
 	class OpenGLTexture2D : public Texture2D {
 	public:
 		OpenGLTexture2D(const TextureSpecification& specification);
-		OpenGLTexture2D(const std::string& path);
+		OpenGLTexture2D(const std::string& path, bool flipOnLoad = false);
 		virtual ~OpenGLTexture2D();
 
 		virtual const TextureSpecification& GetSpecification() const override { return m_Specification; }
 
+		virtual void Reload(const std::string& path) {}
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual uint32_t GetRendererID() const override { return m_RendererID; }

@@ -33,7 +33,7 @@ namespace Aho {
         virtual void SetMat2(const std::string& name, const glm::mat2& mat) = 0;
         virtual void SetMat3(const std::string& name, const glm::mat3& mat) = 0;
         virtual void SetMat4(const std::string& name, const glm::mat4& mat) = 0;
-
+		virtual bool IsCompiled() { return m_Compiled; }
 		// For compute shader
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const = 0;
 
@@ -43,6 +43,8 @@ namespace Aho {
         virtual const std::string& GetName() const = 0;
         static std::shared_ptr<Shader> Create(const std::filesystem::path& filepath);
 		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
+	protected:
+		bool m_Compiled{ false };
 	private:
 		ShaderType m_Type;
 		uint32_t m_RendererID;
