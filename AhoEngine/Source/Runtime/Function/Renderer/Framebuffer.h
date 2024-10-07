@@ -33,7 +33,11 @@ namespace Aho {
 		FilterMin, FilterMag,
 		Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest,
 		// Mipmap level
+<<<<<<< HEAD
 		LevelBase, LevelMax,
+=======
+		//LevelBase, LevelMax,
+>>>>>>> f856ab93ad832a690810dd21ea5113c3705bd06b
 	};
 
 	struct FBTextureSpecification {
