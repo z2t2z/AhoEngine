@@ -118,7 +118,7 @@ namespace Aho {
 				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
-				AHO_CORE_ERROR("{0}", infoLog.data());
+				AHO_CORE_ERROR("Shader compilation failed in path {0}.{1}", m_FilePath, infoLog.data());
 				//AHO_CORE_ASSERT(false, "Shader compilation failure!");
 				return;
 			}

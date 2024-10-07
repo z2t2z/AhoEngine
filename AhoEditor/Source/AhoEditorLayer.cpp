@@ -9,7 +9,6 @@
 
 namespace Aho {
 	AhoEditorLayer::AhoEditorLayer() {
-	
 	}
 
 	void AhoEditorLayer::OnAttach() {
@@ -24,19 +23,28 @@ namespace Aho {
 		m_Shader = Shader::Create(currentPath / "ShaderSrc" / "Shader.glsl");
 		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
 		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
-		//m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "MousePicking.glsl");
+
+		// SSAO
+		m_SSAO_Geo = Shader::Create(currentPath / "ShaderSrc" / "SSAO_GeoPass.glsl");
+		m_SSAO_SSAO = Shader::Create(currentPath / "ShaderSrc" / "SSAO_AOPass.glsl");
+		m_SSAO_Light = Shader::Create(currentPath / "ShaderSrc" / "SSAO_LightingPass.glsl");
 
 		Renderer::Init(m_Shader);
 		// Temporary setting up viewport FBO
-		FramebufferSpecification fbSpec;
+		FBSpecification fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		auto rendererID = m_Shader->GerRendererID();
-		fbSpec.rendererID = rendererID;
+		FBTextureSpecification texSpec;
+		texSpec.TextureFormat = FBTextureFormat::RGBA8;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
-		auto fbSpec0 = fbSpec;
-		fbSpec0.rendererID = m_PickingShader->GerRendererID();
-		m_PickingFBO = Framebuffer::Create(fbSpec0);
+		m_Framebuffer->Bind();
+		m_Framebuffer->AddColorAttachment(texSpec);
+		m_Framebuffer->Unbind();
+
+		m_PickingFBO = Framebuffer::Create(fbSpec);
+		m_PickingFBO->Bind();
+		m_PickingFBO->AddColorAttachment(texSpec);
+		m_PickingFBO->Unbind();
 
 		// Temporary setting up Cube VAO
 		m_CubeVA.reset(VertexArray::Create());
@@ -115,38 +123,6 @@ namespace Aho {
 		m_Cube.AddComponent<TransformComponent>();
 		m_Cube.AddComponent<MeshComponent>(m_CubeVA, 0u);
 
-		// temporary
-		//std::filesystem::path newPath = currentPath / "Asset" / "sponza" / "sponza.obj";
-		//std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
-		//AssetManager::LoadAsset<StaticMesh>(newPath, *res);
-
-		//m_Plane = m_ActiveScene->CreateAObject("sponza");
-		//m_Plane.AddComponent<EntityComponent>();
-		//for (const auto& meshInfo : *res) {
-		//	std::shared_ptr<VertexArray> vao;
-		//	vao.reset(VertexArray::Create());
-		//	vao->Init(meshInfo);
-		//	auto meshEntity = m_ActiveScene->CreateAObject();
-		//	meshEntity.AddComponent<MeshComponent>(vao);
-		//	if (meshInfo->materialInfo.HasMaterial()) {
-		//		auto matEntity = m_ActiveScene->CreateAObject();
-		//		std::shared_ptr<Material> mat = std::make_shared<Material>();
-		//		if (!meshInfo->materialInfo.Albedo.empty()) {
-		//			std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Albedo);
-		//			tex->SetTextureType(TextureType::Diffuse);
-		//			if (tex->IsLoaded()) {
-		//				mat->AddTexture(tex);
-		//			}
-		//		}
-		//		if (!meshInfo->materialInfo.Normal.empty()) {
-		//			std::shared_ptr<Texture2D> tex = Texture2D::Create(meshInfo->materialInfo.Normal);
-		//			tex->SetTextureType(TextureType::Normal);
-		//			if (tex->IsLoaded()) mat->AddTexture(tex);
-		//		}
-		//		meshEntity.AddComponent<MaterialComponent>(mat);
-		//	}
-		//	m_Plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
-		//}
 #define LOAD_MODEL 1
 #if LOAD_MODEL
 		{
@@ -190,7 +166,6 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnDetach() {
-
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
@@ -210,8 +185,8 @@ namespace Aho {
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
 		m_PickingFBO->Unbind();
 	
-		// FileWatcher
-		const auto& FileName = m_FileWatcher.Poll();
+		// FileWatcher, mvp only
+		const auto& FileName = m_FileWatcher.Poll(deltaTime);
 		if (!FileName.empty()) {
 			auto newShader = Shader::Create(FileName);
 			if (newShader->IsCompiled()) {
@@ -293,7 +268,6 @@ namespace Aho {
 			ImGui::End();
 		}
 
-
 		m_Panel->OnImGuiRender();
 
 		// Editor panel
@@ -311,7 +285,7 @@ namespace Aho {
 			m_PickingFBO->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
-		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
 		ImGui::Image((void*)textureID, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		// Gizmos
@@ -345,9 +319,7 @@ namespace Aho {
 		ImGui::End();
 	}
 
-
 	void AhoEditorLayer::OnEvent(Event& e) {
-		EventDispatcher eventDispatcher(e);
+		//EventDispatcher eventDispatcher(e);
 	}
-
 }

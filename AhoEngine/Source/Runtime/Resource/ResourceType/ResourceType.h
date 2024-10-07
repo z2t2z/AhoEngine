@@ -12,28 +12,6 @@ namespace Aho {
 		float u, v;				// texture coordinates
 	};
 
-	//struct MaterialInfo {
-	//	bool hasMaterial{ false };
-	//	std::string Albedo;
-	//	std::string Normal;
-	//	std::string Specular;
-	//	std::string Metallic;
-	//	std::string Roughness;
-
-	//	MaterialInfo() = default;
-	//	template<typename... Args>
-	//	MaterialInfo(bool has, Args&&... args)
-	//		: hasMaterial(has), Albedo(std::forward<Args>(args)...) {
-	//		if constexpr (sizeof...(args) > 1) Normal = std::forward<Args>(args + 1);
-	//		if constexpr (sizeof...(args) > 2) Specular = std::forward<Args>(args + 2);
-	//		if constexpr (sizeof...(args) > 3) Metallic = std::forward<Args>(args + 3);
-	//		if constexpr (sizeof...(args) > 4) Roughness = std::forward<Args>(args + 4);
-	//	}
-	//	bool HasMaterial() {
-	//		return !Albedo.empty() || !Normal.empty();
-	//	}
-	//};
-
 	struct MaterialInfo {
 		std::vector<std::string> Albedo;
 		std::vector<std::string> Normal;
@@ -89,6 +67,13 @@ namespace Aho {
 	private:
 		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
 	};
+
+	//class ShaderAsset : Asset {
+	//public:
+	//	ShaderAsset() = default;
+	//private:
+	//	std::shared_ptr<Shader> m_Shader;
+	//};
 
 	class MaterialAsset : Asset {
 	public:

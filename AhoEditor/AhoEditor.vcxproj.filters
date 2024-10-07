@@ -54,4 +54,9 @@
     </ClCompile>
     <ClCompile Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderSrc\SSAO_GeoPass.glsl" />
+    <None Include="ShaderSrc\SSAO_AOPass.glsl" />
+    <None Include="ShaderSrc\SSAO_LightingPass.glsl" />
+  </ItemGroup>
 </Project>

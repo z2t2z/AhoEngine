@@ -26,8 +26,10 @@ namespace Aho {
 
 		// RenderCommand
 		virtual void SetClearColor(const glm::vec4& color) = 0;
-		virtual void Clear() = 0;
-		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) = 0;
+		virtual void Flush() = 0;
+		virtual void Draw(const std::shared_ptr<VertexArray>& vertexArray) = 0;
+
+		// Shader
 
 	private:
 		static RendererAPI* s_RendererAPI;
