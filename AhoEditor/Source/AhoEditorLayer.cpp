@@ -34,9 +34,30 @@ namespace Aho {
 		FBSpecification fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
+		m_Framebuffer = Framebuffer::Create(fbSpec);
+
 		FBTextureSpecification texSpec;
 		texSpec.TextureFormat = FBTextureFormat::RGBA8;
-		m_Framebuffer = Framebuffer::Create(fbSpec);
+		texSpec.internalFormat = FBInterFormat::RGB16F;
+		texSpec.dataFormat = FBDataFormat::RGB;
+		texSpec.dataType = FBDataType::Float;
+		texSpec.target = FBTarget::Texture2D;
+		texSpec.wrapModeS = FBWrapMode::Clamp;
+		texSpec.wrapModeT = FBWrapMode::Clamp;
+		texSpec.filterModeMin = FBFilterMode::Nearest;
+		texSpec.filterModeMag = FBFilterMode::Nearest;
+
+		// index0 : g_PositionDepth
+		m_Framebuffer->Bind();
+		m_Framebuffer->AddColorAttachment(texSpec);
+		m_Framebuffer->Unbind();
+		texSpec.internalFormat = FBInterFormat::RGB8;
+		texSpec.filterModeMin = FBFilterMode::None;
+		// index1 : g_Normal
+		m_Framebuffer->Bind();
+		m_Framebuffer->AddColorAttachment(texSpec);
+		m_Framebuffer->Unbind();
+		// index2 : g_PositionDepth
 		m_Framebuffer->Bind();
 		m_Framebuffer->AddColorAttachment(texSpec);
 		m_Framebuffer->Unbind();

@@ -14,44 +14,57 @@ namespace Aho {
 		// Defaults
 		Depth = DEPTH24STENCIL8
 	};
+
+	enum class FBInterFormat {
+		None, RGB8, RGBA8, RGB16F, RGBA16F, Depth24, Depth32F,
+	};
+
+	enum class FBDataFormat {
+		None, RGB, RGBA, DepthComponent,
+	};
+
+	enum class FBDataType {
+		None, UnsignedByte, Float, UnsignedInt
+	};
+
+	enum class FBTarget {
+		None, Texture1D, Texture2D, Texture3D, TextureCubemap
+	};
+	enum class FBMipmapLevel {
+		None, MipMapLevelBase, MipMapLevelMax
+	};
+	enum class FBWrapType {
+		None, WrapS, WrapT
+	};
+	enum class FBWrapMode {
+		None, Clamp, Repeat, MirrorRepeat
+	};
+	enum class FBFilterType {
+		None, FilterMin, FilterMag
+	};
+	enum class FBFilterMode {
+		None, Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest
+	};
 	
-	enum class FBTexDataFormat {
-
-	};
-
-	enum class FBTextureFilter {
-
-	};
-
-	enum class FBTexPara {
-		// Target:
-		Texture1D, Texture2D, Texture3D, TextureCubemap,
-		// Wrapping
-		WrapS, WrapT,
-		Clamp, Repeat, MirrorRepeat,
-		// Filter
-		FilterMin, FilterMag,
-		Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest,
-		// Mipmap level
-<<<<<<< HEAD
-		LevelBase, LevelMax,
-=======
-		//LevelBase, LevelMax,
->>>>>>> f856ab93ad832a690810dd21ea5113c3705bd06b
-	};
 
 	struct FBTextureSpecification {
 		FBTextureSpecification() = default;
 		FBTextureSpecification(const FBTextureFormat& format) : TextureFormat(format) {}
 		FBTextureFormat TextureFormat = FBTextureFormat::None;
-		// TODO: filtering/wrap
+		FBInterFormat internalFormat{ FBInterFormat::None };
+		FBTarget target{ FBTarget::None };
+		FBWrapMode wrapModeS{ FBWrapMode::None };
+		FBWrapMode wrapModeT{ FBWrapMode::None };
+		FBFilterMode filterModeMin{ FBFilterMode::None };
+		FBFilterMode filterModeMag{ FBFilterMode::None };
+		FBDataType dataType{ FBDataType::None };
+		FBDataFormat dataFormat{ FBDataFormat::None };
 	};
 
 	struct FBAttachmentSpecification {
 		FBAttachmentSpecification() = default;
 		FBAttachmentSpecification(const std::initializer_list<FBTextureSpecification>& attachments)
-			: Attachments(attachments) {
-		}
+			: Attachments(attachments) {}
 		std::vector<FBTextureSpecification> Attachments;
 	};
 
@@ -60,8 +73,6 @@ namespace Aho {
 		FBAttachmentSpecification Attachments;
 		uint32_t Samples = 1; // what for?
 		bool SwapChainTarget = false; // for vulkan
-		// Temporary !!!
-		//uint32_t rendererID;  // what for?
 	};
 
 	class AHO_API Framebuffer {
