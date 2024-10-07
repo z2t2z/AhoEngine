@@ -22,7 +22,6 @@ namespace Aho {
 	private:
 		float m_DeltaTime{ 0.0f };
 
-		//AssetManagerEditor* m_Manager{ nullptr };
 		FileWatcher m_FileWatcher;
 
 		std::shared_ptr<CameraManager> m_CameraManager;
@@ -34,6 +33,11 @@ namespace Aho {
 
 		std::shared_ptr<Shader> m_PickingShader;
 		std::shared_ptr<Framebuffer> m_PickingFBO;
+
+		std::shared_ptr<Shader> m_SSAO_Geo;
+		std::shared_ptr<Shader> m_SSAO_SSAO;
+		std::shared_ptr<Shader> m_SSAO_Blur;
+		std::shared_ptr<Shader> m_SSAO_Light;
 
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::shared_ptr<Scene> m_EditorScene;

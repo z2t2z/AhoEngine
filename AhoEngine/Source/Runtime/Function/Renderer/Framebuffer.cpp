@@ -6,7 +6,7 @@
 
 namespace Aho {
 
-	std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec) {
+	std::shared_ptr<Framebuffer> Framebuffer::Create(const FBSpecification& spec) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLFramebuffer>(spec);
