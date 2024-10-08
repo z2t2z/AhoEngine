@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 
 namespace Aho {
-
 // std::bind(): Extract a member function from a class as a new function that can be directly called, while binding some parameters in advance
 #define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
@@ -37,7 +36,6 @@ namespace Aho {
 				layer->OnImGuiRender();
 			}
 			m_ImGuiLayer->End();
-
 			m_Window->OnUpdate();
 		}
 	}
@@ -50,7 +48,7 @@ namespace Aho {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		/*   Log every event here in the console */
-		//AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
+		AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
 		for (auto it = std::prev(m_LayerStack.end()); ; it--) {
 			(*it)->OnEvent(e);
 			if (e.Handled()) {

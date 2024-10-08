@@ -57,7 +57,6 @@ namespace Aho {
 				if (materialComponent && materialComponent->material) {
 					materialComponent->material->Apply(shader);
 				}
-
 				mesh.vertexArray->Bind();
 				Renderer::Submit(mesh.vertexArray);
 				mesh.vertexArray->Unbind();

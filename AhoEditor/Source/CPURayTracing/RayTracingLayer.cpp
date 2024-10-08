@@ -197,7 +197,6 @@ namespace Aho {
 		if (m_Scene.m_CameraManager->GetMainEditorCamera()->GetAspectRatio() != (float)m_ViewportWidth / m_ViewportHeight) {
 			m_Scene.m_CameraManager->GetMainEditorCamera()->SetProjection(45, (float)m_ViewportWidth / m_ViewportHeight, 0.1f, 100.0f);
 		}
-
 		m_Renderer.Render(m_Scene);
 	}
 } // namespace Aho

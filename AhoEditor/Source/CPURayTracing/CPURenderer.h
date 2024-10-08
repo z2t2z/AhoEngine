@@ -44,14 +44,12 @@ namespace Aho {
 		std::shared_ptr<ShaderStorageBuffer> m_SSBOAccumulate;
 		/*  Temporary! */
 
-		std::unordered_map<uint32_t, Ray> m_Memo;
-
 		TextureSpecification m_TexSpec;
 		std::shared_ptr<Texture2D> m_FinalImage;
+		std::shared_ptr<Texture2D> m_Noise;
 		Settings m_Settings;
-
 		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter; // multi-threading
-
+		std::vector<float> m_Random;
 		uint32_t* m_ImageData = nullptr;
 		glm::vec4* m_AccumulationData = nullptr;
 		uint32_t m_FrameIndex = 1;

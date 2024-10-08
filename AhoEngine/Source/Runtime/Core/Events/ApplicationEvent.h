@@ -7,7 +7,7 @@
 
 namespace Aho {
 
-	class AHO_API WindowResizeEvent : public Event {
+	class WindowResizeEvent : public Event {
 	public:
 		WindowResizeEvent(unsigned int width, unsigned int height) : m_height(height), m_width(width) {}
 
@@ -28,7 +28,7 @@ namespace Aho {
 		unsigned int m_height;
 	};
 
-	class AHO_API WindowCloseEvent : public Event {
+	class WindowCloseEvent : public Event {
 	public:
 		WindowCloseEvent() {}
 

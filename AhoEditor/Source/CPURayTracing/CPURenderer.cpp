@@ -18,19 +18,30 @@ namespace Aho {
 		}
 
 		thread_local std::mt19937 rng(std::random_device{}());
-		std::uniform_real_distribution<float> dist(-0.5f, 0.5f);
+		std::uniform_real_distribution<float> dist(-0.1f, 0.1f);
 
 		glm::vec3 GenerateRandomVec3() {
-			//float x = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
-			//float y = static_cast<float>(rand()) / RAND_MAX - 0.5f; 
-			//float z = static_cast<float>(rand()) / RAND_MAX - 0.5f;
 			return glm::vec3(dist(rng), dist(rng), dist(rng));
+		}
+
+		static void FillRandom(std::vector<float>& vec, size_t siz) {
+			while (vec.size() > siz) {
+				vec.pop_back();
+			}
+			vec.reserve(siz);
+			while (vec.size() < siz) {
+				float v = dist(rng) + 1.0f;
+				vec.push_back(v);
+			}
 		}
 	}
 	
 	CPURenderer::CPURenderer() {
 		//m_TexSpec.GenerateMips = false;
+		m_TexSpec.Format = ImageFormat::RGBA8;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
+		m_TexSpec.InternalFormat = ImageFormat::RGBA32F;
+		m_Noise = Texture2D::Create(m_TexSpec);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\compute.glsl";
 		m_ComputeShader = Shader::Create(path);
@@ -48,8 +59,12 @@ namespace Aho {
 		m_SSBOAccumulate.reset(ShaderStorageBuffer::Create(width * height * sizeof(glm::vec4)));
 		m_TexSpec.Width = width;
 		m_TexSpec.Height = height;
-		m_TexSpec.GenerateMips = false;
+		m_TexSpec.Format = ImageFormat::RGBA8;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
+		m_TexSpec.Format = ImageFormat::RGBA32F;
+		m_Noise = Texture2D::Create(m_TexSpec);
+		Utils::FillRandom(m_Random, width * height * 3);
+		m_Noise->SetData(m_Random.data(), m_Random.size());
 
 		delete[] m_ImageData;
 		m_ImageData = new uint32_t[width * height];
@@ -77,6 +92,7 @@ namespace Aho {
 		}
 		//AHO_CORE_TRACE("{}", m_FrameIndex);
 		m_ComputeShader->Bind();
+		m_ComputeShader->SetInt("u_NoiseTexture", 0);
 		m_ComputeShader->SetInt("u_Time", std::chrono::steady_clock::now().time_since_epoch().count());
 		m_ComputeShader->SetInt("u_Width", width);
 		m_ComputeShader->SetInt("u_Height", height);
@@ -181,7 +197,8 @@ namespace Aho {
 			color += sphereColor * multiplier;
 
 			ray.Origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
-			ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * Utils::GenerateRandomVec3());
+			//ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * Utils::GenerateRandomVec3());
+			ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * m_Random[y * m_TexSpec.Width + x]);
 		}
 
 		return glm::vec4(color, 1.0f);

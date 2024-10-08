@@ -5,7 +5,7 @@
 
 namespace Aho {
 
-	class AHO_API KeyEvent : public Event {
+	class KeyEvent : public Event {
 	public:
 		inline int GetKeyCode() const { return m_KeyCode; }
 
@@ -18,7 +18,7 @@ namespace Aho {
 
 	};
 
-	class AHO_API KeyPressedEvent : public KeyEvent {
+	class KeyPressedEvent : public KeyEvent {
 	public:
 		KeyPressedEvent(int keycode, int repeatCount) : KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
@@ -36,7 +36,7 @@ namespace Aho {
 		int m_RepeatCount;
 	};
 
-	class AHO_API KeyReleasedEvent : public KeyEvent {
+	class KeyReleasedEvent : public KeyEvent {
 	public:
 		KeyReleasedEvent(int keycode) : KeyEvent(keycode) {}
 
@@ -49,7 +49,7 @@ namespace Aho {
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
 
-	class AHO_API KeyTypedEvent : public KeyEvent {
+	class KeyTypedEvent : public KeyEvent {
 	public:
 		KeyTypedEvent(unsigned int keycode) : KeyEvent(keycode) {}
 

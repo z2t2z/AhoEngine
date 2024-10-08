@@ -27,7 +27,6 @@ namespace Aho {
 		std::shared_ptr<CameraManager> m_CameraManager;
 
 		std::shared_ptr<Shader> m_Shader;
-		std::shared_ptr<VertexArray> m_CubeVA;
 		
 		std::shared_ptr<Framebuffer> m_Framebuffer;
 
@@ -44,8 +43,6 @@ namespace Aho {
 
 		AObject m_Plane; // testing game object
 		AObject m_Test;
-		AObject m_CameraAObject;
-		AObject m_Cube;
 
 		entt::entity m_Selected{ entt::null };
 

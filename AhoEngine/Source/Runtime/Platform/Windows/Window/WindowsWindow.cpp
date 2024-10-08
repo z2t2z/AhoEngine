@@ -134,8 +134,6 @@ namespace Aho {
 			MouseMovedEvent event((float)xpos, (float)ypos);
 			data.EventCallback(event);
 		});
-
-
 	}
 
 	void WindowsWindow::Shutdown() {

@@ -9,6 +9,7 @@ namespace Aho {
 			switch (format) {
 				case ImageFormat::RGB8:  return GL_RGB;
 				case ImageFormat::RGBA8: return GL_RGBA;
+				case ImageFormat::RGBA32F: return GL_RGB32F;
 			}
 
 			AHO_CORE_ASSERT(false);
@@ -19,6 +20,7 @@ namespace Aho {
 			switch (format) {
 				case ImageFormat::RGB8:  return GL_RGB8;
 				case ImageFormat::RGBA8: return GL_RGBA8;
+				case ImageFormat::RGBA32F: return GL_RGB32F;
 			}
 
 			AHO_CORE_ASSERT(false);
@@ -90,7 +92,7 @@ namespace Aho {
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size) {
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-		AHO_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+		AHO_CORE_ASSERT(size == m_Width * m_Height * bpp, "Inconsistent data format");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 

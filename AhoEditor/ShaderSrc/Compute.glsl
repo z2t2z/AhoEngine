@@ -2,6 +2,7 @@
 #version 430
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout(location = 0) uniform sampler2D u_NoiseTexture;
 
 layout(std430, binding = 0) buffer DataBuffer0 {
     uint data[];
@@ -171,7 +172,7 @@ Ray RayCasting(uint x, uint y) {
 	vec4 vs = u_ProjInv * vec4(ndc, 1.0f, 1.0f);
 
 	vec3 rayDirection = vec3(u_ViewInv * vec4(normalize(vec3(vs) / vs.w), 0)); // World space
-	ray.Direction = rayDirection;
+	ray.Direction = normalize(rayDirection);
 	//vs.z = -1.0f;
 	//vs.w = 0.0f;
 	//// View space to world space
@@ -185,7 +186,7 @@ vec4 PerpixelShading(uint x, uint y) {
 	vec3 color = vec3(0.0f);
 	vec3 contribution = vec3(1.0f);
 	float attenuation = 1.0f;
-	int MAX_BOUNCE = 4;
+	int MAX_BOUNCE = 3;
 	for (int i = 0; i < MAX_BOUNCE; i++) {
 		HitInfo hitInfo = TraceSingleRay(ray);
 
@@ -214,8 +215,16 @@ vec4 PerpixelShading(uint x, uint y) {
 
 		ray.Origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
 		//uint seed = (y * u_Width + x) * u_FrameIndex + i + u_Time;
-		uint seed = u_Time + i + y * u_Width + x;
-		ray.Direction = reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * GenerateRandomVec3(seed));
+		//uint seed = u_Time + i + y * u_Width + x;
+		vec3 normal = normalize(hitInfo.WorldNormal);
+		vec3 randomVec = texture(u_NoiseTexture, vec2(x, y) / vec2(256.0)).rgb;
+		randomVec = normalize(randomVec);
+		vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+		vec3 bitangent = cross(normal, tangent);
+		mat3 TBN = mat3(tangent, bitangent, normal);
+		vec3 perturbedNormalTangentSpace = vec3(0.0, 0.0, 1.0) + material.Roughness * texture(u_NoiseTexture, vec2(x, y)).xyz;
+		vec3 perturbedNormalWorldSpace = normalize(TBN * perturbedNormalTangentSpace);
+		ray.Direction = reflect(ray.Direction, perturbedNormalWorldSpace);
 	}
 	return vec4(color, 1.0f);
 }
