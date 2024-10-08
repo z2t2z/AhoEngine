@@ -10,7 +10,6 @@ namespace Aho {
 		Rendering hardware interface 
 		Referred to Piccolo
 	*/
-
 	class RHI {
 	public:
 		~RHI() = default;

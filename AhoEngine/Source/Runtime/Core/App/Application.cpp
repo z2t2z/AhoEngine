@@ -48,7 +48,7 @@ namespace Aho {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		/*   Log every event here in the console */
-		AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
+		//AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
 		for (auto it = std::prev(m_LayerStack.end()); ; it--) {
 			(*it)->OnEvent(e);
 			if (e.Handled()) {

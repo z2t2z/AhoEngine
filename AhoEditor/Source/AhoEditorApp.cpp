@@ -8,8 +8,9 @@ namespace Aho {
 	class AhoEditor : public Application {
 	public:
 		AhoEditor() {
-			PushLayer(new RayTracingLayer());
-			//PushLayer(new AhoEditorLayer());
+			//PushLayer(new RayTracingLayer());
+			//PushLayer(new ResourceLayer());
+			PushLayer(new AhoEditorLayer());
 		}
 
 		~AhoEditor() {

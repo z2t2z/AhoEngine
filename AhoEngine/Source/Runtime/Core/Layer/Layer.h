@@ -19,10 +19,6 @@ namespace Aho {
 		// virtual void OnLogicUpdate() {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
-
-		// TO BE DELETED!
-		//virtual void OnImGuiRender(std::shared_ptr<Framebuffer> m_Framebuffer) {}
-
 		inline const std::string& GetDebugName() {
 			return m_DebugName;
 		}

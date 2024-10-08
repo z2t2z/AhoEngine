@@ -16,7 +16,8 @@ namespace Aho {
 		WindowClose, WindowResize, WindowFocus, WindowLostFocus, WindowMoved,
 		AppTick, AppUpdate, AppRender,
 		KeyPressed, KeyReleased, KeyTyped,
-		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled
+		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
+		FileChanged,
 	};
 
 	enum EventCategory {
@@ -37,35 +38,24 @@ namespace Aho {
 #define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
 
 	class Event {
-
 		friend class EventDispatcher;
-
 	public:
 		virtual EventType GetEventType() const = 0;
 		//virtual EventType GetStaticType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
 		virtual std::string ToString() const { return GetName(); }
-
-		inline bool IsInCategory(EventCategory category) {
-			return GetCategoryFlags() & category;
-		}
-
-		inline bool Handled() {
-			return m_Handled;
-		}
-
+		inline bool IsInCategory(EventCategory category) { return GetCategoryFlags() & category; }
+		inline bool Handled() { return m_Handled; }
 	protected:
 		bool m_Handled = false;
 	};
-
 
 	class EventDispatcher {
 		template<typename T>
 		using EventFn = std::function<bool(T&)>;
 	public:
 		EventDispatcher(Event& event) : m_Event(event) {}
-
 		template<typename T>
 		bool Dispatch(EventFn<T> func) {
 			if (m_Event.GetEventType() == T::GetStaticType()) {
@@ -74,7 +64,6 @@ namespace Aho {
 			}
 			return false;
 		}
-
 	private:
 		Event& m_Event; // Object slicing: 如果使用值类型，那么复制构造函数只复制Event部分的内容，丢失了派生类的额外数据方法
 	};

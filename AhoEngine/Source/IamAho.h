@@ -30,5 +30,7 @@
 #include "Runtime/Resource/Ecs/Components.h"
 #include "Runtime/Resource/Ecs/AObject.h"
 #include "Runtime/Resource/Scene/Scene.h"
+#include "Runtime/Resource/FileWatcher/FileWatcher.h"
+#include "Runtime/Resource/ResourceLayer.h"
 
 

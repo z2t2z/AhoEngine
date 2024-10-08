@@ -1560,6 +1560,10 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RanderPass.h" />
+    <ClInclude Include="Source\Runtime\Resource\ResourceLayer.h" />
+    <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileWatcher.h" />
+    <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileChangedEvent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1670,5 +1674,6 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp" />
   </ItemGroup>
 </Project>

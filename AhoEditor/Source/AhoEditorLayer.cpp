@@ -1,11 +1,9 @@
 #include "IamAho.h"
-
 #include "AhoEditorLayer.h"
 #include <filesystem>
 #include <imgui.h>
 #include <ImGuizmo.h>
 #include <glm/gtc/type_ptr.hpp>
-
 
 namespace Aho {
 	AhoEditorLayer::AhoEditorLayer() {
@@ -21,6 +19,8 @@ namespace Aho {
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		m_Shader = Shader::Create(currentPath / "ShaderSrc" / "Shader.glsl");
+		
+		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
 		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
 
@@ -128,15 +128,8 @@ namespace Aho {
 		RenderCommand::Clear();
 		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
 		m_PickingFBO->Unbind();
-	
-		// FileWatcher, mvp only
-		const auto& FileName = m_FileWatcher.Poll(deltaTime);
-		if (!FileName.empty()) {
-			auto newShader = Shader::Create(FileName);
-			if (newShader->IsCompiled()) {
-				m_Shader = std::move(newShader);
-			}
-		}
+
+		m_FileWatcher.PollFiles();
 	}
 
 	glm::mat4 transf = glm::mat4(1.0f);
@@ -263,7 +256,22 @@ namespace Aho {
 		ImGui::End();
 	}
 
+
 	void AhoEditorLayer::OnEvent(Event& e) {
-		//EventDispatcher eventDispatcher(e);
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<FileChangedEvent>(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
+	}
+
+	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
+		if (e.GetEventType() == EventType::FileChanged) {
+			const auto& FileName = e.GetFilePath();
+			if (!FileName.empty()) {
+				auto newShader = Shader::Create(FileName);
+				if (newShader->IsCompiled()) {
+					m_Shader = std::move(newShader);
+				}
+			}
+		}
+		return true;
 	}
 }

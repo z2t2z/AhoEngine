@@ -34,7 +34,6 @@
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
     <ClInclude Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.h" />
-    <ClInclude Include="Source\FileWatcher\FileWatcher.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">

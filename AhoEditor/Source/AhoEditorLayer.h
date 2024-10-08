@@ -2,7 +2,6 @@
 
 #include "IamAho.h"
 #include "SceneHierarchyPanel/SceneHierarchyPanel.h"
-#include "FileWatcher/FileWatcher.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -17,9 +16,9 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 	private:
-		bool m_CameraControlActive = false;
-
+		bool OnFileChanged(FileChangedEvent& event);
 	private:
+		bool m_CameraControlActive = false;
 		float m_DeltaTime{ 0.0f };
 
 		FileWatcher m_FileWatcher;

@@ -7,7 +7,7 @@
 
 namespace Aho {
 
-	class AHO_API Input {
+	class Input {
 	public:
 		static bool IsKeyPressed(int keycode);
 		static bool IsMouseButtonPressed(int keycode);
