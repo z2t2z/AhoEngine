@@ -1,6 +1,6 @@
 #include "Ahopch.h"
 #include "OpenGLFrameBuffer.h"
-
+#include "Runtime/Core/Core.h"
 #include <glad/glad.h>
 
 namespace Aho {
@@ -126,7 +126,7 @@ namespace Aho {
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const FBSpecification& spec)
 		: m_Specification(spec) {
-		for (auto spec : m_Specification.Attachments.Attachments) {
+		for (const auto& spec : m_Specification.Attachments.Attachments) {
 			if (!Utils::IsDepthFormat(spec.TextureFormat)) {
 				m_ColorAttachmentSpecifications.push_back(spec);
 			}

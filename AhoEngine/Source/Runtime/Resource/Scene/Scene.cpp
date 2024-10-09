@@ -20,20 +20,20 @@ namespace Aho {
 	}
 
 	void Scene::SecondPass(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
-		Renderer::Init(shader);
-		Renderer::BeginScene(camera);
-		auto view = m_Registry.view<EntityComponent>();
-		for (const auto& entity : view) {
-			auto& meshentities = Scene::m_Registry.get<EntityComponent>(entity);
-			for (const auto& meshEntity : meshentities.meshEntities) {
-				auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
-				shader->SetInt("u_ID", mesh.meshID);
-				mesh.vertexArray->Bind();
-				Renderer::Submit(mesh.vertexArray);
-				mesh.vertexArray->Unbind();
-			}
-		}
-		Renderer::EndScene();
+		//Renderer::Init(shader);
+		//Renderer::BeginScene(camera);
+		//auto view = m_Registry.view<EntityComponent>();
+		//for (const auto& entity : view) {
+		//	auto& meshentities = Scene::m_Registry.get<EntityComponent>(entity);
+		//	for (const auto& meshEntity : meshentities.meshEntities) {
+		//		auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
+		//		shader->SetInt("u_ID", mesh.meshID);
+		//		mesh.vertexArray->Bind();
+		//		Renderer::Submit(mesh.vertexArray);
+		//		mesh.vertexArray->Unbind();
+		//	}
+		//}
+		//Renderer::EndScene();
 	}
 
 	void Scene::OnUpdateEditor(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader, float deltaTime) {
@@ -46,25 +46,25 @@ namespace Aho {
 	}
 
 	void Scene::RenderScene(std::shared_ptr<Camera> camera, std::shared_ptr<Shader>& shader) {
-		Renderer::Init(shader);
-		Renderer::BeginScene(camera);
-		auto view = m_Registry.view<EntityComponent>();
-		for (const auto& entity : view) {
-			auto& meshentities = m_Registry.get<EntityComponent>(entity);
-			for (const auto& meshEntity : meshentities.meshEntities) {
-				auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
-				auto materialComponent = m_Registry.try_get<MaterialComponent>(meshEntity);
-				if (materialComponent && materialComponent->material) {
-					materialComponent->material->Apply(shader);
-				}
-				mesh.vertexArray->Bind();
-				Renderer::Submit(mesh.vertexArray);
-				mesh.vertexArray->Unbind();
-				if (materialComponent && materialComponent->material) {
-					materialComponent->material->Unbind(shader);
-				}
-			}
-		}
-		Renderer::EndScene();
+		//Renderer::Init(shader);
+		//Renderer::BeginScene(camera);
+		//auto view = m_Registry.view<EntityComponent>();
+		//for (const auto& entity : view) {
+		//	auto& meshentities = m_Registry.get<EntityComponent>(entity);
+		//	for (const auto& meshEntity : meshentities.meshEntities) {
+		//		auto& mesh = m_Registry.get<MeshComponent>(meshEntity);
+		//		auto materialComponent = m_Registry.try_get<MaterialComponent>(meshEntity);
+		//		if (materialComponent && materialComponent->material) {
+		//			materialComponent->material->Apply(shader);
+		//		}
+		//		mesh.vertexArray->Bind();
+		//		Renderer::Submit(mesh.vertexArray);
+		//		mesh.vertexArray->Unbind();
+		//		if (materialComponent && materialComponent->material) {
+		//			materialComponent->material->Unbind(shader);
+		//		}
+		//	}
+		//}
+		//Renderer::EndScene();
 	}
 }

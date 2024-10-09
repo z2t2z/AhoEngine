@@ -15,8 +15,7 @@ namespace Aho {
 
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
-
-		//virtual void SetBool(const std::string& name, bool value) const override;
+		virtual void BindUBO(const UBO& ubo) override;
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -45,10 +44,11 @@ namespace Aho {
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void CompileFromSource();
 		void CreateProgram();
-
+		void InitUBO();
 	private:
 		bool m_IsCompute = false;
-		uint32_t m_RendererID;
+		uint32_t m_RendererID{ 0u };
+		uint32_t m_UBO{ 0u };
 		std::string m_FilePath;
 		std::string m_Name;
 

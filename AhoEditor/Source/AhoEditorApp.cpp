@@ -1,5 +1,4 @@
 #include "IamAho.h"
-
 #include "AhoEditorLayer.h"
 #include "CPURayTracing/RayTracingLayer.h"
 #include "Runtime/Core/App/EntryPoint.h"
@@ -10,15 +9,13 @@ namespace Aho {
 		AhoEditor() {
 			//PushLayer(new RayTracingLayer());
 			//PushLayer(new ResourceLayer());
-			PushLayer(new AhoEditorLayer());
+			Renderer* renderer = new Renderer();
+			auto cameraManager = std::make_shared<CameraManager>();
+			cameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
+			PushLayer(new RenderLayer(renderer, cameraManager));
+			PushLayer(new AhoEditorLayer(renderer, cameraManager));
 		}
-
-		~AhoEditor() {
-
-		}
-
-	private:
-
+		~AhoEditor() {}
 	};
 
 	Application* CreateApplication() {

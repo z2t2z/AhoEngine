@@ -7,20 +7,32 @@ layout(location = 2) in vec2 a_TexCoords;
 layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec3 a_Bitangent;
 
+layout(std140) uniform CameraData{
+	mat4 u_View;
+	mat4 u_Projection;
+	mat4 u_Model;
+	vec3 u_ViewPosition;
+	float padding0;         // 4 bytes (for alignment)
+	vec3 u_LightPosition;
+	float padding1;         // 4 bytes (for alignment)
+	vec3 u_LightColor;
+	float padding2;         // 4 bytes (for alignment)
+};
+
 out vec3 v_Position;
 out vec3 v_PositionTangent;
 out vec3 v_Normal;
 out vec2 v_TexCoords;
 
-out vec3 v_LightPos;
+out vec3 v_LightPos;	
 out vec3 v_ViewPos;
 
-uniform mat4 u_View;
-uniform mat4 u_Projection;
-uniform mat4 u_Model;
+// uniform mat4 u_View;
+// uniform mat4 u_Projection;
+// uniform mat4 u_Model;
 
-uniform vec3 u_ViewPosition;
-uniform vec3 u_LightPosition;
+// uniform vec3 u_ViewPosition;
+// uniform vec3 u_LightPosition;
 
 void main() {
 	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0);
@@ -44,6 +56,18 @@ void main() {
 
 layout(location = 0) out vec4 color;
 
+layout(std140) uniform CameraData{
+	mat4 u_View;
+	mat4 u_Projection;
+	mat4 u_Model;
+	vec3 u_ViewPosition;
+	float padding0;         // 4 bytes (for alignment)
+	vec3 u_LightPosition;
+	float padding1;         // 4 bytes (for alignment)
+	vec3 u_LightColor;
+	float padding2;         // 4 bytes (for alignment)
+};
+
 in vec3 v_Position;
 in vec3 v_PositionTangent;
 in vec3 v_Normal;
@@ -51,7 +75,7 @@ in vec2 v_TexCoords;
 in vec3 v_LightPos;
 in vec3 v_ViewPos;
 
-uniform vec3 u_LightColor;
+// uniform vec3 u_LightColor;
 uniform vec3 u_Color;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;

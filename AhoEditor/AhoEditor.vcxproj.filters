@@ -16,6 +16,9 @@
     <Filter Include="Source\CPURayTracing">
       <UniqueIdentifier>{01CB5585-ED59-DF4E-9678-F34982E6EFF4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\SceneHierarchyPanel">
+      <UniqueIdentifier>{8217F0D6-6E27-9CA7-D7E0-00C6C30F8B40}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.h">
@@ -33,7 +36,9 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.h" />
+    <ClInclude Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.h">
+      <Filter>Source\SceneHierarchyPanel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -51,11 +56,8 @@
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
       <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ShaderSrc\SSAO_GeoPass.glsl" />
-    <None Include="ShaderSrc\SSAO_AOPass.glsl" />
-    <None Include="ShaderSrc\SSAO_LightingPass.glsl" />
+    <ClCompile Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.cpp">
+      <Filter>Source\SceneHierarchyPanel</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -6,68 +6,24 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
-	AhoEditorLayer::AhoEditorLayer() {
+	AhoEditorLayer::AhoEditorLayer(Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager) 
+		: m_Renderer(renderer), m_CameraManager(cameraManager) {
+
 	}
 
 	void AhoEditorLayer::OnAttach() {
+		AHO_INFO("Editor on attach");
 		// Set the active scene
-		m_CameraManager = std::make_shared<CameraManager>();
-		m_CameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 		m_ActiveScene = std::make_shared<Scene>();
 		m_Panel = std::make_unique<SceneHierarchyPanel>(m_ActiveScene);
 
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
-		m_Shader = Shader::Create(currentPath / "ShaderSrc" / "Shader.glsl");
-		
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
-		m_PickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+		
 
-		// SSAO
-		m_SSAO_Geo = Shader::Create(currentPath / "ShaderSrc" / "SSAO_GeoPass.glsl");
-		m_SSAO_SSAO = Shader::Create(currentPath / "ShaderSrc" / "SSAO_AOPass.glsl");
-		m_SSAO_Light = Shader::Create(currentPath / "ShaderSrc" / "SSAO_LightingPass.glsl");
-
-		Renderer::Init(m_Shader);
-		// Temporary setting up viewport FBO
-		FBSpecification fbSpec;
-		fbSpec.Width = 1280;
-		fbSpec.Height = 720;
-		m_Framebuffer = Framebuffer::Create(fbSpec);
-
-		FBTextureSpecification texSpec;
-		texSpec.TextureFormat = FBTextureFormat::RGBA8;
-		texSpec.internalFormat = FBInterFormat::RGB16F;
-		texSpec.dataFormat = FBDataFormat::RGB;
-		texSpec.dataType = FBDataType::Float;
-		texSpec.target = FBTarget::Texture2D;
-		texSpec.wrapModeS = FBWrapMode::Clamp;
-		texSpec.wrapModeT = FBWrapMode::Clamp;
-		texSpec.filterModeMin = FBFilterMode::Nearest;
-		texSpec.filterModeMag = FBFilterMode::Nearest;
-
-		// index0 : g_PositionDepth
-		m_Framebuffer->Bind();
-		m_Framebuffer->AddColorAttachment(texSpec);
-		m_Framebuffer->Unbind();
-		texSpec.internalFormat = FBInterFormat::RGB8;
-		texSpec.filterModeMin = FBFilterMode::None;
-		// index1 : g_Normal
-		m_Framebuffer->Bind();
-		m_Framebuffer->AddColorAttachment(texSpec);
-		m_Framebuffer->Unbind();
-		// index2 : g_PositionDepth
-		m_Framebuffer->Bind();
-		m_Framebuffer->AddColorAttachment(texSpec);
-		m_Framebuffer->Unbind();
-
-		m_PickingFBO = Framebuffer::Create(fbSpec);
-		m_PickingFBO->Bind();
-		m_PickingFBO->AddColorAttachment(texSpec);
-		m_PickingFBO->Unbind();
-
-#define LOAD_MODEL 1
+#define LOAD_MODEL 0
 #if LOAD_MODEL
 		{
 			std::filesystem::path newPath = currentPath / "Asset" / "sponzaFBX" / "sponza.fbx";
@@ -115,20 +71,6 @@ namespace Aho {
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_CameraManager->Update(deltaTime);
 		m_DeltaTime = deltaTime;
-		// Pass 1: Normal rendering
-		m_Framebuffer->Bind();
-		// TODO : This seems should not be here
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		RenderCommand::Clear();
-		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_Shader, deltaTime);
-		m_Framebuffer->Unbind();
-		// temporary second render pass here
-		m_PickingFBO->Bind();
-		RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-		RenderCommand::Clear();
-		m_ActiveScene->OnUpdateEditor(m_CameraManager->GetMainEditorCamera(), m_PickingShader, -1.0f);
-		m_PickingFBO->Unbind();
-
 		m_FileWatcher.PollFiles();
 	}
 
@@ -211,32 +153,44 @@ namespace Aho {
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
 		ImGui::End();
-
 		// Viewport Window
 		ImGui::Begin("Viewport");
-		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		auto [width, height] = ImGui::GetContentRegionAvail();
-		auto spec = m_Framebuffer->GetSpecification();
+		auto [width, height] = ImGui::GetWindowSize();
+		auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
+		FBO->Bind();
+		auto spec = FBO->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
-			m_Framebuffer->Resize(width, height);
-			m_PickingFBO->Resize(width, height);
+			FBO->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
-		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID(0);
-		ImGui::Image((void*)textureID, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
+		uint32_t RenderResult = FBO->GetColorAttachmentRendererID(0);
+		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		FBO->Unbind();
+		auto [x, y] = Input::GetMousePosition();
+		auto [w, h] = m_Panel->GetPenalSize();
+		x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
+		if (x >= 0 && y >= 0 && x < width && y < height) {
+			uint32_t readData = FBO->ReadPixel(0, x, y);
+		}
 		// Gizmos
 		{
-			if (Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_1)) {
+			auto [x, y] = Input::GetMousePosition();
+			auto [w, h] = m_Panel->GetPenalSize();
+			x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
+			if (false and Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_2)) {
 				m_PickingFBO->Bind();
-				const auto& [x, y] = Input::GetMousePosition();
 				if (x >= 0 && y >= 0 && x < width && y < height) {
-					m_Selected = static_cast<entt::entity>(m_PickingFBO->ReadPixel(0, x, m_PickingFBO->GetSpecification().Height - y + 50));
+					uint32_t readData = m_PickingFBO->ReadPixel(0, x, y);
+					if (readData == 0u) {
+						m_Selected = entt::null;
+					}
+					else {
+						m_Selected = static_cast<entt::entity>(readData);
+					}
 				}
 				else {
+					m_Selected = entt::null;
 				}
-				m_Selected = entt::null;
-
 				m_PickingFBO->Unbind();
 			}
 			if (m_Selected != entt::null) {
@@ -268,7 +222,8 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Shader = std::move(newShader);
+					//m_Shader = std::move(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
 				}
 			}
 		}

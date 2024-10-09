@@ -8,22 +8,19 @@ namespace Aho {
 	public:
 		SceneHierarchyPanel() = default;
 		SceneHierarchyPanel(const Ref<Scene>& scene);
-
 		void SetContext(const Ref<Scene>& scene);
-
 		void OnImGuiRender();
-
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
+		std::pair<float, float> GetPenalSize() { return std::make_pair(m_Width, m_Height); }
 	private:
 		template<typename T>
-		void DisplayAddComponentEntry(const std::string& entryName) {
-
-		}
-
+		void DisplayAddComponentEntry(const std::string& entryName) {}
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
 	private:
+		float m_Width{ 0.0f };
+		float m_Height{ 0.0f };
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;
 	};

@@ -15,7 +15,10 @@ namespace Aho {
 
 	void SceneHierarchyPanel::OnImGuiRender() {
 		ImGui::Begin("Scene Hierarchy");
-
+		//auto [width, height] = ImGui::GetContentRegionAvail();
+		auto [width, height] = ImGui::GetWindowSize();
+		m_Width = width;
+		m_Height = height;
 		if (m_Context) {
 			for (const auto& aobject : m_Context->m_Registry.view<TagComponent>()) {
 				Entity entity{ aobject , m_Context.get() };

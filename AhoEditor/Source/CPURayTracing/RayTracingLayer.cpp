@@ -56,7 +56,8 @@ namespace Aho {
 
 	void RayTracingLayer::OnUpdate(float deltaTime) {
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 1.0f, 1 });
-		RenderCommand::Clear();
+		ClearFlags flags = ClearFlags::Color_Buffer;
+		RenderCommand::Clear(flags);
 
 		if (m_Scene.m_CameraManager->Update(deltaTime)) {
 			m_Renderer.ResetFrameIndex();

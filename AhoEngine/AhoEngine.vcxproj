@@ -166,9 +166,12 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RanderPass.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderLayer.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
@@ -641,6 +644,8 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />

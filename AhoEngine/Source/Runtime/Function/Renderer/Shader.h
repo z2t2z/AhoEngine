@@ -16,6 +16,19 @@ namespace Aho {
 		None
 	};
 
+	struct UBO {
+		UBO() = default;
+		glm::mat4 u_View;
+		glm::mat4 u_Projection;
+		glm::mat4 u_Model;
+		glm::vec3 u_ViewPosition;
+		float padding0;
+		glm::vec3 u_LightPosition;
+		float padding1;
+		glm::vec3 u_LightColor;
+		float padding2;
+	};
+
 	class Shader {
 	public:
 		virtual ~Shader() = default;
@@ -23,6 +36,7 @@ namespace Aho {
         virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
         // Uniforms
+		virtual void BindUBO(const UBO& ubo) = 0;
         virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
         virtual void SetFloat(const std::string& name, float value) = 0;

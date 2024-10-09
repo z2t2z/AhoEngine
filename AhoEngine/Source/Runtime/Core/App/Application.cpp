@@ -2,8 +2,8 @@
 #include "Application.h"
 
 #include "Runtime/Core/Input/Input.h"
-
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
 namespace Aho {
 // std::bind(): Extract a member function from a class as a new function that can be directly called, while binding some parameters in advance
@@ -20,6 +20,9 @@ namespace Aho {
 		m_Window->SetVSync(false);
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+
+		std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+
 	}
 
 	void Application::Run() {

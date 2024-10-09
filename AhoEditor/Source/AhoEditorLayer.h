@@ -6,7 +6,7 @@
 namespace Aho {
 	class AhoEditorLayer : public Layer {
 	public:
-		AhoEditorLayer();
+		AhoEditorLayer(Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~AhoEditorLayer() = default;
 
 		virtual void OnAttach() override;
@@ -22,6 +22,8 @@ namespace Aho {
 		float m_DeltaTime{ 0.0f };
 
 		FileWatcher m_FileWatcher;
+
+		Renderer* m_Renderer{ nullptr };
 
 		std::shared_ptr<CameraManager> m_CameraManager;
 

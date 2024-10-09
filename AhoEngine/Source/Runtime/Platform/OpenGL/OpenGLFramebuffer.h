@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Runtime/Core/Core.h"
 #include "Runtime/Function/Renderer/FrameBuffer.h"
 
 namespace Aho {
@@ -7,7 +7,7 @@ namespace Aho {
 	public:
 		OpenGLFramebuffer(const FBSpecification& spec);
 		virtual ~OpenGLFramebuffer();
-		void Invalidate();
+		void Invalidate() override;
 		virtual void Bind() override;
 		virtual void Unbind() override;
 		virtual void Resize(uint32_t width, uint32_t height) override;
@@ -15,7 +15,10 @@ namespace Aho {
 		virtual void AddColorAttachment(const FBTextureSpecification& spec) override;
 		virtual void AddColorAttachment() override;
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
-		virtual uint32_t GetColorAttachmentRendererID(uint32_t index) const override { return m_ColorAttachments[index]; }
+		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const override { 
+			AHO_CORE_ASSERT(index < m_ColorAttachments.size(), "Out of bound while accessing color attachments");
+			return m_ColorAttachments[index];
+		}
 		virtual const FBSpecification& GetSpecification() const override { return m_Specification; }
 	private:
 		uint32_t m_FBO{ 0u };

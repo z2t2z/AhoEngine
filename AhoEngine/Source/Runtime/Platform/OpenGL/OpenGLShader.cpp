@@ -56,6 +56,11 @@ namespace Aho {
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::BindUBO(const UBO& ubo) {
+		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(UBO), &ubo); // 直接更新整个 UBO
+	}
+
 	std::string OpenGLShader::ReadFile(const std::string& filepath) {
 		std::string result;
 		std::ifstream in(filepath, std::ios::in | std::ios::binary); // ifstream closes itself due to RAII
@@ -159,6 +164,7 @@ namespace Aho {
 			glDeleteShader(handle);
 		}
 		m_Compiled = true;
+		InitUBO();
 	}
 
 	void OpenGLShader::CreateProgram() {
@@ -196,6 +202,16 @@ namespace Aho {
 		}
 
 		m_RendererID = program;
+	}
+
+	/* Hard Code for now */
+	void OpenGLShader::InitUBO() {
+		glGenBuffers(1, &m_UBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+		GLsizeiptr size = sizeof(UBO);
+		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+		GLuint bindingPoint = 0;
+		glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_UBO);
 	}
 
 

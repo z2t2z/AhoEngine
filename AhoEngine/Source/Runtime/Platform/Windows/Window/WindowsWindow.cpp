@@ -38,16 +38,15 @@ namespace Aho {
 		if (!s_GLFWInitialized) {
 			int success = glfwInit();
 			AHO_CORE_ASSERT(success, "Could not initialize GLFW!");
-
 			// GLFW error callback
 			glfwSetErrorCallback(GLFWErrorCallback);
-
 			s_GLFWInitialized = true;
 		}
 
-		//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-		//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
 		m_Context = new OpenGLContext(m_Window);
