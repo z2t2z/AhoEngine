@@ -2,9 +2,8 @@
 
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Camera/RuntimeCamera.h"
-#include "Runtime/Resource/Model/Model.h"
 #include "Runtime/Resource/Asset/MeshAsset.h"
-#include "Runtime/Resource/EcS/AObject.h"
+#include "Runtime/Function/Level/EcS/Entity.h"
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

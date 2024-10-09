@@ -14,19 +14,20 @@ namespace Aho {
 	}
 
 	void SceneHierarchyPanel::OnImGuiRender() {
+		return;
 		ImGui::Begin("Scene Hierarchy");
 		//auto [width, height] = ImGui::GetContentRegionAvail();
 		auto [width, height] = ImGui::GetWindowSize();
 		m_Width = width;
 		m_Height = height;
 		if (m_Context) {
-			for (const auto& aobject : m_Context->m_Registry.view<TagComponent>()) {
-				Entity entity{ aobject , m_Context.get() };
-				DrawEntityNode(entity);
-			}
-			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
-				m_SelectionContext = {};
-			}
+			//for (const auto& aobject : m_Context->m_EntityManager.view<TagComponent>()) {
+			//	Entity entity{ aobject , m_Context.get() };
+			//	DrawEntityNode(entity);
+			//}
+			//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+			//	m_SelectionContext = {};
+			//}
 			// Right-click on blank space
 			//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
 			//	if (ImGui::MenuItem("Create Empty Entity"))

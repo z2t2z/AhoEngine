@@ -20,33 +20,9 @@ namespace Aho {
 	private:
 		bool m_CameraControlActive = false;
 		float m_DeltaTime{ 0.0f };
-
 		FileWatcher m_FileWatcher;
-
 		Renderer* m_Renderer{ nullptr };
-
 		std::shared_ptr<CameraManager> m_CameraManager;
-
-		std::shared_ptr<Shader> m_Shader;
-		
-		std::shared_ptr<Framebuffer> m_Framebuffer;
-
-		std::shared_ptr<Shader> m_PickingShader;
-		std::shared_ptr<Framebuffer> m_PickingFBO;
-
-		std::shared_ptr<Shader> m_SSAO_Geo;
-		std::shared_ptr<Shader> m_SSAO_SSAO;
-		std::shared_ptr<Shader> m_SSAO_Blur;
-		std::shared_ptr<Shader> m_SSAO_Light;
-
-		std::shared_ptr<Scene> m_ActiveScene;
-		std::shared_ptr<Scene> m_EditorScene;
-
-		AObject m_Plane; // testing game object
-		AObject m_Test;
-
-		entt::entity m_Selected{ entt::null };
-
 		bool m_ViewportFocused{ false };
 		bool m_ViewportHovered{ false };
 		glm::vec2 m_ViewportSize{ 0.0f, 0.0f };

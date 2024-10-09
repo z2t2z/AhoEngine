@@ -11,18 +11,18 @@ namespace Aho {
 
 	void RenderLayer::OnAttach() {
 		AHO_CORE_INFO("Renderer on attach");
-		std::shared_ptr<RenderCommandBuffer> cmdBuffer = std::make_shared<RenderCommandBuffer>();
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->AddCommand([&](const std::shared_ptr<RenderData>& data) {
-			std::array<uint32_t, 1> buffers = {};
-			buffers[0] = 36064;
+			//std::array<uint32_t, 1> buffers = {};
+			//buffers[0] = 36065;
 			data->Bind();
-			RenderCommand::DrawBuffer(buffers.data());
+			//RenderCommand::DrawBuffer(buffers.data());
 			RenderCommand::DrawIndexed(data->GetVAO());
 			data->Unbind();
 		});
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto shader = Shader::Create(currentPath / "ShaderSrc" / "Shader.glsl");
-		std::shared_ptr<RenderPassForward> renderPass = std::make_shared<RenderPassForward>();
+		RenderPassForward* renderPass = new RenderPassForward();
 		renderPass->SetRenderCommand(cmdBuffer);
 		renderPass->SetShader(shader);
 
@@ -81,7 +81,7 @@ namespace Aho {
 		FBO->Invalidate();
 		FBO->Unbind();
 		renderPass->SetRenderTarget(FBO);
-		std::shared_ptr<RenderPipelineDefault> pipeline = std::make_shared<RenderPipelineDefault>();
+		RenderPipelineDefault* pipeline = new RenderPipelineDefault();
 		pipeline->AddRenderPass(renderPass);
 		m_Renderer->SetRenderPipeline(pipeline);
 	}

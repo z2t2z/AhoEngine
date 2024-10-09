@@ -12,7 +12,7 @@ namespace Aho {
 				renderPass->Execute();
 			}
 		}
-		std::shared_ptr<RenderPass> GetRenderPass(size_t index) {
+		RenderPass* GetRenderPass(size_t index) {
 			if (index >= m_RenderPasses.size()) {
 				AHO_CORE_ERROR("Out of bound in render pass at index {}", index);
 				return nullptr;
@@ -20,9 +20,9 @@ namespace Aho {
 			return m_RenderPasses[index];
 		}
 		virtual void Initialize() = 0;
-		virtual void AddRenderPass(const std::shared_ptr<RenderPass>& rp) { m_RenderPasses.push_back(rp); }
+		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
 	protected:
-		std::vector<std::shared_ptr<RenderPass>> m_RenderPasses; // Must be ordered!
+		std::vector<RenderPass*> m_RenderPasses; // Must be ordered!
 	};
 
 

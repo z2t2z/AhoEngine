@@ -8,10 +8,11 @@ namespace Aho {
 	public:
 		AhoEditor() {
 			//PushLayer(new RayTracingLayer());
-			//PushLayer(new ResourceLayer());
+
 			Renderer* renderer = new Renderer();
 			auto cameraManager = std::make_shared<CameraManager>();
 			cameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
+			PushLayer(new LevelLayer(cameraManager));
 			PushLayer(new RenderLayer(renderer, cameraManager));
 			PushLayer(new AhoEditorLayer(renderer, cameraManager));
 		}

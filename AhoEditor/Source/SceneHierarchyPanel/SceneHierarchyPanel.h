@@ -3,7 +3,6 @@
 #include <IamAho.h>
 
 namespace Aho {
-	using Entity = AObject;
 	class SceneHierarchyPanel {
 	public:
 		SceneHierarchyPanel() = default;

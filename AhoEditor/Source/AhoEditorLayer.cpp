@@ -14,8 +14,8 @@ namespace Aho {
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("Editor on attach");
 		// Set the active scene
-		m_ActiveScene = std::make_shared<Scene>();
-		m_Panel = std::make_unique<SceneHierarchyPanel>(m_ActiveScene);
+		//m_ActiveScene = std::make_shared<Scene>();
+		//m_Panel = std::make_unique<SceneHierarchyPanel>(m_ActiveScene);
 
 		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -167,45 +167,45 @@ namespace Aho {
 		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		FBO->Unbind();
 		auto [x, y] = Input::GetMousePosition();
-		auto [w, h] = m_Panel->GetPenalSize();
-		x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
+		//auto [w, h] = m_Panel->GetPenalSize();
+		//x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
 		if (x >= 0 && y >= 0 && x < width && y < height) {
 			uint32_t readData = FBO->ReadPixel(0, x, y);
 		}
 		// Gizmos
 		{
-			auto [x, y] = Input::GetMousePosition();
-			auto [w, h] = m_Panel->GetPenalSize();
-			x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
-			if (false and Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_2)) {
-				m_PickingFBO->Bind();
-				if (x >= 0 && y >= 0 && x < width && y < height) {
-					uint32_t readData = m_PickingFBO->ReadPixel(0, x, y);
-					if (readData == 0u) {
-						m_Selected = entt::null;
-					}
-					else {
-						m_Selected = static_cast<entt::entity>(readData);
-					}
-				}
-				else {
-					m_Selected = entt::null;
-				}
-				m_PickingFBO->Unbind();
-			}
-			if (m_Selected != entt::null) {
-				ImGuizmo::SetOrthographic(false);
-				ImGuizmo::SetDrawlist();
-				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
+			//auto [x, y] = Input::GetMousePosition();
+			//auto [w, h] = m_Panel->GetPenalSize();
+			//x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
+			//if (false and Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_2)) {
+			//	m_PickingFBO->Bind();
+			//	if (x >= 0 && y >= 0 && x < width && y < height) {
+			//		uint32_t readData = m_PickingFBO->ReadPixel(0, x, y);
+			//		if (readData == 0u) {
+			//			m_Selected = entt::null;
+			//		}
+			//		else {
+			//			m_Selected = static_cast<entt::entity>(readData);
+			//		}
+			//	}
+			//	else {
+			//		m_Selected = entt::null;
+			//	}
+			//	m_PickingFBO->Unbind();
+			//}
+			//if (m_Selected != entt::null) {
+			//	ImGuizmo::SetOrthographic(false);
+			//	ImGuizmo::SetDrawlist();
+			//	ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
 
-				const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
-				const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
-				auto transform = m_ActiveScene->m_Registry.get<TransformComponent>(m_Selected).GetTransform();
-				ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transf));
+			//	const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
+			//	const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
+			//	auto transform = m_ActiveScene->m_Registry.get<TransformComponent>(m_Selected).GetTransform();
+			//	ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transf));
 
-				// Is snapping
-				bool snapping = Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL);
-			}
+			//	// Is snapping
+			//	bool snapping = Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL);
+			//}
 		}
 		ImGui::End();
 	}

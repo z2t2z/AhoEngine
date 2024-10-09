@@ -16,11 +16,12 @@ namespace Aho {
 		void Render() {
 			m_CurrentPipeline->Execute();
 		}
-		void SetRenderPipeline(const std::shared_ptr<RenderPipeline> pl) { m_CurrentPipeline = pl; }
-		std::shared_ptr<RenderPipeline> GetCurrentRenderPipeline() { return m_CurrentPipeline; }
+		void SetRenderPipeline(RenderPipeline* pl) { m_CurrentPipeline = pl; }
+		RenderPipeline* GetCurrentRenderPipeline() { return m_CurrentPipeline; }
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
-		std::shared_ptr<RenderPipeline> m_CurrentPipeline{ nullptr };
+		RenderPipeline* m_CurrentPipeline{ nullptr };
+		std::vector<RenderPipeline*> m_Pipelines;
 	};
 }
 
