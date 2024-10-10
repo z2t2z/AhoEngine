@@ -2,7 +2,8 @@
 #include "LevelLayer.h"
 
 namespace Aho {
-	LevelLayer::LevelLayer(const std::shared_ptr<CameraManager>& cameraManager) : m_CameraManager(cameraManager) {
+	LevelLayer::LevelLayer(EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
 
 	void LevelLayer::OnAttach() {

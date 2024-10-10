@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 namespace Aho {
-    static uint32_t TIME_LAG = 2u;
+    static uint32_t TIME_LAG = 20u;
     // TODO: Support more file extensions
 	class FileWatcher {
         using FileChangedCallback = std::function<bool(FileChangedEvent&)>;
@@ -30,6 +30,7 @@ namespace Aho {
 
 	private:
         void NotifyFileChanged(const std::string& filePath, const std::string& fileType) {
+            AHO_TRACE("Fires off an event!");
             FileChangedEvent event(filePath, fileType);
             EventDispatcher dispatcher(event);
             dispatcher.Dispatch<FileChangedEvent>(m_Callback);

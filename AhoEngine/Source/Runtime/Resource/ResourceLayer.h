@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Runtime/Core/Layer/Layer.h"
+#include "Runtime/Resource/Asset/AssetManager.h"
 #include "FileWatcher/FileWatcher.h"
 
 namespace Aho {
 	class ResourceLayer : public Layer {
 	public:
-		ResourceLayer();
+		ResourceLayer(EventManager* eventManager, AssetManager* m_AssetManager);
 		virtual ~ResourceLayer() = default;
 
 		virtual void OnAttach() override;
@@ -16,6 +17,11 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 	private:
-		FileWatcher m_FileWatcher;
+		void LoadAssetFromFile(const std::string& path);
+		template<typename T>
+		void PackRenderData(const T& res);
+	private:
+		AssetManager* m_AssetManager;
+		EventManager* m_EventManager;
 	};
 }

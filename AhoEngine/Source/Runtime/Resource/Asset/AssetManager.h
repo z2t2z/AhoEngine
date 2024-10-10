@@ -28,14 +28,16 @@
 	AssetManager is responsible for:
 	1. Loading DCC file and convert it into our asset file (DCC -> JSON)
 	2. Loading resources from our assfile(JSON)
-
 */
 
 namespace Aho {
 	class AssetManager {
 	public:
+		AssetManager() = default;
+		~AssetManager() = default;
+
 		template<typename AssetType>
-		static bool LoadAsset(const std::filesystem::path& path, AssetType& assetOut) {
+		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut) {
 			if (path.extension().string() != ".asset") {
 				return CreateAsset(path, assetOut);
 			}
@@ -50,12 +52,13 @@ namespace Aho {
 		}
 
 		template<typename AssetType>
-		static bool SaveAsset(const std::filesystem::path& path, AssetType& assetIn) {
+		bool SaveAsset(const std::filesystem::path& path, AssetType& assetIn) {
 			/* TODO */
 		}
 
+	private:
 		template<typename AssetType>
-		static bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
+		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
 			const auto& fileExt = path.extension().string();
 			if (fileExt == ".obj" || fileExt == ".fbx") {
 				assetOut = *(AssetCreater::MeshAssetCreater(path.string()));
@@ -64,8 +67,10 @@ namespace Aho {
 			AHO_CORE_ASSERT("Not supported yet");
 			return false;
 		}
+		void Initialize() { /* TODO */ }
+
 	private:
-		static std::unordered_map<UUID, std::shared_ptr<Asset>> s_AssetPools;
+		std::unordered_map<UUID, std::shared_ptr<Asset>> s_AssetPools;
 	};
 
 }

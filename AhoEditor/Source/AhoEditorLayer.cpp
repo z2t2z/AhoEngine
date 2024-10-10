@@ -6,75 +6,34 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
-	AhoEditorLayer::AhoEditorLayer(Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager) 
-		: m_Renderer(renderer), m_CameraManager(cameraManager) {
+	AhoEditorLayer::AhoEditorLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
 
 	}
 
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("Editor on attach");
-		// Set the active scene
-		//m_ActiveScene = std::make_shared<Scene>();
-		//m_Panel = std::make_unique<SceneHierarchyPanel>(m_ActiveScene);
-
-		// Temporary init shader here
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
-		
-
-#define LOAD_MODEL 0
-#if LOAD_MODEL
-		{
-			std::filesystem::path newPath = currentPath / "Asset" / "sponzaFBX" / "sponza.fbx";
-			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
-			AssetManager::LoadAsset<StaticMesh>(newPath, *res);
-			AObject plane = m_ActiveScene->CreateAObject("Plane");
-			plane.AddComponent<EntityComponent>();
-			for (const auto& meshInfo : *res) {
-				std::shared_ptr<VertexArray> vao;
-				vao.reset(VertexArray::Create());
-				vao->Init(meshInfo);
-				auto meshEntity = m_ActiveScene->CreateAObject();
-				meshEntity.AddComponent<MeshComponent>(vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
-				meshEntity.AddComponent<TransformComponent>();
-				if (meshInfo->materialInfo.HasMaterial()) {
-					auto matEntity = m_ActiveScene->CreateAObject();
-					std::shared_ptr<Material> mat = std::make_shared<Material>();
-					for (const auto& albedo : meshInfo->materialInfo.Albedo) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
-						tex->SetTextureType(TextureType::Diffuse);
-						mat->AddTexture(tex);
-						if (tex->IsLoaded()) {
-							// TODO: Cache the loaded texture
-						}
-					}
-					for (const auto& normal : meshInfo->materialInfo.Normal) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal);
-						tex->SetTextureType(TextureType::Normal);
-						mat->AddTexture(tex);
-						if (tex->IsLoaded()) {
-
-						}
-					}
-					meshEntity.AddComponent<MaterialComponent>(mat);
-				}
-				plane.GetComponent<EntityComponent>().meshEntities.push_back(meshEntity.GetEntityHandle());
-			}
-		}
-#endif
 	}
 
 	void AhoEditorLayer::OnDetach() {
 	}
 
+	static bool call{ false };
+
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_CameraManager->Update(deltaTime);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
+		if (!call) {
+			call = true;
+			std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
+			std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(path.string());
+			m_EventManager->PushBack(event);
+		}
 	}
-
-	glm::mat4 transf = glm::mat4(1.0f);
 
 	void AhoEditorLayer::OnImGuiRender() {
 		// Dock space settings
@@ -153,10 +112,11 @@ namespace Aho {
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
 		ImGui::End();
+
 		// Viewport Window
 		ImGui::Begin("Viewport");
 		auto [width, height] = ImGui::GetWindowSize();
-		auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
+		auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget(); // TODO: Make a simpler API, something like GetFinalResult
 		FBO->Bind();
 		auto spec = FBO->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
@@ -172,61 +132,29 @@ namespace Aho {
 		if (x >= 0 && y >= 0 && x < width && y < height) {
 			uint32_t readData = FBO->ReadPixel(0, x, y);
 		}
-		// Gizmos
-		{
-			//auto [x, y] = Input::GetMousePosition();
-			//auto [w, h] = m_Panel->GetPenalSize();
-			//x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
-			//if (false and Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_2)) {
-			//	m_PickingFBO->Bind();
-			//	if (x >= 0 && y >= 0 && x < width && y < height) {
-			//		uint32_t readData = m_PickingFBO->ReadPixel(0, x, y);
-			//		if (readData == 0u) {
-			//			m_Selected = entt::null;
-			//		}
-			//		else {
-			//			m_Selected = static_cast<entt::entity>(readData);
-			//		}
-			//	}
-			//	else {
-			//		m_Selected = entt::null;
-			//	}
-			//	m_PickingFBO->Unbind();
-			//}
-			//if (m_Selected != entt::null) {
-			//	ImGuizmo::SetOrthographic(false);
-			//	ImGuizmo::SetDrawlist();
-			//	ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height);
-
-			//	const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
-			//	const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
-			//	auto transform = m_ActiveScene->m_Registry.get<TransformComponent>(m_Selected).GetTransform();
-			//	ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transf));
-
-			//	// Is snapping
-			//	bool snapping = Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL);
-			//}
-		}
 		ImGui::End();
+
+		//ImGui::ShowDemoWindow();
 	}
 
-
 	void AhoEditorLayer::OnEvent(Event& e) {
-		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<FileChangedEvent>(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
+		//EventDispatcher dispatcher(e);
+		//AHO_TRACE("Event recieved!");
+		//dispatcher.Dispatch<FileChangedEvent>(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 	}
 
 	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
 		if (e.GetEventType() == EventType::FileChanged) {
+			AHO_TRACE("Event recieved!");
 			const auto& FileName = e.GetFilePath();
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					//m_Shader = std::move(newShader);
 					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
 				}
 			}
+			//e.SetHandled();
+			return false;
 		}
-		return true;
 	}
 }

@@ -5,7 +5,7 @@
 namespace Aho {
 	class LevelLayer : public Layer {
 	public:
-		LevelLayer(const std::shared_ptr<CameraManager>& cameraManager);
+		LevelLayer(EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~LevelLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -18,6 +18,7 @@ namespace Aho {
 	private:
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
+		EventManager* m_EventManager;
 		std::shared_ptr<Scene> m_CurrentScene;
 		std::shared_ptr<CameraManager> m_CameraManager;
 		std::vector<std::shared_ptr<Scene>> m_Scenes;

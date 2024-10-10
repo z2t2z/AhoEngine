@@ -32,7 +32,11 @@ namespace Aho {
 			style.WindowRounding = 0.0f;
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
-		
+		auto path = std::filesystem::current_path().parent_path();
+		// TODO: Font manager
+		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Bold.ttf").string().c_str(), 18.0f);
+		auto font = io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Regular.ttf").string().c_str(), 18.0f);
+		io.FontDefault = font;
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 

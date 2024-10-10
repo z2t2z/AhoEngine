@@ -4,9 +4,8 @@
 #include <imgui.h>
 
 namespace Aho {
-	RenderLayer::RenderLayer(Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager) 
-		: m_Renderer(renderer), m_CameraManager(cameraManager) {
-
+	RenderLayer::RenderLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
 	}
 
 	void RenderLayer::OnAttach() {
@@ -26,42 +25,6 @@ namespace Aho {
 		renderPass->SetRenderCommand(cmdBuffer);
 		renderPass->SetShader(shader);
 
-		std::filesystem::path newPath = currentPath / "Asset" / "sponzaFBX" / "sponza.fbx";
-		std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
-		AssetManager::LoadAsset<StaticMesh>(newPath, *res);
-		// Temporary: No ECS here!!
-		for (const auto& meshInfo : *res) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			if (meshInfo->materialInfo.HasMaterial()) {
-				std::shared_ptr<Material> mat = std::make_shared<Material>();
-				for (const auto& albedo : meshInfo->materialInfo.Albedo) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
-					tex->SetTextureType(TextureType::Diffuse);
-					mat->AddTexture(tex);
-					if (tex->IsLoaded()) {
-						// TODO: Cache the loaded texture
-					}
-				}
-				for (const auto& normal : meshInfo->materialInfo.Normal) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(normal);
-					tex->SetTextureType(TextureType::Normal);
-					mat->AddTexture(tex);
-					if (tex->IsLoaded()) {
-						// TODO: Cache the loaded texture
-					}
-				}
-				mat->SetShader(shader);
-				renderData->SetMaterial(mat);
-			}
-			else {
-				// TODO
-			}
-			renderPass->AddRenderData(renderData);
-		}
 		FBSpecification fbSpec;
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
@@ -108,6 +71,43 @@ namespace Aho {
 
 	void RenderLayer::OnEvent(Event& e) {
 		/* Parameters on changed event */
+		if (e.GetEventType() == EventType::PackRenderData) {
+			e.SetHandled();
+			auto ee = (PackRenderDataEvent*)&(e);
+			auto rawData = ee->GetRawData();
+			for (const auto& meshInfo : *rawData) {
+				std::shared_ptr<VertexArray> vao;
+				vao.reset(VertexArray::Create());
+				vao->Init(meshInfo);
+				std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+				renderData->SetVAOs(vao);
+				if (meshInfo->materialInfo.HasMaterial()) {
+					std::shared_ptr<Material> mat = std::make_shared<Material>();
+					for (const auto& albedo : meshInfo->materialInfo.Albedo) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
+						tex->SetTextureType(TextureType::Diffuse);
+						mat->AddTexture(tex);
+						if (tex->IsLoaded()) {
+							// TODO: Cache the loaded texture
+						}
+					}
+					for (const auto& normal : meshInfo->materialInfo.Normal) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal);
+						tex->SetTextureType(TextureType::Normal);
+						mat->AddTexture(tex);
+						if (tex->IsLoaded()) {
+							// TODO: Cache the loaded texture
+						}
+					}
+					const auto& shader = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetShader();
+					mat->SetShader(shader);
+					renderData->SetMaterial(mat);
+				}
+				else {
+					// TODO
+				}
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->AddRenderData(renderData);
+			}
+		}
 	}
-
 }

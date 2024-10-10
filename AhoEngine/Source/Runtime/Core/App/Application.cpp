@@ -3,7 +3,6 @@
 
 #include "Runtime/Core/Input/Input.h"
 #include <GLFW/glfw3.h>
-#include <glad/glad.h>
 
 namespace Aho {
 // std::bind(): Extract a member function from a class as a new function that can be directly called, while binding some parameters in advance
@@ -19,10 +18,8 @@ namespace Aho {
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
 		m_Window->SetVSync(false);
 		m_ImGuiLayer = new ImGuiLayer();
+		m_EventManager = new EventManager();
 		PushOverlay(m_ImGuiLayer);
-
-		std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
-
 	}
 
 	void Application::Run() {
@@ -30,7 +27,10 @@ namespace Aho {
 			float currTime = (float)glfwGetTime();
 			float deltaTime = currTime - m_LastFrameTime;
 			m_LastFrameTime = currTime;
-			// Will be done on the render thread in the future
+			if (!m_EventManager->Empty()) {
+				auto e = m_EventManager->PopFront();
+				OnEvent(*e);
+			}
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);
 			}
@@ -50,14 +50,9 @@ namespace Aho {
 	void Application::OnEvent(Event& e) {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
-		/*   Log every event here in the console */
-		//AHO_CORE_TRACE("{0}", e.ToString());			 			// ?
-		for (auto it = std::prev(m_LayerStack.end()); ; it--) {
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
 			(*it)->OnEvent(e);
 			if (e.Handled()) {
-				break;
-			}
-			if (it == m_LayerStack.begin()) {
 				break;
 			}
 		}
@@ -75,6 +70,5 @@ namespace Aho {
 		m_Running = false;
 		return true;
 	}
-
 } // namespace Aho
 

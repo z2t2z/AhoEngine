@@ -23,9 +23,14 @@ namespace Aho {
 		std::vector<Layer*>::iterator begin() {
 			return m_Layers.begin();
 		}
-
 		std::vector<Layer*>::iterator end() {
 			return m_Layers.end();
+		}
+		std::reverse_iterator<std::vector<Layer*>::iterator> rbegin() {
+			return m_Layers.rbegin();
+		}
+		std::reverse_iterator<std::vector<Layer*>::iterator> rend() {
+			return m_Layers.rend();
 		}
 
 	private:

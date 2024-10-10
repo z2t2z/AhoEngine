@@ -41,15 +41,12 @@ namespace Aho {
 
 	class Asset {
 	public:
-		Asset() = default;
-		Asset(const std::string& path) {}
-		
 		virtual ~Asset() = default;
-		//virtual bool Load() = 0;
+		virtual bool Load() = 0;
 		//virtual bool Save() = 0;
 		bool IsLoaded() { return m_IsLoaded; }
 		UUID GetUUID() { return m_UUID; }
-	private:
+	protected:
 		UUID m_UUID;
 		std::string m_Path;
 		bool m_IsLoaded{ false };
@@ -60,7 +57,7 @@ namespace Aho {
 		StaticMesh() = default;
 		StaticMesh(const std::string& path) {}
 		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh) : m_SubMesh(SubMesh) {}
-
+		virtual bool Load() override { return false; }
 		std::vector<std::shared_ptr<MeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<MeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
@@ -80,6 +77,7 @@ namespace Aho {
 		MaterialAsset() = default;
 		MaterialAsset(const std::string& path) {}
 		MaterialAsset(const MaterialInfo& materialInfo) : m_MaterialInfo(materialInfo) {}
+		virtual bool Load() override {}
 		MaterialInfo GetMaterialInfo() { return m_MaterialInfo; }
 	private:
 		MaterialInfo m_MaterialInfo;

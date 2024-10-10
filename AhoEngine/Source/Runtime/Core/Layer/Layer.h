@@ -4,8 +4,7 @@
 #include "Runtime/Core/Events/Event.h"
 
 namespace Aho {
-
-	class AHO_API Layer {
+	class Layer {
 	public:
 		Layer(const std::string& name = "Layer");
 		virtual ~Layer();
@@ -13,10 +12,6 @@ namespace Aho {
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
 		virtual void OnUpdate(float deltaTime) {}
-
-		// TODO:
-		// virtual void OnLogicUpdate() {}
-		// virtual void OnLogicUpdate() {}
 		virtual void OnEvent(Event& event) {}
 		virtual void OnImGuiRender() {}
 		inline const std::string& GetDebugName() {

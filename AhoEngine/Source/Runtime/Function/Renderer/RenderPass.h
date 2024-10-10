@@ -39,7 +39,7 @@ namespace Aho {
 				return;
 			}
 			if (m_RenderData.empty()) {
-				AHO_CORE_WARN("No data to render!");
+				//AHO_CORE_WARN("No data to render!");
 				return;
 			}
 			//m_Shader->Bind();
