@@ -19,6 +19,13 @@ namespace Aho {
 			}
 			return m_RenderPasses[index];
 		}
+		uint32_t GetFinalRenderTarget() {
+			if (m_RenderPasses.empty()) {
+				AHO_CORE_ERROR("m_RenderPasses is empty!");
+				return 0;
+			}
+			return m_RenderPasses.back()->GetRenderTarget()->GetLastColorAttachment();
+		}
 		virtual void Initialize() = 0;
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
 	protected:

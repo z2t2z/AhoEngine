@@ -87,6 +87,7 @@ namespace Aho {
 		virtual void AddColorAttachment(const FBTextureSpecification& spec) = 0;
 		virtual void AddColorAttachment() = 0;
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
+		virtual const uint32_t GetLastColorAttachment() const = 0;
 		virtual const FBSpecification& GetSpecification() const = 0;
 		static std::shared_ptr<Framebuffer> Create(const FBSpecification& spec);
 	};

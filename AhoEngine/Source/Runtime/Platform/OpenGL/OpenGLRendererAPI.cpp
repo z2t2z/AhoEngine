@@ -18,6 +18,6 @@ namespace Aho {
 	}
 
 	void OpenGLRendererAPI::DrawBuffer(const uint32_t* attachmentID) {
-		glDrawBuffers(1, attachmentID);
+		//glDrawBuffers(2, attachmentID);
 	}
 }

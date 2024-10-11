@@ -47,7 +47,8 @@ void main() {
 #type fragment
 #version 460 core
 
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 EntityColor;
+layout(location = 1) out vec4 color;
 
 layout(std140) uniform CameraData{
 	mat4 u_View;
@@ -69,7 +70,7 @@ in vec3 v_LightPos;
 in vec3 v_ViewPos;
 
 // uniform vec3 u_LightColor;
-uniform vec3 u_Color;
+uniform uint u_EntityID;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;
 
@@ -99,5 +100,11 @@ void main() {
 	// Combination
 	vec3 result = (ambient + diffuse + specular);
 	color = vec4(result, 1.0);
-	// color = vec4(1.0);
+
+	EntityColor = vec4(
+		float(u_EntityID & 0xFF) / 255.0,              // R
+		float((u_EntityID >> 8) & 0xFF) / 255.0,       // G
+		float((u_EntityID >> 16) & 0xFF) / 255.0,      // B
+		float((u_EntityID >> 24) & 0xFF) / 255.0       // A
+	);
 }

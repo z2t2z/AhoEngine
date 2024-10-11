@@ -12,10 +12,6 @@ namespace Aho {
     }
 
     void Material::Apply(const std::shared_ptr<Shader>& shader) {
-        //if (!m_Outdated) {
-        //    return;
-        //}
-        //m_Outdated = false;
         const auto& chosenShader = shader == nullptr ? m_Shader : shader;
         AHO_CORE_ASSERT(chosenShader);
         chosenShader->Bind();
@@ -53,27 +49,10 @@ namespace Aho {
         for (const auto& [name, val] : m_UniformInt) {
             chosenShader->SetInt(name, val);
         }
+        for (const auto& [name, val] : m_UniformUint) {
+            chosenShader->SetUint(name, val);
+        }
         //chosenShader->Unbind(); // !!!!!!???
     }
 
-    template<>
-    inline void Material::SetUniform<glm::vec3>(const std::string& name, const glm::vec3& value) {
-        m_Outdated = true;
-        m_UniformVec3[name] = value;
-    }
-    template<>
-    inline void Material::SetUniform<glm::mat4>(const std::string& name, const glm::mat4& value) {
-        m_Outdated = true;
-        m_UniformMat4[name] = value;
-    }
-    template<>
-    inline void Material::SetUniform<float>(const std::string& name, const float& value) {
-        m_Outdated = true;
-        m_UniformFloat[name] = value;
-    }
-    template<>
-    inline void Material::SetUniform<int>(const std::string& name, const int& value) {
-        m_Outdated = true;
-        m_UniformInt[name] = value;
-    }
 }

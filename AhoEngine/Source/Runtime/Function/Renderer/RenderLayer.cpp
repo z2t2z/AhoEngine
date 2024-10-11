@@ -12,10 +12,7 @@ namespace Aho {
 		AHO_CORE_INFO("Renderer on attach");
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->AddCommand([&](const std::shared_ptr<RenderData>& data) {
-			//std::array<uint32_t, 1> buffers = {};
-			//buffers[0] = 36065;
 			data->Bind();
-			//RenderCommand::DrawBuffer(buffers.data());
 			RenderCommand::DrawIndexed(data->GetVAO());
 			data->Unbind();
 		});
@@ -40,6 +37,10 @@ namespace Aho {
 		texSpec.filterModeMin = FBFilterMode::Nearest;
 		texSpec.filterModeMag = FBFilterMode::Nearest;
 		FBO->Bind();
+		FBO->AddColorAttachment(texSpec);
+		//texSpec.filterModeMin = FBFilterMode::Nearest;
+		//texSpec.dataType = FBDataType::UnsignedByte;
+		//texSpec.dataFormat = FBDataFormat::RGBA;
 		FBO->AddColorAttachment(texSpec);
 		FBO->Invalidate();
 		FBO->Unbind();

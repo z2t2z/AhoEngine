@@ -163,6 +163,11 @@ namespace Aho {
 		for (const auto& spec : temp) {
 			AddColorAttachment(spec);
 		}
+		std::vector<GLenum> attchments;
+		for (int i = 0; i < m_ColorAttachments.size(); i++) {
+			attchments.push_back(GL_COLOR_ATTACHMENT0 + i);
+		}
+		glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), attchments.data());
 		AHO_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}

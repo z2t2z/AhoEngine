@@ -18,7 +18,7 @@ namespace Aho {
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
 		inline static void DrawBuffer(const uint32_t* bufferID) {
-			s_RendererAPI->DrawBuffer(bufferID);
+			//s_RendererAPI->DrawBuffer(bufferID);
 		}
 	private:
 		static RendererAPI* s_RendererAPI;
@@ -36,6 +36,7 @@ namespace Aho {
 		}
 	private:
 		std::vector<std::function<void(const std::shared_ptr<RenderData>& data)>> m_Commands;
+	};
 
 	//TODO: think of doing things this way
 	//	template <typename Func, typename... Args>
@@ -53,6 +54,4 @@ namespace Aho {
 	//			func(std::get<Args>(args)...);
 	//		});
 	//	}
-	};
-
 }

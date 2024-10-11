@@ -19,6 +19,10 @@ namespace Aho {
 			AHO_CORE_ASSERT(index < m_ColorAttachments.size(), "Out of bound while accessing color attachments");
 			return m_ColorAttachments[index];
 		}
+		virtual const uint32_t GetLastColorAttachment() const override {
+			AHO_CORE_ASSERT(!m_ColorAttachments.empty(), "Colorattachment is empty!");
+			return m_ColorAttachments.back();
+		}
 		virtual const FBSpecification& GetSpecification() const override { return m_Specification; }
 	private:
 		uint32_t m_FBO{ 0u };

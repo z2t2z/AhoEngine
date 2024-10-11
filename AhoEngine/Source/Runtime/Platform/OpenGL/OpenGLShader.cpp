@@ -214,6 +214,9 @@ namespace Aho {
 		glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_UBO);
 	}
 
+	void OpenGLShader::SetUint(const std::string& name, int value) {
+		UploadUniformUint(name, value);
+	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value) {
 		UploadUniformInt(name, value);
@@ -255,6 +258,11 @@ namespace Aho {
 		glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 		// TODO: customizable flags
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
+	}
+
+	void OpenGLShader::UploadUniformUint(const std::string& name, int value) {
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value) {

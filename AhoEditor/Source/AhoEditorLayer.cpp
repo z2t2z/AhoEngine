@@ -27,6 +27,7 @@ namespace Aho {
 		m_CameraManager->Update(deltaTime);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
+		// TODO : Async
 		if (!call) {
 			call = true;
 			std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
@@ -124,17 +125,22 @@ namespace Aho {
 			FBO->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
 		}
-		uint32_t RenderResult = FBO->GetColorAttachmentRendererID(0);
+		uint32_t RenderResult = FBO->GetLastColorAttachment();
 		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-		FBO->Unbind();
-		auto [x, y] = Input::GetMousePosition();
-		//auto [w, h] = m_Panel->GetPenalSize();
-		//x -= w + 10.0f, y -= 45.0f; // TODO: Think of a better way
+
+		auto [MouseX, MouseY] = ImGui::GetMousePos();
+		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
+		uint32_t x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
+		y = spec.Height - y;
+		uint32_t readData = 0;
 		if (x >= 0 && y >= 0 && x < width && y < height) {
-			uint32_t readData = FBO->ReadPixel(0, x, y);
+			readData = FBO->ReadPixel(0, x, y);
+		}
+		FBO->Unbind();
+		if (readData) {
+			AHO_TRACE("{}", readData);
 		}
 		ImGui::End();
-
 		//ImGui::ShowDemoWindow();
 	}
 

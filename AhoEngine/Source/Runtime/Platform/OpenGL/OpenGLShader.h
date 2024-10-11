@@ -16,6 +16,7 @@ namespace Aho {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 		virtual void BindUBO(const UBO& ubo) override;
+		virtual void SetUint(const std::string& name, int value) override;
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -29,6 +30,7 @@ namespace Aho {
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
 		virtual const std::string& GetName() const override { return m_Name; }
 
+		void UploadUniformUint(const std::string& name, int value);
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
 

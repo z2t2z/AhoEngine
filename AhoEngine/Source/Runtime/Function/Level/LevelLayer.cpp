@@ -53,9 +53,11 @@ namespace Aho {
 				auto meshEntity = m_EntityManager->CreateEntity("subMesh");
 				m_EntityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
 				m_EntityManager->AddComponent<TransformComponent>(meshEntity);
+				std::shared_ptr<Material> mat = std::make_shared<Material>();
+				uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
+				mat->SetUniform("u_EntityID", entityID); // setting entity id here
 				if (meshInfo->materialInfo.HasMaterial()) {
 					auto matEntity = m_EntityManager->CreateEntity("subMesh");
-					std::shared_ptr<Material> mat = std::make_shared<Material>();
 					for (const auto& albedo : meshInfo->materialInfo.Albedo) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
 						tex->SetTextureType(TextureType::Diffuse);
@@ -69,7 +71,7 @@ namespace Aho {
 						tex->SetTextureType(TextureType::Normal);
 						mat->AddTexture(tex);
 						if (tex->IsLoaded()) {
-
+							
 						}
 					}
 					renderData->SetMaterial(mat);
