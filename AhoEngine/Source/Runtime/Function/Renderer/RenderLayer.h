@@ -19,7 +19,7 @@ namespace Aho {
 
 	private:
 		UBO m_UBO;
-		EventManager* m_EventManager;
+		EventManager* m_EventManager{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
 	};

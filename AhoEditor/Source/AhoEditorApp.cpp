@@ -15,8 +15,8 @@ namespace Aho {
 			auto eventManager = GetEventManager();
 			AHO_ASSERT(eventManager);
 			PushLayer(new RenderLayer(eventManager, renderer, cameraManager));
-			PushLayer(new ResourceLayer(eventManager, assetManager));
 			PushLayer(new LevelLayer(eventManager, cameraManager));
+			PushLayer(new ResourceLayer(eventManager, assetManager));
 			PushLayer(new AhoEditorLayer(eventManager, renderer, cameraManager));
 		}
 		~AhoEditor() {}

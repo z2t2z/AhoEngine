@@ -52,7 +52,7 @@ namespace Aho {
 		bool m_IsLoaded{ false };
 	};
 
-	class StaticMesh : Asset {
+	class StaticMesh : public Asset {
 	public:
 		StaticMesh() = default;
 		StaticMesh(const std::string& path) {}
@@ -72,7 +72,7 @@ namespace Aho {
 	//	std::shared_ptr<Shader> m_Shader;
 	//};
 
-	class MaterialAsset : Asset {
+	class MaterialAsset : public Asset {
 	public:
 		MaterialAsset() = default;
 		MaterialAsset(const std::string& path) {}

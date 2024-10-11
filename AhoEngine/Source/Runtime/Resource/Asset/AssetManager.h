@@ -36,10 +36,20 @@ namespace Aho {
 		AssetManager() = default;
 		~AssetManager() = default;
 
+		// TODO: Maybe try std::shared_ptr<T> assetOut
 		template<typename AssetType>
 		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut) {
+			if (m_AssetPaths.contains(path.string())) {
+				/* TODO : pop out a window here */
+				//auto uuid = m_AssetPaths.at(path.string());
+				//assetOut = *(s_AssetPools.at(uuid));  why?
+				return true;
+			}
 			if (path.extension().string() != ".asset") {
-				return CreateAsset(path, assetOut);
+				if (!CreateAsset(path, assetOut)) {
+					AHO_CORE_ERROR("Import failed at path: {}", path.string());
+				}
+				return true;
 			}
 			std::ifstream rawJson(path.string());
 			if (!rawJson) {
@@ -56,6 +66,12 @@ namespace Aho {
 			/* TODO */
 		}
 
+		template<typename T>
+		void AddAsset(const std::string& path, UUID uuid, const T& res) {
+			s_AssetPools[uuid] = res;
+			m_AssetPaths[path] = uuid;
+		}
+
 	private:
 		template<typename AssetType>
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
@@ -67,10 +83,12 @@ namespace Aho {
 			AHO_CORE_ASSERT("Not supported yet");
 			return false;
 		}
+
 		void Initialize() { /* TODO */ }
 
 	private:
 		std::unordered_map<UUID, std::shared_ptr<Asset>> s_AssetPools;
+		std::unordered_map<std::string, UUID> m_AssetPaths;
 	};
 
 }

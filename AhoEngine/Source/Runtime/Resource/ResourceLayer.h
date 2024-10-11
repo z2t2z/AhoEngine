@@ -19,6 +19,8 @@ namespace Aho {
 	private:
 		void LoadAssetFromFile(const std::string& path);
 		template<typename T>
+		void PackEcSData(const T& res);
+		template<typename T>
 		void PackRenderData(const T& res);
 	private:
 		AssetManager* m_AssetManager;

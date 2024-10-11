@@ -48,30 +48,30 @@ namespace Aho {
 	}
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity) {
-		auto& tag = entity.GetComponent<TagComponent>().Tag;
+		//auto& tag = entity.GetComponent<TagComponent>().Tag;
 
-		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-		if (ImGui::IsItemClicked()) {
-			m_SelectionContext = entity;
-		}
+		//ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		//flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+		//bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		//if (ImGui::IsItemClicked()) {
+		//	m_SelectionContext = entity;
+		//}
 
-		bool entityDeleted = false;
-		if (ImGui::BeginPopupContextItem()) {
-			if (ImGui::MenuItem("Delete Entity"))
-				entityDeleted = true;
+		//bool entityDeleted = false;
+		//if (ImGui::BeginPopupContextItem()) {
+		//	if (ImGui::MenuItem("Delete Entity"))
+		//		entityDeleted = true;
 
-			ImGui::EndPopup();
-		}
+		//	ImGui::EndPopup();
+		//}
 
-		if (opened) {
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			bool opened = ImGui::TreeNodeEx((void*)9817239, flags, tag.c_str());
-			if (opened)
-				ImGui::TreePop();
-			ImGui::TreePop();
-		}
+		//if (opened) {
+		//	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		//	bool opened = ImGui::TreeNodeEx((void*)9817239, flags, tag.c_str());
+		//	if (opened)
+		//		ImGui::TreePop();
+		//	ImGui::TreePop();
+		//}
 
 		//if (entityDeleted) {
 		//	m_Context->DestroyEntity(entity);

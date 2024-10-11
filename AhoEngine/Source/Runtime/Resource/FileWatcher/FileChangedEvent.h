@@ -8,7 +8,6 @@ namespace Aho {
         FileChangedEvent(const std::string& filePath, const std::string& fileType)
             : m_FilePath(filePath), m_FileType(fileType) {
         }
-
         static EventType GetStaticType() { return EventType::FileChanged; }
         virtual EventType GetEventType() const override { return GetStaticType(); }
         virtual const char* GetName() const override { return "FileChanged"; }

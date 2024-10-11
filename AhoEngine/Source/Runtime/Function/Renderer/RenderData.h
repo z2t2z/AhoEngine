@@ -15,6 +15,7 @@ namespace Aho {
 		void SetVAOs(const std::shared_ptr<VertexArray>& vao) { m_VAO = vao; }
 		std::shared_ptr<VertexArray> GetVAO()					{ return m_VAO; }
 		void SetMaterial(const std::shared_ptr<Material>& mat) { m_Material = mat; }
+		std::shared_ptr<Material> GetMaterial() { return m_Material; }
 		void Bind();
 		void Unbind();
 	private:

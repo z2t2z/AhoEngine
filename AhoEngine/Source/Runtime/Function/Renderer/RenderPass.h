@@ -3,6 +3,7 @@
 #include "RenderCommand.h"
 #include "RenderData.h"
 #include "Framebuffer.h"
+#include <vector>
 
 namespace Aho {
 	class RenderPass {
@@ -12,6 +13,7 @@ namespace Aho {
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
+		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void SetRenderCommand(RenderCommandBuffer* renderCommandBuffer) { m_RenderCommandBuffer = renderCommandBuffer; }
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
@@ -39,10 +41,10 @@ namespace Aho {
 				return;
 			}
 			if (m_RenderData.empty()) {
-				//AHO_CORE_WARN("No data to render!");
+				AHO_CORE_WARN("No data to render!");
 				return;
 			}
-			//m_Shader->Bind();
+			m_Shader->Bind();
 			m_Framebuffer->Bind();
 			RenderCommand::SetClearColor(glm::vec4(0.0f, 0.5f, 0.0f, 1.0f));
 			RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
@@ -50,7 +52,7 @@ namespace Aho {
 				m_RenderCommandBuffer->Execute(data);
 			}
 			m_Framebuffer->Unbind();
-			//m_Shader->Unbind();
+			m_Shader->Unbind();
 		}
 	};
 

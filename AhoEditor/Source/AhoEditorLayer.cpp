@@ -31,6 +31,7 @@ namespace Aho {
 			call = true;
 			std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
 			std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(path.string());
+			AHO_CORE_WARN("Pushing a AssetImportedEvent!");
 			m_EventManager->PushBack(event);
 		}
 	}

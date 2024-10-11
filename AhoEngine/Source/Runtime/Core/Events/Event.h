@@ -14,7 +14,7 @@ namespace Aho {
 		AppTick, AppUpdate, AppRender,
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
-		FileChanged, AssetImported, PackRenderData
+		FileChanged, AssetImported, PackRenderData, UploadRenderData
 	};
 
 	enum EventCategory {
@@ -71,9 +71,14 @@ namespace Aho {
 	class EventManager {
 	public:
 		bool Empty() { return m_EventQueue.empty(); }
-		std::shared_ptr<Event> PopFront() { auto res = GetFront();  m_EventQueue.pop_front(); return res; }
+		std::shared_ptr<Event> PopFront() { 
+			auto res = GetFront();
+			m_EventQueue.pop_front();
+			return res; 
+		}
 		std::shared_ptr<Event> GetFront() { return m_EventQueue.front(); }
 		void PushBack(std::shared_ptr<Event> e) { m_EventQueue.push_back(e); }
+		int GetQueueSize() { return m_EventQueue.size(); }
 	private:
 		std::deque<std::shared_ptr<Event>> m_EventQueue;
 	};
@@ -108,4 +113,17 @@ namespace Aho {
 		std::shared_ptr<StaticMesh> m_Data{ nullptr };
 	};
 
+	class RenderData;
+	class UploadRenderDataEvent : public Event {
+	public:
+		UploadRenderDataEvent(const std::vector<std::shared_ptr<RenderData>>& data)
+			: m_RenderData(data) {}
+		static EventType GetStaticType() { return EventType::UploadRenderData; }
+		virtual EventType GetEventType() const override { return GetStaticType(); }
+		virtual const char* GetName() const override { return "UploadRenderData"; }
+		virtual int GetCategoryFlags() const override { return 0; }
+		std::vector<std::shared_ptr<RenderData>> GetRawData() const { return m_RenderData; }
+	private:
+		std::vector<std::shared_ptr<RenderData>> m_RenderData;
+	};
 } // namespace Aho

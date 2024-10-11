@@ -50,6 +50,7 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnDetach() {
+
 	}
 
 	void RenderLayer::OnUpdate(float deltaTime) {
@@ -71,43 +72,18 @@ namespace Aho {
 
 	void RenderLayer::OnEvent(Event& e) {
 		/* Parameters on changed event */
-		if (e.GetEventType() == EventType::PackRenderData) {
+		if (e.GetEventType() == EventType::UploadRenderData) {
 			e.SetHandled();
-			auto ee = (PackRenderDataEvent*)&(e);
-			auto rawData = ee->GetRawData();
-			for (const auto& meshInfo : *rawData) {
-				std::shared_ptr<VertexArray> vao;
-				vao.reset(VertexArray::Create());
-				vao->Init(meshInfo);
-				std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-				renderData->SetVAOs(vao);
-				if (meshInfo->materialInfo.HasMaterial()) {
-					std::shared_ptr<Material> mat = std::make_shared<Material>();
-					for (const auto& albedo : meshInfo->materialInfo.Albedo) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo);
-						tex->SetTextureType(TextureType::Diffuse);
-						mat->AddTexture(tex);
-						if (tex->IsLoaded()) {
-							// TODO: Cache the loaded texture
-						}
-					}
-					for (const auto& normal : meshInfo->materialInfo.Normal) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal);
-						tex->SetTextureType(TextureType::Normal);
-						mat->AddTexture(tex);
-						if (tex->IsLoaded()) {
-							// TODO: Cache the loaded texture
-						}
-					}
-					const auto& shader = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetShader();
-					mat->SetShader(shader);
-					renderData->SetMaterial(mat);
+			auto ee = (UploadRenderDataEvent*)&(e);
+			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
+			auto renderData = ee->GetRawData();
+			for (const auto& data : ee->GetRawData()) {
+				auto shader = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetShader();
+				if (data->GetMaterial()) {
+					data->GetMaterial()->SetShader(shader);
 				}
-				else {
-					// TODO
-				}
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->AddRenderData(renderData);
 			}
+			m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->AddRenderData(renderData);
 		}
 	}
 }

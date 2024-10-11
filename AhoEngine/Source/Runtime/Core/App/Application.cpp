@@ -24,13 +24,10 @@ namespace Aho {
 
 	void Application::Run() {
 		while (m_Running) {
+			//AHO_CORE_TRACE("{0}", m_EventManager->GetQueueSize());
 			float currTime = (float)glfwGetTime();
 			float deltaTime = currTime - m_LastFrameTime;
 			m_LastFrameTime = currTime;
-			if (!m_EventManager->Empty()) {
-				auto e = m_EventManager->PopFront();
-				OnEvent(*e);
-			}
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);
 			}
@@ -39,6 +36,10 @@ namespace Aho {
 				layer->OnImGuiRender();
 			}
 			m_ImGuiLayer->End();
+			while (!m_EventManager->Empty()) {
+				auto e = m_EventManager->PopFront();
+				OnEvent(*e);
+			}
 			m_Window->OnUpdate();
 		}
 	}

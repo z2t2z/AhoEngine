@@ -1,5 +1,6 @@
 #pragma once
 #include "Runtime/Core/Layer/Layer.h"
+#include "Runtime/Resource/Asset/AssetManager.h"
 #include "Scene/Scene.h"
 
 namespace Aho {
@@ -16,9 +17,12 @@ namespace Aho {
 		std::shared_ptr<Scene> GetCurrentScene() { return m_CurrentScene; }
 		void AddScene(const std::shared_ptr<Scene>& scene) { m_Scenes.push_back(scene); }
 	private:
+		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
+	private:
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
-		EventManager* m_EventManager;
+		EventManager* m_EventManager{ nullptr };
+		EntityManager* m_EntityManager{nullptr};
 		std::shared_ptr<Scene> m_CurrentScene;
 		std::shared_ptr<CameraManager> m_CameraManager;
 		std::vector<std::shared_ptr<Scene>> m_Scenes;
