@@ -14,10 +14,11 @@ namespace Aho {
 			AssetManager* assetManager = new AssetManager();
 			auto eventManager = GetEventManager();
 			AHO_ASSERT(eventManager);
+			auto levelLayer = new LevelLayer(eventManager, cameraManager);
 			PushLayer(new RenderLayer(eventManager, renderer, cameraManager));
-			PushLayer(new LevelLayer(eventManager, cameraManager));
+			PushLayer(levelLayer);
 			PushLayer(new ResourceLayer(eventManager, assetManager));
-			PushLayer(new AhoEditorLayer(eventManager, renderer, cameraManager));
+			PushLayer(new AhoEditorLayer(levelLayer, eventManager, renderer, cameraManager));
 		}
 		~AhoEditor() {}
 	};

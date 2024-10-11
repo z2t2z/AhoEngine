@@ -6,35 +6,26 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
-	AhoEditorLayer::AhoEditorLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
-		: m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
+	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
 
 	}
 
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("Editor on attach");
-		std::filesystem::path currentPath = std::filesystem::current_path();
+		m_FolderPath = std::filesystem::current_path();
+		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(currentPath / "ShaderSrc" / "Shader.glsl");
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "Shader.glsl");
 	}
 
 	void AhoEditorLayer::OnDetach() {
 	}
 
-	static bool call{ false };
-
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
 		m_CameraManager->Update(deltaTime);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
-		// TODO : Async
-		if (!call) {
-			call = true;
-			std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
-			std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(path.string());
-			AHO_CORE_WARN("Pushing a AssetImportedEvent!");
-			m_EventManager->PushBack(event);
-		}
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
@@ -107,15 +98,91 @@ namespace Aho {
 			}
 			ImGui::End();
 		}
+		DrawViewPortPanel();
+		DrawSceneHierarchyPanel();
+		DrawContentBrowserPanel();
+	}
 
-		m_Panel->OnImGuiRender();
+	void AhoEditorLayer::OnEvent(Event& e) {
 
-		// Editor panel
+	}
+
+	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
+		if (e.GetEventType() == EventType::FileChanged) {
+			AHO_TRACE("Event recieved!");
+			const auto& FileName = e.GetFilePath();
+			if (!FileName.empty()) {
+				auto newShader = Shader::Create(FileName);
+				if (newShader->IsCompiled()) {
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
+				}
+			}
+		}
+		return true;
+	}
+
+	void AhoEditorLayer::DrawEditorPanel() {
 		ImGui::Begin("Editor Panel");
 		ImGui::Text("This is the editor panel");
 		ImGui::End();
+	}
+	
+	namespace fs = std::filesystem;
+	void AhoEditorLayer::DrawContentBrowserPanel() {
+		ImGui::Begin("Content Browser");
+		if (m_CurrentPath != m_FolderPath) {
+			if (ImGui::Button("<==")) {
+				m_CurrentPath = m_CurrentPath.parent_path();
+			}
+		}
+		for (const auto& entry : fs::directory_iterator(m_CurrentPath)) {
+			auto fileName = entry.path().filename().string();
+			if (ImGui::Button(fileName.c_str())) {
+				if (fs::is_directory(entry)) {
+					m_CurrentPath = entry.path();
+				}
+			}
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
+				auto relativePath = entry.path().string();
+				//AHO_WARN("{}", relativePath);
+				const char* itemPayload = relativePath.c_str();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPayload, relativePath.length());
+				ImGui::Text("File");
+				ImGui::EndDragDropSource();
+			}
+		}
+		ImGui::End();
+	}
 
-		// Viewport Window
+	void AhoEditorLayer::DrawSceneHierarchyPanel() {
+		ImGui::Begin("Scene Hierarchy");
+		auto [width, height] = ImGui::GetWindowSize();
+		auto scene = m_LevelLayer->GetCurrentLevel();
+		if (true) {
+			//for (const auto& aobject : m_LevelLayer->m_EntityManager.view<TagComponent>()) {
+			//	Entity entity{ aobject , m_Context.get() };
+			//	//DrawEntityNode(entity);
+			//}
+			//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+			//	m_SelectionContext = {};
+			//}
+			// Right-click on blank space
+			//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
+			//	if (ImGui::MenuItem("Create Empty Entity"))
+			//		m_Context->CreateAObject("Empty Entity");
+			//	ImGui::EndPopup();
+			//}
+		}
+		ImGui::End();
+
+		ImGui::Begin("Properties");
+		//if (m_SelectionContext) {
+		//	DrawComponents(m_SelectionContext);
+		//}
+		ImGui::End();
+	}
+
+	void AhoEditorLayer::DrawViewPortPanel() {
 		ImGui::Begin("Viewport");
 		auto [width, height] = ImGui::GetWindowSize();
 		auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget(); // TODO: Make a simpler API, something like GetFinalResult
@@ -123,7 +190,7 @@ namespace Aho {
 		auto spec = FBO->GetSpecification();
 		if (spec.Width != width || spec.Height != height) {
 			FBO->Resize(width, height);
-			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);
+			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 		uint32_t RenderResult = FBO->GetLastColorAttachment();
 		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
@@ -138,30 +205,23 @@ namespace Aho {
 		}
 		FBO->Unbind();
 		if (readData) {
-			AHO_TRACE("{}", readData);
+			//AHO_TRACE("{}", readData);
 		}
-		ImGui::End();
-		//ImGui::ShowDemoWindow();
-	}
 
-	void AhoEditorLayer::OnEvent(Event& e) {
-		//EventDispatcher dispatcher(e);
-		//AHO_TRACE("Event recieved!");
-		//dispatcher.Dispatch<FileChangedEvent>(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-	}
-
-	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
-		if (e.GetEventType() == EventType::FileChanged) {
-			AHO_TRACE("Event recieved!");
-			const auto& FileName = e.GetFilePath();
-			if (!FileName.empty()) {
-				auto newShader = Shader::Create(FileName);
-				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
-				}
+		if (ImGui::BeginDragDropTarget()) {
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
+			if (payload) {
+				const char* droppedData = static_cast<const char*>(payload->Data);
+				std::string droppedString(droppedData, payload->DataSize);
+				AHO_TRACE("Accepted! {}", droppedString);
+				//std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
+				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString);
+				AHO_CORE_WARN("Pushing a AssetImportedEvent!");
+				m_EventManager->PushBack(event);
 			}
-			//e.SetHandled();
-			return false;
+			ImGui::EndDragDropTarget();
 		}
+
+		ImGui::End();
 	}
 }

@@ -1,21 +1,20 @@
-#include "SceneHierarchyPanel.h"
+#include "LevelHierarchyPanel.h"
 
 #include <imgui.h>
 #include "entt.hpp"
 
 namespace Aho {
-	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& scene) {
+	LevelHierarchyPanel::LevelHierarchyPanel(const Ref<Level>& scene) {
 		SetContext(scene);
 	}
 
-	void SceneHierarchyPanel::SetContext(const Ref<Scene>& scene) {
+	void LevelHierarchyPanel::SetContext(const Ref<Level>& scene) {
 		m_Context = scene;
 		m_SelectionContext = {};
 	}
 
-	void SceneHierarchyPanel::OnImGuiRender() {
-		return;
-		ImGui::Begin("Scene Hierarchy");
+	void LevelHierarchyPanel::OnImGuiRender() {
+		ImGui::Begin("Level Hierarchy");
 		//auto [width, height] = ImGui::GetContentRegionAvail();
 		auto [width, height] = ImGui::GetWindowSize();
 		m_Width = width;
@@ -44,10 +43,10 @@ namespace Aho {
 		ImGui::End();
 	}
 
-	void SceneHierarchyPanel::SetSelectedEntity(Entity entity) {
+	void LevelHierarchyPanel::SetSelectedEntity(Entity entity) {
 	}
 
-	void SceneHierarchyPanel::DrawEntityNode(Entity entity) {
+	void LevelHierarchyPanel::DrawEntityNode(Entity entity) {
 		//auto& tag = entity.GetComponent<TagComponent>().Tag;
 
 		//ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
@@ -80,7 +79,7 @@ namespace Aho {
 		//}
 	}
 
-	void SceneHierarchyPanel::DrawComponents(Entity entity) {
+	void LevelHierarchyPanel::DrawComponents(Entity entity) {
 	}
 
 } // namespace Aho

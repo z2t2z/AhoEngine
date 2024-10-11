@@ -3,11 +3,11 @@
 #include <IamAho.h>
 
 namespace Aho {
-	class SceneHierarchyPanel {
+	class LevelHierarchyPanel {
 	public:
-		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene);
-		void SetContext(const Ref<Scene>& scene);
+		LevelHierarchyPanel() = default;
+		LevelHierarchyPanel(const Ref<Level>& scene);
+		void SetContext(const Ref<Level>& scene);
 		void OnImGuiRender();
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
@@ -20,7 +20,7 @@ namespace Aho {
 	private:
 		float m_Width{ 0.0f };
 		float m_Height{ 0.0f };
-		Ref<Scene> m_Context;
+		Ref<Level> m_Context;
 		Entity m_SelectionContext;
 	};
 } // namespace Aho

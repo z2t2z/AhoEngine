@@ -318,7 +318,7 @@
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h">
       <Filter>Source\Runtime\Resource\ResourceType</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Level\Scene\Scene.h">
+    <ClInclude Include="Source\Runtime\Function\Level\Level.h">
       <Filter>Source\Runtime\Resource\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h">
@@ -1585,6 +1585,7 @@
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Level\LevelLayer.h" />
+    <ClInclude Include="Source\Runtime\Function\Level\EcS\EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1692,7 +1693,7 @@
     <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp">
       <Filter>Source\Runtime\Resource</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Level\Scene\Scene.cpp">
+    <ClCompile Include="Source\Runtime\Function\Level\Level.cpp">
       <Filter>Source\Runtime\Resource\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">

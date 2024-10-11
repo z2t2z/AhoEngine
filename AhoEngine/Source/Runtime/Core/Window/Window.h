@@ -14,8 +14,9 @@ namespace Aho {
 		unsigned int Height;
 
 		WindowProps(const std::string& title = "IamAho",
-			unsigned int width = 1280,
-			unsigned int height = 720) : Title(title), Width(width), Height(height) {}
+			unsigned int width = 1600,
+			unsigned int height = 900) 
+			: Title(title), Width(width), Height(height) {}
 	};
 
 
@@ -23,7 +24,6 @@ namespace Aho {
 	class Window {
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
-
 		virtual ~Window() {};
 		virtual void OnUpdate() = 0;
 		virtual unsigned int GetWidth() const = 0;

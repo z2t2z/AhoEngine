@@ -36,7 +36,7 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.h">
+    <ClInclude Include="Source\LevelHierarchyPanel\LevelHierarchyPanel.h">
       <Filter>Source\SceneHierarchyPanel</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,7 +56,7 @@
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
       <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SceneHierarchyPanel\SceneHierarchyPanel.cpp">
+    <ClCompile Include="Source\LevelHierarchyPanel\LevelHierarchyPanel.cpp">
       <Filter>Source\SceneHierarchyPanel</Filter>
     </ClCompile>
   </ItemGroup>

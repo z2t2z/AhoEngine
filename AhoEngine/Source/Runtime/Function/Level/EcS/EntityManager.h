@@ -1,22 +1,10 @@
 #pragma once
 
-#include "entt.hpp"
-#include "Runtime/Function/Renderer/Shader.h"
-#include "Runtime/Function/Camera/CameraManager.h"
-#include "Runtime/Function/Level/EcS/Entity.h"
-#include "Runtime/Function/Level/EcS/Components.h"
-#include <memory>
+#include "Entity.h"
+#include "Components.h"
+#include <entt.hpp>
 
 namespace Aho {
-	class Scene {
-	public:
-		Scene() = default;
-		~Scene() = default;
-		void OnUpdate(float deltaTime);
-	private:
-		
-	};
-
 	class EntityManager {
 	public:
 		EntityManager() = default;
