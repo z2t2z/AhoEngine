@@ -23,7 +23,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
-		m_CameraManager->Update(deltaTime);
+		m_CameraManager->Update(deltaTime, m_CursorInViewport);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
 	}
@@ -104,12 +104,28 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
+		// Handle all input events here
+		if (e.GetCategoryFlags() == EventCategory::EventCategoryInput) {
+			e.SetHandled();
+			//if (e.GetEventType() == EventType::MouseButtonPressed) {
+			//	auto ee = (MouseButtonPressedEvent*)&e;
+			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_2) {
 
+			//	}
+			//}
+			//if (e.GetEventType() == EventType::MouseButtonReleased) {
+			//	auto ee = (MouseButtonReleasedEvent*)&e;
+			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_2) {
+
+			//	}
+			//}
+			//if (e.GetEventType() == EventType::KeyPressed) {
+			//}
+		}
 	}
 
 	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
 		if (e.GetEventType() == EventType::FileChanged) {
-			AHO_TRACE("Event recieved!");
 			const auto& FileName = e.GetFilePath();
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
@@ -156,23 +172,28 @@ namespace Aho {
 
 	void AhoEditorLayer::DrawSceneHierarchyPanel() {
 		ImGui::Begin("Scene Hierarchy");
-		auto [width, height] = ImGui::GetWindowSize();
+		//auto [width, height] = ImGui::GetWindowSize();
 		auto scene = m_LevelLayer->GetCurrentLevel();
-		if (true) {
-			//for (const auto& aobject : m_LevelLayer->m_EntityManager.view<TagComponent>()) {
-			//	Entity entity{ aobject , m_Context.get() };
-			//	//DrawEntityNode(entity);
-			//}
-			//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
-			//	m_SelectionContext = {};
-			//}
-			// Right-click on blank space
-			//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
-			//	if (ImGui::MenuItem("Create Empty Entity"))
-			//		m_Context->CreateAObject("Empty Entity");
-			//	ImGui::EndPopup();
-			//}
+		if (!scene) {
+			ImGui::End();
+			return;
 		}
+		//for (const auto& each : scene->GetEntityManager()->GetView<TagComponent>()) {
+		//}
+		//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+		//	//m_SelectionContext = {};
+		//}
+			//Right-click on blank space
+		//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
+		//	if (ImGui::MenuItem("Create Empty Entity"))
+		//		//m_Context->CreateAObject("Empty Entity");
+		//	ImGui::EndPopup();
+		//}
+		auto view = scene->GetEntityManager()->GetView<TagComponent>();
+		view.each([](auto entity, TagComponent& tag) {
+			ImGui::Text(tag.Tag.c_str());
+		});
+
 		ImGui::End();
 
 		ImGui::Begin("Properties");
@@ -197,11 +218,15 @@ namespace Aho {
 
 		auto [MouseX, MouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
-		uint32_t x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
+		int x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
 		y = spec.Height - y;
 		uint32_t readData = 0;
 		if (x >= 0 && y >= 0 && x < width && y < height) {
+			m_CursorInViewport = true;
 			readData = FBO->ReadPixel(0, x, y);
+		}
+		else {
+			m_CursorInViewport = false;
 		}
 		FBO->Unbind();
 		if (readData) {

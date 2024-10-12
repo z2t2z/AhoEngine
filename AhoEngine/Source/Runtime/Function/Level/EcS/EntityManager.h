@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Components.h"
 #include <entt.hpp>
+#include <mutex>
 
 namespace Aho {
 	class EntityManager {
@@ -27,6 +28,11 @@ namespace Aho {
 		template<typename T>
 		bool HasComponent(Entity entity) {
 			return m_Registry.all_of<T>(entity.GetEntityHandle());
+		}
+
+		template<typename T>
+		auto GetView() {
+			return m_Registry.view<T>();
 		}
 
 		Entity CreateEntity(const std::string& name = std::string()) {

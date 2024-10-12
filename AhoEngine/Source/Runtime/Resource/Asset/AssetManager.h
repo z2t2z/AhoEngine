@@ -9,6 +9,8 @@
 #include "json.hpp"
 #include <fstream>
 #include <filesystem>
+#include <mutex>
+#include <thread>
 
 /* 
 	Referred to Piccolo, basically just for editor.
@@ -76,7 +78,7 @@ namespace Aho {
 		template<typename AssetType>
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
 			const auto& fileExt = path.extension().string();
-			if (fileExt == ".obj" || fileExt == ".fbx") {
+			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
 				assetOut = *(AssetCreater::MeshAssetCreater(path.string()));
 				return true;
 			}

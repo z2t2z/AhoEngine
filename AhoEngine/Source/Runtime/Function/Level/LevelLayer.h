@@ -2,6 +2,8 @@
 #include "Runtime/Core/Layer/Layer.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Level.h"
+#include <thread>
+#include <future>
 
 namespace Aho {
 	class LevelLayer : public Layer {
@@ -18,6 +20,10 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 	private:
+		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) {
+			std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach();
+		}
+		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
 	private:
 		bool m_SimulateMode{ false };

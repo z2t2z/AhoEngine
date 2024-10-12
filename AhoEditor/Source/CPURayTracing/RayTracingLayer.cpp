@@ -59,7 +59,7 @@ namespace Aho {
 		ClearFlags flags = ClearFlags::Color_Buffer;
 		RenderCommand::Clear(flags);
 
-		if (m_Scene.m_CameraManager->Update(deltaTime)) {
+		if (m_Scene.m_CameraManager->Update(deltaTime, true)) {
 			m_Renderer.ResetFrameIndex();
 		}
 	}

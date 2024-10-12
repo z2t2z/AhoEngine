@@ -13,7 +13,6 @@ namespace Aho {
 			cameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 			AssetManager* assetManager = new AssetManager();
 			auto eventManager = GetEventManager();
-			AHO_ASSERT(eventManager);
 			auto levelLayer = new LevelLayer(eventManager, cameraManager);
 			PushLayer(new RenderLayer(eventManager, renderer, cameraManager));
 			PushLayer(levelLayer);

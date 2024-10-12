@@ -20,6 +20,7 @@ namespace Aho {
 		void DrawContentBrowserPanel();
 		void DrawSceneHierarchyPanel();
 	private:
+		bool m_CursorInViewport{ false };
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
 		float m_DeltaTime{ 0.0f };
