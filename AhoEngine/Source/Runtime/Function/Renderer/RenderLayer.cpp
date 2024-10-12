@@ -38,9 +38,6 @@ namespace Aho {
 		texSpec.filterModeMag = FBFilterMode::Nearest;
 		FBO->Bind();
 		FBO->AddColorAttachment(texSpec);
-		//texSpec.filterModeMin = FBFilterMode::Nearest;
-		//texSpec.dataType = FBDataType::UnsignedByte;
-		//texSpec.dataFormat = FBDataFormat::RGBA;
 		FBO->AddColorAttachment(texSpec);
 		FBO->Invalidate();
 		FBO->Unbind();
@@ -63,7 +60,7 @@ namespace Aho {
 		m_UBO.u_ViewPosition = cam->GetPosition();
 		m_UBO.u_LightPosition = glm::vec3(0.0f, 2.0f, 0.0f);
 		m_UBO.u_LightColor = glm::vec3(1.0f, 0.0f, 0.0f);
-		mainShader->BindUBO(m_UBO);
+		mainShader->BindUBO(m_UBO); // TODO: set in render pass
 		m_Renderer->Render();
 	}
 

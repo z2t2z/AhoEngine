@@ -8,7 +8,6 @@
 namespace Aho {
 	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
 		: m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
-
 	}
 
 	void AhoEditorLayer::OnAttach() {
@@ -98,7 +97,11 @@ namespace Aho {
 			}
 			ImGui::End();
 		}
-		DrawViewPortPanel();
+		if (!m_ViewportPanel) {
+			auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
+			m_ViewportPanel = new ViewportPanel(FBO, m_EventManager, m_CameraManager);
+		}
+		m_CursorInViewport = m_ViewportPanel->DrawPanel();
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
 	}
@@ -131,6 +134,7 @@ namespace Aho {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
 					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->ApplyShader();
 				}
 			}
 		}
@@ -160,7 +164,6 @@ namespace Aho {
 			}
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 				auto relativePath = entry.path().string();
-				//AHO_WARN("{}", relativePath);
 				const char* itemPayload = relativePath.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPayload, relativePath.length());
 				ImGui::Text("File");
@@ -200,53 +203,6 @@ namespace Aho {
 		//if (m_SelectionContext) {
 		//	DrawComponents(m_SelectionContext);
 		//}
-		ImGui::End();
-	}
-
-	void AhoEditorLayer::DrawViewPortPanel() {
-		ImGui::Begin("Viewport");
-		auto [width, height] = ImGui::GetWindowSize();
-		auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget(); // TODO: Make a simpler API, something like GetFinalResult
-		FBO->Bind();
-		auto spec = FBO->GetSpecification();
-		if (spec.Width != width || spec.Height != height) {
-			FBO->Resize(width, height);
-			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
-		}
-		uint32_t RenderResult = FBO->GetLastColorAttachment();
-		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-		auto [MouseX, MouseY] = ImGui::GetMousePos();
-		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
-		int x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
-		y = spec.Height - y;
-		uint32_t readData = 0;
-		if (x >= 0 && y >= 0 && x < width && y < height) {
-			m_CursorInViewport = true;
-			readData = FBO->ReadPixel(0, x, y);
-		}
-		else {
-			m_CursorInViewport = false;
-		}
-		FBO->Unbind();
-		if (readData) {
-			//AHO_TRACE("{}", readData);
-		}
-
-		if (ImGui::BeginDragDropTarget()) {
-			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
-			if (payload) {
-				const char* droppedData = static_cast<const char*>(payload->Data);
-				std::string droppedString(droppedData, payload->DataSize);
-				AHO_TRACE("Accepted! {}", droppedString);
-				//std::filesystem::path path = std::filesystem::current_path() / "Asset" / "sponzaFBX" / "sponza.fbx";
-				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString);
-				AHO_CORE_WARN("Pushing a AssetImportedEvent!");
-				m_EventManager->PushBack(event);
-			}
-			ImGui::EndDragDropTarget();
-		}
-
 		ImGui::End();
 	}
 }

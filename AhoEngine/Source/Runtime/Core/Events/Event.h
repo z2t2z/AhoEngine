@@ -85,9 +85,7 @@ namespace Aho {
 
 	class AssetImportedEvent : public Event {
 	public:
-		AssetImportedEvent(const std::string& filePath)
-			: m_FilePath(filePath) {
-		}
+		AssetImportedEvent(const std::string& filePath) : m_FilePath(filePath) {}
 		static EventType GetStaticType() { return EventType::AssetImported; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 		virtual const char* GetName() const override { return "AssetImported"; }

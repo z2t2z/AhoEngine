@@ -16,6 +16,15 @@ namespace Aho {
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void SetRenderCommand(RenderCommandBuffer* renderCommandBuffer) { m_RenderCommandBuffer = renderCommandBuffer; }
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
+		virtual void ApplyShader() {
+			AHO_CORE_ASSERT(m_Shader, "shader is not initialized!");
+			for (const auto& data : m_RenderData) {
+				auto mat = data->GetMaterial();
+				if (mat) {
+					mat->SetShader(m_Shader);
+				}
+			}
+		}
 		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
 		virtual void SetClearFlags(ClearFlags flags) { m_ClearFlags = flags; }
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }

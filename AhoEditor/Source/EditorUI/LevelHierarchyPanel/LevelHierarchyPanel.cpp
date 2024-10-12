@@ -4,12 +4,12 @@
 #include "entt.hpp"
 
 namespace Aho {
-	LevelHierarchyPanel::LevelHierarchyPanel(const Ref<Level>& scene) {
-		SetContext(scene);
+	LevelHierarchyPanel::LevelHierarchyPanel(const Ref<Level>& level) {
+		SetContext(level);
 	}
 
-	void LevelHierarchyPanel::SetContext(const Ref<Level>& scene) {
-		m_Context = scene;
+	void LevelHierarchyPanel::SetContext(const Ref<Level>& level) {
+		m_Context = level;
 		m_SelectionContext = {};
 	}
 
@@ -20,19 +20,19 @@ namespace Aho {
 		m_Width = width;
 		m_Height = height;
 		if (m_Context) {
-			//for (const auto& aobject : m_Context->m_EntityManager.view<TagComponent>()) {
-			//	Entity entity{ aobject , m_Context.get() };
-			//	DrawEntityNode(entity);
-			//}
-			//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
-			//	m_SelectionContext = {};
-			//}
-			// Right-click on blank space
-			//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
-			//	if (ImGui::MenuItem("Create Empty Entity"))
-			//		m_Context->CreateAObject("Empty Entity");
-			//	ImGui::EndPopup();
-			//}
+			for (const auto& aobject : m_Context->m_EntityManager->GetView<EntityComponent>()) {
+				//Entity entity{ aobject , m_Context.get() };
+				//DrawEntityNode(entity);
+			}
+			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+				m_SelectionContext = {};
+			}
+			 //Right-click on blank space
+			if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
+				if (ImGui::MenuItem("Create Empty Entity"))
+					m_Context->CreateAObject("Empty Entity");
+				ImGui::EndPopup();
+			}
 		}
 		ImGui::End();
 

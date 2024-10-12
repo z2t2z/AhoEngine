@@ -1,7 +1,8 @@
 #pragma once
 
 #include "IamAho.h"
-#include "LevelHierarchyPanel/LevelHierarchyPanel.h"
+#include "EditorUI/LevelHierarchyPanel/LevelHierarchyPanel.h"
+#include "EditorUI/ViewportPanel/ViewportPanel.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -15,19 +16,22 @@ namespace Aho {
 		virtual void OnEvent(Event& e) override;
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
-		void DrawViewPortPanel();
 		void DrawEditorPanel();
 		void DrawContentBrowserPanel();
 		void DrawSceneHierarchyPanel();
 	private:
-		bool m_CursorInViewport{ false };
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
+	private:
+		bool m_CursorInViewport{ false };
 		float m_DeltaTime{ 0.0f };
 		FileWatcher m_FileWatcher;
+	private:
 		LevelLayer* m_LevelLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
+	private:
+		ViewportPanel* m_ViewportPanel{ nullptr };
 	};
 }

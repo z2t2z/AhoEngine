@@ -77,7 +77,7 @@ uniform sampler2D u_Normal;
 // Blinn-Phong
 void main() {
 	// Ambient
-	float ambientStrength = 0.2;
+	float ambientStrength = 0.1;
 	vec3 rawColor = texture(u_Diffuse, v_TexCoords).rgb;
 	vec3 ambient = ambientStrength * rawColor;
 

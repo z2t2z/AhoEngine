@@ -95,7 +95,7 @@ namespace Aho {
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).meshEntities.push_back(meshEntity.GetEntityHandle());
 		}
-		/* Check if success */
+		/* TODO: Maybe check if success */
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 } // namespace Aho

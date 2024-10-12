@@ -19,14 +19,14 @@ namespace Aho {
 		TagComponent(const std::string& tag) : Tag(tag) {}
 	};
 
+	// Root node
 	struct EntityComponent {
-		std::vector<entt::entity> meshEntities;
+		std::vector<entt::entity> entities;
 		EntityComponent() = default;
 		EntityComponent(const EntityComponent&) = default;
-		EntityComponent(const std::vector<entt::entity>& _meshEntities)
-			: meshEntities(_meshEntities) {}
+		EntityComponent(const std::vector<entt::entity>& _entities)
+			: entities(_entities) {}
 	};
-
 
 	struct TransformComponent {
 		glm::vec3 Translation{ 0.0f, 0.0f, 0.0f };
@@ -39,7 +39,6 @@ namespace Aho {
 
 		glm::mat4 GetTransform() const {
 			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
-
 			return glm::translate(glm::mat4(1.0f), Translation)
 				* rotation
 				* glm::scale(glm::mat4(1.0f), Scale);
