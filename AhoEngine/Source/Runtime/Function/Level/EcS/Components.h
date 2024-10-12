@@ -5,11 +5,6 @@
 #include "Runtime/Resource/Asset/MeshAsset.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include <string>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
 
 namespace Aho {
 	struct TagComponent {
@@ -29,20 +24,17 @@ namespace Aho {
 	};
 
 	struct TransformComponent {
-		glm::vec3 Translation{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 Scale{ 1.0f, 1.0f, 1.0f };
-
-		TransformComponent() = default;
+		TransformPara* transformPara;
+		TransformComponent() { transformPara = new TransformPara(); }
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& translation) : Translation(translation) {}
-
-		glm::mat4 GetTransform() const {
-			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
-			return glm::translate(glm::mat4(1.0f), Translation)
-				* rotation
-				* glm::scale(glm::mat4(1.0f), Scale);
-		}
+		TransformComponent(TransformPara* t) : transformPara(t) {}
+		glm::mat4 GetTransform() { return transformPara->GetTransform(); }
+		glm::vec3& GetTranslation() { return transformPara->Translation; }
+		glm::vec3& GetScale() { return transformPara->Scale; }
+		glm::vec3& GetRotation() { return transformPara->Rotation; }
+		void SetTranslation(glm::vec3 translation) { transformPara->Translation = translation; }
+		void SetScale(glm::vec3 scale) { transformPara->Scale = scale; }
+		void SetRotation(glm::vec3 rotation) { transformPara->Rotation = rotation; }
 	};
 
 	struct MaterialComponent {

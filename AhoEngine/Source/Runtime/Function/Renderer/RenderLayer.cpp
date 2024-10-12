@@ -53,13 +53,6 @@ namespace Aho {
 
 	void RenderLayer::OnUpdate(float deltaTime) {
 		const auto& mainShader = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetShader();
-		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		m_UBO.u_Model = glm::mat4(1.0f);
-		m_UBO.u_Projection = cam->GetProjection();
-		m_UBO.u_View = cam->GetView();
-		m_UBO.u_ViewPosition = cam->GetPosition();
-		m_UBO.u_LightPosition = glm::vec3(0.0f, 2.0f, 0.0f);
-		m_UBO.u_LightColor = glm::vec3(1.0f, 0.0f, 0.0f);
 		mainShader->BindUBO(m_UBO); // TODO: set in render pass
 		m_Renderer->Render();
 	}

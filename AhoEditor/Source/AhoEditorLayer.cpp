@@ -1,5 +1,6 @@
 #include "IamAho.h"
 #include "AhoEditorLayer.h"
+#include "entt.hpp"
 #include <filesystem>
 #include <imgui.h>
 #include <ImGuizmo.h>
@@ -97,28 +98,27 @@ namespace Aho {
 			}
 			ImGui::End();
 		}
-		if (!m_ViewportPanel) {
-			auto FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
-			m_ViewportPanel = new ViewportPanel(FBO, m_EventManager, m_CameraManager);
+		if (!m_FBO) {
+			m_FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
 		}
-		m_CursorInViewport = m_ViewportPanel->DrawPanel();
+		//m_CursorInViewport = m_ViewportPanel->DrawPanel();
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
+		DrawViewport();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
 		// Handle all input events here
-		if (e.GetCategoryFlags() == EventCategory::EventCategoryInput) {
+		//if (e.GetCategoryFlags() == EventCategory::EventCategoryInput) {
+		if (int(e.GetEventType()) & int(EventType::MouseButtonPressed)) {
 			e.SetHandled();
-			//if (e.GetEventType() == EventType::MouseButtonPressed) {
-			//	auto ee = (MouseButtonPressedEvent*)&e;
-			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_2) {
-
-			//	}
-			//}
+			auto ee = (MouseButtonPressedEvent*)&e;
+			if (!m_BlockClickingEvent && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
+				m_PickObject = true;
+			}
 			//if (e.GetEventType() == EventType::MouseButtonReleased) {
 			//	auto ee = (MouseButtonReleasedEvent*)&e;
-			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_2) {
+			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
 
 			//	}
 			//}
@@ -141,10 +141,86 @@ namespace Aho {
 		return true;
 	}
 
-	void AhoEditorLayer::DrawEditorPanel() {
-		ImGui::Begin("Editor Panel");
-		ImGui::Text("This is the editor panel");
+	void AhoEditorLayer::DrawViewport() {
+		ImGui::Begin("Viewport");
+		auto [width, height] = ImGui::GetWindowSize();
+		m_FBO->Bind();
+		auto spec = m_FBO->GetSpecification();
+		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
+			m_FBO->Resize(width, height/* - ImGui::GetFrameHeight() */);
+			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
+		}
+		uint32_t RenderResult = m_FBO->GetLastColorAttachment();
+		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		auto [MouseX, MouseY] = ImGui::GetMousePos();
+		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
+		int x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
+		y = spec.Height - y;
+		if (x >= 0 && y >= 0 && x < width && y < height) {
+			m_CursorInViewport = true;
+			if (m_PickObject) {
+				m_PickObject = false;
+				m_PickData = m_FBO->ReadPixel(0, x, y);
+			}
+		}
+		else {
+			m_CursorInViewport = false;
+		}
+		// Object Picking
+
+		m_FBO->Unbind();
+		if (m_LevelLayer->GetCurrentLevel()) {
+			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+			if (entityManager->IsEntityIDValid(m_PickData)) {
+				m_SelectedObject = Entity(static_cast<entt::entity>(m_PickData));
+				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
+					auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
+					auto& translation = tc.GetTranslation();
+					auto& scale = tc.GetScale();
+					auto& rotation = tc.GetRotation();
+					auto transform = tc.GetTransform();
+					// Gizmo
+					const auto& viewMat = m_CameraManager->GetMainEditorCamera()->GetView();
+					const auto& projMat = m_CameraManager->GetMainEditorCamera()->GetProjection();
+					ImGuizmo::SetOrthographic(false);
+					ImGuizmo::SetDrawlist();
+					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height - ImGui::GetFrameHeight());
+					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
+					m_BlockClickingEvent = ImGuizmo::IsOver();
+					ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
+						ImGuizmo::OPERATION::TRANSLATE,
+						ImGuizmo::MODE::LOCAL,
+						glm::value_ptr(transform));
+					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+					ImGui::Begin("Editor Panel");
+					ImGui::Text("%d", m_PickData);
+					ImGui::DragFloat3("Translation", glm::value_ptr(translation), 1.0f);
+					ImGui::DragFloat3("Scale", glm::value_ptr(scale), 1.0f);
+					ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 1.0f);
+					ImGui::End();
+				}
+			}
+		}
+
+		// Recieving a drag target
+		if (ImGui::BeginDragDropTarget()) {
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
+			if (payload) {
+				const char* droppedData = static_cast<const char*>(payload->Data);
+				std::string droppedString(droppedData, payload->DataSize);
+				AHO_TRACE("Payload accepted! {}", droppedString);
+				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString);
+				AHO_CORE_WARN("Pushing a AssetImportedEvent!");
+				m_EventManager->PushBack(event);
+			}
+			ImGui::EndDragDropTarget();
+		}
 		ImGui::End();
+	}
+
+	void AhoEditorLayer::DrawEditorPanel() {
+
 	}
 	
 	namespace fs = std::filesystem;

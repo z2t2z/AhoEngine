@@ -2,6 +2,11 @@
 
 #include "Runtime/Resource/UUID/UUID.h"
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 namespace Aho {
 	struct Vertex {
@@ -11,6 +16,17 @@ namespace Aho {
 		float btx, bty, btz;	// bitangent
 		float u, v;				// texture coordinates
 	};
+
+	struct TransformPara {
+		glm::vec3 Translation;
+		glm::vec3 Scale;
+		glm::vec3 Rotation;
+		TransformPara() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
+		glm::mat4 GetTransform() const {
+			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
+			return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
+		}
+	}; // BIG TODO: Idk where this shoule be
 
 	struct MaterialInfo {
 		std::vector<std::string> Albedo;

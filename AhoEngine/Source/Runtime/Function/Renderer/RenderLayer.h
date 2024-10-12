@@ -15,8 +15,8 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 		void SetRenderer(Renderer* renderer) { m_Renderer = renderer; }
+		UBO* GetUBO() { return &m_UBO; }
 	private:
-
 	private:
 		UBO m_UBO;
 		EventManager* m_EventManager{ nullptr };

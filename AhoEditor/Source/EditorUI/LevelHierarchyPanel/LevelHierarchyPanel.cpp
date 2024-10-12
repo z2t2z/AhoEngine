@@ -20,7 +20,7 @@ namespace Aho {
 		m_Width = width;
 		m_Height = height;
 		if (m_Context) {
-			for (const auto& aobject : m_Context->m_EntityManager->GetView<EntityComponent>()) {
+			for (const auto& aobject : m_Context->GetEntityManager()->GetView<EntityComponent>()) {
 				//Entity entity{ aobject , m_Context.get() };
 				//DrawEntityNode(entity);
 			}
@@ -30,7 +30,7 @@ namespace Aho {
 			 //Right-click on blank space
 			if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
 				if (ImGui::MenuItem("Create Empty Entity"))
-					m_Context->CreateAObject("Empty Entity");
+					m_Context->GetEntityManager()->CreateEntity("Empty Entity");
 				ImGui::EndPopup();
 			}
 		}

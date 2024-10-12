@@ -41,6 +41,10 @@ namespace Aho {
 			tag.Tag = name.empty() ? "IamAnEntity" : name;
 			return entity;
 		}
+
+		bool IsEntityIDValid(uint32_t id) {
+			return m_Registry.valid(static_cast<entt::entity>(id));
+		}
 	private:
 		entt::registry m_Registry;
 	};

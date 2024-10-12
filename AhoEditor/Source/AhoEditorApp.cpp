@@ -13,11 +13,14 @@ namespace Aho {
 			cameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
 			AssetManager* assetManager = new AssetManager();
 			auto eventManager = GetEventManager();
-			auto levelLayer = new LevelLayer(eventManager, cameraManager);
-			PushLayer(new RenderLayer(eventManager, renderer, cameraManager));
+			auto renderLayer = new RenderLayer(eventManager, renderer, cameraManager);
+			auto levelLayer = new LevelLayer(renderLayer, eventManager, cameraManager);
+			auto resourceLayer = new ResourceLayer(eventManager, assetManager);
+			auto editorLayer = new AhoEditorLayer(levelLayer, eventManager, renderer, cameraManager);
+			PushLayer(renderLayer);
 			PushLayer(levelLayer);
-			PushLayer(new ResourceLayer(eventManager, assetManager));
-			PushLayer(new AhoEditorLayer(levelLayer, eventManager, renderer, cameraManager));
+			PushLayer(resourceLayer);
+			PushLayer(editorLayer);
 		}
 		~AhoEditor() {}
 	};

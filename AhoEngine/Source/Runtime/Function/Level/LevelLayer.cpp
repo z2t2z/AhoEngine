@@ -8,8 +8,8 @@
 
 
 namespace Aho {
-	LevelLayer::LevelLayer(EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
-		: m_EventManager(eventManager), m_CameraManager(cameraManager) {
+	LevelLayer::LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_RenderLayer(renderLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
 
 	void LevelLayer::OnAttach() {
@@ -21,10 +21,13 @@ namespace Aho {
 	}
 	
 	void LevelLayer::OnUpdate(float deltaTime) {
+		SubmitRenderData();
+
+
+		/* Actual in-game logic here */
 		if (!m_PlayMode) {
 			return;
 		}
-		/* Actual in-game logic here */
 	}
 	
 	void LevelLayer::OnImGuiRender() {
@@ -44,6 +47,16 @@ namespace Aho {
 		std::shared_ptr<UploadRenderDataEvent> newEv = std::make_shared<UploadRenderDataEvent>(renderDataAll);
 		AHO_CORE_WARN("Pushing a UploadRenderDataEvent!");
 		m_EventManager->PushBack(newEv);
+	}
+
+	void LevelLayer::SubmitRenderData() {
+		const auto& cam = m_CameraManager->GetMainEditorCamera();
+		m_RenderLayer->GetUBO()->u_Model = glm::mat4(1.0f);
+		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
+		m_RenderLayer->GetUBO()->u_View = cam->GetView();
+		m_RenderLayer->GetUBO()->u_ViewPosition = cam->GetPosition();
+		m_RenderLayer->GetUBO()->u_LightPosition = glm::vec3(0.0f, 2.0f, 0.0f);
+		m_RenderLayer->GetUBO()->u_LightColor = glm::vec3(1.0f, 0.0f, 0.0f);
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {
@@ -67,7 +80,8 @@ namespace Aho {
 
 			auto meshEntity = entityManager->CreateEntity("subMesh");
 			entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
-			entityManager->AddComponent<TransformComponent>(meshEntity);
+			auto& tc = entityManager->AddComponent<TransformComponent>(meshEntity);
+			renderData->SetTransform(tc.transformPara);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID); // setting entity id here
@@ -93,7 +107,7 @@ namespace Aho {
 				entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			}
 			renderDataAll.push_back(renderData);
-			entityManager->GetComponent<EntityComponent>(gameObject).meshEntities.push_back(meshEntity.GetEntityHandle());
+			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 		/* TODO: Maybe check if success */
 		UploadRenderDataEventTrigger(renderDataAll);

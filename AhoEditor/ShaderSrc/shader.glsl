@@ -10,7 +10,7 @@ layout(location = 4) in vec3 a_Bitangent;
 layout(std140) uniform CameraData{
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_Model;
+	mat4 u_Model0; // deprecated!
 	vec3 u_ViewPosition;
 	float padding0;         // 4 bytes (for alignment)
 	vec3 u_LightPosition;
@@ -23,6 +23,8 @@ out vec3 v_Position;
 out vec3 v_PositionTangent;
 out vec3 v_Normal;
 out vec2 v_TexCoords;
+
+uniform mat4 u_Model;
 
 out vec3 v_LightPos;	
 out vec3 v_ViewPos;
@@ -53,7 +55,7 @@ layout(location = 1) out vec4 color;
 layout(std140) uniform CameraData{
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_Model;
+	mat4 u_Model0;
 	vec3 u_ViewPosition;
 	float padding0;         // 4 bytes (for alignment)
 	vec3 u_LightPosition;

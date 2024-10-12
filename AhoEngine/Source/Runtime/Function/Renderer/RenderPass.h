@@ -17,6 +17,7 @@ namespace Aho {
 		virtual void SetRenderCommand(RenderCommandBuffer* renderCommandBuffer) { m_RenderCommandBuffer = renderCommandBuffer; }
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
 		virtual void ApplyShader() {
+			// if just use a single shader(should be a general case) then apply this shader to all materials
 			AHO_CORE_ASSERT(m_Shader, "shader is not initialized!");
 			for (const auto& data : m_RenderData) {
 				auto mat = data->GetMaterial();

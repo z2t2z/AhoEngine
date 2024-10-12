@@ -2,13 +2,14 @@
 #include "Runtime/Core/Layer/Layer.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Level.h"
+#include "Runtime/Function/Renderer/RenderLayer.h"
 #include <thread>
 #include <future>
 
 namespace Aho {
 	class LevelLayer : public Layer {
 	public:
-		LevelLayer(EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
+		LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~LevelLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -20,12 +21,14 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 	private:
+		void SubmitRenderData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) {
 			std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach();
 		}
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
 	private:
+		RenderLayer* m_RenderLayer{ nullptr };
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
 		EventManager* m_EventManager{ nullptr };
