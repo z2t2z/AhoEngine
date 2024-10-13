@@ -39,7 +39,6 @@
     <ClInclude Include="Source\EditorUI\LevelHierarchyPanel\LevelHierarchyPanel.h">
       <Filter>Source\SceneHierarchyPanel</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorUI\ViewportPanel\ViewportPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -60,6 +59,9 @@
     <ClCompile Include="Source\EditorUI\LevelHierarchyPanel\LevelHierarchyPanel.cpp">
       <Filter>Source\SceneHierarchyPanel</Filter>
     </ClCompile>
-    <ClCompile Include="Source\EditorUI\ViewportPanel\ViewportPanel.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderSrc\ShadowMap.glsl" />
+    <None Include="ShaderSrc\ShadowMapDebug.glsl" />
   </ItemGroup>
 </Project>

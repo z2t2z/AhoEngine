@@ -75,14 +75,14 @@ namespace Aho {
 		bool SwapChainTarget = false; // for vulkan
 	};
 
-	class AHO_API Framebuffer {
+	class Framebuffer {
 	public:
 		virtual ~Framebuffer() = default;
 		virtual void Bind() = 0;
 		virtual void Unbind() = 0;
 		virtual void Invalidate() = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
-		virtual uint32_t ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
+		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) = 0;
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
 		virtual void AddColorAttachment(const FBTextureSpecification& spec) = 0;
 		virtual void AddColorAttachment() = 0;

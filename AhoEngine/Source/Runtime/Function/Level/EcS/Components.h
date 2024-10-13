@@ -14,7 +14,7 @@ namespace Aho {
 		TagComponent(const std::string& tag) : Tag(tag) {}
 	};
 
-	// Root node
+	// To support mutiple mesh components
 	struct EntityComponent {
 		std::vector<entt::entity> entities;
 		EntityComponent() = default;
@@ -67,11 +67,9 @@ namespace Aho {
 	struct PointLightComponent {
 		glm::vec3 color;
 		float intensity;
-
 		PointLightComponent() = default;
 		PointLightComponent(glm::vec3 _color, float _intensity = 1.0f) 
 			: color(_color), intensity(_intensity) {}
 		PointLightComponent(const PointLightComponent&) = default;
 	};
-
 }

@@ -51,8 +51,6 @@ namespace Aho {
 	}
 
 	void ImGuiLayer::OnImGuiRender() {
-		//static bool show = false;
-		//ImGui::ShowDemoWindow(&show);
 	}
 
 	void ImGuiLayer::Begin() {

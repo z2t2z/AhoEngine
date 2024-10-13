@@ -10,7 +10,7 @@ namespace Aho {
 	class Level {
 	public:
 		Level() { m_EntityManager = new EntityManager(); }
-		~Level() = default;
+		~Level() { delete m_EntityManager; }
 		EntityManager* GetEntityManager() { return m_EntityManager; }
 	private:
 		EntityManager* m_EntityManager{ nullptr };

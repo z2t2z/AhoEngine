@@ -7,58 +7,26 @@
 #include <glm/glm.hpp>
 
 namespace Aho {
-	/* Temporary!! */
-	//class MaterialParameter {
-	//public:
-	//	virtual ~MaterialParameter() = default;
-	//	virtual const std::string& GetName() const = 0;
-	//	virtual void SetValue(void* value) = 0;
-	//	virtual void* GetValue() const = 0;
-	//};
-
-	//class FloatParameter : public MaterialParameter {
-	//public:
-	//	FloatParameter() = default;
-	//	FloatParameter(const std::string& name, float value) : m_Name(name), m_Value(value) {}
-	//	const std::string& GetName() const override { return m_Name; }
-	//	void SetValue(void* val) override { m_Value = *static_cast<float*>(val); }
-	//	void* GetValue() const override { return (void*)&m_Value; }
-	//private:
-	//	std::string m_Name;
-	//	float m_Value;
-	//};
-
-	//class Vec3Parameter : public MaterialParameter {
-	//public:
-	//	Vec3Parameter() = default;
-	//	Vec3Parameter(const std::string& name, glm::vec3 value) : m_Name(name), m_Value(value) {}
-	//	const std::string& GetName() const override { return m_Name; }
-	//	void SetValue(void* val) override { m_Value = *static_cast<glm::vec3*>(val); }
-	//	void* GetValue() const override { return (void*)&m_Value; }
-	//private:
-	//	std::string m_Name;
-	//	glm::vec3 m_Value;
-	//};
-
+	//Material(std::string& filepath) { m_Shader = Shader::Create(filepath); }
+	//void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; m_Outdated = true; }
+	//std::shared_ptr<Shader> GetShader() const { return m_Shader; }
 	// Future TODO: different types, translucent
+	//std::shared_ptr<Shader> m_Shader;
+
 	class Material {
 	public:
 		Material() {}
 		~Material() = default;
-		Material(std::string& filepath) { m_Shader = Shader::Create(filepath); }
-		void UnbindTexture(const std::shared_ptr<Shader>& shader = nullptr);
-		void Apply(const std::shared_ptr<Shader>& shader = nullptr);
 		void AddTexture(const std::shared_ptr<Texture2D>& texture) { m_Textures.push_back(texture); m_Outdated = true; }
 		template<typename T>
 		void SetUniform(const std::string& name, T value);
-		void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; m_Outdated = true; }
-		std::shared_ptr<Shader> GetShader() const { return m_Shader; }
+		void Apply(const std::shared_ptr<Shader>& shader);
+		void UnbindTexture();
 	private:
 		bool m_Outdated{ true };
 		std::vector<std::shared_ptr<Texture2D>> m_Textures;
-		std::shared_ptr<Shader> m_Shader;
-
-		// TODO: Maybe store pointers directly?
+	private:
+		// TODO: use a descriptor or something, this is not intuitive
 		std::unordered_map<std::string, glm::vec3> m_UniformVec3;
 		std::unordered_map<std::string, glm::mat4> m_UniformMat4;
 		std::unordered_map<std::string, float> m_UniformFloat;

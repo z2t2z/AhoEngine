@@ -2,7 +2,6 @@
 
 #include "IamAho.h"
 #include "EditorUI/LevelHierarchyPanel/LevelHierarchyPanel.h"
-#include "EditorUI/ViewportPanel/ViewportPanel.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -16,7 +15,6 @@ namespace Aho {
 		virtual void OnEvent(Event& e) override;
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
-		void DrawEditorPanel();
 		void DrawContentBrowserPanel();
 		void DrawSceneHierarchyPanel();
 		void DrawViewport();
@@ -27,7 +25,6 @@ namespace Aho {
 		bool m_IsViewportFocused{ false };
 		bool m_CursorInViewport{ false };
 		bool m_PickObject{ false };
-		bool m_IsDragging{ false };
 		bool m_BlockClickingEvent{ false };
 		uint32_t m_PickData{ 998244353u };
 		Entity m_SelectedObject;
@@ -39,7 +36,5 @@ namespace Aho {
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
-	private:
-		ViewportPanel* m_ViewportPanel{ nullptr };
 	};
 }

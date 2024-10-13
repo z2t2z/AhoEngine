@@ -17,25 +17,22 @@ namespace Aho {
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
-		inline static void DrawBuffer(const uint32_t* bufferID) {
-			//s_RendererAPI->DrawBuffer(bufferID);
-		}
 	private:
 		static RendererAPI* s_RendererAPI;
 	};
 
 	class RenderCommandBuffer {
 	public:
-		void Execute(const std::shared_ptr<RenderData>& data) const {
+		void Execute(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader) const {
 			for (const auto& command : m_Commands) {
-				command(data);
+				command(data, shader);
 			}
 		}
-		void AddCommand(const std::function<void(const std::shared_ptr<RenderData>)>& func) {
+		void AddCommand(const std::function<void(const std::shared_ptr<RenderData>, const std::shared_ptr<Shader>)>& func) {
 			m_Commands.push_back(func);
 		}
 	private:
-		std::vector<std::function<void(const std::shared_ptr<RenderData>& data)>> m_Commands;
+		std::vector<std::function<void(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader)>> m_Commands;
 	};
 
 	//TODO: think of doing things this way

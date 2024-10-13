@@ -22,6 +22,7 @@ namespace Aho {
 		Specular,
 		Height,
 		Roughness,
+		Depth
 		//Metalness,
 		// TODO
 	};

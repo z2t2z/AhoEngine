@@ -22,9 +22,7 @@ namespace Aho {
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 	private:
 		void SubmitRenderData();
-		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) {
-			std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach();
-		}
+		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
 	private:

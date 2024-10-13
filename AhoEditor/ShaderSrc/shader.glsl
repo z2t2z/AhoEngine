@@ -79,8 +79,9 @@ uniform sampler2D u_Normal;
 // Blinn-Phong
 void main() {
 	// Ambient
-	float ambientStrength = 0.1;
+	float ambientStrength = 0.01;
 	vec3 rawColor = texture(u_Diffuse, v_TexCoords).rgb;
+	rawColor = pow(rawColor, vec3(2.2)); // To linear space
 	vec3 ambient = ambientStrength * rawColor;
 
 	// Diffuse
@@ -101,6 +102,7 @@ void main() {
 	specular = specStrength * specular;
 	// Combination
 	vec3 result = (ambient + diffuse + specular);
+	result = pow(result, vec3(1.0 / 2.2));
 	color = vec4(result, 1.0);
 
 	EntityColor = vec4(

@@ -8,7 +8,7 @@
 #include "Runtime/Core/Gui/ImGuiLayer.h"
 
 namespace Aho {
-	class AHO_API Application {
+	class Application {
 	public:
 		Application();
 		virtual ~Application() = default;
@@ -21,15 +21,17 @@ namespace Aho {
 		inline static Application& Get() { return *s_Instance; }
 	protected:
 		EventManager* GetEventManager() { return m_EventManager; }
+		bool OnWindowClose(WindowCloseEvent& e);
+	private:
+		uint32_t m_FPS{ 0u };
+		float m_AccumulatedTime{ 0.0f };
+		bool m_Running = true;
+		float m_LastFrameTime = 0.0f;
 	private:
 		EventManager* m_EventManager{ nullptr };
-		bool OnWindowClose(WindowCloseEvent& e);
 		std::shared_ptr<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
-		bool m_Running = true;
 		LayerStack m_LayerStack;
-		float m_LastFrameTime = 0.0f;
-
 	private:
 		static Application* s_Instance;
 	};

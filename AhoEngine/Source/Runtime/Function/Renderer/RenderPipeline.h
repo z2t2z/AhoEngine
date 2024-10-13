@@ -6,7 +6,11 @@
 namespace Aho {
 	class RenderPipeline {
 	public:
-		~RenderPipeline() = default;
+		~RenderPipeline() {
+			for (auto renderPass : m_RenderPasses) {
+				delete renderPass;
+			}
+		}
 		virtual void Execute() const {
 			for (const auto& renderPass : m_RenderPasses) {
 				renderPass->Execute();
@@ -28,6 +32,8 @@ namespace Aho {
 		}
 		virtual void Initialize() = 0;
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
+		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
+		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
 	protected:
 		std::vector<RenderPass*> m_RenderPasses; // Must be ordered!
 	};

@@ -12,7 +12,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnAttach() {
-		AHO_INFO("Editor on attach");
+		AHO_INFO("EditorLayer on attach");
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
@@ -101,7 +101,6 @@ namespace Aho {
 		if (!m_FBO) {
 			m_FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
 		}
-		//m_CursorInViewport = m_ViewportPanel->DrawPanel();
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
 		DrawViewport();
@@ -109,21 +108,12 @@ namespace Aho {
 
 	void AhoEditorLayer::OnEvent(Event& e) {
 		// Handle all input events here
-		//if (e.GetCategoryFlags() == EventCategory::EventCategoryInput) {
 		if (int(e.GetEventType()) & int(EventType::MouseButtonPressed)) {
 			e.SetHandled();
 			auto ee = (MouseButtonPressedEvent*)&e;
 			if (!m_BlockClickingEvent && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
 				m_PickObject = true;
 			}
-			//if (e.GetEventType() == EventType::MouseButtonReleased) {
-			//	auto ee = (MouseButtonReleasedEvent*)&e;
-			//	if (ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
-
-			//	}
-			//}
-			//if (e.GetEventType() == EventType::KeyPressed) {
-			//}
 		}
 	}
 
@@ -134,7 +124,6 @@ namespace Aho {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
 					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->ApplyShader();
 				}
 			}
 		}
@@ -167,8 +156,8 @@ namespace Aho {
 		else {
 			m_CursorInViewport = false;
 		}
-		// Object Picking
 
+		// Object Picking
 		m_FBO->Unbind();
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
@@ -217,10 +206,6 @@ namespace Aho {
 			ImGui::EndDragDropTarget();
 		}
 		ImGui::End();
-	}
-
-	void AhoEditorLayer::DrawEditorPanel() {
-
 	}
 	
 	namespace fs = std::filesystem;

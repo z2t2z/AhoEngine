@@ -11,16 +11,16 @@ namespace Aho {
 	using Ref = std::shared_ptr<T>;
 
 	enum class ShaderType {
+		None = 0,
 		Normal, // vertex + pixel
-		Compute,
-		None
+		Compute
 	};
 
 	struct UBO {
 		UBO() = default;
 		glm::mat4 u_View;
 		glm::mat4 u_Projection;
-		glm::mat4 u_Model;
+		glm::mat4 u_Model; // deprecated, just being lazy to delete this
 		glm::vec3 u_ViewPosition;
 		float padding0;
 		glm::vec3 u_LightPosition;
@@ -32,7 +32,6 @@ namespace Aho {
 	class Shader {
 	public:
 		virtual ~Shader() = default;
-        
         virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
         // Uniforms
@@ -60,7 +59,7 @@ namespace Aho {
 	protected:
 		bool m_Compiled{ false };
 	private:
-		ShaderType m_Type;
+		ShaderType m_Type{ ShaderType::None };
 		uint32_t m_RendererID;
 	};
 

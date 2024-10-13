@@ -17,7 +17,6 @@ namespace Aho {
 		inline const std::string& GetDebugName() {
 			return m_DebugName;
 		}
-
 	protected:
 		std::string m_DebugName;
 	};

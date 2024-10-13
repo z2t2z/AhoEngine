@@ -8,7 +8,7 @@ namespace Aho {
 	class RenderLayer : public Layer {
 	public:
 		RenderLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
-		virtual ~RenderLayer() = default;
+		virtual ~RenderLayer() { delete m_Renderer; }
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		void OnUpdate(float deltaTime) override;
@@ -17,6 +17,10 @@ namespace Aho {
 		void SetRenderer(Renderer* renderer) { m_Renderer = renderer; }
 		UBO* GetUBO() { return &m_UBO; }
 	private:
+		void SetupForwardRenderPipeline();
+		RenderPass* SetupDebugPass();
+		RenderPass* SetupDepthPass();
+		RenderPass* SetupMainPass();
 	private:
 		UBO m_UBO;
 		EventManager* m_EventManager{ nullptr };

@@ -120,11 +120,12 @@ namespace Aho {
 				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 				// The maxLength includes the NULL character
 				std::vector<GLchar> infoLog(maxLength);
-				glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				if (maxLength) { // if maxlength is somehow 0 then there will be segment fault
+					glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
+				}
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
 				AHO_CORE_ERROR("Shader compilation failed in path {0}.{1}", m_FilePath, infoLog.data());
-				//AHO_CORE_ASSERT(false, "Shader compilation failure!");
 				return;
 			}
 			shaderHandles.push_back(shader);
@@ -146,8 +147,9 @@ namespace Aho {
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
 			// The maxLength includes the NULL character
 			std::vector<GLchar> infoLog(maxLength);
-			glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
-
+			if (maxLength) {
+				glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
+			}
 			// We don't need the program anymore.
 			glDeleteProgram(program);
 			// Don't leak shaders either.

@@ -143,6 +143,7 @@ namespace Aho {
 		glDeleteFramebuffers(1, &m_FBO);
 	}
 
+	// TODO: Make these more clear
 	void OpenGLFramebuffer::Invalidate() {
 		if (m_FBO) {
 			glDeleteFramebuffers(1, &m_FBO);
@@ -157,17 +158,23 @@ namespace Aho {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
-		m_ColorAttachments.clear();
-		auto temp = m_ColorAttachmentSpecifications;
-		m_ColorAttachmentSpecifications.clear();
-		for (const auto& spec : temp) {
-			AddColorAttachment(spec);
+		if (!m_ColorAttachmentSpecifications.empty()) {
+			m_ColorAttachments.clear();
+			auto temp = m_ColorAttachmentSpecifications;
+			m_ColorAttachmentSpecifications.clear();
+			for (const auto& spec : temp) {
+				AddColorAttachment(spec);
+			}
+			std::vector<GLenum> attchments;
+			for (int i = 0; i < m_ColorAttachments.size(); i++) {
+				attchments.push_back(GL_COLOR_ATTACHMENT0 + i);
+			}
+			glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), attchments.data());
 		}
-		std::vector<GLenum> attchments;
-		for (int i = 0; i < m_ColorAttachments.size(); i++) {
-			attchments.push_back(GL_COLOR_ATTACHMENT0 + i);
+		else {
+			glDrawBuffer(GL_NONE); // if no color attachments, then assume it is a depth buffer
+			glReadBuffer(GL_NONE);
 		}
-		glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), attchments.data());
 		AHO_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -191,12 +198,12 @@ namespace Aho {
 		Invalidate();
 	}
 
-	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) {
+	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) {
 		if (attachmentIndex >= m_ColorAttachments.size()) {
 			AHO_CORE_ERROR("Attachment index out of bound: {}", attachmentIndex);
 			return 0u;
 		}
-		if (x < 0 || y < 0 || x >= m_Specification.Width || y >= m_Specification.Height) {
+		if (x >= m_Specification.Width || y >= m_Specification.Height) {
 			AHO_CORE_ERROR("Attempting to read pixel data from an invalid position: {0}, {1}", x, y);
 			return 0u;
 		}

@@ -12,13 +12,31 @@ namespace Aho {
 	class Renderer {
 	public:
 		Renderer();
-		~Renderer() = default;
+		~Renderer() {
+			for (auto& pipeline : m_Pipelines) {
+				delete pipeline;
+			}
+		}
 		void Render() {
 			m_CurrentPipeline->Execute();
 		}
-		void SetRenderPipeline(RenderPipeline* pl) { m_CurrentPipeline = pl; }
+		void AddRenderPipeline(RenderPipeline* pl) { 
+			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
+				m_Pipelines.push_back(pl); 
+			}
+		}
+		void SetCurrentRenderPipeline(RenderPipeline* pl) { 
+			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
+				AddRenderPipeline(pl); 
+			}
+			m_CurrentPipeline = pl; 
+		}
 		RenderPipeline* GetCurrentRenderPipeline() { return m_CurrentPipeline; }
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+		std::vector<RenderPipeline*>::iterator begin() { return m_Pipelines.begin(); }
+		std::vector<RenderPipeline*>::iterator end() { return m_Pipelines.end(); }
+		std::vector<RenderPipeline*>::const_iterator begin() const { return m_Pipelines.begin(); }
+		std::vector<RenderPipeline*>::const_iterator end() const { return m_Pipelines.end(); }
 	private:
 		RenderPipeline* m_CurrentPipeline{ nullptr };
 		std::vector<RenderPipeline*> m_Pipelines;
