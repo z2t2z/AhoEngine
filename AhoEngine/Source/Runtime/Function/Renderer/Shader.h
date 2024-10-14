@@ -16,17 +16,17 @@ namespace Aho {
 		Compute
 	};
 
-	struct UBO {
-		UBO() = default;
+	// TODO: For now this is hardcoded for every shader
+	struct alignas(16) UBO {
 		glm::mat4 u_View;
 		glm::mat4 u_Projection;
-		glm::mat4 u_Model; // deprecated, just being lazy to delete this
+		glm::mat4 u_LightViewMatrix;
 		glm::vec3 u_ViewPosition;
-		float padding0;
+		float _padding0; // won't be used
 		glm::vec3 u_LightPosition;
-		float padding1;
+		float _padding1; // won't be used
 		glm::vec3 u_LightColor;
-		float padding2;
+		float _padding2; // won't be used
 	};
 
 	class Shader {
@@ -34,9 +34,10 @@ namespace Aho {
 		virtual ~Shader() = default;
         virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
+		virtual void Delete() const = 0;
         // Uniforms
 		virtual void BindUBO(const UBO& ubo) = 0;
-		virtual void SetUint(const std::string& name, int value) = 0;
+		virtual void SetUint(const std::string& name, uint32_t value) = 0;
         virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
         virtual void SetFloat(const std::string& name, float value) = 0;
@@ -51,16 +52,15 @@ namespace Aho {
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const = 0;
 
 		virtual ShaderType GetShaderType() { return m_Type; }
-		inline uint32_t GerRendererID() { return m_RendererID; }
+		inline uint32_t GerRendererID() { return m_ShaderID; }
 
         virtual const std::string& GetName() const = 0;
         static std::shared_ptr<Shader> Create(const std::filesystem::path& filepath);
 		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
 	protected:
 		bool m_Compiled{ false };
-	private:
 		ShaderType m_Type{ ShaderType::None };
-		uint32_t m_RendererID;
+		uint32_t m_ShaderID;
 	};
 
 	class ShaderLibrary {

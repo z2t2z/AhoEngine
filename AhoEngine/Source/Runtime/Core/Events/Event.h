@@ -120,7 +120,7 @@ namespace Aho {
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 		virtual const char* GetName() const override { return "UploadRenderData"; }
 		virtual int GetCategoryFlags() const override { return 0; }
-		std::vector<std::shared_ptr<RenderData>> GetRawData() const { return m_RenderData; }
+		std::vector<std::shared_ptr<RenderData>> GetRawData() const { return m_RenderData; } // TODO: no copy
 	private:
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;
 	};

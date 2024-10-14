@@ -33,6 +33,7 @@ namespace Aho {
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 		auto path = std::filesystem::current_path().parent_path();
+		AHO_CORE_TRACE(path.string());
 		// TODO: Font manager
 		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Bold.ttf").string().c_str(), 18.0f);
 		auto font = io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Regular.ttf").string().c_str(), 18.0f);

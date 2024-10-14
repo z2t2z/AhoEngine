@@ -22,8 +22,8 @@ namespace Aho {
 	
 	void LevelLayer::OnUpdate(float deltaTime) {
 		SubmitRenderData();
-
-
+		// UpdatePhysics();
+		// UpdateAnimation();
 		/* Actual in-game logic here */
 		if (!m_PlayMode) {
 			return;
@@ -51,12 +51,16 @@ namespace Aho {
 
 	void LevelLayer::SubmitRenderData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		m_RenderLayer->GetUBO()->u_Model = glm::mat4(1.0f);
 		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
 		m_RenderLayer->GetUBO()->u_View = cam->GetView();
 		m_RenderLayer->GetUBO()->u_ViewPosition = cam->GetPosition();
-		m_RenderLayer->GetUBO()->u_LightPosition = glm::vec3(0.0f, 2.0f, 0.0f);
-		m_RenderLayer->GetUBO()->u_LightColor = glm::vec3(1.0f, 0.0f, 0.0f);
+		m_RenderLayer->GetUBO()->u_LightPosition = m_LightData.lightPos;
+		m_RenderLayer->GetUBO()->u_LightColor = m_LightData.lightColor;
+		if (m_Update) {
+			float nearPlane = 0.1f, farPlane = 100.0f;
+			glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
+			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(m_LightData.lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {
@@ -77,14 +81,12 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-
 			auto meshEntity = entityManager->CreateEntity("subMesh");
 			entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
-			auto& tc = entityManager->AddComponent<TransformComponent>(meshEntity);
-			renderData->SetTransform(tc.transformPara);
+			auto& tc = entityManager->AddComponent<TransformComponent>(meshEntity, renderData->GetTransformParam());
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
-			mat->SetUniform("u_EntityID", entityID); // setting entity id here
+			mat->SetUniform("u_EntityID", entityID);	// setting entity id here
 			if (meshInfo->materialInfo.HasMaterial()) {
 				auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& albedo : meshInfo->materialInfo.Albedo) {

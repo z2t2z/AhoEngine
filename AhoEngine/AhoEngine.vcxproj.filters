@@ -37,6 +37,12 @@
     <Filter Include="Source\Runtime\Function\Camera">
       <UniqueIdentifier>{B61487DC-A23A-5143-8B80-D60E7745760F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Level">
+      <UniqueIdentifier>{0592C0B9-71AA-A7E3-3A57-377DA62E3C7D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Level\EcS">
+      <UniqueIdentifier>{EF042FEC-5B73-846B-A45C-3F6B100A7A07}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Function\Renderer">
       <UniqueIdentifier>{64CB9F28-501C-8B6A-7980-792C65301ED4}</UniqueIdentifier>
     </Filter>
@@ -67,9 +73,6 @@
     <Filter Include="Source\Runtime\Resource\AssetCreator">
       <UniqueIdentifier>{7FA65513-6B8D-170B-14DE-7D2800A49071}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Runtime\Resource\EcS">
-      <UniqueIdentifier>{2A9302C9-96A0-30AF-1F87-2C9A8B93FC65}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Runtime\Resource\FileWatcher">
       <UniqueIdentifier>{7D75C683-E92E-312E-728E-4B08DE46E79D}</UniqueIdentifier>
     </Filter>
@@ -81,9 +84,6 @@
     </Filter>
     <Filter Include="Source\Runtime\Resource\ResourceType\Mesh">
       <UniqueIdentifier>{155BDA97-8175-3D39-CA97-4DCD36F16440}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Runtime\Resource\Scene">
-      <UniqueIdentifier>{DDB7F114-49D0-D83E-127D-68D87E546DD8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\Serializer">
       <UniqueIdentifier>{C907171D-B543-1A87-1E56-327E0AB1C2A1}</UniqueIdentifier>
@@ -188,6 +188,21 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h">
       <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Level\EcS\Components.h">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Level\EcS\Entity.h">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Level\EcS\EntityManager.h">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Level\Level.h">
+      <Filter>Source\Runtime\Function\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Level\LevelLayer.h">
+      <Filter>Source\Runtime\Function\Level</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -294,12 +309,6 @@
     <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h">
       <Filter>Source\Runtime\Resource\AssetCreator</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Level\EcS\Entity.h">
-      <Filter>Source\Runtime\Resource\EcS</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Level\EcS\Components.h">
-      <Filter>Source\Runtime\Resource\EcS</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileChangedEvent.h">
       <Filter>Source\Runtime\Resource\FileWatcher</Filter>
     </ClInclude>
@@ -317,9 +326,6 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h">
       <Filter>Source\Runtime\Resource\ResourceType</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Level\Level.h">
-      <Filter>Source\Runtime\Resource\Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h">
       <Filter>Source\Runtime\Resource\Serializer</Filter>
@@ -1584,8 +1590,6 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Level\LevelLayer.h" />
-    <ClInclude Include="Source\Runtime\Function\Level\EcS\EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1614,6 +1618,15 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp">
       <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Level\Level.cpp">
+      <Filter>Source\Runtime\Function\Level</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp">
+      <Filter>Source\Runtime\Function\Level</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -1684,17 +1697,11 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp">
       <Filter>Source\Runtime\Resource\Asset\Importer</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp">
-      <Filter>Source\Runtime\Resource\EcS</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp">
       <Filter>Source\Runtime\Resource\Model</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp">
       <Filter>Source\Runtime\Resource</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Level\Level.cpp">
-      <Filter>Source\Runtime\Resource\Scene</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">
       <Filter>Source\Runtime\Resource\UUID</Filter>
@@ -1705,6 +1712,5 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp" />
   </ItemGroup>
 </Project>

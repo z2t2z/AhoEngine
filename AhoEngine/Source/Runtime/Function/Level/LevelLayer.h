@@ -7,6 +7,11 @@
 #include <future>
 
 namespace Aho {
+	struct LightData {
+		glm::vec3 lightPos{ 0.0f, 0.0f, 0.0f };
+		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
+	};
+
 	class LevelLayer : public Layer {
 	public:
 		LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
@@ -20,15 +25,19 @@ namespace Aho {
 		void AddLevel(const std::shared_ptr<Level>& scene) { m_Levels.push_back(scene); }
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
+		LightData* GetLightData() { return &m_LightData; }
 	private:
 		void SubmitRenderData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
 	private:
-		RenderLayer* m_RenderLayer{ nullptr };
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
+		bool m_Update{ true };		// TODO: temporary...
+		LightData m_LightData;		// TODO: temporary...
+	private:
+		RenderLayer* m_RenderLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Level> m_CurrentLevel;
 		std::shared_ptr<CameraManager> m_CameraManager;

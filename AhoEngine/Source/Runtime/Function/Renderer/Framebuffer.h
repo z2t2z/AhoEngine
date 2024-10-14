@@ -1,20 +1,9 @@
 #pragma once
-
+#include "Texture.h"
 #include <vector>
 #include <memory>
 
 namespace Aho {
-	enum class FBTextureFormat {
-		None = 0,
-		// Color
-		RGBA8,
-		RED_INTEGER,
-		// Depth/stencil
-		DEPTH24STENCIL8,
-		// Defaults
-		Depth = DEPTH24STENCIL8
-	};
-
 	enum class FBInterFormat {
 		None, RGB8, RGBA8, RGB16F, RGBA16F, Depth24, Depth32F,
 	};
@@ -46,11 +35,8 @@ namespace Aho {
 		None, Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest
 	};
 	
-
 	struct FBTextureSpecification {
 		FBTextureSpecification() = default;
-		FBTextureSpecification(const FBTextureFormat& format) : TextureFormat(format) {}
-		FBTextureFormat TextureFormat = FBTextureFormat::None;
 		FBInterFormat internalFormat{ FBInterFormat::None };
 		FBTarget target{ FBTarget::None };
 		FBWrapMode wrapModeS{ FBWrapMode::None };
@@ -61,18 +47,14 @@ namespace Aho {
 		FBDataFormat dataFormat{ FBDataFormat::None };
 	};
 
-	struct FBAttachmentSpecification {
-		FBAttachmentSpecification() = default;
-		FBAttachmentSpecification(const std::initializer_list<FBTextureSpecification>& attachments)
-			: Attachments(attachments) {}
-		std::vector<FBTextureSpecification> Attachments;
-	};
-
 	struct FBSpecification {
+		FBSpecification() = default;
+		FBSpecification(uint32_t width, uint32_t height, const std::initializer_list<FBTextureSpecification>& attachments)
+			: Width(width), Height(height), Attachments(attachments) {}
 		uint32_t Width = 0, Height = 0;
-		FBAttachmentSpecification Attachments;
-		uint32_t Samples = 1; // what for?
-		bool SwapChainTarget = false; // for vulkan
+		std::vector<FBTextureSpecification> Attachments;
+		//uint32_t Samples = 1;	// what for?
+		//bool SwapChainTarget = false; // for vulkan
 	};
 
 	class Framebuffer {
@@ -82,7 +64,10 @@ namespace Aho {
 		virtual void Unbind() = 0;
 		virtual void Invalidate() = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual std::shared_ptr<Texture> GetDepthTexture() = 0; 
+		virtual std::vector<std::shared_ptr<Texture>> GetTextureAttachments() = 0;
 		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) = 0;
+		virtual uint32_t GetDepthAttachment() = 0;
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
 		virtual void AddColorAttachment(const FBTextureSpecification& spec) = 0;
 		virtual void AddColorAttachment() = 0;

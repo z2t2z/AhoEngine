@@ -20,8 +20,7 @@ namespace Aho {
 		void AddTexture(const std::shared_ptr<Texture2D>& texture) { m_Textures.push_back(texture); m_Outdated = true; }
 		template<typename T>
 		void SetUniform(const std::string& name, T value);
-		void Apply(const std::shared_ptr<Shader>& shader);
-		void UnbindTexture();
+		void Apply(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 	private:
 		bool m_Outdated{ true };
 		std::vector<std::shared_ptr<Texture2D>> m_Textures;

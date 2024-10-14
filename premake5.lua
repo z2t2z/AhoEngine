@@ -133,6 +133,7 @@ project "AhoEditor"
         "AhoEngine/Source",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.Glad}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.json}",
         "%{IncludeDir.ImGuizmo}"
@@ -186,6 +187,7 @@ project "Sandbox"
         "AhoEngine/Vendor/spdlog/include",
         "AhoEngine/Source",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.Glad}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.json}"

@@ -24,10 +24,10 @@ namespace Aho {
 	};
 
 	struct TransformComponent {
-		TransformPara* transformPara;
-		TransformComponent() { transformPara = new TransformPara(); }
+		TransformParam* transformPara;
+		TransformComponent() { transformPara = new TransformParam(); }
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(TransformPara* t) : transformPara(t) {}
+		TransformComponent(TransformParam* t) : transformPara(t) {}
 		glm::mat4 GetTransform() { return transformPara->GetTransform(); }
 		glm::vec3& GetTranslation() { return transformPara->Translation; }
 		glm::vec3& GetScale() { return transformPara->Scale; }

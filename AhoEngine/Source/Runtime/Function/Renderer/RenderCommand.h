@@ -3,7 +3,9 @@
 #include "RendererAPI.h"
 #include "VertexArrayr.h"
 #include "RenderData.h"
+#include "Framebuffer.h"
 #include <memory>
+#include <glad/glad.h>
 
 namespace Aho {
 	class RenderCommand {
@@ -23,18 +25,40 @@ namespace Aho {
 
 	class RenderCommandBuffer {
 	public:
-		void Execute(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader) const {
+		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& renderTarget, const std::shared_ptr<Framebuffer>& lastFBO = nullptr) const {
+			shader->Bind();
+			renderTarget->Bind();
+			RenderCommand::SetClearColor(m_ClearColor);
+			RenderCommand::Clear(m_ClearFlags);
 			for (const auto& command : m_Commands) {
-				command(data, shader);
+				command(renderData, shader, lastFBO);
 			}
+			renderTarget->Unbind();
+			shader->Unbind();
 		}
-		void AddCommand(const std::function<void(const std::shared_ptr<RenderData>, const std::shared_ptr<Shader>)>& func) {
-			m_Commands.push_back(func);
-		}
+		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, const std::shared_ptr<Shader>&, const std::shared_ptr<Framebuffer>&)>& func) { m_Commands.push_back(func); }
+		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
+		virtual void SetClearFlags(ClearFlags flags) { m_ClearFlags = flags; }
 	private:
-		std::vector<std::function<void(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader)>> m_Commands;
+		glm::vec4 m_ClearColor{ .5f, .2f, .3f, 1.0f };
+		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
+	private:
+		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO)>> m_Commands;
 	};
 
+	//class RenderCommandBuffer {
+	//public:
+	//	void Execute(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& fbo = nullptr) const {
+	//		for (const auto& command : m_Commands) {
+	//			command(data, shader, fbo);
+	//		}
+	//	}
+	//	void AddCommand(const std::function<void(const std::shared_ptr<RenderData>, const std::shared_ptr<Shader>, const std::shared_ptr<Framebuffer>)>& func) {
+	//		m_Commands.push_back(func);
+	//	}
+	//private:
+	//	std::vector<std::function<void(const std::shared_ptr<RenderData>& data, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& fbo)>> m_Commands;
+	//};
 	//TODO: think of doing things this way
 	//	template <typename Func, typename... Args>
 	//	void AddCommand(Func&& func, Args&&... args) {

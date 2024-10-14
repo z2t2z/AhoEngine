@@ -15,19 +15,21 @@ namespace Aho {
 		float tx, ty, tz;		// tangent
 		float btx, bty, btz;	// bitangent
 		float u, v;				// texture coordinates
+		Vertex() { x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; }
 	};
 
-	struct TransformPara {
+	struct TransformParam {
 		glm::vec3 Translation;
 		glm::vec3 Scale;
 		glm::vec3 Rotation;
-		TransformPara() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
+		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() const {
 			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
 			return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
 		}
 	}; // BIG TODO: Idk where this shoule be
 
+	// For loading only
 	struct MaterialInfo {
 		std::vector<std::string> Albedo;
 		std::vector<std::string> Normal;
@@ -47,6 +49,9 @@ namespace Aho {
 		MaterialInfo materialInfo;
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
 			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) { }
+		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV)
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV) {
+		}
 	};
 
 	/*

@@ -45,20 +45,19 @@ namespace Aho {
 	}
 
 	OpenGLShader::~OpenGLShader() {
-		glDeleteProgram(m_RendererID);
+		glDeleteProgram(m_ShaderID);
+	}
+
+	void OpenGLShader::Delete() const {
+		glDeleteProgram(m_ShaderID);
 	}
 
 	void OpenGLShader::Bind() const {
-		glUseProgram(m_RendererID);
+		glUseProgram(m_ShaderID);
 	}
 
 	void OpenGLShader::Unbind() const {
 		glUseProgram(0);
-	}
-
-	void OpenGLShader::BindUBO(const UBO& ubo) {
-		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(UBO), &ubo); // 直接更新整个 UBO
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath) {
@@ -71,10 +70,12 @@ namespace Aho {
 				result.resize(size);
 				in.seekg(0, std::ios::beg);
 				in.read(&result[0], size);
-			} else {
+			}
+			else {
 				AHO_CORE_ERROR("Could not read from file '{0}'", filepath);
 			}
-		} else {
+		}
+		else {
 			AHO_CORE_ERROR("Could not open file '{0}'", filepath);
 		}
 		if (result.empty()) {
@@ -111,7 +112,7 @@ namespace Aho {
 			(shaderType == GL_COMPUTE_SHADER ? ComputeFlag : NormalFlag) = true;
 			GLuint shader = glCreateShader(shaderType);
 			const GLchar* source = Source.c_str();
-			glShaderSource(shader, 1, &source, 0);
+			glShaderSource(shader, 1, &source, NULL);
 			glCompileShader(shader);
 			GLint isCompiled = 0;
 			glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
@@ -133,15 +134,15 @@ namespace Aho {
 
 		AHO_CORE_ASSERT(!(ComputeFlag && NormalFlag), "Can not have normal shader and compute shader at the same time.");
 
-		m_RendererID = glCreateProgram();
-		GLuint program = m_RendererID;
+		m_ShaderID = glCreateProgram();
+		GLuint program = m_ShaderID;
 		for (const auto& handle : shaderHandles) {
 			glAttachShader(program, handle);
 		}
 		glLinkProgram(program);
 		// Note the different functions here: glGetProgram* instead of glGetShader*.
 		GLint isLinked = 0;
-		glGetProgramiv(program, GL_LINK_STATUS, (int*)&isLinked);
+		glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
 		if (isLinked == GL_FALSE) {
 			GLint maxLength = 0;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
@@ -160,7 +161,6 @@ namespace Aho {
 			//AHO_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
-
 		// Always detach shaders after a successful link.
 		for (const auto& handle : shaderHandles) {
 			glDeleteShader(handle);
@@ -187,36 +187,43 @@ namespace Aho {
 		if (isLinked == GL_FALSE) {
 			GLint maxLength;
 			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-
 			std::vector<GLchar> infoLog(maxLength);
-			glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
+			if (maxLength) {
+				glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
+			}
 			AHO_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
-
 			glDeleteProgram(program);
-
-			for (auto id : shaderIDs)
+			for (auto id : shaderIDs) {
 				glDeleteShader(id);
+			}
 		}
-
 		for (auto id : shaderIDs) {
 			glDetachShader(program, id);
 			glDeleteShader(id);
 		}
+		m_ShaderID = program;
+	}
 
-		m_RendererID = program;
+	void OpenGLShader::BindUBO(const UBO& ubo) {
+		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(UBO), &ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 
 	/* Hard Code for now */
+	static uint32_t g_BindingPoint = 0u;
 	void OpenGLShader::InitUBO() {
 		glGenBuffers(1, &m_UBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
-		GLsizeiptr size = sizeof(UBO);
-		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-		GLuint bindingPoint = 0;
-		glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_UBO);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(UBO), nullptr, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		m_BindingPoint = g_BindingPoint;
+		g_BindingPoint++;
+		glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint, m_UBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 
-	void OpenGLShader::SetUint(const std::string& name, int value) {
+	void OpenGLShader::SetUint(const std::string& name, uint32_t value) {
 		UploadUniformUint(name, value);
 	}
 
@@ -263,47 +270,47 @@ namespace Aho {
 	}
 
 	void OpenGLShader::UploadUniformUint(const std::string& name, int value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform1iv(location, count, values);
 	}
 
 	void OpenGLShader::UploadUniformFloat(const std::string& name, float value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform1f(location, value);
 	}
 
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform2f(location, value.x, value.y);
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform3f(location, value.x, value.y, value.z);
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix) {
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 

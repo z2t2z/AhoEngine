@@ -22,6 +22,7 @@ namespace Aho {
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
 	private:
+		bool m_DrawDepthMap{ false };
 		bool m_IsViewportFocused{ false };
 		bool m_CursorInViewport{ false };
 		bool m_PickObject{ false };

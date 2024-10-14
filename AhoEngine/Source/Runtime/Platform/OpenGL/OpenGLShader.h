@@ -6,17 +6,16 @@
 #include <glad/glad.h>
 
 namespace Aho {
-
 	class OpenGLShader : public Shader {
 	public:
 		OpenGLShader(const std::string& filepath);
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
-
+		virtual void Delete() const override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 		virtual void BindUBO(const UBO& ubo) override;
-		virtual void SetUint(const std::string& name, int value) override;
+		virtual void SetUint(const std::string& name, uint32_t value) override;
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
@@ -49,8 +48,8 @@ namespace Aho {
 		void InitUBO();
 	private:
 		bool m_IsCompute = false;
-		uint32_t m_RendererID{ 0u };
 		uint32_t m_UBO{ 0u };
+		uint32_t m_BindingPoint{ 0u };
 		std::string m_FilePath;
 		std::string m_Name;
 

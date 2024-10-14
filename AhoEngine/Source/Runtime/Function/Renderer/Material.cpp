@@ -2,34 +2,27 @@
 #include "Material.h"
 
 namespace Aho {
-    void Material::UnbindTexture() {
-        for (size_t i = 0; i < m_Textures.size(); i++) {
-            const auto& texture = m_Textures[i];
-            texture->Bind(0);
-        }
-    }
-
-    void Material::Apply(const std::shared_ptr<Shader>& shader) {
+    void Material::Apply(const std::shared_ptr<Shader>& shader, uint32_t texOffset) {
         AHO_CORE_ASSERT(shader);
         for (size_t i = 0; i < m_Textures.size(); i++) {
             const auto& texture = m_Textures[i];
-            texture->Bind(i);
+            texture->Bind(i + texOffset);
             auto type = texture->GetTextureType();
             switch (type) {
                 case TextureType::Diffuse:
-                    shader->SetInt("u_Diffuse", i);
+                    shader->SetInt("u_Diffuse", i + texOffset);
                     break;
                 case TextureType::Normal:
-                    shader->SetInt("u_Normal", i);
+                    shader->SetInt("u_Normal", i + texOffset);
                     break;
                 case TextureType::Specular:
-                    shader->SetInt("u_Specular", i);
+                    shader->SetInt("u_Specular", i + texOffset);
                     break;
                 case TextureType::Roughness:
-                    shader->SetInt("u_Roughness", i);
+                    shader->SetInt("u_Roughness", i + texOffset);
                     break;
                 case TextureType::Depth:
-                    shader->SetInt("u_Depth", i);
+                    shader->SetInt("u_DepthMap", i + texOffset);
                     break;
                 default:
                     AHO_CORE_ERROR("Wrong texture type");
@@ -51,7 +44,5 @@ namespace Aho {
         for (const auto& [name, val] : m_UniformUint) {
             shader->SetUint(name, val);
         }
-        //chosenShader->Unbind(); // !!!!!!???
     }
-
 }

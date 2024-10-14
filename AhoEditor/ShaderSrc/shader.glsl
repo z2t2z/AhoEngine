@@ -7,16 +7,13 @@ layout(location = 2) in vec2 a_TexCoords;
 layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec3 a_Bitangent;
 
-layout(std140) uniform CameraData{
+layout(std140) uniform CameraData {
 	mat4 u_View;
 	mat4 u_Projection;
 	mat4 u_Model0; // deprecated!
 	vec3 u_ViewPosition;
-	float padding0;         // 4 bytes (for alignment)
 	vec3 u_LightPosition;
-	float padding1;         // 4 bytes (for alignment)
 	vec3 u_LightColor;
-	float padding2;         // 4 bytes (for alignment)
 };
 
 out vec3 v_Position;
@@ -27,11 +24,11 @@ out vec2 v_TexCoords;
 uniform mat4 u_Model;
 
 out vec3 v_LightPos;	
-out vec3 v_ViewPos;
+out vec3 v_ViewPos;  
 
-void main() {
-	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0);
-	v_Position = vec3(u_Model * vec4(a_Position, 1.0));
+void main() { 
+	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0f);
+	v_Position = vec3(u_Model * vec4(a_Position, 1.0f));
 	v_TexCoords = a_TexCoords;
 
 	mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
@@ -47,21 +44,18 @@ void main() {
 }
 
 #type fragment
-#version 460 core
+#version 460 core 
 
 layout(location = 0) out vec4 EntityColor;
 layout(location = 1) out vec4 color;
 
-layout(std140) uniform CameraData{
+layout(std140) uniform CameraData {
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_Model0;
+	mat4 u_Model0; // deprecated!
 	vec3 u_ViewPosition;
-	float padding0;         // 4 bytes (for alignment)
 	vec3 u_LightPosition;
-	float padding1;         // 4 bytes (for alignment)
 	vec3 u_LightColor;
-	float padding2;         // 4 bytes (for alignment)
 };
 
 in vec3 v_Position;
@@ -79,36 +73,36 @@ uniform sampler2D u_Normal;
 // Blinn-Phong
 void main() {
 	// Ambient
-	float ambientStrength = 0.01;
+	float ambientStrength = 0.01f;
 	vec3 rawColor = texture(u_Diffuse, v_TexCoords).rgb;
-	rawColor = pow(rawColor, vec3(2.2)); // To linear space
+	rawColor = pow(rawColor, vec3(2.2f)); // To linear space
 	vec3 ambient = ambientStrength * rawColor;
 
 	// Diffuse
 	vec3 normal = texture(u_Normal, v_TexCoords).rgb;
-	normal = normalize(normal * 2.0 - 1.0);
+	normal = normalize(normal * 2.0f - 1.0f);
 
 	vec3 lightDir = normalize(v_LightPos - v_PositionTangent);
-	float diff = max(dot(normal, lightDir), 0.0);
+	float diff = max(dot(normal, lightDir), 0.0f);
 	vec3 diffuse = diff * rawColor;
 
 	// Specular
-	float specularStrength = 1.0;
+	float specularStrength = 1.0f;
 	vec3 viewDir = normalize(-v_ViewPos + v_PositionTangent);
 	vec3 halfwayDir = normalize(lightDir + viewDir);
-	float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
-	vec3 specular = specularStrength * spec * u_LightColor;
-	float specStrength = 0.2;
-	specular = specStrength * specular;
+	float spec = pow(max(dot(normal, halfwayDir), 0.0f), 32);
+	vec3 specular = specularStrength * spec * u_LightColor; 
+	float specStrength = 0.2f; 
+	specular = specStrength * specular;   
 	// Combination
 	vec3 result = (ambient + diffuse + specular);
-	result = pow(result, vec3(1.0 / 2.2));
-	color = vec4(result, 1.0);
+	result = pow(result, vec3(1.0f / 2.2f));
+	color = vec4(result, 1.0f);    
 
 	EntityColor = vec4(
-		float(u_EntityID & 0xFF) / 255.0,              // R
-		float((u_EntityID >> 8) & 0xFF) / 255.0,       // G
-		float((u_EntityID >> 16) & 0xFF) / 255.0,      // B
-		float((u_EntityID >> 24) & 0xFF) / 255.0       // A
+		float(u_EntityID & 0xFF) / 255.0f,              // R  
+		float((u_EntityID >> 8) & 0xFF) / 255.0f,       // G !
+		float((u_EntityID >> 16) & 0xFF) / 255.0f,      // B 
+		float((u_EntityID >> 24) & 0xFF) / 255.0f       // A
 	);
 }

@@ -1,7 +1,6 @@
 #include "Ahopch.h"
 #include "OpenGLFrameBuffer.h"
 #include "Runtime/Core/Core.h"
-#include <glad/glad.h>
 
 namespace Aho {
 
@@ -12,9 +11,9 @@ namespace Aho {
 			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 		}
 
-		static bool IsDepthFormat(FBTextureFormat format) {
+		static bool IsDepthFormat(FBDataFormat format) {
 			switch (format) {
-				case FBTextureFormat::DEPTH24STENCIL8:  return true;
+				case FBDataFormat::DepthComponent:  return true;
 			}
 			return false;
 		}
@@ -22,14 +21,6 @@ namespace Aho {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			target, mipmaplevel, internalFormat, width, height, boarder, dataFormat, dataType, initialData
 		*/
-		static GLenum FBOTextureFormat(FBTextureFormat format) {
-			switch (format) {
-				case FBTextureFormat::RGBA8:       return GL_RGBA8;
-				case FBTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
-			}
-			AHO_CORE_ASSERT(false, "FBOTextureFormat");
-			return 0;
-		}
 
 		GLuint GetGLParam(FBTarget param) {
 			switch (param) {
@@ -126,8 +117,8 @@ namespace Aho {
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const FBSpecification& spec)
 		: m_Specification(spec) {
-		for (const auto& spec : m_Specification.Attachments.Attachments) {
-			if (!Utils::IsDepthFormat(spec.TextureFormat)) {
+		for (const auto& spec : m_Specification.Attachments) {
+			if (!Utils::IsDepthFormat(spec.dataFormat)) {
 				m_ColorAttachmentSpecifications.push_back(spec);
 			}
 			else {
@@ -150,20 +141,23 @@ namespace Aho {
 			glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
 			glDeleteTextures(1, &m_DepthAttachment);
 		}
+		// TODO: this is the old way. Big to do
 		glCreateFramebuffers(1, &m_FBO);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-		// TODO: this is the old way
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
+		m_DepthTex = std::make_shared<FBTexture>(m_DepthAttachment);
 		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
 		if (!m_ColorAttachmentSpecifications.empty()) {
 			m_ColorAttachments.clear();
-			auto temp = m_ColorAttachmentSpecifications;
-			m_ColorAttachmentSpecifications.clear();
-			for (const auto& spec : temp) {
+			for (const auto& spec : m_ColorAttachmentSpecifications) {
 				AddColorAttachment(spec);
+			}
+			m_ColorAttachmentTex.clear(); // TODO;;
+			for (const auto& fbtexID : m_ColorAttachments) {
+				m_ColorAttachmentTex.emplace_back(std::make_shared<FBTexture>(fbtexID));
 			}
 			std::vector<GLenum> attchments;
 			for (int i = 0; i < m_ColorAttachments.size(); i++) {
@@ -198,6 +192,14 @@ namespace Aho {
 		Invalidate();
 	}
 
+	std::shared_ptr<Texture> OpenGLFramebuffer::GetDepthTexture() {
+		return m_DepthTex;
+	}
+
+	std::vector<std::shared_ptr<Texture>> OpenGLFramebuffer::GetTextureAttachments() {
+		return m_ColorAttachmentTex;
+	}
+
 	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) {
 		if (attachmentIndex >= m_ColorAttachments.size()) {
 			AHO_CORE_ERROR("Attachment index out of bound: {}", attachmentIndex);
@@ -217,7 +219,6 @@ namespace Aho {
 	void OpenGLFramebuffer::AddColorAttachment(const FBTextureSpecification& spec) {
 		uint32_t _;
 		m_ColorAttachments.emplace_back(_);
-		m_ColorAttachmentSpecifications.push_back(spec);
 		auto target = Utils::GetGLParam(spec.target);
 		auto internalFormat = Utils::GetGLParam(spec.internalFormat);
 		auto dataFormat = Utils::GetGLParam(spec.dataFormat);
@@ -228,6 +229,7 @@ namespace Aho {
 		auto filterModeMag = Utils::GetGLParam(spec.filterModeMag);
 
 		glCreateTextures(target, 1, &m_ColorAttachments.back());
+
 		glBindTexture(target, m_ColorAttachments.back());
 		glTexImage2D(target, 0, internalFormat, m_Specification.Width, m_Specification.Height, 0, dataFormat, dataType, nullptr);
 		if (wrapModeS) {
@@ -257,10 +259,6 @@ namespace Aho {
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value) {
 		AHO_CORE_ERROR("Not implemented yet");
 		return;
-		AHO_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Attachment index is out of bound!");
-		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
-		glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
-			Utils::FBOTextureFormat(spec.TextureFormat), GL_INT, &value);
 	}
 
 }

@@ -20,6 +20,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnDetach() {
+
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
@@ -80,7 +81,8 @@ namespace Aho {
 					ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
 					ImGui::MenuItem("Padding", NULL, &opt_padding);
 					ImGui::Separator();
-
+					ImGui::MenuItem("DebugView", NULL, &m_DrawDepthMap);
+					ImGui::Separator();
 					if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
 					if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
 					if (ImGui::MenuItem("Flag: NoUndocking", "", (dockspace_flags & ImGuiDockNodeFlags_NoUndocking) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoUndocking; }
@@ -123,7 +125,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(std::move(newShader));
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(newShader);
 				}
 			}
 		}
@@ -133,14 +135,21 @@ namespace Aho {
 	void AhoEditorLayer::DrawViewport() {
 		ImGui::Begin("Viewport");
 		auto [width, height] = ImGui::GetWindowSize();
-		m_FBO->Bind();
 		auto spec = m_FBO->GetSpecification();
 		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
 			m_FBO->Resize(width, height/* - ImGui::GetFrameHeight() */);
+			m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(2)->GetRenderTarget()->Resize(width, height);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
-		uint32_t RenderResult = m_FBO->GetLastColorAttachment();
-		ImGui::Image((void*)(uintptr_t)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		uint32_t RenderResult;
+		if (m_DrawDepthMap) {
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(2)->GetRenderTarget()->GetLastColorAttachment();
+		}
+		else {
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget()->GetLastColorAttachment();
+		}
+		ImGui::Image((void*)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [MouseX, MouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
@@ -148,9 +157,11 @@ namespace Aho {
 		y = spec.Height - y;
 		if (x >= 0 && y >= 0 && x < width && y < height) {
 			m_CursorInViewport = true;
-			if (m_PickObject) {
+			if (m_PickObject && !m_DrawDepthMap) {
 				m_PickObject = false;
+				m_FBO->Bind();
 				m_PickData = m_FBO->ReadPixel(0, x, y);
+				m_FBO->Unbind();
 			}
 		}
 		else {
@@ -158,7 +169,6 @@ namespace Aho {
 		}
 
 		// Object Picking
-		m_FBO->Unbind();
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 			if (entityManager->IsEntityIDValid(m_PickData)) {
@@ -186,7 +196,7 @@ namespace Aho {
 					ImGui::Text("%d", m_PickData);
 					ImGui::DragFloat3("Translation", glm::value_ptr(translation), 1.0f);
 					ImGui::DragFloat3("Scale", glm::value_ptr(scale), 1.0f);
-					ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 1.0f);
+					ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 1.0f); // wrong
 					ImGui::End();
 				}
 			}
@@ -264,6 +274,9 @@ namespace Aho {
 		//if (m_SelectionContext) {
 		//	DrawComponents(m_SelectionContext);
 		//}
+		auto lightData = m_LevelLayer->GetLightData();
+		ImGui::DragFloat3("Light Position", glm::value_ptr(lightData->lightPos), 0.25f);
+		ImGui::DragFloat3("Light Color", glm::value_ptr(lightData->lightColor), 0.25f);
 		ImGui::End();
 	}
 }

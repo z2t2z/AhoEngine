@@ -46,6 +46,7 @@ namespace Aho {
 			if (meshInfo->hasUVs) {
 				vertices.push_back(vertex.u);
 				vertices.push_back(vertex.v);
+				// TODO;
 				vertices.push_back(vertex.tx);
 				vertices.push_back(vertex.ty);
 				vertices.push_back(vertex.tz);
@@ -64,6 +65,7 @@ namespace Aho {
 		}
 		if (meshInfo->hasUVs) {
 			layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
+			// TODO;
 			layout.Push({ ShaderDataType::Float3, "a_Tangent" });
 			layout.Push({ ShaderDataType::Float3, "a_Bitangent" });
 		}
