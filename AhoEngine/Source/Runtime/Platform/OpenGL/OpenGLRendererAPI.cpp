@@ -16,8 +16,4 @@ namespace Aho {
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
-
-	void OpenGLRendererAPI::DrawBuffer(const uint32_t* attachmentID) {
-		//glDrawBuffers(2, attachmentID);
-	}
 }

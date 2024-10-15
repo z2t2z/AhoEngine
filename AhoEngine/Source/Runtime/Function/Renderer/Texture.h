@@ -37,7 +37,6 @@ namespace Aho {
 
 	class Texture {
 	public:
-		//Texture(TextureType type) : m_TextureType(type) {}
 		virtual ~Texture() = default;
 		virtual const TextureSpecification& GetSpecification() const = 0;
 		virtual void Reload(const std::string& path) = 0;

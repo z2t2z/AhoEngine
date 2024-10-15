@@ -49,15 +49,6 @@ void main() {
 layout(location = 0) out vec4 EntityColor;
 layout(location = 1) out vec4 color;
 
-layout(std140) uniform CameraData {
-	mat4 u_View;
-	mat4 u_Projection;
-	mat4 u_Model0; // deprecated!
-	vec3 u_ViewPosition;
-	vec3 u_LightPosition;
-	vec3 u_LightColor;
-};
-
 in vec3 v_Position;
 in vec3 v_PositionTangent;
 in vec3 v_Normal;
@@ -84,7 +75,7 @@ void main() {
 
 	vec3 lightDir = normalize(v_LightPos - v_PositionTangent);
 	float diff = max(dot(normal, lightDir), 0.0f);
-	vec3 diffuse = diff * rawColor;
+	vec3 diffuse = diff * rawColor; 
 
 	// Specular
 	float specularStrength = 1.0f;

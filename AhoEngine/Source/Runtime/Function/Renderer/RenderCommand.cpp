@@ -4,7 +4,6 @@
 #include "Runtime/Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Aho {
-
-	RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI;
-
+	// constexpr?
+	RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI();
 }

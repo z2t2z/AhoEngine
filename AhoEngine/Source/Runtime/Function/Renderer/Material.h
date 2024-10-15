@@ -21,6 +21,16 @@ namespace Aho {
 		template<typename T>
 		void SetUniform(const std::string& name, T value);
 		void Apply(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
+		float& GetUniform(const std::string& name) {
+			if (m_UniformFloat.contains(name)) {
+				return m_UniformFloat[name];
+			}
+			else {
+				AHO_CORE_ERROR("Material does not have this parameter: {}", name);
+				float t = 0.0f;
+				return t;
+			}
+		}
 	private:
 		bool m_Outdated{ true };
 		std::vector<std::shared_ptr<Texture2D>> m_Textures;

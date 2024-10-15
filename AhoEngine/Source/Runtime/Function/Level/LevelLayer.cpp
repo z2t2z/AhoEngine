@@ -53,13 +53,15 @@ namespace Aho {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
 		m_RenderLayer->GetUBO()->u_View = cam->GetView();
-		m_RenderLayer->GetUBO()->u_ViewPosition = cam->GetPosition();
-		m_RenderLayer->GetUBO()->u_LightPosition = m_LightData.lightPos;
-		m_RenderLayer->GetUBO()->u_LightColor = m_LightData.lightColor;
+		m_RenderLayer->GetUBO()->u_ViewPosition = glm::vec4(cam->GetPosition(), 0.0f);
+		for (int i = 0; i < 4; i++) {
+			m_RenderLayer->GetUBO()->u_LightPosition[i] = m_LightData.lightPosition[i];
+			m_RenderLayer->GetUBO()->u_LightColor[i] = m_LightData.lightColor[i];
+		}
 		if (m_Update) {
 			float nearPlane = 0.1f, farPlane = 100.0f;
 			glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
-			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(m_LightData.lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_LightData.lightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 	}
 
@@ -87,6 +89,9 @@ namespace Aho {
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// setting entity id here
+			mat->SetUniform("u_AO", 0.1f);
+			mat->SetUniform("u_Metalic", 0.2f);
+			mat->SetUniform("u_Roughness", 0.2f);
 			if (meshInfo->materialInfo.HasMaterial()) {
 				auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& albedo : meshInfo->materialInfo.Albedo) {

@@ -100,7 +100,7 @@ namespace Aho {
 		});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
-		std::string FileName = (currentPath / "ShaderSrc" / "Shader.glsl").string();
+		std::string FileName = (currentPath / "ShaderSrc" / "pbrShader.glsl").string();
 		auto shader = Shader::Create(FileName);
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		if (shader->IsCompiled()) {

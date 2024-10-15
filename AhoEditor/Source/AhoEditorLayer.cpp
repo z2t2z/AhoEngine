@@ -16,7 +16,8 @@ namespace Aho {
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "Shader.glsl");
+		//m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "Shader.glsl");
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -197,8 +198,23 @@ namespace Aho {
 					ImGui::DragFloat3("Translation", glm::value_ptr(translation), 1.0f);
 					ImGui::DragFloat3("Scale", glm::value_ptr(scale), 1.0f);
 					ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 1.0f); // wrong
+
+					if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
+						auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
+						ImGui::Separator();
+						ImGui::Text("Material properties:");
+						ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 1.0f);
+						ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
+						ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
+					}
 					ImGui::End();
 				}
+				else {
+					m_BlockClickingEvent = false;
+				}
+			}
+			else {
+				m_BlockClickingEvent = false;
 			}
 		}
 
@@ -210,7 +226,7 @@ namespace Aho {
 				std::string droppedString(droppedData, payload->DataSize);
 				AHO_TRACE("Payload accepted! {}", droppedString);
 				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString);
-				AHO_CORE_WARN("Pushing a AssetImportedEvent!");
+				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
 				m_EventManager->PushBack(event);
 			}
 			ImGui::EndDragDropTarget();
@@ -267,16 +283,18 @@ namespace Aho {
 		view.each([](auto entity, TagComponent& tag) {
 			ImGui::Text(tag.Tag.c_str());
 		});
-
 		ImGui::End();
 
-		ImGui::Begin("Properties");
-		//if (m_SelectionContext) {
-		//	DrawComponents(m_SelectionContext);
-		//}
+		ImGui::Begin("Light Properties");
 		auto lightData = m_LevelLayer->GetLightData();
-		ImGui::DragFloat3("Light Position", glm::value_ptr(lightData->lightPos), 0.25f);
-		ImGui::DragFloat3("Light Color", glm::value_ptr(lightData->lightColor), 0.25f);
+		for (int i = 0; i < 4; i++) {
+			ImGui::Text("Light %d", i + 1);
+			std::string lightPos = "Light Position " + std::to_string(i + 1);
+			std::string lightColor = "Light Color " + std::to_string(i + 1);
+			ImGui::DragFloat4(lightPos.c_str(), glm::value_ptr(lightData->lightPosition[i]), 0.1f);
+			ImGui::DragFloat4(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.1f);
+			ImGui::Separator();
+		}
 		ImGui::End();
 	}
 }

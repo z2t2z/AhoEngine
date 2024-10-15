@@ -35,6 +35,7 @@ namespace Aho {
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
 
+            isCursorValid = true; // ???
             if (!isCursorValid || !Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
                 Input::UnlockCursor();
                 return false;

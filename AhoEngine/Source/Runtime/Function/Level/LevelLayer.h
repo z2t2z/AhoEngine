@@ -8,8 +8,14 @@
 
 namespace Aho {
 	struct LightData {
-		glm::vec3 lightPos{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 lightColor{ 1.0f, 1.0f, 1.0f };
+		glm::vec4 lightPosition[4];
+		glm::vec4 lightColor[4];
+		LightData() {
+			for (int i = 0; i < 4; i++) {
+				lightPosition[i] = glm::vec4(0.0f);
+				lightColor[i] = glm::vec4(0.0f);
+			}
+		}
 	};
 
 	class LevelLayer : public Layer {
