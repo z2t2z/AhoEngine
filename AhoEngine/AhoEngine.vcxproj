@@ -666,6 +666,7 @@
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Input\WindowsInput.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp" />

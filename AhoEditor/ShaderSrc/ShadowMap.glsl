@@ -2,13 +2,13 @@
 #version 460 core
 layout(location = 0) in vec3 a_Position;
 
-layout(std140) uniform CameraData{
+layout(std140, binding = 0) uniform CameraData{
+	vec4 u_LightPosition[4];
+	vec4 u_LightColor[4];
 	mat4 u_View;
 	mat4 u_Projection;
 	mat4 u_LightViewMatrix; // ortho * view
 	vec4 u_ViewPosition;
-	vec4 u_LightPosition[4];
-	vec4 u_LightColor[4];
 };
 
 uniform mat4 u_Model;

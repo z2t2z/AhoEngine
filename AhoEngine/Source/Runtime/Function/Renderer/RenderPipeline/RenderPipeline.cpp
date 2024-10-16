@@ -37,7 +37,10 @@ namespace Aho {
 
 	void RenderPipeline::SortRenderPasses() {
 		std::sort(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* lhs, RenderPass* rhs) {
-			return lhs->GetRenderPassType() == RenderPassType::Depth;
+			if (lhs->GetRenderPassType() == RenderPassType::Depth) {
+				return true;
+			}
+			return false;
 		});
 		auto it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Final;

@@ -16,6 +16,7 @@ namespace Aho {
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		AHO_CORE_ASSERT(status, "Failed to initialize Glad!");
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
 		//glEnable(GL_CULL_FACE);    
 		//glCullFace(GL_BACK);       
 		//glFrontFace(GL_CCW);       

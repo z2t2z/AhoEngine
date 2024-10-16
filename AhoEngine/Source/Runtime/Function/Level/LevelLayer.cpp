@@ -59,9 +59,11 @@ namespace Aho {
 		//	m_RenderLayer->GetUBO()->u_LightColor[i] = m_LightData.lightColor[i];
 		//}
 		if (m_Update) {
-			float nearPlane = 0.1f, farPlane = 1000.0f;
-			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_LightData.lightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			//m_RenderLayer->GetUBO()->u_LightViewMatrix = cam->GetProjection() * cam->GetView();
+			float nearPlane = 0.1f, farPlane = 50.0f;
+			glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, nearPlane, farPlane);
+			auto pos = glm::vec3(m_RenderLayer->GetUBO()->u_LightPosition[0]);
+			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_RenderLayer->GetUBO()->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 	}
 
@@ -98,21 +100,13 @@ namespace Aho {
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
 				auto matEntity = entityManager->CreateEntity("subMesh");
-				for (const auto& albedo : meshInfo->materialInfo.Albedo) {
-					if (!textureCached.contains(albedo)) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo); // TODO: should be done in the resource layer!
-						tex->SetTextureType(TextureType::Diffuse);
-						textureCached[albedo] = tex;
+				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
+					if (!textureCached.contains(path)) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+						tex->SetTextureType(type);
+						textureCached[path] = tex;
 					}
-					mat->AddTexture(textureCached.at(albedo));
-				}
-				for (const auto& normal : meshInfo->materialInfo.Normal) {
-					if (!textureCached.contains(normal)) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal); // TODO: should be done in the resource layer!
-						tex->SetTextureType(TextureType::Normal);
-						textureCached[normal] = tex;
-					}
-					mat->AddTexture(textureCached.at(normal));
+					mat->AddTexture(textureCached.at(path));
 				}
 			}
 			renderDataAll.push_back(renderData);
@@ -120,5 +114,9 @@ namespace Aho {
 		}
 		/* TODO: Maybe check if success */
 		UploadRenderDataEventTrigger(renderDataAll);
+	}
+
+	void LevelLayer::LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset) {
+
 	}
 } // namespace Aho

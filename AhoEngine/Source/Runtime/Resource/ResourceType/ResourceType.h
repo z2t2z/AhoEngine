@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Runtime/Resource/UUID/UUID.h"
+#include "Runtime/Function/Renderer/Texture.h"
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,6 +19,22 @@ namespace Aho {
 		Vertex() { x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; }
 	};
 
+	constexpr int MAX_BONE = 4;
+	struct VertexSkeletal {
+		float x, y, z;			// position
+		float nx, ny, nz;		// normal
+		float tx, ty, tz;		// tangent
+		float btx, bty, btz;	// bitangent
+		float u, v;				// texture coordinates
+		int bones[MAX_BONE];
+		float weights[MAX_BONE];
+		VertexSkeletal() { 
+			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; 
+			memset(bones, -1, sizeof(bones)); 
+			memset(weights, 0, sizeof(weights)); 
+		}
+	};
+
 	struct TransformParam {
 		glm::vec3 Translation;
 		glm::vec3 Scale;
@@ -27,17 +44,14 @@ namespace Aho {
 			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
 			return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
 		}
-	}; // BIG TODO: Idk where this shoule be
+	}; // TODO
 
 	// For loading only
 	struct MaterialInfo {
-		std::vector<std::string> Albedo;
-		std::vector<std::string> Normal;
+		std::vector<std::pair<TextureType, std::string>> materials;
 		MaterialInfo() = default;
-		//MaterialInfo(const MaterialInfo& m); // ?
-		//MaterialInfo(MaterialInfo&& other) noexcept : Albedo(other.Albedo), Normal(other.Normal) {}
 		bool HasMaterial() {
-			return !Albedo.empty() || !Normal.empty();
+			return !materials.empty();
 		}
 	};
 
@@ -46,7 +60,7 @@ namespace Aho {
 		std::vector<uint32_t> indexBuffer;
 		bool hasNormal{ false };
 		bool hasUVs{ false };
-		MaterialInfo materialInfo;
+		MaterialInfo materialInfo; // to be removed
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
 			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) { }
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV)
@@ -54,53 +68,22 @@ namespace Aho {
 		}
 	};
 
-	/*
-		Asset can be created through:
-		1. Constructed using the data loaded from DCC
-		2. Reading .asset file from the disk
-	*/
-
-	class Asset {
-	public:
-		virtual ~Asset() = default;
-		virtual bool Load() = 0;
-		//virtual bool Save() = 0;
-		bool IsLoaded() { return m_IsLoaded; }
-		UUID GetUUID() { return m_UUID; }
-	protected:
-		UUID m_UUID;
-		std::string m_Path;
-		bool m_IsLoaded{ false };
+	struct BoneInfo {
+		int id;				// index in finalBoneMatrices
+		glm::mat4 offset;	// offset matrix transforms vertex from model space to bone space
 	};
 
-	class StaticMesh : public Asset {
-	public:
-		StaticMesh() = default;
-		StaticMesh(const std::string& path) {}
-		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh) : m_SubMesh(SubMesh) {}
-		virtual bool Load() override { return false; }
-		std::vector<std::shared_ptr<MeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
-		std::vector<std::shared_ptr<MeshInfo>>::iterator end() { return m_SubMesh.end(); }
-		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
-	private:
-		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
-	};
-
-	//class ShaderAsset : Asset {
-	//public:
-	//	ShaderAsset() = default;
-	//private:
-	//	std::shared_ptr<Shader> m_Shader;
-	//};
-
-	class MaterialAsset : public Asset {
-	public:
-		MaterialAsset() = default;
-		MaterialAsset(const std::string& path) {}
-		MaterialAsset(const MaterialInfo& materialInfo) : m_MaterialInfo(materialInfo) {}
-		virtual bool Load() override {}
-		MaterialInfo GetMaterialInfo() { return m_MaterialInfo; }
-	private:
-		MaterialInfo m_MaterialInfo;
+	struct SkeletalMeshInfo {
+		std::vector<VertexSkeletal> vertexBuffer;
+		std::vector<uint32_t> indexBuffer;
+		std::vector<BoneInfo> boneInfos;
+		uint32_t boneCounter{ 0u };
+		bool hasNormal{ false };
+		bool hasUVs{ false };
+		MaterialInfo materialInfo;
+		SkeletalMeshInfo(const std::vector<VertexSkeletal>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) {}
+		SkeletalMeshInfo(const std::vector<VertexSkeletal>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV)
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV) {}
 	};
 }

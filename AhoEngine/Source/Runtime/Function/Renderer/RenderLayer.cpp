@@ -56,6 +56,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo) {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		cmdBuffer->SetClearColor(glm::vec4(0.1f, 0.15f, 0.15f, 1.0f));
 		RenderPassDefault* debugPass = new RenderPassDefault();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
 			AHO_CORE_ASSERT(lastFBO, "Framebuffer is not set correctly in debug pass");
@@ -107,7 +108,7 @@ namespace Aho {
 		auto shader = Shader::Create(FileName);
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		if (shader->IsCompiled()) {
-			renderPass->SetShader(std::move(shader));
+			renderPass->SetShader(shader);
 		}
 		renderPass->SetRenderCommand(cmdBuffer);
 		FBTextureSpecification texSpecColor;
@@ -145,14 +146,12 @@ namespace Aho {
 		texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
 		texSpecDepth.internalFormat = FBInterFormat::Depth24;	// ......
 		texSpecDepth.dataType = FBDataType::Float;
-		texSpecDepth.wrapModeS = FBWrapMode::Clamp;
-		texSpecDepth.wrapModeT = FBWrapMode::Clamp;
+		texSpecDepth.wrapModeS = FBWrapMode::Repeat;
+		texSpecDepth.wrapModeT = FBWrapMode::Repeat;
 		texSpecDepth.filterModeMin = FBFilterMode::Nearest;
 		texSpecDepth.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(4096u, 4096u, { texSpecDepth });  // Hardcode fow now
+		FBSpecification fbSpec(2048, 2048, { texSpecDepth });  // Hardcode fow now
 		auto depthFBO = Framebuffer::Create(fbSpec);
-		//int id = depthFBO->GetDepthTexture()->GetTextureID();
-		//AHO_CORE_TRACE("depthFBO texture ID {}", id);
 		depthRenderPass->SetRenderTarget(depthFBO);
 		depthRenderPass->SetRenderPassType(RenderPassType::Depth);
 		return depthRenderPass;

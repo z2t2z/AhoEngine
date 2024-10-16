@@ -38,6 +38,7 @@ namespace Aho {
 		void SubmitRenderData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
+		void LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
 	private:
 		bool m_SimulateMode{ false };

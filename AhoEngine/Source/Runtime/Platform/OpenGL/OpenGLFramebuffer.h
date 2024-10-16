@@ -65,6 +65,6 @@ namespace Aho {
 		std::vector<uint32_t> m_ColorAttachments;
 	private:
 		std::vector<std::shared_ptr<Texture>> m_ColorAttachmentTex;
-		std::shared_ptr<Texture> m_DepthTex;
+		std::shared_ptr<Texture> m_DepthTex{ nullptr };
 	};
 }

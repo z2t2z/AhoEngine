@@ -40,7 +40,7 @@ namespace Aho {
 		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
 		virtual void SetClearFlags(ClearFlags flags) { m_ClearFlags = flags; }
 	private:
-		glm::vec4 m_ClearColor{ .5f, .2f, .3f, 1.0f };
+		glm::vec4 m_ClearColor{ 132.0f / 255.0f, 181.0f / 255.0f, 245.0f / 255.0f, 1.0f };
 		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
 	private:
 		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO)>> m_Commands;

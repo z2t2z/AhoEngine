@@ -2,6 +2,7 @@
 
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/Log/Log.h"
+#include "Runtime/Resource/Asset/Asset.h"
 #include "Runtime/Resource/Serializer/Serializer.h"
 #include "Runtime/Resource/ResourceType/ResourceType.h"
 #include "Runtime/Resource/AssetCreator/AssetCreator.h"
@@ -73,13 +74,12 @@ namespace Aho {
 			s_AssetPools[uuid] = res;
 			m_AssetPaths[path] = uuid;
 		}
-
 	private:
 		template<typename AssetType>
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
 			const auto& fileExt = path.extension().string();
 			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
-				assetOut = *(AssetCreater::MeshAssetCreater(path.string()));
+				assetOut = *(AssetCreator::MeshAssetCreater(path.string()));
 				return true;
 			}
 			AHO_CORE_ASSERT("Not supported yet");

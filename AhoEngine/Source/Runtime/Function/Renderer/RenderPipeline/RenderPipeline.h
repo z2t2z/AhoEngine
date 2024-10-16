@@ -23,8 +23,8 @@ namespace Aho {
 		bool m_DrawDebug{ true };
 		RenderPass* m_ResultPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
-		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
 		std::vector<RenderPass*> m_RenderPasses;	
+		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
 		std::vector<std::shared_ptr<RenderData>> m_DebugData;	// TODO: Temporary
 	};
 

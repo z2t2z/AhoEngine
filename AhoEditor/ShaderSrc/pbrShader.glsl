@@ -126,7 +126,7 @@ float CalShadow() {
 	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
 	float minDepth = texture(u_DepthMap, SS.xy).r;
 	float currDepth = SS.z;
-	return currDepth > minDepth + 0.005f ? 0.0f : 1.0f;
+	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
 }
 
 void DrawDebugInfo() {
@@ -137,19 +137,6 @@ void DrawDebugInfo() {
 		float((u_EntityID >> 16) & 0xFF) / 255.0f,      // B 
 		float((u_EntityID >> 24) & 0xFF) / 255.0f       // A
 	);
-
-	// vec3 DebugLightColor = vec3(100.0f, 100.0f, 100.0f);
-	// DebugLightColor /= 255.0f;
-	// float Radius = 1.0f;
-	// int lightCnt = 0;
-	// for (int i = 0; i < 4; i++) {
-	// 	if (length(v_Position - v_LightPosition[i]) < Radius) {
-	// 		lightCnt += 1;
-	// 	}       
-	// } 
-	// if (lightCnt > 0) {
-	// 	out_Color = vec4(DebugLightColor, 1.0f);
-	// }  
 }
 
 vec3 GetNormalFromMap() {
@@ -172,8 +159,6 @@ void main() {
 	float intensityScalor = 1.0f;
 	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
 	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
-	// Albedo = v_LightColor[0];
-	// vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb); 
 	vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
 	Normal = v_Normal;
 	vec3 viewDir = normalize(v_ViewPosition - v_Position);
@@ -191,7 +176,7 @@ void main() {
 		// Radiance per light source
 		vec3 halfWay = normalize(viewDir + lightDir);
 		float Distance = length(v_LightPosition[i] - v_Position);
-		float Attenuation = 1.0f / (Distance); // inverse-square law, more physically correct
+		float Attenuation = 1.0f / (Distance * Distance); // inverse-square law, more physically correct
 		vec3 Radiance = v_LightColor[i] * (1.0f - Attenuation);
 		// Cook-Torrance BRDF:
 		float NDF = GGX(Normal, halfWay, u_Roughness);
@@ -207,7 +192,7 @@ void main() {
 	}
 
 	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - u_AO);
-	vec3 Color = Ambient + Lo * (1.0f - 0.0f);
+	vec3 Color = Ambient + Lo * (1.0f - CalShadow());
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	out_Color = vec4(Color, 1.0f);

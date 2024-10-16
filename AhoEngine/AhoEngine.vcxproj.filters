@@ -1713,5 +1713,6 @@
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
   </ItemGroup>
 </Project>

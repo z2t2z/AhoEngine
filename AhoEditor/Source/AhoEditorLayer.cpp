@@ -164,7 +164,7 @@ namespace Aho {
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetRenderTarget()->GetLastColorAttachment();
 		}
-		ImGui::Image((void*)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((ImTextureID)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [MouseX, MouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
@@ -256,9 +256,8 @@ namespace Aho {
 		const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
 		auto [ww, wh] = ImGui::GetWindowSize();
 		auto [wx, wy] = ImGui::GetWindowPos();
-		auto lightData = m_LevelLayer->GetLightData();
 		for (int i = 0; i < 1; i++) {
-			auto p = proj * view * lightData->lightPosition[i];
+			auto p = proj * view * m_LevelLayer->GetUBO()->u_LightPosition[i];
 			if (p.w <= 0.0f) {
 				continue;
 			}
@@ -333,7 +332,7 @@ namespace Aho {
 			//ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.01f);
 			auto& pos = m_LevelLayer->GetUBO()->u_LightPosition[0];
 			ImGui::DragFloat3(lightPos.c_str(), glm::value_ptr(pos), 0.01f);
-			ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(m_LevelLayer->GetUBO()->u_LightColor[0]), 0.01f);
+			ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(m_LevelLayer->GetUBO()->u_LightColor[0]), 0.01f, 0.0f, 1.0f);
 			ImGui::Separator();
 		}
 		ImGui::End();
