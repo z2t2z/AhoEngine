@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 namespace Aho {
-    static uint32_t TIME_LAG = 20u;
+    constexpr uint32_t TIME_LAG = 5000000u;
     // TODO: Support more file extensions
 	class FileWatcher {
         using FileChangedCallback = std::function<bool(FileChangedEvent&)>;
@@ -38,6 +38,7 @@ namespace Aho {
 
         bool IsFileContentChanged(const std::filesystem::path& FilePath) {
             std::time_t newModifiedTime = std::filesystem::last_write_time(FilePath).time_since_epoch().count();
+            //AHO_CORE_TRACE("{}", newModifiedTime);
             if (newModifiedTime - m_FileChangedTime[FilePath] > TIME_LAG) {
                 m_FileChangedTime[FilePath] = newModifiedTime;
                 return true;

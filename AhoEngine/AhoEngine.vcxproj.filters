@@ -228,10 +228,10 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderLayer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
@@ -1712,5 +1712,6 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
   </ItemGroup>
 </Project>

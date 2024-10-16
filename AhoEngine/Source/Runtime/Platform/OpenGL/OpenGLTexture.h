@@ -9,7 +9,7 @@ namespace Aho {
 	public:
 		OpenGLTexture2D() = default;
 		OpenGLTexture2D(const TextureSpecification& specification);
-		OpenGLTexture2D(const std::string& path, bool flipOnLoad = false);
+		OpenGLTexture2D(const std::string& path, bool flipOnLoad = false, bool grayScale = true);
 		virtual ~OpenGLTexture2D();
 		virtual const TextureSpecification& GetSpecification() const override { return m_Specification; }
 		virtual void Reload(const std::string& path) {}

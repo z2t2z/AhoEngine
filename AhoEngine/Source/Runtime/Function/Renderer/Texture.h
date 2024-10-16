@@ -58,7 +58,7 @@ namespace Aho {
 	class Texture2D : public Texture {
 	public:
 		static std::shared_ptr<Texture2D> Create(const TextureSpecification& specification);
-		static std::shared_ptr<Texture2D> Create(const std::string& path, bool FilpOnLoad = false);
+		static std::shared_ptr<Texture2D> Create(const std::string& path, bool filpOnLoad = false, bool grayScale = false);
 		static std::shared_ptr<Texture2D> Create();
 	};
 

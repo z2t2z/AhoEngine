@@ -16,8 +16,8 @@ namespace Aho {
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		//m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "Shader.glsl");
 		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");
+		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string(), false);
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -25,7 +25,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
-		m_CameraManager->Update(deltaTime, m_CursorInViewport);
+		m_CameraManager->Update(deltaTime, m_CursorInViewport && m_IsViewportFocused);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
 	}
@@ -102,7 +102,8 @@ namespace Aho {
 			ImGui::End();
 		}
 		if (!m_FBO) {
-			m_FBO = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget();
+			// TODO: when setting up renderLayer, fires an event
+			m_FBO = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetRenderTarget();
 		}
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
@@ -114,7 +115,7 @@ namespace Aho {
 		if (int(e.GetEventType()) & int(EventType::MouseButtonPressed)) {
 			e.SetHandled();
 			auto ee = (MouseButtonPressedEvent*)&e;
-			if (!m_BlockClickingEvent && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
+			if (m_IsViewportFocused && !m_BlockClickingEvent && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
 				m_PickObject = true;
 			}
 		}
@@ -126,7 +127,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->SetShader(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->SetShader(newShader);
 				}
 			}
 		}
@@ -139,16 +140,18 @@ namespace Aho {
 		auto spec = m_FBO->GetSpecification();
 		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
 			m_FBO->Resize(width, height/* - ImGui::GetFrameHeight() */);
-			m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(2)->GetRenderTarget()->Resize(width, height);
+			if (m_DrawDepthMap) {
+				m_Renderer->GetCurrentRenderPipeline()->GetDebugPass()->GetRenderTarget()->Resize(width, height);
+			}
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(2)->GetRenderTarget()->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetDebugPass()->GetRenderTarget()->GetLastColorAttachment();
 		}
 		else {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->GetRenderTarget()->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetRenderTarget()->GetLastColorAttachment();
 		}
 		ImGui::Image((void*)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
@@ -156,7 +159,8 @@ namespace Aho {
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
 		int x = MouseX - windowPosX, y = MouseY - windowPosY - ImGui::GetFrameHeight(); // mouse position in the current window
 		y = spec.Height - y;
-		if (x >= 0 && y >= 0 && x < width && y < height) {
+		m_IsViewportFocused = ImGui::IsWindowFocused();
+		if (m_IsViewportFocused && x >= 0 && y >= 0 && x < width && y < height) {
 			m_CursorInViewport = true;
 			if (m_PickObject && !m_DrawDepthMap) {
 				m_PickObject = false;
@@ -166,6 +170,7 @@ namespace Aho {
 			}
 		}
 		else {
+			//m_PickData = 998244353u;
 			m_CursorInViewport = false;
 		}
 
@@ -231,7 +236,32 @@ namespace Aho {
 			}
 			ImGui::EndDragDropTarget();
 		}
+		DrawLightIcons();
+
 		ImGui::End();
+	}
+
+	void AhoEditorLayer::DrawLightIcons() {
+		const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
+		const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
+		auto [ww, wh] = ImGui::GetWindowSize();
+		auto [wx, wy] = ImGui::GetWindowPos();
+		auto lightData = m_LevelLayer->GetLightData();
+		for (int i = 0; i < 1; i++) {
+			auto p = proj * view * lightData->lightPosition[i];
+			if (p.w <= 0.0f) {
+				continue;
+			}
+			auto NDC = p / p.w;
+			auto ss = NDC * 0.5f + 0.5f;
+			if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
+				ImVec2 pos{ wx + ww * ss.x, wy + wh * (1.0f - ss.y)};
+				ImGui::SetCursorScreenPos(pos);
+				ImVec2 iconSize{ 96, 96 };
+				//GLuint id = m_LightIcon;
+				ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{0, 1}, ImVec2{1, 0});
+			}
+		}
 	}
 	
 	namespace fs = std::filesystem;
@@ -289,8 +319,8 @@ namespace Aho {
 		auto lightData = m_LevelLayer->GetLightData();
 		for (int i = 0; i < 4; i++) {
 			ImGui::Text("Light %d", i + 1);
-			std::string lightPos = "Light Position " + std::to_string(i + 1);
-			std::string lightColor = "Light Color " + std::to_string(i + 1);
+			std::string lightPos = "Light Position ";// +std::to_string(i + 1);
+			std::string lightColor = "Light Color ";// +std::to_string(i + 1);
 			ImGui::DragFloat4(lightPos.c_str(), glm::value_ptr(lightData->lightPosition[i]), 0.1f);
 			ImGui::DragFloat4(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.1f);
 			ImGui::Separator();

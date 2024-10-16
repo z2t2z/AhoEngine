@@ -30,12 +30,11 @@ namespace Aho {
         bool Update(float deltaTime, bool isCursorValid) {
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
-            glm::vec2 delta = 0.002f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
+            glm::vec2 delta = deltaTime * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
 
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
 
-            isCursorValid = true; // ???
             if (!isCursorValid || !Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
                 Input::UnlockCursor();
                 return false;
@@ -60,15 +59,15 @@ namespace Aho {
                 cam->MoveForward(deltaTime);
                 //movement.z -= 1.0f;
             }
-            else if (Input::IsKeyPressed(AHO_KEY_S)) {
+            if (Input::IsKeyPressed(AHO_KEY_S)) {
                 cam->MoveBackward(deltaTime);
                 //movement.z += 1.0f;
             }
-            else if (Input::IsKeyPressed(AHO_KEY_A)) {
+            if (Input::IsKeyPressed(AHO_KEY_A)) {
                 cam->MoveLeft(deltaTime);
                 //movement.x -= 1.0f;
             }
-            else if (Input::IsKeyPressed(AHO_KEY_D)) {
+            if (Input::IsKeyPressed(AHO_KEY_D)) {
                 cam->MoveRight(deltaTime);
                 //movement.x += 1.0f;
             }

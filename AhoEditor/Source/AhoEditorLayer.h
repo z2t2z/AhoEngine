@@ -18,6 +18,7 @@ namespace Aho {
 		void DrawContentBrowserPanel();
 		void DrawSceneHierarchyPanel();
 		void DrawViewport();
+		void DrawLightIcons();
 	private:
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
@@ -31,6 +32,8 @@ namespace Aho {
 		Entity m_SelectedObject;
 		float m_DeltaTime{ 0.0f };
 	private:
+		//std::unique_ptr<Texture2D> m_LightIcon; ??
+		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
 		std::shared_ptr<Framebuffer> m_FBO{ nullptr };
 		FileWatcher m_FileWatcher;
 		LevelLayer* m_LevelLayer{ nullptr };

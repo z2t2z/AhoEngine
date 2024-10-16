@@ -44,11 +44,11 @@ namespace Aho {
 	}
 
 	// Big TODO
-	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool flipOnLoad) : m_Path(path) {
+	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool flipOnLoad, bool grayScale) : m_Path(path) {
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(flipOnLoad);
 		stbi_uc* data = nullptr;
-		data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+		data = stbi_load(path.c_str(), &width, &height, &channels, grayScale);
 		if (data) {
 			m_IsLoaded = true;
 			m_Width = width;
@@ -62,10 +62,14 @@ namespace Aho {
 				internalFormat = GL_RGB8;
 				dataFormat = GL_RGB;
 			}
+			else if (channels == 1) {
+				internalFormat = GL_R8; 
+				dataFormat = GL_RED;    
+			}
 			m_InternalFormat = internalFormat;
 			m_DataFormat = dataFormat;
 
-			AHO_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+			AHO_CORE_ASSERT(internalFormat != 0 && dataFormat != 0, "Format not supported!");
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
 			glTextureStorage2D(m_TextureID, 1, internalFormat, m_Width, m_Height);

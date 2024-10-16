@@ -8,7 +8,7 @@ namespace Aho {
 	class RenderLayer : public Layer {
 	public:
 		RenderLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
-		virtual ~RenderLayer() { delete m_Renderer; }
+		~RenderLayer() { delete m_Renderer; }
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		void OnUpdate(float deltaTime) override;

@@ -19,9 +19,9 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnUpdate(float deltaTime) {
-		m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(0)->BindSceneDataUBO(m_UBO);
-		m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(1)->BindSceneDataUBO(m_UBO);
-		//m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(2)->BindSceneDataUBO(m_UBO);
+		for (const auto& pass : *(m_Renderer->GetCurrentRenderPipeline())) {
+			pass->BindSceneDataUBO(m_UBO);
+		}
 		m_Renderer->Render();
 	}
 
@@ -92,8 +92,11 @@ namespace Aho {
 	RenderPass* RenderLayer::SetupMainPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
+			uint32_t texOffset = 0u;
+			lastFBO->GetDepthTexture()->Bind(texOffset);
+			shader->SetInt("u_DepthMap", texOffset++);
 			for (const auto& data : renderData) {
-				data->Bind(shader);
+				data->Bind(shader, texOffset);
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
@@ -120,6 +123,7 @@ namespace Aho {
 		FBSpecification fbSpec(1280u, 720u, { texSpecColor, texSpecColor, texSpecDepth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		renderPass->SetRenderTarget(FBO);
+		renderPass->SetRenderPassType(RenderPassType::Final);
 		return renderPass;
 	}
 
@@ -145,11 +149,12 @@ namespace Aho {
 		texSpecDepth.wrapModeT = FBWrapMode::Clamp;
 		texSpecDepth.filterModeMin = FBFilterMode::Nearest;
 		texSpecDepth.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1024u, 1024u, { texSpecDepth });  // Hardcode fow now
+		FBSpecification fbSpec(4096u, 4096u, { texSpecDepth });  // Hardcode fow now
 		auto depthFBO = Framebuffer::Create(fbSpec);
-		int id = depthFBO->GetDepthTexture()->GetTextureID();
-		AHO_CORE_TRACE("depthFBO texture ID {}", id);
+		//int id = depthFBO->GetDepthTexture()->GetTextureID();
+		//AHO_CORE_TRACE("depthFBO texture ID {}", id);
 		depthRenderPass->SetRenderTarget(depthFBO);
+		depthRenderPass->SetRenderPassType(RenderPassType::Depth);
 		return depthRenderPass;
 	}
 }

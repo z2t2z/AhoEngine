@@ -10,17 +10,19 @@ layout(location = 4) in vec3 a_Bitangent;
 layout(std140) uniform CameraData{
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_Model0; // deprecated!
+	mat4 u_LightViewMatrix; // ortho * view
 	vec4 u_ViewPosition;
 	vec4 u_LightPosition[4];
 	vec4 u_LightColor[4];
 };
 
 out vec3 v_Position;
+out vec4 v_PositionLightSpace;
 out vec2 v_TexCoords;
 out vec3 v_ViewPosition;
 out vec3 v_LightPosition[4];
 out vec3 v_LightColor[4];
+out vec3 v_Normal;
 
 uniform mat4 u_Model;
 
@@ -32,8 +34,9 @@ void main() {
 	mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
 	vec3 T = normalize(normalMatrix * a_Tangent);
 	vec3 N = normalize(normalMatrix * a_Normal);
-	T = normalize(T - dot(T, N) * N);
-	vec3 B = cross(N, T);
+	vec3 B = normalize(normalMatrix * a_Bitangent);
+	// T = normalize(T - dot(T, N) * N);
+	// vec3 B = cross(N, T);
 
 	mat3 TBN = transpose(mat3(T, B, N));
 	for (int i = 0; i < 4; i++) {
@@ -41,6 +44,7 @@ void main() {
 		v_LightPosition[i] = TBN * lightPos;
 		v_LightColor[i] = vec3(u_LightColor[i].r, u_LightColor[i].g, u_LightColor[i].b);
 	}
+	v_PositionLightSpace = u_LightViewMatrix * vec4(v_Position, 1.0f);
 	v_ViewPosition = TBN * vec3(u_ViewPosition);
 	v_Position = TBN * v_Position;
 }
@@ -52,14 +56,17 @@ layout(location = 0) out vec4 out_EntityColor;
 layout(location = 1) out vec4 out_Color;
 
 in vec3 v_Position;
+in vec4 v_PositionLightSpace;
 in vec2 v_TexCoords;
 in vec3 v_ViewPosition;
 in vec3 v_LightPosition[4];
 in vec3 v_LightColor[4];
+in vec3 v_Normal;
 
 uniform uint u_EntityID;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;
+uniform sampler2D u_DepthMap;
 
 uniform float u_Metalic;
 uniform float u_Roughness;
@@ -113,10 +120,58 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 	return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
+float CalShadow() {
+	vec3 NDC = v_PositionLightSpace.xyz / v_PositionLightSpace.w; // [-1, 1]
+	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
+	float minDepth = texture(u_DepthMap, SS.xy).r;
+	float currDepth = SS.z;
+	return currDepth > minDepth + 0.005f ? 0.0f : 1.0f;
+}
+
+void DrawDebugInfo() {
+	// EntityColor for selection
+	out_EntityColor = vec4(
+		float(u_EntityID & 0xFF) / 255.0f,              // R  
+		float((u_EntityID >> 8) & 0xFF) / 255.0f,       // G
+		float((u_EntityID >> 16) & 0xFF) / 255.0f,      // B 
+		float((u_EntityID >> 24) & 0xFF) / 255.0f       // A
+	);
+
+	// vec3 DebugLightColor = vec3(100.0f, 100.0f, 100.0f);
+	// DebugLightColor /= 255.0f;
+	// float Radius = 1.0f;
+	// int lightCnt = 0;
+	// for (int i = 0; i < 4; i++) {
+	// 	if (length(v_Position - v_LightPosition[i]) < Radius) {
+	// 		lightCnt += 1;
+	// 	}       
+	// } 
+	// if (lightCnt > 0) {
+	// 	out_Color = vec4(DebugLightColor, 1.0f);
+	// }  
+}
+
+vec3 GetNormalFromMap() {
+    vec3 tangentNormal = texture(u_Normal, v_TexCoords).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(v_Position);
+    vec3 Q2  = dFdy(v_Position);
+    vec2 st1 = dFdx(v_TexCoords);
+    vec2 st2 = dFdy(v_TexCoords);
+
+    vec3 N   = normalize(v_Normal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
+
 void main() {
 	float intensityScalor = 1.0f;
 	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
-	vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb);
+	// vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb); 
+	vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
 	vec3 viewDir = normalize(v_ViewPosition - v_Position);
 
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
@@ -126,14 +181,14 @@ void main() {
 	for (int i = 0; i < 4; i++) {
 		// Radiance per light source
 		vec3 lightDir = normalize(v_LightPosition[i] - v_Position);
-		vec3 halfWay = normalize(lightDir + viewDir);
+		vec3 halfWay = normalize(viewDir + lightDir);
 		float Distance = length(v_LightPosition[i] - v_Position);
 		float Attenuation = 1.0f / (Distance * Distance); // inverse-square law, more physically correct
 		vec3 Radiance = v_LightColor[i] * Attenuation;
 		// Cook-Torrance BRDF:
 		float NDF = GGX(Normal, halfWay, u_Roughness);
 		float G = GeometrySmith(Normal, v_ViewPosition, lightDir, u_Roughness);
-		vec3 F = FresnelSchlick(max(dot(halfWay, viewDir), 0.0), F0);
+		vec3 F = FresnelSchlick(max(dot(halfWay, viewDir), 0.0f), F0);
 		vec3 kS = F;
 		vec3 kD = vec3(1.0f) - kS;
 		kD *= 1.0f - u_Metalic;
@@ -145,15 +200,9 @@ void main() {
 	}
 
 	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - u_AO);
-	vec3 Color = Ambient + Lo;
-	Color = Color / (Color + vec3(1.0f));
-	Color = pow(Color, vec3(1.0f / 2.2f)); // gamma correction
+	vec3 Color = Ambient + Lo * (1.0f - 0.0f);
+	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
+	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	out_Color = vec4(Color, 1.0f);
-
-	out_EntityColor = vec4(
-		float(u_EntityID & 0xFF) / 255.0f,              // R  
-		float((u_EntityID >> 8) & 0xFF) / 255.0f,       // G
-		float((u_EntityID >> 16) & 0xFF) / 255.0f,      // B 
-		float((u_EntityID >> 24) & 0xFF) / 255.0f       // A
-	);
+	DrawDebugInfo();
 }

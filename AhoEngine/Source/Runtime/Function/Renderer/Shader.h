@@ -17,17 +17,6 @@ namespace Aho {
 	};
 
 	// TODO: For now this is hardcoded for every shader
-	//struct alignas(16) UBO {
-	//	glm::mat4 u_View;
-	//	glm::mat4 u_Projection;
-	//	glm::mat4 u_LightViewMatrix;
-	//	glm::vec3 u_ViewPosition;
-	//	float _padding0; // won't be used
-	//	glm::vec3 u_LightPosition;
-	//	float _padding1; // won't be used
-	//	glm::vec3 u_LightColor;
-	//	float _padding2; // won't be used
-	//};
 	struct alignas(16) UBO {
 		glm::mat4 u_View;
 		glm::mat4 u_Projection;

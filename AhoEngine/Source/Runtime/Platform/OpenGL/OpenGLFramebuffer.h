@@ -22,7 +22,9 @@ namespace Aho {
 		virtual const std::string& GetPath() const override { return "error"; }
 		virtual void SetData(void* data, uint32_t size) override {}
 		virtual bool IsLoaded() const override { return true; }
-		virtual bool operator==(const Texture& other) const override { return m_TextureID == other.GetTextureID(); }
+		virtual bool operator==(const Texture& other) const override { 
+			return m_TextureID == other.GetTextureID(); 
+		}
 	private:
 		uint32_t m_TextureID{ 0u };
 	};

@@ -60,7 +60,7 @@ namespace Aho {
 		}
 		if (m_Update) {
 			float nearPlane = 0.1f, farPlane = 100.0f;
-			glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
+			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
 			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_LightData.lightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 	}
@@ -92,6 +92,8 @@ namespace Aho {
 			mat->SetUniform("u_AO", 0.1f);
 			mat->SetUniform("u_Metalic", 0.2f);
 			mat->SetUniform("u_Roughness", 0.2f);
+			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
+			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
 				auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& albedo : meshInfo->materialInfo.Albedo) {
@@ -110,8 +112,6 @@ namespace Aho {
 						// TODO: Cache the loaded texture
 					}
 				}
-				renderData->SetMaterial(mat);
-				entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			}
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
