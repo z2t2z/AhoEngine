@@ -17,13 +17,20 @@ namespace Aho {
 	};
 
 	// TODO: For now this is hardcoded for every shader
-	struct alignas(16) UBO {
+	struct UBO {
+		//glm::vec4 u_LightPosition{ 0.0f };
+		//glm::vec4 u_LightColor{ 0.0f };
+		UBO() {
+			for (int i = 0; i < 4; i++) {
+				u_LightPosition[i] = u_LightColor[i] = glm::vec4(0.0f);
+			}
+		}
+		glm::vec4 u_LightPosition[4];
+		glm::vec4 u_LightColor[4];
 		glm::mat4 u_View;
 		glm::mat4 u_Projection;
 		glm::mat4 u_LightViewMatrix;
-		glm::vec4 u_ViewPosition; // for memory alignments
-		glm::vec4 u_LightPosition[4];
-		glm::vec4 u_LightColor[4];
+		glm::vec4 u_ViewPosition{ 0.0f }; // for memory alignments
 	};
 
 	class Shader {

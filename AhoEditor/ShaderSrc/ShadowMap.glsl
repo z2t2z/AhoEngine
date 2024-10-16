@@ -5,13 +5,10 @@ layout(location = 0) in vec3 a_Position;
 layout(std140) uniform CameraData{
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_LightViewMatrix;
-	vec3 u_ViewPosition;
-	float padding0;         // 4 bytes (for alignment)
-	vec3 u_LightPosition;
-	float padding1;         // 4 bytes (for alignment)
-	vec3 u_LightColor;
-	float padding2;         // 4 bytes (for alignment)
+	mat4 u_LightViewMatrix; // ortho * view
+	vec4 u_ViewPosition;
+	vec4 u_LightPosition[4];
+	vec4 u_LightColor[4];
 };
 
 uniform mat4 u_Model;

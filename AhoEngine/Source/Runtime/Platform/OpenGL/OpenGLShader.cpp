@@ -218,7 +218,7 @@ namespace Aho {
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(UBO), nullptr, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		m_BindingPoint = g_BindingPoint;
-		g_BindingPoint++;
+		//g_BindingPoint += 10;
 		glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint, m_UBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}

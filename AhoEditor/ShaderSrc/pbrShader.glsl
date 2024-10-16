@@ -7,13 +7,13 @@ layout(location = 2) in vec2 a_TexCoords;
 layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec3 a_Bitangent;
 
-layout(std140) uniform CameraData{
+layout(std140, binding = 0) uniform CameraData{
+	vec4 u_LightPosition[4];
+	vec4 u_LightColor[4];
 	mat4 u_View;
 	mat4 u_Projection;
 	mat4 u_LightViewMatrix; // ortho * view
 	vec4 u_ViewPosition;
-	vec4 u_LightPosition[4];
-	vec4 u_LightColor[4];
 };
 
 out vec3 v_Position;
@@ -37,8 +37,9 @@ void main() {
 	vec3 B = normalize(normalMatrix * a_Bitangent);
 	// T = normalize(T - dot(T, N) * N);
 	// vec3 B = cross(N, T);
-
+	v_Normal = a_Normal;
 	mat3 TBN = transpose(mat3(T, B, N));
+	TBN = mat3(1.0f);
 	for (int i = 0; i < 4; i++) {
 		vec3 lightPos = vec3(u_LightPosition[i].r, u_LightPosition[i].g, u_LightPosition[i].b);
 		v_LightPosition[i] = TBN * lightPos;
@@ -170,8 +171,11 @@ vec3 GetNormalFromMap() {
 void main() {
 	float intensityScalor = 1.0f;
 	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
+	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
+	// Albedo = v_LightColor[0];
 	// vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb); 
 	vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
+	Normal = v_Normal;
 	vec3 viewDir = normalize(v_ViewPosition - v_Position);
 
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
@@ -179,12 +183,16 @@ void main() {
 
 	vec3 Lo = vec3(0.0f);
 	for (int i = 0; i < 4; i++) {
-		// Radiance per light source
 		vec3 lightDir = normalize(v_LightPosition[i] - v_Position);
+		float NdotL = max(dot(Normal, lightDir), 0.0f);
+		if (NdotL < 0.0f) {
+			continue;
+		}
+		// Radiance per light source
 		vec3 halfWay = normalize(viewDir + lightDir);
 		float Distance = length(v_LightPosition[i] - v_Position);
-		float Attenuation = 1.0f / (Distance * Distance); // inverse-square law, more physically correct
-		vec3 Radiance = v_LightColor[i] * Attenuation;
+		float Attenuation = 1.0f / (Distance); // inverse-square law, more physically correct
+		vec3 Radiance = v_LightColor[i] * (1.0f - Attenuation);
 		// Cook-Torrance BRDF:
 		float NDF = GGX(Normal, halfWay, u_Roughness);
 		float G = GeometrySmith(Normal, v_ViewPosition, lightDir, u_Roughness);
@@ -195,7 +203,6 @@ void main() {
 		vec3 Numerator = NDF * G * F;
 		float Denominator = 4.0f * max(dot(Normal, viewDir), 0.0f) * max(dot(Normal, lightDir), 0.0f) + 0.0001f;
 		vec3 Specular = Numerator / Denominator;
-		float NdotL = max(dot(Normal, lightDir), 0.0f);
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 
@@ -204,5 +211,5 @@ void main() {
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	out_Color = vec4(Color, 1.0f);
-	DrawDebugInfo();
+	DrawDebugInfo();   
 }

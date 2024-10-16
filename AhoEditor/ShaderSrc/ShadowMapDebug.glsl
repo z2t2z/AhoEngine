@@ -25,5 +25,4 @@ void main() {
     float depth = texture(u_DepthMap, TexCoords).r; // [0, 1] 
      //depth = (2.0 * u_Near * u_Far) / (u_Far + u_Near - depth * (u_Far - u_Near));
     color = vec4(vec3(depth * depth), 1.0f); // assumue a orthographic projection is used for now
-    //depth = depth * 2.0f - 1.0f; // [-1, 1]
 }

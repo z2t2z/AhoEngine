@@ -17,7 +17,7 @@ namespace Aho {
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");
-		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string(), false);
+		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -31,7 +31,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
-		// Dock space settings
+		// Dock space settings and some basic settings
 		{
 			// Dockspace
 			static bool opt_fullscreen = true;
@@ -75,6 +75,8 @@ namespace Aho {
 				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 			}
 
+			static bool camSpeed = false;
+			static bool sens = false;
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
 					// Disabling fullscreen would allow the window to be moved to the front of other windows,
@@ -83,6 +85,12 @@ namespace Aho {
 					ImGui::MenuItem("Padding", NULL, &opt_padding);
 					ImGui::Separator();
 					ImGui::MenuItem("DebugView", NULL, &m_DrawDepthMap);
+					if (ImGui::BeginMenu("Camera Options")) {
+						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
+						ImGui::SliderFloat("Camera Speed", &m_CameraManager->GetSpeed(), 0.0f, 10.0f);
+						ImGui::EndMenu();
+					}
+
 					ImGui::Separator();
 					if (ImGui::MenuItem("Flag: NoDockingOverCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingOverCentralNode) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingOverCentralNode; }
 					if (ImGui::MenuItem("Flag: NoDockingSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingSplit) != 0)) { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingSplit; }
@@ -108,6 +116,8 @@ namespace Aho {
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
 		DrawViewport();
+
+		//ImGui::ShowDemoWindow();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
@@ -137,9 +147,10 @@ namespace Aho {
 	void AhoEditorLayer::DrawViewport() {
 		ImGui::Begin("Viewport");
 		auto [width, height] = ImGui::GetWindowSize();
-		auto spec = m_FBO->GetSpecification();
+		auto fbo = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetRenderTarget();
+		auto spec = fbo->GetSpecification();
 		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
-			m_FBO->Resize(width, height/* - ImGui::GetFrameHeight() */);
+			fbo->Resize(width, height/* - ImGui::GetFrameHeight() */);
 			if (m_DrawDepthMap) {
 				m_Renderer->GetCurrentRenderPipeline()->GetDebugPass()->GetRenderTarget()->Resize(width, height);
 			}
@@ -164,13 +175,12 @@ namespace Aho {
 			m_CursorInViewport = true;
 			if (m_PickObject && !m_DrawDepthMap) {
 				m_PickObject = false;
-				m_FBO->Bind();
-				m_PickData = m_FBO->ReadPixel(0, x, y);
-				m_FBO->Unbind();
+				fbo->Bind();
+				m_PickData = fbo->ReadPixel(0, x, y);
+				fbo->Unbind();
 			}
 		}
 		else {
-			//m_PickData = 998244353u;
 			m_CursorInViewport = false;
 		}
 
@@ -258,7 +268,6 @@ namespace Aho {
 				ImVec2 pos{ wx + ww * ss.x, wy + wh * (1.0f - ss.y)};
 				ImGui::SetCursorScreenPos(pos);
 				ImVec2 iconSize{ 96, 96 };
-				//GLuint id = m_LightIcon;
 				ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{0, 1}, ImVec2{1, 0});
 			}
 		}
@@ -292,7 +301,6 @@ namespace Aho {
 
 	void AhoEditorLayer::DrawSceneHierarchyPanel() {
 		ImGui::Begin("Scene Hierarchy");
-		//auto [width, height] = ImGui::GetWindowSize();
 		auto scene = m_LevelLayer->GetCurrentLevel();
 		if (!scene) {
 			ImGui::End();
@@ -317,12 +325,15 @@ namespace Aho {
 
 		ImGui::Begin("Light Properties");
 		auto lightData = m_LevelLayer->GetLightData();
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 1; i++) {
 			ImGui::Text("Light %d", i + 1);
 			std::string lightPos = "Light Position ";// +std::to_string(i + 1);
 			std::string lightColor = "Light Color ";// +std::to_string(i + 1);
-			ImGui::DragFloat4(lightPos.c_str(), glm::value_ptr(lightData->lightPosition[i]), 0.1f);
-			ImGui::DragFloat4(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.1f);
+			//ImGui::DragFloat3(lightPos.c_str(), glm::value_ptr(lightData->lightPosition[i]), 0.01f);
+			//ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.01f);
+			auto& pos = m_LevelLayer->GetUBO()->u_LightPosition[0];
+			ImGui::DragFloat3(lightPos.c_str(), glm::value_ptr(pos), 0.01f);
+			ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(m_LevelLayer->GetUBO()->u_LightColor[0]), 0.01f);
 			ImGui::Separator();
 		}
 		ImGui::End();

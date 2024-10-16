@@ -17,6 +17,7 @@ namespace Aho {
         Runtime
     };
 
+    // TODO: Big temporary
     class CameraManager {
     public:
         CameraManager() {
@@ -30,7 +31,7 @@ namespace Aho {
         bool Update(float deltaTime, bool isCursorValid) {
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
-            glm::vec2 delta = deltaTime * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
+            glm::vec2 delta = m_Sensitivity / 1000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
 
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
@@ -56,19 +57,19 @@ namespace Aho {
             // Handle WASD movement
             glm::vec3 movement(0.0f, 0.0f, 0.0f);
             if (Input::IsKeyPressed(AHO_KEY_W)) {
-                cam->MoveForward(deltaTime);
+                cam->MoveForward(deltaTime * m_Speed * 10.0f);
                 //movement.z -= 1.0f;
             }
             if (Input::IsKeyPressed(AHO_KEY_S)) {
-                cam->MoveBackward(deltaTime);
+                cam->MoveBackward(deltaTime * m_Speed * 10.0f);
                 //movement.z += 1.0f;
             }
             if (Input::IsKeyPressed(AHO_KEY_A)) {
-                cam->MoveLeft(deltaTime);
+                cam->MoveLeft(deltaTime * m_Speed * 10.0f);
                 //movement.x -= 1.0f;
             }
             if (Input::IsKeyPressed(AHO_KEY_D)) {
-                cam->MoveRight(deltaTime);
+                cam->MoveRight(deltaTime * m_Speed * 10.0f);
                 //movement.x += 1.0f;
             }
             //GetMainEditorCamera()->Update(deltaTime, movement);
@@ -76,8 +77,11 @@ namespace Aho {
         }
 
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }
-
+        float& GetSensitivity() { return m_Sensitivity; }
+        float& GetSpeed() { return m_Speed; }
     private:
+        float m_Sensitivity{ 2.0f };
+        float m_Speed{ 5.0f };
         float m_LastMouseX = 0.0f, m_LastMouseY = 0.0f;
         std::vector<std::shared_ptr<Camera>> m_Cameras;
     };

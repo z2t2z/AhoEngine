@@ -32,10 +32,10 @@ namespace Aho {
 
         void Update(float deltaTime, glm::vec3& movement) override;
 
-        void MoveForward(float deltaTime)   override { m_Position += deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
-        void MoveBackward(float deltaTime)  override { m_Position -= deltaTime * m_Speed * m_Front; RecalculateViewMatrix(); }
-        void MoveLeft(float deltaTime)      override { m_Position -= deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
-        void MoveRight(float deltaTime)     override { m_Position += deltaTime * m_Speed * m_Right; RecalculateViewMatrix(); }
+        void MoveForward(float speed)   override { m_Position += speed * m_Front; RecalculateViewMatrix(); }
+        void MoveBackward(float speed)  override { m_Position -= speed * m_Front; RecalculateViewMatrix(); }
+        void MoveLeft(float speed)      override { m_Position -= speed * m_Right; RecalculateViewMatrix(); }
+        void MoveRight(float speed)     override { m_Position += speed * m_Right; RecalculateViewMatrix(); }
 
     private:
         void RecalculateViewMatrix();

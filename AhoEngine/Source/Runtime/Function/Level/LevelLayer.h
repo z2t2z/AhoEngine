@@ -14,7 +14,7 @@ namespace Aho {
 		LightData() {
 			for (int i = 0; i < 4; i++) {
 				lightPosition[i] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-				lightColor[i] = glm::vec4(1.0f);
+				lightColor[i] = glm::vec4(0.1f);
 			}
 		}
 	};
@@ -33,6 +33,7 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		LightData* GetLightData() { return &m_LightData; }
+		UBO* GetUBO() { return m_RenderLayer->GetUBO(); }
 	private:
 		void SubmitRenderData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }

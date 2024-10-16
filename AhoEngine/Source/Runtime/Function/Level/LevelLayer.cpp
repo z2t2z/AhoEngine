@@ -4,8 +4,8 @@
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Renderer/RenderData.h"
-#include <mutex>
-
+#include "Runtime/Function/Renderer/Texture.h"
+#include <unordered_map>
 
 namespace Aho {
 	LevelLayer::LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
@@ -54,12 +54,12 @@ namespace Aho {
 		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
 		m_RenderLayer->GetUBO()->u_View = cam->GetView();
 		m_RenderLayer->GetUBO()->u_ViewPosition = glm::vec4(cam->GetPosition(), 0.0f);
-		for (int i = 0; i < 4; i++) {
-			m_RenderLayer->GetUBO()->u_LightPosition[i] = m_LightData.lightPosition[i];
-			m_RenderLayer->GetUBO()->u_LightColor[i] = m_LightData.lightColor[i];
-		}
+		//for (int i = 0; i < 4; i++) {
+		//	m_RenderLayer->GetUBO()->u_LightPosition[i] = m_LightData.lightPosition[i];
+		//	m_RenderLayer->GetUBO()->u_LightColor[i] = m_LightData.lightColor[i];
+		//}
 		if (m_Update) {
-			float nearPlane = 0.1f, farPlane = 100.0f;
+			float nearPlane = 0.1f, farPlane = 1000.0f;
 			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
 			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_LightData.lightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
@@ -77,6 +77,8 @@ namespace Aho {
 		entityManager->AddComponent<EntityComponent>(gameObject);
 
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		renderDataAll.reserve(rawData->size());
 		for (const auto& meshInfo : *rawData) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -97,20 +99,20 @@ namespace Aho {
 			if (meshInfo->materialInfo.HasMaterial()) {
 				auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& albedo : meshInfo->materialInfo.Albedo) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo); // TODO: should be done in the resource layer!
-					tex->SetTextureType(TextureType::Diffuse);
-					mat->AddTexture(tex);
-					if (tex->IsLoaded()) {
-						// TODO: Cache the loaded texture
+					if (!textureCached.contains(albedo)) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(albedo); // TODO: should be done in the resource layer!
+						tex->SetTextureType(TextureType::Diffuse);
+						textureCached[albedo] = tex;
 					}
+					mat->AddTexture(textureCached.at(albedo));
 				}
 				for (const auto& normal : meshInfo->materialInfo.Normal) {
-					std::shared_ptr<Texture2D> tex = Texture2D::Create(normal); // TODO: should be done in the resource layer!
-					tex->SetTextureType(TextureType::Normal);
-					mat->AddTexture(tex);
-					if (tex->IsLoaded()) {
-						// TODO: Cache the loaded texture
+					if (!textureCached.contains(normal)) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(normal); // TODO: should be done in the resource layer!
+						tex->SetTextureType(TextureType::Normal);
+						textureCached[normal] = tex;
 					}
+					mat->AddTexture(textureCached.at(normal));
 				}
 			}
 			renderDataAll.push_back(renderData);
