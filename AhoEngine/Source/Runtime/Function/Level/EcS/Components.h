@@ -67,6 +67,7 @@ namespace Aho {
 	struct PointLightComponent {
 		glm::vec4 color{ 0.1f, 0.12f, 0.15f, 1.0f };
 		float intensity{ 0.5f };
+		int count{ 0 };
 		PointLightComponent() = default;
 		PointLightComponent(glm::vec4 _color, float _intensity = 1.0f) 
 			: color(_color), intensity(_intensity) {}

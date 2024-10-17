@@ -9,11 +9,12 @@
 
 namespace Aho {
 	LevelLayer::LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
-		: m_RenderLayer(renderLayer), m_ResourceLayer(resourceLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
+		: Layer("LevelLayer"), m_RenderLayer(renderLayer), m_ResourceLayer(resourceLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
 
 	void LevelLayer::OnAttach() {
-		
+		m_CurrentLevel = std::make_shared<Level>();
+		m_Levels.push_back(m_CurrentLevel);
 	}
 	
 	void LevelLayer::OnDetach() {
@@ -24,10 +25,6 @@ namespace Aho {
 		SubmitUBOData();
 		// UpdatePhysics();
 		// UpdateAnimation();
-		/* Actual in-game logic here */
-		if (!m_PlayMode) {
-			return;
-		}
 	}
 	
 	void LevelLayer::OnImGuiRender() {
@@ -55,10 +52,14 @@ namespace Aho {
 	}
 
 	void LevelLayer::AddLightSource(LightType lt) {
+		if (m_LightData.lightCnt == MAX_LIGHT_CNT) {
+			AHO_CORE_WARN("Maximum light count reached!");
+			return;
+		}
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto gameObject = entityManager->CreateEntity("PointLight");
-		entityManager->AddComponent<TransformComponent>(gameObject);
-		entityManager->AddComponent<PointLightComponent>(gameObject);
+		auto& pc = entityManager->AddComponent<PointLightComponent>(gameObject);
+		pc.count = m_LightData.lightCnt++;
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		for (const auto& meshInfo : *m_ResourceLayer->GetCube()) {
 			std::shared_ptr<VertexArray> vao;
@@ -66,10 +67,12 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
+			auto& tc = entityManager->AddComponent<TransformComponent>(gameObject, renderData->GetTransformParam());
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
 			renderData->SetMaterial(mat);
+			renderData->SetVirtual();
 			renderDataAll.push_back(renderData);
 		}
 		UploadRenderDataEventTrigger(renderDataAll);
@@ -77,22 +80,23 @@ namespace Aho {
 
 	void LevelLayer::SubmitUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
-		m_RenderLayer->GetUBO()->u_View = cam->GetView();
-		m_RenderLayer->GetUBO()->u_ViewPosition = glm::vec4(cam->GetPosition(), 0.0f);
+		auto ubo = m_RenderLayer->GetUBO();
+		ubo->u_Projection = cam->GetProjection();
+		ubo->u_View = cam->GetView();
+		ubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
 		if (m_Update) {
 			float nearPlane = 0.1f, farPlane = 50.0f;
 			glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, nearPlane, farPlane);
-			auto pos = glm::vec3(m_RenderLayer->GetUBO()->u_LightPosition[0]);
-			m_RenderLayer->GetUBO()->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(m_RenderLayer->GetUBO()->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			ubo->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(ubo->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+		ubo->info[0] = m_LightData.lightCnt;
+		for (int i = 0; i < m_LightData.lightCnt; i++) {
+			ubo->u_LightPosition[i] = m_LightData.lightPosition[i];
+			ubo->u_LightColor[i] = m_LightData.lightColor[i];
 		}
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {
-		if (!m_CurrentLevel) {
-			m_CurrentLevel = std::make_shared<Level>();
-			m_Levels.push_back(m_CurrentLevel);
-		}
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity("StaticMesh")); // TODO: give it a proper name

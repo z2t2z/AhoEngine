@@ -27,6 +27,7 @@ namespace Aho {
 	private:
 		bool m_Selected{ false };
 		bool m_DrawDepthMap{ false };
+		bool m_PickingPass{ false };
 		bool m_IsViewportFocused{ false };
 		bool m_CursorInViewport{ false };
 		bool m_PickObject{ false };
@@ -41,11 +42,11 @@ namespace Aho {
 		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
+		std::shared_ptr<Framebuffer> m_FBO{ nullptr }; 
 	private:
-		std::shared_ptr<Framebuffer> m_FBO{ nullptr };
-		FileWatcher m_FileWatcher;
-		LevelLayer* m_LevelLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };
+		LevelLayer* m_LevelLayer{ nullptr };
+		FileWatcher m_FileWatcher;
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
 	};

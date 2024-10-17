@@ -20,6 +20,7 @@ namespace Aho {
 		void SetMaterial(const std::shared_ptr<Material>& mat) { m_Material = mat; }
 		std::shared_ptr<Material> GetMaterial() { return m_Material; }
 		void SetTransformParam(TransformParam t) { m_Param = t; }
+		void SetVirtual() { m_Virtual = true; }
 		TransformParam* GetTransformParam() { return &m_Param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		void Unbind();

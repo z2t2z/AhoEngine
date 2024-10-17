@@ -6,7 +6,7 @@
 
 namespace Aho {
 	RenderLayer::RenderLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
-		: m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
+		: Layer("RenderLayer"), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
 	}
 
 	void RenderLayer::OnAttach() {
@@ -33,12 +33,13 @@ namespace Aho {
 		/* Parameters on changed event */
 		if (e.GetEventType() == EventType::UploadRenderData) {
 			e.SetHandled();
-			auto ee = (UploadRenderDataEvent*)&(e);
 			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
-			auto renderData = ee->GetRawData();
 			for (const auto& pipeLine : *m_Renderer) {
-				for (const auto& data : renderData) {
-					data->IsVirtual() ? pipeLine->AddVirtualRenderData(data) : pipeLine->AddRenderData(data);
+				for (const auto& data : ((UploadRenderDataEvent*)&e)->GetRawData()) {
+					pipeLine->AddVirtualRenderData(data);
+					if (!data->IsVirtual()) {
+						pipeLine->AddRenderData(data); // TODO: Memory wastage, should be optimized
+					}
 				}
 			}
 		}
@@ -139,11 +140,11 @@ namespace Aho {
 				data->Unbind();
 			}
 		});
-		RenderPassDefault* pickPass = new RenderPassDefault();
-		pickPass->SetRenderCommand(cmdBufferDepth);
+		RenderPassDefault* pickingPass = new RenderPassDefault();
+		pickingPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
-		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
-		pickPass->SetShader(depthShader);
+		auto pickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+		pickingPass->SetShader(pickingShader);
 		FBTextureSpecification texSpecColor;
 		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
 		texSpecColor.internalFormat = FBInterFormat::RGBA8;
@@ -156,9 +157,9 @@ namespace Aho {
 		texSpecColor.filterModeMag = FBFilterMode::Nearest;
 		FBSpecification fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
 		auto fbo = Framebuffer::Create(fbSpec);
-		pickPass->SetRenderTarget(fbo);
-		pickPass->SetRenderPassType(RenderPassType::Pick);
-		return pickPass;
+		pickingPass->SetRenderTarget(fbo);
+		pickingPass->SetRenderPassType(RenderPassType::Pick);
+		return pickingPass;
 	}
 
 	RenderPass* RenderLayer::SetupDepthPass() {

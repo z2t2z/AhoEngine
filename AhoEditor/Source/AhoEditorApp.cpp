@@ -14,6 +14,7 @@ namespace Aho {
 			AssetManager* assetManager = new AssetManager();
 			auto eventManager = GetEventManager();
 			auto renderLayer = new RenderLayer(eventManager, renderer, cameraManager);
+			//renderLayer->set
 			auto resourceLayer = new ResourceLayer(eventManager, assetManager);
 			auto levelLayer = new LevelLayer(renderLayer, resourceLayer, eventManager, cameraManager);
 			auto editorLayer = new AhoEditorLayer(levelLayer, eventManager, renderer, cameraManager);

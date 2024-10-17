@@ -16,9 +16,9 @@ namespace Aho {
 		std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
+		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); SortRenderPasses(); }
-		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
 		virtual void SortRenderPasses();
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
@@ -30,7 +30,7 @@ namespace Aho {
 		RenderPass* m_PickingPass{ nullptr };
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
-		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source or other virtual mesh
+		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source, only renderred in picking pass
 		std::vector<std::shared_ptr<RenderData>> m_DebugData;	// TODO: Temporary
 	};
 

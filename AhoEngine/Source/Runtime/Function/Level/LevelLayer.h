@@ -9,6 +9,7 @@
 
 namespace Aho {
 	struct LightData {
+		int lightCnt{ 0 };
 		glm::vec4 lightPosition[MAX_LIGHT_CNT];
 		glm::vec4 lightColor[MAX_LIGHT_CNT];
 		LightData() {
@@ -33,7 +34,6 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		LightData* GetLightData() { return &m_LightData; }
-		UBO* GetUBO() { return m_RenderLayer->GetUBO(); }
 	private:
 		void AddLightSource(LightType lt);
 		void SubmitUBOData();
@@ -50,7 +50,7 @@ namespace Aho {
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
-		std::shared_ptr<Level> m_CurrentLevel;
+		std::shared_ptr<Level> m_CurrentLevel{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
 		std::vector<std::shared_ptr<Level>> m_Levels;
 	};

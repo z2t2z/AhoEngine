@@ -3,10 +3,9 @@
 #include "ResourceType/ResourceType.h"
 
 namespace Aho {
-	ResourceLayer::ResourceLayer(EventManager* eventManager, AssetManager* assetManager) : m_EventManager(eventManager), m_AssetManager(assetManager) {}
-
 	namespace fs = std::filesystem;
-	void ResourceLayer::OnAttach() {
+	ResourceLayer::ResourceLayer(EventManager* eventManager, AssetManager* assetManager) 
+		: Layer("ResourceLayer"), m_EventManager(eventManager), m_AssetManager(assetManager) {
 		auto path = fs::current_path() / "Asset" / "Basic";
 		m_Cube = std::make_shared<StaticMesh>();
 		m_Sphere = std::make_shared<StaticMesh>();
@@ -15,7 +14,9 @@ namespace Aho {
 		m_AssetManager->LoadAssetFromFile(path / "Sphere.fbx", *m_Sphere);
 		m_AssetManager->LoadAssetFromFile(path / "Cylinder.fbx", *m_Cylinder);
 	}
-	
+
+	void ResourceLayer::OnAttach() {
+	}
 	void ResourceLayer::OnDetach() {
 	}
 	void ResourceLayer::OnUpdate(float deltaTime) {
@@ -50,7 +51,7 @@ namespace Aho {
 	template<typename T>
 	void ResourceLayer::PackRenderData(const T& res) {
 		std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(res);
-		AHO_CORE_WARN("Pushing a PackRenderDataEvent!");
+		AHO_CORE_WARN("Pushing a PackRenderDataEvent!");  // pass to levelLayer
 		m_EventManager->PushBack(e);
 	}
 }

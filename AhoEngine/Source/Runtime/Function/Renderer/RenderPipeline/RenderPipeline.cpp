@@ -12,7 +12,6 @@ namespace Aho {
 		std::shared_ptr<Framebuffer> depthPassFBO = m_DepthPass->Execute(m_RenderData);
 		std::shared_ptr<Framebuffer> resultPassFBO = m_ResultPass->Execute(m_RenderData, depthPassFBO);
 		m_PickingPass->Execute(m_VirtualData);
-		m_PickingPass->Execute(m_RenderData);
 		if (m_DrawDebug) {
 			m_DebugPass->Execute(m_DebugData, depthPassFBO);
 		}
