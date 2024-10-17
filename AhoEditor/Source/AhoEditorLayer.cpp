@@ -16,8 +16,8 @@ namespace Aho {
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");
-		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");			// TODO: resource layer
+		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -207,22 +207,9 @@ namespace Aho {
 						ImGuizmo::OPERATION::TRANSLATE,
 						ImGuizmo::MODE::LOCAL,
 						glm::value_ptr(transform));
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
-					ImGui::Begin("Editor Panel");
-					ImGui::Text("%d", m_PickData);
-					ImGui::DragFloat3("Translation", glm::value_ptr(translation), 1.0f);
-					ImGui::DragFloat3("Scale", glm::value_ptr(scale), 1.0f);
-					ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 1.0f); // wrong
-
-					if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
-						auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
-						ImGui::Separator();
-						ImGui::Text("Material properties:");
-						ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 1.0f);
-						ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
-						ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
-					}
-					ImGui::End();
+					//ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+					
+					DrawPropertiesPanel(entityManager);
 				}
 				else {
 					m_BlockClickingEvent = false;
@@ -251,6 +238,32 @@ namespace Aho {
 		ImGui::End();
 	}
 
+	static float s_ImageSize = 100.0f;
+	void AhoEditorLayer::DrawPropertiesPanel(EntityManager* entityManager) {
+		ImGui::Begin("Properties Panel");
+		auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
+		auto& translation = tc.GetTranslation();
+		auto& scale = tc.GetScale();
+		auto& rotation = tc.GetRotation();
+		ImGui::DragFloat3("Translation", glm::value_ptr(translation), 0.1f);
+		ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f);
+		ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 0.1f); // in degrees
+
+		if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
+			auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
+			ImGui::Separator();
+			ImGui::Text("Material:");
+			ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
+			for (const auto& tex : *mc.material) {
+				ImGui::Image((ImTextureID)tex->GetTextureID(), ImVec2{s_ImageSize, s_ImageSize}, ImVec2{0, 1}, ImVec2{1, 0});
+			}
+		}
+		ImGui::End();
+	}
+
+	static const float s_LightVisSize = 96.0f;
 	void AhoEditorLayer::DrawLightIcons() {
 		const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
 		const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
@@ -261,12 +274,12 @@ namespace Aho {
 			if (p.w <= 0.0f) {
 				continue;
 			}
-			auto NDC = p / p.w;
-			auto ss = NDC * 0.5f + 0.5f;
+			auto ndc = p / p.w;
+			auto ss = ndc * 0.5f + 0.5f;
 			if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
-				ImVec2 pos{ wx + ww * ss.x, wy + wh * (1.0f - ss.y)};
+				ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2};
 				ImGui::SetCursorScreenPos(pos);
-				ImVec2 iconSize{ 96, 96 };
+				ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
 				ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{0, 1}, ImVec2{1, 0});
 			}
 		}

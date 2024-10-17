@@ -82,8 +82,7 @@
       <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;..\AhoEngine\Vendor\Glad\include;..\AhoEngine\Vendor\entt\include;..\AhoEngine\Vendor\assimp\assimp\include;..\AhoEngine\Vendor\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -100,7 +99,7 @@
       <AdditionalIncludeDirectories>..\AhoEngine\Vendor\ImGui;..\AhoEngine\Vendor\spdlog\include;..\AhoEngine\Source;..\AhoEngine\Vendor\glm;..\AhoEngine\Vendor\Glad\include;..\AhoEngine\Vendor\entt\include;..\AhoEngine\Vendor\assimp\assimp\include;..\AhoEngine\Vendor\json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -120,7 +119,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>

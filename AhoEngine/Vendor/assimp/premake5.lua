@@ -120,11 +120,11 @@ project "Assimp"
 		}
 
 	filter "configurations:Debug"
-		runtime "Debug"
-		buildoptions "/MDd"
+        runtime "Debug"
+        staticruntime "Off"		
 		symbols "on"
 
 	filter "configurations:Release"
-		buildoptions "/MDd"
-		runtime "Release"
+        runtime "Release"
+        staticruntime "off"
 		optimize "on"

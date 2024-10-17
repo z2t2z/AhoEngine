@@ -38,11 +38,14 @@ namespace Aho {
 	struct TransformParam {
 		glm::vec3 Translation;
 		glm::vec3 Scale;
-		glm::vec3 Rotation;
+		glm::vec3 Rotation; // in degrees
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() const {
-			glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
-			return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
+			glm::mat4 rotationMatrix = glm::mat4(1.0f);
+			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			return glm::translate(glm::mat4(1.0f), Translation) * rotationMatrix * glm::scale(glm::mat4(1.0f), Scale);
 		}
 	}; // TODO
 

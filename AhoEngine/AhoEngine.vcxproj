@@ -80,8 +80,7 @@
       <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;Vendor\json;Vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/MDd %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -102,7 +101,7 @@
       <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\assimp\include;Vendor\stb_image;Vendor\json;Vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -126,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -651,9 +650,9 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp" />
@@ -666,10 +665,10 @@
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Input\WindowsInput.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp" />
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp" />

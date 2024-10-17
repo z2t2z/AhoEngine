@@ -16,6 +16,7 @@ namespace Aho {
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
 		void DrawContentBrowserPanel();
+		void DrawPropertiesPanel(EntityManager* em);
 		void DrawSceneHierarchyPanel();
 		void DrawViewport();
 		void DrawLightIcons();

@@ -46,6 +46,12 @@
     <Filter Include="Source\Runtime\Function\Renderer">
       <UniqueIdentifier>{64CB9F28-501C-8B6A-7980-792C65301ED4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\RenderPass">
+      <UniqueIdentifier>{0A6DBA87-76D2-4D0E-FFAA-EFE66B0F437D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline">
+      <UniqueIdentifier>{49FDEFE9-B538-50AD-BE2D-CD3C2AE8D4DD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Platform">
       <UniqueIdentifier>{FD947116-69CC-B9AD-72D6-1DD1DE8CE0A6}</UniqueIdentifier>
     </Filter>
@@ -229,10 +235,10 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -1646,6 +1652,9 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
@@ -1697,6 +1706,9 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp">
       <Filter>Source\Runtime\Resource\Asset\Importer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp">
+      <Filter>Source\Runtime\Resource\AssetCreator</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp">
       <Filter>Source\Runtime\Resource\Model</Filter>
     </ClCompile>
@@ -1712,7 +1724,5 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
   </ItemGroup>
 </Project>

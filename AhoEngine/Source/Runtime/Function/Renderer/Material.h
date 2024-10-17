@@ -31,6 +31,8 @@ namespace Aho {
 				return t;
 			}
 		}
+		std::vector<std::shared_ptr<Texture2D>>::iterator begin() { return m_Textures.begin(); }
+		std::vector<std::shared_ptr<Texture2D>>::iterator end() { return m_Textures.end(); }
 	private:
 		bool m_Outdated{ true };
 		std::vector<std::shared_ptr<Texture2D>> m_Textures;
