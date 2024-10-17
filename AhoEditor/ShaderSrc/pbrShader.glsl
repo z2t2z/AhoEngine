@@ -14,6 +14,7 @@ layout(std140, binding = 0) uniform CameraData{
 	mat4 u_Projection;
 	mat4 u_LightViewMatrix; // ortho * view
 	vec4 u_ViewPosition;
+	ivec4 info;
 };
 
 out vec3 v_Position;
@@ -23,6 +24,7 @@ out vec3 v_ViewPosition;
 out vec3 v_LightPosition[4];
 out vec3 v_LightColor[4];
 out vec3 v_Normal;
+flat out int v_MAX_LIGHT_CNT;
 
 uniform mat4 u_Model;
 
@@ -40,7 +42,8 @@ void main() {
 	v_Normal = a_Normal;
 	mat3 TBN = transpose(mat3(T, B, N));
 	TBN = mat3(1.0f);
-	for (int i = 0; i < 4; i++) {
+	v_MAX_LIGHT_CNT = info[0];
+	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
 		vec3 lightPos = vec3(u_LightPosition[i].r, u_LightPosition[i].g, u_LightPosition[i].b);
 		v_LightPosition[i] = TBN * lightPos;
 		v_LightColor[i] = vec3(u_LightColor[i].r, u_LightColor[i].g, u_LightColor[i].b);
@@ -53,8 +56,7 @@ void main() {
 #type fragment
 #version 460 core
 
-layout(location = 0) out vec4 out_EntityColor;
-layout(location = 1) out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
 
 in vec3 v_Position;
 in vec4 v_PositionLightSpace;
@@ -63,8 +65,8 @@ in vec3 v_ViewPosition;
 in vec3 v_LightPosition[4];
 in vec3 v_LightColor[4];
 in vec3 v_Normal;
+flat in int v_MAX_LIGHT_CNT;
 
-uniform uint u_EntityID;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;
 uniform sampler2D u_DepthMap;
@@ -129,16 +131,6 @@ float CalShadow() {
 	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
 }
 
-void DrawDebugInfo() {
-	// EntityColor for selection
-	out_EntityColor = vec4(
-		float(u_EntityID & 0xFF) / 255.0f,              // R  
-		float((u_EntityID >> 8) & 0xFF) / 255.0f,       // G
-		float((u_EntityID >> 16) & 0xFF) / 255.0f,      // B 
-		float((u_EntityID >> 24) & 0xFF) / 255.0f       // A
-	);
-}
-
 vec3 GetNormalFromMap() {
     vec3 tangentNormal = texture(u_Normal, v_TexCoords).xyz * 2.0 - 1.0;
 
@@ -167,7 +159,7 @@ void main() {
 	F0 = mix(F0, Albedo, u_Metalic);
 
 	vec3 Lo = vec3(0.0f);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
 		vec3 lightDir = normalize(v_LightPosition[i] - v_Position);
 		float NdotL = max(dot(Normal, lightDir), 0.0f);
 		if (NdotL < 0.0f) {
@@ -196,5 +188,4 @@ void main() {
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	out_Color = vec4(Color, 1.0f);
-	DrawDebugInfo();   
 }

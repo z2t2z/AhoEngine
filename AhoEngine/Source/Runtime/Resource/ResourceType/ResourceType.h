@@ -10,6 +10,14 @@
 #include <glm/gtx/quaternion.hpp>
 
 namespace Aho {
+	enum class LightType {
+		None = 0,
+		PointLight,
+		DirectionalLight,
+		RecLight,
+		SpotLgiht
+	};
+
 	struct Vertex {
 		float x, y, z;			// position
 		float nx, ny, nz;		// normal
@@ -40,12 +48,13 @@ namespace Aho {
 		glm::vec3 Scale;
 		glm::vec3 Rotation; // in degrees
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
-		glm::mat4 GetTransform() const {
-			glm::mat4 rotationMatrix = glm::mat4(1.0f);
-			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-			return glm::translate(glm::mat4(1.0f), Translation) * rotationMatrix * glm::scale(glm::mat4(1.0f), Scale);
+		glm::mat4 GetTransform() {
+			glm::mat4 result(1.0f);
+			result = glm::rotate(result, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			result = glm::rotate(result, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			result = glm::rotate(result, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			result = glm::translate(glm::mat4(1.0f), Translation) * result * glm::scale(glm::mat4(1.0f), Scale);
+			return result;
 		}
 	}; // TODO
 

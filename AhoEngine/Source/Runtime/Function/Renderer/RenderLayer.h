@@ -21,6 +21,7 @@ namespace Aho {
 		RenderPass* SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo);
 		RenderPass* SetupDepthPass();
 		RenderPass* SetupMainPass();
+		RenderPass* SetupPickingPass();
 	private:
 		UBO m_UBO;
 		EventManager* m_EventManager{ nullptr };

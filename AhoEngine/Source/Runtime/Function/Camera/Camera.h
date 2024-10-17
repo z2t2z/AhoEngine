@@ -11,9 +11,9 @@ namespace Aho {
 		virtual ~Camera() = default;
 		virtual glm::vec3 GetPosition() const = 0;
 		virtual const glm::mat4& GetProjection() const = 0;
-		virtual const glm::mat4& GetProjectionInv() const = 0;
 		virtual const glm::mat4& GetView() const = 0;
-		virtual const glm::mat4& GetViewInv() const = 0;
+		virtual const glm::mat4& GetProjectionInv() = 0;
+		virtual const glm::mat4& GetViewInv() = 0;
 		virtual glm::vec3 GetFront() const = 0;
 		virtual glm::vec3 GetRight() const = 0;
 

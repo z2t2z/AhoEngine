@@ -24,13 +24,15 @@ namespace Aho {
 				u_LightPosition[i] = u_LightColor[i] = glm::vec4(0.0f);
 				u_LightPosition[i].w = 1.0f;
 			}
+			memset(info, 0, sizeof(info));
 		}
 		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
 		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
-		glm::mat4 u_View;
-		glm::mat4 u_Projection;
-		glm::mat4 u_LightViewMatrix;
+		glm::mat4 u_View{ 0.0f };
+		glm::mat4 u_Projection{ 0.0f };
+		glm::mat4 u_LightViewMatrix{ 0.0f };
 		glm::vec4 u_ViewPosition{ 0.0f };
+		int info[MAX_LIGHT_CNT];
 	};
 
 	class Shader {

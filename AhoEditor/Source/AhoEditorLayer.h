@@ -16,14 +16,16 @@ namespace Aho {
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
 		void DrawContentBrowserPanel();
-		void DrawPropertiesPanel(EntityManager* em);
+		void DrawPropertiesPanel();
 		void DrawSceneHierarchyPanel();
 		void DrawViewport();
 		void DrawLightIcons();
+		void DrawToolBar();
 	private:
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
 	private:
+		bool m_Selected{ false };
 		bool m_DrawDepthMap{ false };
 		bool m_IsViewportFocused{ false };
 		bool m_CursorInViewport{ false };
@@ -35,6 +37,11 @@ namespace Aho {
 	private:
 		//std::unique_ptr<Texture2D> m_LightIcon; ??
 		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_PlusIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
+	private:
 		std::shared_ptr<Framebuffer> m_FBO{ nullptr };
 		FileWatcher m_FileWatcher;
 		LevelLayer* m_LevelLayer{ nullptr };

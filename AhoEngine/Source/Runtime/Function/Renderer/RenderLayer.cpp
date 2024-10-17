@@ -36,12 +36,13 @@ namespace Aho {
 			auto ee = (UploadRenderDataEvent*)&(e);
 			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
 			auto renderData = ee->GetRawData();
-			for (auto pipeLine : *m_Renderer) {
-				pipeLine->AddRenderData(renderData);
+			for (const auto& pipeLine : *m_Renderer) {
+				for (const auto& data : renderData) {
+					data->IsVirtual() ? pipeLine->AddVirtualRenderData(data) : pipeLine->AddRenderData(data);
+				}
 			}
 		}
 	}
-
 
 	void RenderLayer::SetupForwardRenderPipeline() {
 		RenderPipelineDefault* pipeline = new RenderPipelineDefault();
@@ -51,6 +52,7 @@ namespace Aho {
 		pipeline->AddRenderPass(depthPass);
 		auto debugPass = SetupDebugPass(depthMapFBO);
 		pipeline->AddRenderPass(debugPass);
+		pipeline->AddRenderPass(SetupPickingPass());
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
 	}
 
@@ -121,11 +123,42 @@ namespace Aho {
 		texSpecColor.wrapModeT = FBWrapMode::Clamp;
 		texSpecColor.filterModeMin = FBFilterMode::Nearest;
 		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor, texSpecColor, texSpecDepth });
+		FBSpecification fbSpec(1280u, 720u, { texSpecColor, texSpecDepth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		renderPass->SetRenderTarget(FBO);
 		renderPass->SetRenderPassType(RenderPassType::Final);
 		return renderPass;
+	}
+
+	RenderPass* RenderLayer::SetupPickingPass() {
+		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+		});
+		RenderPassDefault* pickPass = new RenderPassDefault();
+		pickPass->SetRenderCommand(cmdBufferDepth);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+		pickPass->SetShader(depthShader);
+		FBTextureSpecification texSpecColor;
+		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		texSpecColor.internalFormat = FBInterFormat::RGBA8;
+		texSpecColor.dataFormat = FBDataFormat::RGBA;
+		texSpecColor.dataType = FBDataType::UnsignedByte;
+		texSpecColor.target = FBTarget::Texture2D;
+		texSpecColor.wrapModeS = FBWrapMode::Clamp;
+		texSpecColor.wrapModeT = FBWrapMode::Clamp;
+		texSpecColor.filterModeMin = FBFilterMode::Nearest;
+		texSpecColor.filterModeMag = FBFilterMode::Nearest;
+		FBSpecification fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		auto fbo = Framebuffer::Create(fbSpec);
+		pickPass->SetRenderTarget(fbo);
+		pickPass->SetRenderPassType(RenderPassType::Pick);
+		return pickPass;
 	}
 
 	RenderPass* RenderLayer::SetupDepthPass() {

@@ -12,10 +12,12 @@ namespace Aho {
 
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
-
 		void OnUpdate(float deltaTime) override;
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
+		std::shared_ptr<StaticMesh> GetCube() { return m_Cube; }
+		std::shared_ptr<StaticMesh> GetSphere() { return m_Sphere; }
+		std::shared_ptr<StaticMesh> GetCylinder() { return m_Cylinder; }
 	private:
 		void LoadAssetFromFile(const std::string& path);
 		template<typename T>
@@ -25,5 +27,9 @@ namespace Aho {
 	private:
 		AssetManager* m_AssetManager;
 		EventManager* m_EventManager;
+	private:
+		std::shared_ptr<StaticMesh> m_Cube{ nullptr };
+		std::shared_ptr<StaticMesh> m_Sphere{nullptr};
+		std::shared_ptr<StaticMesh> m_Cylinder{nullptr};
 	};
 }

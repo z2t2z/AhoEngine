@@ -1,18 +1,18 @@
 #pragma once
 #include "Runtime/Core/Layer/Layer.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
-#include "Level.h"
 #include "Runtime/Function/Renderer/RenderLayer.h"
+#include "Runtime/Resource/ResourceLayer.h"
+#include "Level.h"
 #include <thread>
 #include <future>
 
 namespace Aho {
-	// TODO
 	struct LightData {
-		glm::vec4 lightPosition[4];
-		glm::vec4 lightColor[4];
+		glm::vec4 lightPosition[MAX_LIGHT_CNT];
+		glm::vec4 lightColor[MAX_LIGHT_CNT];
 		LightData() {
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < MAX_LIGHT_CNT; i++) {
 				lightPosition[i] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 				lightColor[i] = glm::vec4(0.1f);
 			}
@@ -21,7 +21,7 @@ namespace Aho {
 
 	class LevelLayer : public Layer {
 	public:
-		LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
+		LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~LevelLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -35,7 +35,8 @@ namespace Aho {
 		LightData* GetLightData() { return &m_LightData; }
 		UBO* GetUBO() { return m_RenderLayer->GetUBO(); }
 	private:
-		void SubmitRenderData();
+		void AddLightSource(LightType lt);
+		void SubmitUBOData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset);
@@ -47,6 +48,7 @@ namespace Aho {
 		LightData m_LightData;		// TODO: temporary...
 	private:
 		RenderLayer* m_RenderLayer{ nullptr };
+		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Level> m_CurrentLevel;
 		std::shared_ptr<CameraManager> m_CameraManager;

@@ -23,10 +23,12 @@ namespace Aho {
 		TransformParam* GetTransformParam() { return &m_Param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		void Unbind();
+		bool IsVirtual() { return m_Virtual; }
 	private:
 		bool m_Loaded{ true };
 		bool m_Deleted{ false };
 		bool m_Rendered{ true };
+		bool m_Virtual{ false };
 	private:
 		TransformParam m_Param;
 		std::shared_ptr<VertexArray> m_VAO{ nullptr };

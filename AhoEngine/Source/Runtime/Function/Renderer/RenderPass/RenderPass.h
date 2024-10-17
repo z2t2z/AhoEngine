@@ -10,6 +10,7 @@ namespace Aho {
 		Debug,
 		Final,
 		Depth,
+		Pick,
 		/* TODO */
 	};
 
@@ -22,7 +23,7 @@ namespace Aho {
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
 		virtual RenderPassType GetRenderPassType() { return m_RenderPassType; }
 		virtual void SetRenderPassType(RenderPassType type) { m_RenderPassType = type; }
-		virtual const std::shared_ptr<Framebuffer>& Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Framebuffer>& fbo) = 0;
+		virtual const std::shared_ptr<Framebuffer>& Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Framebuffer>& fbo = nullptr) = 0;
 		virtual void BindSceneDataUBO(const UBO& m_UBO) { m_Shader->BindUBO(m_UBO); }
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
 		virtual RenderCommandBuffer* GetRenderCommandBuffer() { return m_RenderCommandBuffer; }

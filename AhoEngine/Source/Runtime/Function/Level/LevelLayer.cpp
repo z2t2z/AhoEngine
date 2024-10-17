@@ -8,8 +8,8 @@
 #include <unordered_map>
 
 namespace Aho {
-	LevelLayer::LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
-		: m_RenderLayer(renderLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
+	LevelLayer::LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
+		: m_RenderLayer(renderLayer), m_ResourceLayer(resourceLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
 
 	void LevelLayer::OnAttach() {
@@ -21,7 +21,7 @@ namespace Aho {
 	}
 	
 	void LevelLayer::OnUpdate(float deltaTime) {
-		SubmitRenderData();
+		SubmitUBOData();
 		// UpdatePhysics();
 		// UpdateAnimation();
 		/* Actual in-game logic here */
@@ -35,11 +35,16 @@ namespace Aho {
 	
 	void LevelLayer::OnEvent(Event& e) {
 		if (e.GetEventType() == EventType::PackRenderData) {
-			auto ee = (PackRenderDataEvent*)&(e);
+			auto rawData = ((PackRenderDataEvent*)&e)->GetRawData();
 			AHO_CORE_WARN("Recieving a PackRenderDataEvent!");
-			auto rawData = ee->GetRawData();
 			LoadStaticMeshAsset(rawData);
 			e.SetHandled();
+		}
+		if (e.GetEventType() == EventType::AddEntity) {
+			auto type = ((AddLightSourceEvent*)&e)->GetLightType();
+			AHO_CORE_WARN("Recieing a AddLightSourceEvent!");
+			AddLightSource(type);
+			e.Handled();
 		}
 	}
 
@@ -49,17 +54,33 @@ namespace Aho {
 		m_EventManager->PushBack(newEv);
 	}
 
-	void LevelLayer::SubmitRenderData() {
+	void LevelLayer::AddLightSource(LightType lt) {
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+		auto gameObject = entityManager->CreateEntity("PointLight");
+		entityManager->AddComponent<TransformComponent>(gameObject);
+		entityManager->AddComponent<PointLightComponent>(gameObject);
+		std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		for (const auto& meshInfo : *m_ResourceLayer->GetCube()) {
+			std::shared_ptr<VertexArray> vao;
+			vao.reset(VertexArray::Create());
+			vao->Init(meshInfo);
+			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+			renderData->SetVAOs(vao);
+			std::shared_ptr<Material> mat = std::make_shared<Material>();
+			uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
+			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
+			renderData->SetMaterial(mat);
+			renderDataAll.push_back(renderData);
+		}
+		UploadRenderDataEventTrigger(renderDataAll);
+	}
+
+	void LevelLayer::SubmitUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		m_RenderLayer->GetUBO()->u_Projection = cam->GetProjection();
 		m_RenderLayer->GetUBO()->u_View = cam->GetView();
 		m_RenderLayer->GetUBO()->u_ViewPosition = glm::vec4(cam->GetPosition(), 0.0f);
-		//for (int i = 0; i < 4; i++) {
-		//	m_RenderLayer->GetUBO()->u_LightPosition[i] = m_LightData.lightPosition[i];
-		//	m_RenderLayer->GetUBO()->u_LightColor[i] = m_LightData.lightColor[i];
-		//}
 		if (m_Update) {
-			//m_RenderLayer->GetUBO()->u_LightViewMatrix = cam->GetProjection() * cam->GetView();
 			float nearPlane = 0.1f, farPlane = 50.0f;
 			glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, nearPlane, farPlane);
 			auto pos = glm::vec3(m_RenderLayer->GetUBO()->u_LightPosition[0]);
@@ -92,7 +113,7 @@ namespace Aho {
 			auto& tc = entityManager->AddComponent<TransformComponent>(meshEntity, renderData->GetTransformParam());
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
-			mat->SetUniform("u_EntityID", entityID);	// setting entity id here
+			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
 			mat->SetUniform("u_AO", 0.1f);
 			mat->SetUniform("u_Metalic", 0.2f);
 			mat->SetUniform("u_Roughness", 0.2f);

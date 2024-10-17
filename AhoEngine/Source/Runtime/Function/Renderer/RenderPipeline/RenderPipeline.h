@@ -9,13 +9,16 @@ namespace Aho {
 		~RenderPipeline();
 		virtual void Initialize() = 0;
 		virtual void Execute();
-		RenderPass* GetRenderPass(size_t index);
-		RenderPass* GetResultPass() { return m_ResultPass; }
-		RenderPass* GetDebugPass() { return m_DebugPass; }
+		std::shared_ptr<Framebuffer> GetRenderPass(size_t index);
+		std::shared_ptr<Framebuffer> GetResultPass() { return m_ResultPass->GetRenderTarget(); }
+		std::shared_ptr<Framebuffer> GetDepthPass() { return m_DepthPass->GetRenderTarget(); }
+		std::shared_ptr<Framebuffer> GetDebugPass() { return m_DebugPass->GetRenderTarget(); }
+		std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); SortRenderPasses(); }
+		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
 		virtual void SortRenderPasses();
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
@@ -23,8 +26,11 @@ namespace Aho {
 		bool m_DrawDebug{ true };
 		RenderPass* m_ResultPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
+		RenderPass* m_DepthPass{ nullptr };
+		RenderPass* m_PickingPass{ nullptr };
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
+		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source or other virtual mesh
 		std::vector<std::shared_ptr<RenderData>> m_DebugData;	// TODO: Temporary
 	};
 

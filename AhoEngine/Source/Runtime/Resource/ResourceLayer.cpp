@@ -5,8 +5,17 @@
 namespace Aho {
 	ResourceLayer::ResourceLayer(EventManager* eventManager, AssetManager* assetManager) : m_EventManager(eventManager), m_AssetManager(assetManager) {}
 
+	namespace fs = std::filesystem;
 	void ResourceLayer::OnAttach() {
+		auto path = fs::current_path() / "Asset" / "Basic";
+		m_Cube = std::make_shared<StaticMesh>();
+		m_Sphere = std::make_shared<StaticMesh>();
+		m_Cylinder = std::make_shared<StaticMesh>();
+		m_AssetManager->LoadAssetFromFile(path / "Cube.fbx", *m_Cube);
+		m_AssetManager->LoadAssetFromFile(path / "Sphere.fbx", *m_Sphere);
+		m_AssetManager->LoadAssetFromFile(path / "Cylinder.fbx", *m_Cylinder);
 	}
+	
 	void ResourceLayer::OnDetach() {
 	}
 	void ResourceLayer::OnUpdate(float deltaTime) {

@@ -15,9 +15,9 @@ namespace Aho {
 
         glm::vec3 GetPosition()       const override { return m_Position; }
         const glm::mat4& GetProjection()     const override { return m_ProjectionMatrix; }
-        const glm::mat4& GetProjectionInv()     const override { return m_ProjectionMatrixInv; }
+        const glm::mat4& GetProjectionInv() override { m_ProjectionMatrixInv = glm::inverse(m_ProjectionMatrix); return m_ProjectionMatrixInv; }
         const glm::mat4& GetView()           const override { return m_ViewMatrix; }
-        const glm::mat4& GetViewInv()           const override { return m_ViewMatrixInv; }
+        const glm::mat4& GetViewInv() override { m_ViewMatrixInv = glm::inverse(m_ViewMatrix); return m_ViewMatrixInv; }
         glm::vec3 GetFront()          const override { return m_Front; }
         glm::vec3 GetRight()          const override { return m_Right; }
         virtual float GetFOV() const override { return m_Fov; }

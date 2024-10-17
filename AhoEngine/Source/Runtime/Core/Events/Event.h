@@ -14,7 +14,8 @@ namespace Aho {
 		AppTick, AppUpdate, AppRender,
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
-		FileChanged, AssetImported, PackRenderData, UploadRenderData
+		FileChanged, AssetImported, PackRenderData, UploadRenderData,
+		AddEntity,
 	};
 
 	enum EventCategory {
@@ -123,5 +124,20 @@ namespace Aho {
 		std::vector<std::shared_ptr<RenderData>> GetRawData() const { return m_RenderData; } // TODO: no copy
 	private:
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;
+	};
+
+
+	enum class LightType;
+	class AddLightSourceEvent : public Event {
+	public:
+		AddLightSourceEvent(LightType lt)
+			: m_LightType(lt) {}
+		static EventType GetStaticType() { return EventType::AddEntity; }
+		virtual EventType GetEventType() const override { return GetStaticType(); }
+		virtual const char* GetName() const override { return "AddLight"; }
+		virtual int GetCategoryFlags() const override { return 0; }
+		LightType GetLightType() const { return m_LightType; } // TODO: no copy
+	private:
+		LightType m_LightType;
 	};
 } // namespace Aho

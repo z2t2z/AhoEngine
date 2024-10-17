@@ -32,11 +32,12 @@ namespace Aho {
 			m_CurrentPipeline = pl; 
 		}
 		RenderPipeline* GetCurrentRenderPipeline() { return m_CurrentPipeline; }
-		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+	public:
 		std::vector<RenderPipeline*>::iterator begin() { return m_Pipelines.begin(); }
 		std::vector<RenderPipeline*>::iterator end() { return m_Pipelines.end(); }
 		std::vector<RenderPipeline*>::const_iterator begin() const { return m_Pipelines.begin(); }
 		std::vector<RenderPipeline*>::const_iterator end() const { return m_Pipelines.end(); }
+		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
 		RenderPipeline* m_CurrentPipeline{ nullptr };
 		std::vector<RenderPipeline*> m_Pipelines;

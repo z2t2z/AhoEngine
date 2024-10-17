@@ -79,7 +79,7 @@ namespace Aho {
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
 			const auto& fileExt = path.extension().string();
 			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
-				assetOut = *(AssetCreator::MeshAssetCreater(path.string()));
+				assetOut = *AssetCreator::MeshAssetCreater(path.string());
 				return true;
 			}
 			AHO_CORE_ASSERT("Not supported yet");
