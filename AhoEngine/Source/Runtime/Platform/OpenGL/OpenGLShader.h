@@ -15,6 +15,7 @@ namespace Aho {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 		virtual void BindUBO(const UBO& ubo) override;
+		virtual void SetBool(const std::string& name, bool value) override;
 		virtual void SetUint(const std::string& name, uint32_t value) override;
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
@@ -28,18 +29,6 @@ namespace Aho {
 
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
 		virtual const std::string& GetName() const override { return m_Name; }
-
-		void UploadUniformUint(const std::string& name, int value);
-		void UploadUniformInt(const std::string& name, int value);
-		void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
-
-		void UploadUniformFloat(const std::string& name, float value);
-		void UploadUniformFloat2(const std::string& name, const glm::vec2& value);
-		void UploadUniformFloat3(const std::string& name, const glm::vec3& value);
-		void UploadUniformFloat4(const std::string& name, const glm::vec4& value);
-
-		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
-		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 	private:
 		std::string ReadFile(const std::string& filepath);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);

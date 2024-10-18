@@ -44,8 +44,8 @@ namespace Aho {
 		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut) {
 			if (m_AssetPaths.contains(path.string())) {
 				/* TODO : pop out a window here */
-				//auto uuid = m_AssetPaths.at(path.string());
-				//assetOut = *(s_AssetPools.at(uuid));  why?
+				auto uuid = m_AssetPaths.at(path.string());
+				assetOut = *(s_AssetPools.at(uuid)); // why?
 				return true;
 			}
 			if (path.extension().string() != ".asset") {
@@ -79,6 +79,9 @@ namespace Aho {
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
 			const auto& fileExt = path.extension().string();
 			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
+				if (fileExt == ".fbx" || fileExt == ".FBX") {
+					AHO_CORE_WARN(".fbx does not use a verbose vertex format which may leads to incorrect tangent vector calculation");
+				}
 				assetOut = *AssetCreator::MeshAssetCreater(path.string());
 				return true;
 			}
@@ -89,7 +92,7 @@ namespace Aho {
 		void Initialize() { /* TODO */ }
 
 	private:
-		std::unordered_map<UUID, std::shared_ptr<Asset>> s_AssetPools;
+		std::unordered_map<UUID, std::shared_ptr<StaticMesh>> s_AssetPools;
 		std::unordered_map<std::string, UUID> m_AssetPaths;
 	};
 

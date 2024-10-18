@@ -42,7 +42,7 @@ namespace Aho {
 			m_AccumulatedTime += deltaTime;
 			m_FPS += 1;
 			if (m_AccumulatedTime >= 1.0f) {
-				//AHO_CORE_TRACE("{}", m_FPS);
+				AHO_CORE_TRACE("{}", m_FPS);
 				m_FPS = 0;
 				m_AccumulatedTime = 0.0f;
 			}

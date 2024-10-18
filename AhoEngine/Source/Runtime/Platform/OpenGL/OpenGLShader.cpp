@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 
 namespace Aho {
-
 	namespace Utils {
 		static GLenum ShaderTypeFromString(const std::string& type) {
 			if (type == "vertex")
@@ -15,12 +14,10 @@ namespace Aho {
 				return GL_FRAGMENT_SHADER;
 			if (type == "compute")
 				return GL_COMPUTE_SHADER;
-
 			AHO_CORE_ASSERT(false, "Unknown shader type: " + type);
 			return 0;
 		}
 	} // namespace Aho::Utils
-
 
 	OpenGLShader::OpenGLShader(const std::string& filepath) : m_FilePath(filepath) {
 		std::string source = ReadFile(filepath);
@@ -218,49 +215,63 @@ namespace Aho {
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(UBO), nullptr, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		m_BindingPoint = g_BindingPoint;
-		//g_BindingPoint += 10;
 		glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint, m_UBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 
+	void OpenGLShader::SetBool(const std::string& name, bool value) {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1i(location, value);
+	}
+
 	void OpenGLShader::SetUint(const std::string& name, uint32_t value) {
-		UploadUniformUint(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value) {
-		UploadUniformInt(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count) {
-		UploadUniformIntArray(name, values, count);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1iv(location, count, values);
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value) {
-		UploadUniformFloat(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1f(location, value);
 	}
 
 	void OpenGLShader::SetVec2(const std::string& name, const glm::vec2& value) {
-		UploadUniformFloat2(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform2f(location, value.x, value.y);
 	}
 
 	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) {
-		UploadUniformFloat3(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform3f(location, value.x, value.y, value.z);
 	}
 
 	void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) {
-		UploadUniformFloat4(name, value);
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
 
-	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& value) {
-		UploadUniformMat4(name, value);
+	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& matrix) {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& value) {
-		UploadUniformMat4(name, value);
+	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& matrix) {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value) {
-		UploadUniformMat4(name, value);
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix) {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const {
@@ -268,50 +279,4 @@ namespace Aho {
 		// TODO: customizable flags
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
 	}
-
-	void OpenGLShader::UploadUniformUint(const std::string& name, int value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform1ui(location, value);
-	}
-
-	void OpenGLShader::UploadUniformInt(const std::string& name, int value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform1i(location, value);
-	}
-
-	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform1iv(location, count, values);
-	}
-
-	void OpenGLShader::UploadUniformFloat(const std::string& name, float value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform1f(location, value);
-	}
-
-	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform2f(location, value.x, value.y);
-	}
-
-	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform3f(location, value.x, value.y, value.z);
-	}
-
-	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniform4f(location, value.x, value.y, value.z, value.w);
-	}
-
-	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-	}
-
-	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix) {
-		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-	}
-
 }

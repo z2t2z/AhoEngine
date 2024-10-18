@@ -27,30 +27,45 @@ out vec3 v_Normal;
 flat out int v_MAX_LIGHT_CNT;
 
 uniform mat4 u_Model;
+uniform bool u_HasCoords = false;
+uniform bool u_HasNormal = false;
+uniform bool u_HasDiffuse = false;
+uniform bool u_HasDepthMap = false;
+uniform bool u_HasSpecularMap = false;
+uniform bool u_HasAOMap = false;
+
+uniform sampler2D u_Normal;
 
 void main() {
 	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0f);
-	v_Position = vec3(u_Model * vec4(a_Position, 1.0f));
 	v_TexCoords = a_TexCoords;
+	v_PositionLightSpace = u_LightViewMatrix * vec4(a_Position, 1.0f);
+	v_MAX_LIGHT_CNT = info[0];
 
 	mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
-	vec3 T = normalize(normalMatrix * a_Tangent);
-	vec3 N = normalize(normalMatrix * a_Normal);
-	vec3 B = normalize(normalMatrix * a_Bitangent);
-	// T = normalize(T - dot(T, N) * N);
-	// vec3 B = cross(N, T);
-	v_Normal = a_Normal;
-	mat3 TBN = transpose(mat3(T, B, N));
-	TBN = mat3(1.0f);
-	v_MAX_LIGHT_CNT = info[0];
-	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
-		vec3 lightPos = vec3(u_LightPosition[i].r, u_LightPosition[i].g, u_LightPosition[i].b);
-		v_LightPosition[i] = TBN * lightPos;
-		v_LightColor[i] = vec3(u_LightColor[i].r, u_LightColor[i].g, u_LightColor[i].b);
+	if (u_HasNormal) {
+		// if uses a normal map then transform to tangent space
+		vec3 T = normalize(normalMatrix * a_Tangent);
+		vec3 N = normalize(normalMatrix * a_Normal);
+		T = normalize(T - dot(T, N) * N);
+		vec3 B = cross(N, T); // NOTE: right-handed
+		mat3 TBN = transpose(mat3(T, B, N));
+		for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
+			v_LightPosition[i] = TBN * vec3(u_LightPosition[i].xyz);
+			v_LightColor[i] = vec3(u_LightColor[i].rgb);
+		}
+		v_Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
+		v_Position = TBN * vec3(u_Model * vec4(a_Position, 1.0f));
+		v_ViewPosition = TBN * vec3(u_ViewPosition);
+	} else {
+		v_Normal = normalize(normalMatrix * a_Normal);
+		v_Position = vec3(u_Model * vec4(a_Position, 1.0f));
+		v_ViewPosition = vec3(u_ViewPosition);
+		for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
+			v_LightPosition[i] = vec3(u_LightPosition[i].xyz);
+			v_LightColor[i] = vec3(u_LightColor[i].rgb);
+		}
 	}
-	v_PositionLightSpace = u_LightViewMatrix * vec4(v_Position, 1.0f);
-	v_ViewPosition = TBN * vec3(u_ViewPosition);
-	v_Position = TBN * v_Position;
 }
 
 #type fragment
@@ -67,8 +82,8 @@ in vec3 v_LightColor[4];
 in vec3 v_Normal;
 flat in int v_MAX_LIGHT_CNT;
 
+
 uniform sampler2D u_Diffuse;
-uniform sampler2D u_Normal;
 uniform sampler2D u_DepthMap;
 
 uniform float u_Metalic;
@@ -131,28 +146,27 @@ float CalShadow() {
 	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
 }
 
-vec3 GetNormalFromMap() {
-    vec3 tangentNormal = texture(u_Normal, v_TexCoords).xyz * 2.0 - 1.0;
+// vec3 GetNormalFromMap() {
+//     vec3 tangentNormal = texture(u_Normal, v_TexCoords).xyz * 2.0 - 1.0;
 
-    vec3 Q1  = dFdx(v_Position);
-    vec3 Q2  = dFdy(v_Position);
-    vec2 st1 = dFdx(v_TexCoords);
-    vec2 st2 = dFdy(v_TexCoords);
+//     vec3 Q1  = dFdx(v_Position);
+//     vec3 Q2  = dFdy(v_Position);
+//     vec2 st1 = dFdx(v_TexCoords);
+//     vec2 st2 = dFdy(v_TexCoords);
 
-    vec3 N   = normalize(v_Normal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
+//     vec3 N   = normalize(v_Normal);
+//     vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+//     vec3 B  = -normalize(cross(N, T));
+//     mat3 TBN = mat3(T, B, N);
 
-    return normalize(TBN * tangentNormal);
-}
+//     return normalize(TBN * tangentNormal);
+// }
 
 void main() {
 	float intensityScalor = 1.0f;
 	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
 	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
-	vec3 Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
-	Normal = v_Normal;
+	vec3 Normal = v_Normal;
 	vec3 viewDir = normalize(v_ViewPosition - v_Position);
 
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick

@@ -15,6 +15,8 @@ namespace Aho {
 					return TextureType::Diffuse;
 				case(aiTextureType_NORMALS):
 					return TextureType::Normal;
+				case(aiTextureType_HEIGHT):
+					return TextureType::Normal;
 				case(aiTextureType_SPECULAR):
 					return TextureType::Specular;
 				case(aiTextureType_METALNESS):
@@ -44,7 +46,6 @@ namespace Aho {
 		}
 	} // namespace Utils
 
-
 	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath) {
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
@@ -59,7 +60,7 @@ namespace Aho {
 		auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
 			MaterialInfo info;
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_SPECULAR, aiTextureType_METALNESS, aiTextureType_AMBIENT_OCCLUSION }) {
+			for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_HEIGHT, aiTextureType_SPECULAR, aiTextureType_METALNESS, aiTextureType_AMBIENT_OCCLUSION }) {
 				for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 					aiString str;
 					material->GetTexture(type, i, &str);
@@ -99,8 +100,8 @@ namespace Aho {
 				}
 				vertices.push_back(vertex);
 			}
-			//indexBuffer.reserve(mesh->mNumVertices);
 			std::vector<uint32_t> indexBuffer;
+			indexBuffer.reserve(mesh->mNumVertices);
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
 				aiFace face = mesh->mFaces[i];
 				for (uint32_t j = 0; j < face.mNumIndices; j++) {
@@ -220,11 +221,10 @@ namespace Aho {
 				}
 				vertices.push_back(vertex);
 			}
-
 			RetrieveSkeletonInfo(vertices, mesh, scene);
 
-			//indexBuffer.reserve(mesh->mNumVertices);
 			std::vector<uint32_t> indexBuffer;
+			indexBuffer.reserve(mesh->mNumVertices);
 			for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
 				aiFace face = mesh->mFaces[i];
 				for (uint32_t j = 0; j < face.mNumIndices; j++) {
@@ -256,8 +256,6 @@ namespace Aho {
 		ProcessNode(scene->mRootNode, scene);
 		return nullptr;
 	}
-
-
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {
 		return std::make_shared<MaterialAsset>();

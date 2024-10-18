@@ -20,6 +20,7 @@ namespace Aho {
 		void AddTexture(const std::shared_ptr<Texture2D>& texture) { m_Textures.push_back(texture); m_Outdated = true; }
 		template<typename T>
 		void SetUniform(const std::string& name, T value);
+		void ClearState(const std::shared_ptr<Shader>& shader);
 		void Apply(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		float& GetUniform(const std::string& name) {
 			if (m_UniformFloat.contains(name)) {

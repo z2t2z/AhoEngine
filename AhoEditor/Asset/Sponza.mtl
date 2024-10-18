@@ -1,0 +1,266 @@
+# Blender 4.1.1 MTL File: 'None'
+# www.blender.org
+
+newmtl sponza:Material__299
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Background_Albedo.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Background_Albedo.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Background_Normal.png
+
+newmtl sponza:Material__301
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Lion_Albedo.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Lion_Albedo.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Lion_Normal.png
+
+newmtl sponza:Material__58
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/VasePlant_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/VasePlant_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/VasePlant_normal.png
+
+newmtl sponza:arch1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Arch_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Arch_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Arch_normal.png
+
+newmtl sponza:bricks1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Bricks_a_Albedo.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Bricks_a_Albedo.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Bricks_a_Normal.png
+
+newmtl sponza:ceiling1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Ceiling_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Ceiling_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Ceiling_normal.png
+
+newmtl sponza:chain1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/ChainTexture_Albedo.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/ChainTexture_Albedo.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/ChainTexture_Normal.png
+
+newmtl sponza:column_a1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_a_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_a_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_a_normal.png
+
+newmtl sponza:column_b1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_b_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_b_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_b_normal.png
+
+newmtl sponza:column_c1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_c_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_c_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Column_c_normal.png
+
+newmtl sponza:details1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Details_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Details_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Details_normal.png
+
+newmtl sponza:fabric_a1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Red_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Red_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Red_normal.png
+
+newmtl sponza:fabric_c1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Red_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Red_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Red_normal.png
+
+newmtl sponza:fabric_d1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Blue_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Blue_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Blue_normal.png
+
+newmtl sponza:fabric_e1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Green_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Green_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Fabric_Green_normal.png
+
+newmtl sponza:fabric_f1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Green_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Green_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Green_normal.png
+
+newmtl sponza:fabric_g1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Blue_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Blue_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Curtain_Blue_normal.png
+
+newmtl sponza:flagpole1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_FlagPole_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_FlagPole_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_FlagPole_normal.png
+
+newmtl sponza:floor1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Floor_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Floor_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Floor_normal.png
+
+newmtl sponza:leaf1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Thorn_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Thorn_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Thorn_normal.png
+
+newmtl sponza:roof1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Roof_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Roof_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Sponza_Roof_normal.png
+
+newmtl sponza:vase1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/Vase_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/Vase_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/Vase_normal.png
+
+newmtl sponza:vase_hanging1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseHanging_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseHanging_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseHanging_normal.png
+
+newmtl sponza:vase_round1
+Ns 119.999992
+Ka 0.500000 0.500000 0.500000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+illum 3
+map_Kd D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseRound_diffuse.png
+map_d D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseRound_diffuse.png
+map_Bump D:/Projs/Aho/AhoEditor/Asset/Sponza/VaseRound_normal.png

@@ -43,6 +43,7 @@ namespace Aho {
 		virtual void Delete() const = 0;
         // Uniforms
 		virtual void BindUBO(const UBO& ubo) = 0;
+		virtual void SetBool(const std::string& name, bool value) = 0;
 		virtual void SetUint(const std::string& name, uint32_t value) = 0;
         virtual void SetInt(const std::string& name, int value) = 0;
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
