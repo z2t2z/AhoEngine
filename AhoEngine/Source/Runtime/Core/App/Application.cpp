@@ -35,8 +35,7 @@ namespace Aho {
 			}
 			m_ImGuiLayer->End();
 			while (!m_EventManager->Empty()) {
-				auto e = m_EventManager->PopFront();
-				OnEvent(*e);
+				OnEvent(*m_EventManager->PopFront());
 			}
 			m_Window->OnUpdate();
 			m_AccumulatedTime += deltaTime;

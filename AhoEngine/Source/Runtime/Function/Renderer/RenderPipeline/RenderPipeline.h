@@ -23,11 +23,13 @@ namespace Aho {
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
 	protected:
-		bool m_DrawDebug{ true };
+		bool m_DrawDebug{ false };
 		RenderPass* m_ResultPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
 		RenderPass* m_DepthPass{ nullptr };
 		RenderPass* m_PickingPass{ nullptr };
+		RenderPass* m_SSAOGeoPass{ nullptr };
+		RenderPass* m_SSAO{ nullptr };
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
 		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source, only renderred in picking pass

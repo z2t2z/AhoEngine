@@ -9,11 +9,11 @@ namespace Aho {
 	}
 
 	void RenderPipeline::Execute() {
-		std::shared_ptr<Framebuffer> depthPassFBO = m_DepthPass->Execute(m_RenderData);
-		std::shared_ptr<Framebuffer> resultPassFBO = m_ResultPass->Execute(m_RenderData, depthPassFBO);
+		m_DepthPass->Execute(m_RenderData);
+		m_ResultPass->Execute(m_RenderData);
 		m_PickingPass->Execute(m_VirtualData);
 		if (m_DrawDebug) {
-			m_DebugPass->Execute(m_DebugData, depthPassFBO);
+			m_DebugPass->Execute(m_DebugData);
 		}
 	}
 
@@ -25,13 +25,8 @@ namespace Aho {
 		return m_RenderPasses[index]->GetRenderTarget();
 	}
 
+	// TODO
 	void RenderPipeline::SortRenderPasses() {
-		//std::sort(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* lhs, RenderPass* rhs) {
-		//	if (lhs->GetRenderPassType() == RenderPassType::Depth) {
-		//		return true;
-		//	}
-		//	return false;
-		//});
 		auto it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Final;
 		});
@@ -55,6 +50,18 @@ namespace Aho {
 		});
 		if (it != m_RenderPasses.end()) {
 			m_PickingPass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::SSAOGeo;
+		});
+		if (it != m_RenderPasses.end()) {
+			m_SSAOGeoPass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::SSAO;
+		});
+		if (it != m_RenderPasses.end()) {
+			m_SSAO = *it;
 		}
 	}
 } // namespace Aho

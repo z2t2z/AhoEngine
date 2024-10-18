@@ -1,9 +1,7 @@
 #include "Ahopch.h"
 #include "OpenGLShader.h"
-
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <glad/glad.h>
 
 namespace Aho {
 	namespace Utils {

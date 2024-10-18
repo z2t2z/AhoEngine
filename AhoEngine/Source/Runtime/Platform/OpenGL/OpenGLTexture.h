@@ -11,6 +11,7 @@ namespace Aho {
 		OpenGLTexture2D(const TextureSpecification& specification);
 		OpenGLTexture2D(const std::string& path, bool flipOnLoad = false, bool grayScale = true);
 		virtual ~OpenGLTexture2D();
+		virtual void Invalidate() { AHO_CORE_ASSERT("Should not be called for now!"); };
 		virtual const TextureSpecification& GetSpecification() const override { return m_Specification; }
 		virtual void Reload(const std::string& path) {}
 		virtual uint32_t GetWidth() const override { return m_Width; }

@@ -47,24 +47,105 @@ namespace Aho {
 
 	void RenderLayer::SetupForwardRenderPipeline() {
 		RenderPipelineDefault* pipeline = new RenderPipelineDefault();
-		pipeline->AddRenderPass(SetupMainPass());
+		auto mainPass = SetupMainPass();
+		pipeline->AddRenderPass(mainPass);
 		auto depthPass = SetupDepthPass();
 		auto depthMapFBO = depthPass->GetRenderTarget();
 		pipeline->AddRenderPass(depthPass);
+		Texture* depthTex = depthPass->GetRenderTarget()->GetDepthTexture();
+		mainPass->AddGBuffer(depthTex);
 		auto debugPass = SetupDebugPass(depthMapFBO);
+		debugPass->AddGBuffer(depthTex);
 		pipeline->AddRenderPass(debugPass);
 		pipeline->AddRenderPass(SetupPickingPass());
+		//pipeline->AddRenderPass(SetupSSAOGeoPass());
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
+	}
+
+	RenderPass* RenderLayer::SetupSSAOGeoPass() {
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+		});
+		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
+		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO_GeoPass.glsl").string());
+		RenderPassDefault* renderPass = new RenderPassDefault();
+		AHO_CORE_ASSERT(shader->IsCompiled());
+		renderPass->SetShader(shader);
+		renderPass->SetRenderCommand(cmdBuffer);
+		FBTextureSpecification positionAttachment;
+		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		positionAttachment.internalFormat = FBInterFormat::RGBA16F;
+		positionAttachment.dataFormat = FBDataFormat::RGBA;
+		positionAttachment.dataType = FBDataType::Float;
+		positionAttachment.target = FBTarget::Texture2D;
+		positionAttachment.wrapModeS = FBWrapMode::Clamp;
+		positionAttachment.wrapModeT = FBWrapMode::Clamp;
+		positionAttachment.filterModeMin = FBFilterMode::Nearest;
+		positionAttachment.filterModeMag = FBFilterMode::Nearest;
+		FBTextureSpecification normalAttachment = positionAttachment;
+		normalAttachment.wrapModeS = FBWrapMode::None;
+		FBTextureSpecification colorAttachment = normalAttachment;
+		colorAttachment.dataType = FBDataType::UnsignedByte;
+		colorAttachment.internalFormat = FBInterFormat::RGBA8;
+		FBSpecification fbSpec(1280u, 720u, { positionAttachment, normalAttachment, colorAttachment, texSpecDepth });
+		auto FBO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(FBO);
+		renderPass->SetRenderPassType(RenderPassType::SSAOGeo);
+		return renderPass;
+	}
+
+	RenderPass* RenderLayer::SetupSSAOPass() {
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				texBuffer->Bind(texOffset++);
+			}
+			//shader->SetInt("u_")
+			for (const auto& data : renderData) {
+				data->Bind(shader, texOffset);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+		});
+
+		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
+		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO.glsl").string());
+		RenderPassDefault* renderPass = new RenderPassDefault();
+		AHO_CORE_ASSERT(shader->IsCompiled());
+		renderPass->SetShader(shader);
+		renderPass->SetRenderCommand(cmdBuffer);
+		FBTextureSpecification ssaoColor;
+		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		ssaoColor.internalFormat = FBInterFormat::RED;
+		ssaoColor.dataFormat = FBDataFormat::RED;
+		ssaoColor.dataType = FBDataType::UnsignedByte;
+		ssaoColor.target = FBTarget::Texture2D;
+		ssaoColor.filterModeMin = FBFilterMode::Nearest;
+		ssaoColor.filterModeMag = FBFilterMode::Nearest;
+		FBTextureSpecification ssaoBlur = ssaoColor;
+		FBSpecification fbSpec(1280u, 720u, { ssaoColor, ssaoBlur });
+		auto FBO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(FBO);
+		renderPass->SetRenderPassType(RenderPassType::Final);
+		return renderPass;
 	}
 
 	RenderPass* RenderLayer::SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo) {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->SetClearColor(glm::vec4(0.1f, 0.15f, 0.15f, 1.0f));
 		RenderPassDefault* debugPass = new RenderPassDefault();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
-			AHO_CORE_ASSERT(lastFBO, "Framebuffer is not set correctly in debug pass");
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
 			uint32_t texOffset = 0u;
-			lastFBO->GetDepthTexture()->Bind(texOffset);
+			AHO_CORE_ASSERT(textureBuffers.size() == 1);
+			for (const auto& texBuffer : textureBuffers) {
+				texBuffer->Bind(texOffset);
+			}
 			shader->SetInt("u_DepthMap", texOffset++);
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset);
@@ -87,7 +168,7 @@ namespace Aho {
 		texSpecColor.wrapModeT = FBWrapMode::Clamp;
 		texSpecColor.filterModeMin = FBFilterMode::Nearest;
 		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor, texSpecDepth });
+		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
 		auto FBO = Framebuffer::Create(fbSpec);
 		debugPass->SetRenderTarget(FBO);
 		return debugPass;
@@ -95,9 +176,11 @@ namespace Aho {
 	
 	RenderPass* RenderLayer::SetupMainPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
 			uint32_t texOffset = 0u;
-			lastFBO->GetDepthTexture()->Bind(texOffset);
+			for (const auto& texBuffer : textureBuffers) {
+				texBuffer->Bind(texOffset);
+			}
 			shader->SetInt("u_DepthMap", texOffset++);
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset);
@@ -133,7 +216,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupPickingPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -164,7 +247,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupDepthPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& lastFBO) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());

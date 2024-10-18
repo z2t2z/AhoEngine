@@ -71,6 +71,8 @@ namespace Aho {
 
 		GLint GetGLParam(FBInterFormat format) {
 			switch (format) {
+				case FBInterFormat::RED:
+					return GL_RED;
 				case FBInterFormat::RGB8:
 					return GL_RGB8;
 				case FBInterFormat::RGBA8:
@@ -90,6 +92,8 @@ namespace Aho {
 
 		GLenum GetGLParam(FBDataFormat format) {
 			switch (format) {
+				case FBDataFormat::RED:
+					return GL_RED;
 				case FBDataFormat::RGB:
 					return GL_RGB;
 				case FBDataFormat::RGBA:
@@ -120,53 +124,56 @@ namespace Aho {
 		for (const auto& spec : m_Specification.Attachments) {
 			if (!Utils::IsDepthFormat(spec.dataFormat)) {
 				m_ColorAttachmentSpecifications.push_back(spec);
+				m_Attchments.push_back(GL_COLOR_ATTACHMENT0 + m_Attchments.size());
 			}
 			else {
+				m_DepthTex = new FBTexture();
 				m_DepthAttachmentSpecification = spec;
 			}
 		}
+		m_ColorAttachmentTex.resize(m_Attchments.size());
+		std::fill(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), new FBTexture());
 		Invalidate();
 	}
 
 	OpenGLFramebuffer::~OpenGLFramebuffer() {
-		glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
-		glDeleteTextures(1, &m_DepthAttachment);
-		glDeleteFramebuffers(1, &m_FBO);
+		if (m_DepthTex) {
+			delete m_DepthTex;
+		}
+		for (auto& tex : m_ColorAttachmentTex) {
+			delete tex;
+		}
 	}
 
 	// TODO: Make these more clear
 	void OpenGLFramebuffer::Invalidate() {
 		if (m_FBO) {
 			glDeleteFramebuffers(1, &m_FBO);
-			glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
-			glDeleteTextures(1, &m_DepthAttachment);
+			if (m_DepthTex) {
+				m_DepthTex->Invalidate();
+			}
+			for (auto& tex : m_ColorAttachmentTex) {
+				tex->Invalidate();
+			}
 		}
-		// TODO: this is the old way. Big to do
-		glCreateFramebuffers(1, &m_FBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
-		m_DepthTex = std::make_shared<FBTexture>(m_DepthAttachment);
-		glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+		// if has depth attachment, invalidate it
+		if (m_DepthAttachmentSpecification.dataFormat == FBDataFormat::DepthComponent) {
+			glCreateFramebuffers(1, &m_FBO);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+			glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
+			m_DepthTex->SetTextureID(m_DepthAttachment);
+			glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+		}
 
+		// if has color attachments, invalidate them
 		if (!m_ColorAttachmentSpecifications.empty()) {
-			m_ColorAttachments.clear();
-			for (const auto& spec : m_ColorAttachmentSpecifications) {
-				AddColorAttachment(spec);
-			}
-			m_ColorAttachmentTex.clear(); // TODO;;
-			for (const auto& fbtexID : m_ColorAttachments) {
-				m_ColorAttachmentTex.emplace_back(std::make_shared<FBTexture>(fbtexID));
-			}
-			std::vector<GLenum> attchments;
-			for (int i = 0; i < m_ColorAttachments.size(); i++) {
-				attchments.push_back(GL_COLOR_ATTACHMENT0 + i);
-			}
-			glDrawBuffers(static_cast<GLsizei>(m_ColorAttachments.size()), attchments.data());
+			InvalidateColorAttachment();
+			glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
 		}
 		else {
-			glDrawBuffer(GL_NONE); // if no color attachments, then assume it is a depth buffer
+			glDrawBuffer(GL_NONE);
 			glReadBuffer(GL_NONE);
 		}
 		AHO_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
@@ -192,16 +199,16 @@ namespace Aho {
 		Invalidate();
 	}
 
-	std::shared_ptr<Texture> OpenGLFramebuffer::GetDepthTexture() {
+	Texture* OpenGLFramebuffer::GetDepthTexture() {
 		return m_DepthTex;
 	}
 
-	std::vector<std::shared_ptr<Texture>> OpenGLFramebuffer::GetTextureAttachments() {
+	std::vector<Texture*> OpenGLFramebuffer::GetTextureAttachments() {
 		return m_ColorAttachmentTex;
 	}
 
 	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) {
-		if (attachmentIndex >= m_ColorAttachments.size()) {
+		if (attachmentIndex >= m_ColorAttachmentTex.size()) {
 			AHO_CORE_ERROR("Attachment index out of bound: {}", attachmentIndex);
 			return 0u;
 		}
@@ -216,49 +223,31 @@ namespace Aho {
 	}
 
 	// TODO: Mipmap level, filtering method
-	void OpenGLFramebuffer::AddColorAttachment(const FBTextureSpecification& spec) {
-		uint32_t _;
-		m_ColorAttachments.emplace_back(_);
-		auto target = Utils::GetGLParam(spec.target);
-		auto internalFormat = Utils::GetGLParam(spec.internalFormat);
-		auto dataFormat = Utils::GetGLParam(spec.dataFormat);
-		auto dataType = Utils::GetGLParam(spec.dataType);
-		auto wrapModeS = Utils::GetGLParam(spec.wrapModeS);
-		auto wrapModeT = Utils::GetGLParam(spec.wrapModeT);
-		auto filterModeMin = Utils::GetGLParam(spec.filterModeMin);
-		auto filterModeMag = Utils::GetGLParam(spec.filterModeMag);
-
-		glCreateTextures(target, 1, &m_ColorAttachments.back());
-
-		glBindTexture(target, m_ColorAttachments.back());
-		glTexImage2D(target, 0, internalFormat, m_Specification.Width, m_Specification.Height, 0, dataFormat, dataType, nullptr);
-		if (wrapModeS) {
-			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapModeS);
-			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapModeT);
+	void OpenGLFramebuffer::InvalidateColorAttachment() {
+		for (size_t i = 0; i < m_ColorAttachmentSpecifications.size(); i++) {
+			const auto& spec = m_ColorAttachmentSpecifications[i];
+			uint32_t id;
+			auto target = Utils::GetGLParam(spec.target);
+			auto internalFormat = Utils::GetGLParam(spec.internalFormat);
+			auto dataFormat = Utils::GetGLParam(spec.dataFormat);
+			auto dataType = Utils::GetGLParam(spec.dataType);
+			auto wrapModeS = Utils::GetGLParam(spec.wrapModeS);
+			auto wrapModeT = Utils::GetGLParam(spec.wrapModeT);
+			auto filterModeMin = Utils::GetGLParam(spec.filterModeMin);
+			auto filterModeMag = Utils::GetGLParam(spec.filterModeMag);
+			glCreateTextures(target, 1, &id);
+			m_ColorAttachmentTex[i]->SetTextureID(id);
+			glBindTexture(target, id);
+			glTexImage2D(target, 0, internalFormat, m_Specification.Width, m_Specification.Height, 0, dataFormat, dataType, nullptr);
+			if (wrapModeS) {
+				glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapModeS);
+				glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapModeT);
+			}
+			if (filterModeMag) {
+				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filterModeMin);
+				glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filterModeMag);
+			}
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, id, 0);
 		}
-		if (filterModeMag) {
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filterModeMin);
-			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filterModeMag);
-		}
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + m_ColorAttachments.size() - 1, target, m_ColorAttachments.back(), 0);
-		// TODO: why the followings are not working?
-		//int mipLevels = 1 + static_cast<int>(std::floor(std::log2(std::max(m_Specification.Width, m_Specification.Height))));
-		//glCreateTextures(GL_TEXTURE_2D, mipLevels, &m_ColorAttachments.back());
-		//glTextureStorage2D(m_ColorAttachments.back(), 1, GL_RGBA, m_Specification.Width, m_Specification.Height);
-		//glTextureParameteri(m_ColorAttachments.back(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTextureParameteri(m_ColorAttachments.back(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + m_ColorAttachments.size() - 1, GL_TEXTURE_2D, m_ColorAttachments.back(), 0);
 	}
-
-	void OpenGLFramebuffer::AddColorAttachment() {
-		AHO_CORE_ASSERT(!m_ColorAttachments.empty(), "Attempting to add a color attachment to an incomplete frame buffer");
-		const auto spec = m_ColorAttachmentSpecifications[0];
-		AddColorAttachment(spec);
-	}
-
-	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value) {
-		AHO_CORE_ERROR("Not implemented yet");
-		return;
-	}
-
 }

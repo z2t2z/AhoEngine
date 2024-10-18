@@ -40,6 +40,7 @@ namespace Aho {
 	class Texture {
 	public:
 		virtual ~Texture() = default;
+		virtual void Invalidate() = 0;
 		virtual const TextureSpecification& GetSpecification() const = 0;
 		virtual void Reload(const std::string& path) = 0;
 		virtual uint32_t GetWidth() const = 0;

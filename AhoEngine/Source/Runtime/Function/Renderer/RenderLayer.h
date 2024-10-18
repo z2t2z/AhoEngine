@@ -18,6 +18,8 @@ namespace Aho {
 		UBO* GetUBO() { return &m_UBO; }
 	private:
 		void SetupForwardRenderPipeline();
+		RenderPass* SetupSSAOGeoPass();
+		RenderPass* SetupSSAOPass();
 		RenderPass* SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo);
 		RenderPass* SetupDepthPass();
 		RenderPass* SetupMainPass();

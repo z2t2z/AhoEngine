@@ -10,9 +10,9 @@ namespace Aho {
 		m_Cube = std::make_shared<StaticMesh>();
 		m_Sphere = std::make_shared<StaticMesh>();
 		m_Cylinder = std::make_shared<StaticMesh>();
-		m_AssetManager->LoadAssetFromFile(path / "Cube.fbx", *m_Cube);
-		m_AssetManager->LoadAssetFromFile(path / "Sphere.fbx", *m_Sphere);
-		m_AssetManager->LoadAssetFromFile(path / "Cylinder.fbx", *m_Cylinder);
+		m_AssetManager->LoadAssetFromFile(path / "Cube.obj", *m_Cube);
+		m_AssetManager->LoadAssetFromFile(path / "Sphere.obj", *m_Sphere);
+		m_AssetManager->LoadAssetFromFile(path / "Cylinder.obj", *m_Cylinder);
 	}
 
 	void ResourceLayer::OnAttach() {

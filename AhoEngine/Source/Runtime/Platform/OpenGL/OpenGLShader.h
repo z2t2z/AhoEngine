@@ -26,7 +26,6 @@ namespace Aho {
 		virtual void SetMat2(const std::string& name, const glm::mat2& mat) override;
 		virtual void SetMat3(const std::string& name, const glm::mat3& mat) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& mat) override;
-
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
 		virtual const std::string& GetName() const override { return m_Name; }
 	private:
