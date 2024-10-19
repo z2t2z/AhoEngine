@@ -36,7 +36,7 @@ namespace Aho {
 		LightData* GetLightData() { return &m_LightData; }
 	private:
 		void AddLightSource(LightType lt);
-		void SubmitUBOData();
+		void UpdataUBOData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset);

@@ -1,11 +1,10 @@
 #include "Ahopch.h"
 #include "OpenGLFrameBuffer.h"
 #include "Runtime/Core/Core.h"
+#include <glm/glm.hpp>
 
 namespace Aho {
-
 	static const uint32_t s_MaxFramebufferSize = 8192;
-
 	namespace Utils {
 		static GLenum TextureTarget(bool multisampled) {
 			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
@@ -16,6 +15,25 @@ namespace Aho {
 				case FBDataFormat::DepthComponent:  return true;
 			}
 			return false;
+		}
+
+		Texture* CreateNoiseTexture(int siz) {
+			std::vector<glm::vec3> ssaoNoise;
+			for (unsigned int i = 0; i < siz; i++) {
+				glm::vec3 noise = GenerateRandomVec3();
+				noise.z = 0.0f;
+				ssaoNoise.push_back(noise);
+			}
+			uint32_t id;
+			glGenTextures(1, &id);
+			glBindTexture(GL_TEXTURE_2D, id);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			FBTexture* noiseTex = new FBTexture(id);
+			return noiseTex;
 		}
 		/*
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -131,8 +149,9 @@ namespace Aho {
 				m_DepthAttachmentSpecification = spec;
 			}
 		}
-		m_ColorAttachmentTex.resize(m_Attchments.size());
-		std::fill(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), new FBTexture());
+		for (size_t i = 0; i < m_Attchments.size(); i++) {
+			m_ColorAttachmentTex.push_back(new FBTexture());
+		}
 		Invalidate();
 	}
 
@@ -140,7 +159,7 @@ namespace Aho {
 		if (m_DepthTex) {
 			delete m_DepthTex;
 		}
-		for (auto& tex : m_ColorAttachmentTex) {
+		for (Texture* tex : m_ColorAttachmentTex) {
 			delete tex;
 		}
 	}
@@ -156,10 +175,10 @@ namespace Aho {
 				tex->Invalidate();
 			}
 		}
+		glCreateFramebuffers(1, &m_FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 		// if has depth attachment, invalidate it
 		if (m_DepthAttachmentSpecification.dataFormat == FBDataFormat::DepthComponent) {
-			glCreateFramebuffers(1, &m_FBO);
-			glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
 			m_DepthTex->SetTextureID(m_DepthAttachment);
 			glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);

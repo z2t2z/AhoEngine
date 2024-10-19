@@ -1,7 +1,9 @@
 #include "Ahopch.h"
 #include "RenderLayer.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
+#include "Runtime/Function/Renderer/Shader.h"
 #include "Runtime/Platform/OpenGL/OpenGLShader.h"
+#include "Runtime/Platform/OpenGL/OpenGLFramebuffer.h"
 #include <imgui.h>
 
 namespace Aho {
@@ -19,9 +21,6 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnUpdate(float deltaTime) {
-		for (const auto& pass : *(m_Renderer->GetCurrentRenderPipeline())) {
-			pass->BindSceneDataUBO(m_UBO);
-		}
 		m_Renderer->Render();
 	}
 
@@ -58,13 +57,38 @@ namespace Aho {
 		debugPass->AddGBuffer(depthTex);
 		pipeline->AddRenderPass(debugPass);
 		pipeline->AddRenderPass(SetupPickingPass());
-		//pipeline->AddRenderPass(SetupSSAOGeoPass());
+
+		// Setup SSAO
+		auto ssaoGeoPass = SetupSSAOGeoPass();
+		auto attachments = ssaoGeoPass->GetRenderTarget()->GetTextureAttachments();
+		auto ssaoPass = SetupSSAOPass();
+		auto ssaoLighting = SetupSSAOLightingPass();
+		for (int i = 0; i < 3; i++) {
+			// Note that order matters: gPostion, gNormal, gAlbedo, gSSAO
+			if (i < 2) {
+				ssaoPass->AddGBuffer(attachments[i]);
+			}	
+			ssaoLighting->AddGBuffer(attachments[i]);
+		}
+		// ssaoPass: gPostion, gNormal, gNoise
+		ssaoPass->AddGBuffer(Utils::CreateNoiseTexture(32));
+		// ssaoPass: gPostion, gNormal, gAlbedo, gSSAO
+		ssaoLighting->AddGBuffer(ssaoPass->GetRenderTarget()->GetTextureAttachments().back());
+
+		pipeline->AddRenderPass(ssaoGeoPass);
+		pipeline->AddRenderPass(ssaoPass);
+		pipeline->AddRenderPass(ssaoLighting);
+		// Setup UBO data
+		pipeline->AddUBO((void*)new UBO());
+		pipeline->AddUBO((void*)new GeneralUBO());
+		pipeline->AddUBO((void*)new SSAOUBO());
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
 	}
 
 	RenderPass* RenderLayer::SetupSSAOGeoPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(UBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -73,6 +97,7 @@ namespace Aho {
 		});
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO_GeoPass.glsl").string());
+		shader->SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		renderPass->SetShader(shader);
@@ -101,12 +126,16 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupSSAOPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		//cmdBuffer->SetClearFlags(ClearFlags::Color_Buffer);
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(SSAOUBO));
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++);
 			}
-			//shader->SetInt("u_")
+			shader->SetInt("u_gPosition", 0);
+			shader->SetInt("u_gNormal", 1);
+			shader->SetInt("u_Noise", 2);
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -116,6 +145,7 @@ namespace Aho {
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO.glsl").string());
+		shader->SetUBO(sizeof(SSAOUBO), 2, DrawType::Dynamic);
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		renderPass->SetShader(shader);
@@ -124,15 +154,61 @@ namespace Aho {
 		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
 		ssaoColor.internalFormat = FBInterFormat::RED;
 		ssaoColor.dataFormat = FBDataFormat::RED;
-		ssaoColor.dataType = FBDataType::UnsignedByte;
+		ssaoColor.dataType = FBDataType::Float;
 		ssaoColor.target = FBTarget::Texture2D;
 		ssaoColor.filterModeMin = FBFilterMode::Nearest;
 		ssaoColor.filterModeMag = FBFilterMode::Nearest;
-		FBTextureSpecification ssaoBlur = ssaoColor;
-		FBSpecification fbSpec(1280u, 720u, { ssaoColor, ssaoBlur });
+		//FBTextureSpecification ssaoBlur = ssaoColor;
+		FBSpecification fbSpec(1280u, 720u, {ssaoColor});
 		auto FBO = Framebuffer::Create(fbSpec);
 		renderPass->SetRenderTarget(FBO);
-		renderPass->SetRenderPassType(RenderPassType::Final);
+		renderPass->SetRenderPassType(RenderPassType::SSAO);
+		return renderPass;
+	}
+
+	RenderPass* RenderLayer::SetupSSAOLightingPass() {
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		//cmdBuffer->SetDepthTest(false);
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(GeneralUBO));
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				texBuffer->Bind(texOffset++); // Note that order matters!
+			}
+			shader->SetInt("u_gPosition", 0);
+			shader->SetInt("u_gNormal", 1);
+			shader->SetInt("u_gAlbedo", 2);
+			shader->SetInt("u_gSSAO", 3);
+			//shader->SetInt("u_DepthMap", texOffset++);
+			for (const auto& data : renderData) {
+				data->Bind(shader, texOffset);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+		});
+
+		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
+		std::string FileName = (currentPath / "ShaderSrc" / "SSAO_LightingPass.glsl").string();
+		auto shader = Shader::Create(FileName);
+		AHO_CORE_ASSERT(shader->IsCompiled());
+		shader->SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
+		RenderPassDefault* renderPass = new RenderPassDefault();
+		renderPass->SetShader(shader);
+		renderPass->SetRenderCommand(cmdBuffer);
+		FBTextureSpecification texSpecColor;
+		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		texSpecColor.internalFormat = FBInterFormat::RGBA8;
+		texSpecColor.dataFormat = FBDataFormat::RGBA;
+		texSpecColor.dataType = FBDataType::UnsignedByte;
+		texSpecColor.target = FBTarget::Texture2D;
+		texSpecColor.wrapModeS = FBWrapMode::Clamp;
+		texSpecColor.wrapModeT = FBWrapMode::Clamp;
+		texSpecColor.filterModeMin = FBFilterMode::Nearest;
+		texSpecColor.filterModeMag = FBFilterMode::Nearest;
+		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
+		auto FBO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(FBO);
+		renderPass->SetRenderPassType(RenderPassType::SSAOLighting);
 		return renderPass;
 	}
 
@@ -140,7 +216,7 @@ namespace Aho {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->SetClearColor(glm::vec4(0.1f, 0.15f, 0.15f, 1.0f));
 		RenderPassDefault* debugPass = new RenderPassDefault();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
 			uint32_t texOffset = 0u;
 			AHO_CORE_ASSERT(textureBuffers.size() == 1);
 			for (const auto& texBuffer : textureBuffers) {
@@ -176,10 +252,11 @@ namespace Aho {
 	
 	RenderPass* RenderLayer::SetupMainPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(GeneralUBO));
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset);
+				texBuffer->Bind(texOffset); // TODO;
 			}
 			shader->SetInt("u_DepthMap", texOffset++);
 			for (const auto& data : renderData) {
@@ -192,10 +269,10 @@ namespace Aho {
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "pbrShader.glsl").string();
 		auto shader = Shader::Create(FileName);
+		AHO_CORE_ASSERT(shader->IsCompiled());
+		shader->SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
 		RenderPassDefault* renderPass = new RenderPassDefault();
-		if (shader->IsCompiled()) {
-			renderPass->SetShader(shader);
-		}
+		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
 		FBTextureSpecification texSpecColor;
 		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
@@ -216,7 +293,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupPickingPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(UBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -227,6 +305,7 @@ namespace Aho {
 		pickingPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto pickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
+		pickingShader->SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		pickingPass->SetShader(pickingShader);
 		FBTextureSpecification texSpecColor;
 		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
@@ -247,7 +326,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupDepthPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo) {
+			shader->BindUBO(ubo, sizeof(UBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -258,6 +338,7 @@ namespace Aho {
 		depthRenderPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "ShadowMap.glsl");
+		depthShader->SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		depthRenderPass->SetShader(depthShader);
 		FBTextureSpecification texSpecDepth;
 		texSpecDepth.dataFormat = FBDataFormat::DepthComponent;

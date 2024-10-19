@@ -1,8 +1,8 @@
 #type vertex
-#version 450 core
+#version 460 core
 
 layout(location = 0) in vec3 a_Position;
-layout(location = 2) in vec2 a_TexCoords;
+layout(location = 1) in vec2 a_TexCoords;
 
 out vec2 v_TexCoords;
 
@@ -12,42 +12,50 @@ void main() {
 }
 
 #type fragment
-#version 450 core
-
-layout(location = 0) out vec4 color;
+#version 460 core
+layout(location = 0) out vec4 out_color;
 
 in vec2 v_TexCoords;
+layout(std140, binding = 1) uniform GeneralUBO{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
 
-// Light info
-uniform vec3 u_LightPosition;
-uniform vec3 u_LightColor;
+	vec4 u_LightPosition[4];
+	vec4 u_LightColor[4];
+	ivec4 info;
+};
+
 uniform float u_Linear;
 uniform float u_Quadratic;
 
-uniform sampler2D g_PositionDepth;
-uniform sampler2D g_Normal;
-uniform sampler2D g_Albedo;
-uniform sampler2D g_SSAO;
+uniform sampler2D u_gPosition;
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
+uniform sampler2D u_gSSAO;
 
 void main() {
-	vec3 position = texture(g_PositionDepth, v_TexCoords).rgb;
-	vec3 normal = texture(g_Normal, v_TexCoords).rgb;
-	vec3 albedo = texture(g_Albedo, v_TexCoords).rgb;
-	float AO = texture(g_SSAO, v_TexCoords).r;
+	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb;
+	vec3 normal = texture(u_gNormal, v_TexCoords).rgb;
+	vec3 albedo = texture(u_gAlbedo, v_TexCoords).rgb;
+	vec3 lightColor = u_LightColor[0].rgb;
+	vec3 lightPos = (u_View * u_LightPosition[0]).xyz;
+	float AO = texture(u_gSSAO, v_TexCoords).r;
 
-	vec3 ambient = vec3(0.3f * AO);
-	vec3 viewDir = normalize(-position);
+	vec3 ambient = vec3(0.3f * AO * albedo);
+	vec3 viewDir = normalize(-fragPos);
 
-	vec3 lightDir = normalize(u_LightPosition - position);
-	vec3 diffuse = max(dot(normal, lightDir), 0.0f) * albedo * u_LightColor;
+	vec3 lightDir = normalize(lightPos - fragPos);
+	vec3 diffuse = max(dot(normal, lightDir), 0.0f) * albedo * lightColor;
 
 	vec3 halfwayDir = normalize(lightDir + viewDir);
 	float specFac = pow(max(dot(normal, halfwayDir), 0.0f), 16.0f);
-	vec3 spec = u_LightColor * specFac;
+	vec3 spec = lightColor * specFac;
 
-	float dis = length(u_LightPosition - position);
-	float attenuation = 1.0f / (1.0f + u_Linear * dis + u_Quadratic * dis * dis);
-	vec3 result = ambient + (diffuse + spec) * attenuation;
+	float dis = length(lightPos - fragPos);
+	float attenuation = 1.0f / (dis * dis);
+	vec3 result = ambient + (diffuse + spec);
 
-	color = vec4(result, 1.0f);
+	out_color = vec4(result, 1.0f);
 }

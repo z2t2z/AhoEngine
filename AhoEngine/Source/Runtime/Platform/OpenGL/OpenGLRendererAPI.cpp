@@ -16,4 +16,14 @@ namespace Aho {
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 	}
+
+	void OpenGLRendererAPI::SetDepthTest(bool state) {
+		if (state) {
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LEQUAL);
+		}
+		else {
+			glDisable(GL_DEPTH_TEST);
+		}
+	}
 }

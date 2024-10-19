@@ -16,23 +16,58 @@ namespace Aho {
 		Compute
 	};
 
-	// TODO: For now this is hardcoded for every shader
+	// Works totally fine without alignment
+	struct alignas(16) UBO {
+		UBO() = default;
+		glm::mat4 u_View{ 0.0f };
+		glm::mat4 u_Projection{ 0.0f };
+		glm::vec4 u_ViewPosition{ 0.0f };
+		glm::mat4 u_LightViewMatrix{ 0.0f };
+		size_t GetSize() const { return sizeof(UBO); }
+	};
+
 	constexpr int MAX_LIGHT_CNT = 4;
-	struct UBO {
-		UBO() {
+	struct alignas(16) GeneralUBO {
+		glm::mat4 u_View{ 0.0f };
+		glm::mat4 u_Projection{ 0.0f };
+		glm::vec4 u_ViewPosition{ 0.0f };
+		glm::mat4 u_LightViewMatrix{ 0.0f };
+
+		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
+		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
+		glm::ivec4 info{ 0 };
+		GeneralUBO() {
 			for (int i = 0; i < MAX_LIGHT_CNT; i++) {
 				u_LightPosition[i] = u_LightColor[i] = glm::vec4(0.0f);
 				u_LightPosition[i].w = 1.0f;
 			}
-			memset(info, 0, sizeof(info));
 		}
-		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
-		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
-		glm::mat4 u_View{ 0.0f };
+		size_t GetSize() const { return sizeof(GeneralUBO); }
+	};
+
+	constexpr int SAMPLES_CNT = 64;
+	struct alignas(16) SSAOUBO {
 		glm::mat4 u_Projection{ 0.0f };
-		glm::mat4 u_LightViewMatrix{ 0.0f };
-		glm::vec4 u_ViewPosition{ 0.0f };
-		int info[MAX_LIGHT_CNT];
+		glm::vec4 samples[SAMPLES_CNT];
+		glm::vec4 info{ 0 }; // width, height, radius, bias
+		SSAOUBO() {
+			for (int i = 0; i < SAMPLES_CNT; i++) {
+				glm::vec3 sample = Utils::GenerateRandomVec3(); // [-1, 1]
+				sample = glm::normalize(sample);
+				sample *= (Utils::GenerateRandomVec3().x + 1.0f) / 2.0f;
+				float scale = float(i) / 64.0f;
+				// scale samples s.t. they're more aligned to center of kernel
+				scale = 0.1f + 1.0f * (scale * scale);
+				sample *= scale;
+				samples[i] = glm::vec4(sample, 0.0f);
+			}
+			info = { 1280.f, 720.0f, 0.5f, 0.025f };
+		}
+	};
+
+	enum class DrawType {
+		Static = 0,
+		Dynamic
 	};
 
 	class Shader {
@@ -42,7 +77,8 @@ namespace Aho {
 		virtual void Unbind() const = 0;
 		virtual void Delete() const = 0;
         // Uniforms
-		virtual void BindUBO(const UBO& ubo) = 0;
+		virtual void SetUBO(size_t size, uint32_t bindingPoint, DrawType type) = 0;
+		virtual void BindUBO(const void* ubo, size_t size) = 0;
 		virtual void SetBool(const std::string& name, bool value) = 0;
 		virtual void SetUint(const std::string& name, uint32_t value) = 0;
         virtual void SetInt(const std::string& name, int value) = 0;

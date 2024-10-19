@@ -161,7 +161,6 @@ namespace Aho {
 			glDeleteShader(handle);
 		}
 		m_Compiled = true;
-		InitUBO();
 	}
 
 	void OpenGLShader::CreateProgram() {
@@ -199,23 +198,22 @@ namespace Aho {
 		m_ShaderID = program;
 	}
 
-	void OpenGLShader::BindUBO(const UBO& ubo) {
+	void OpenGLShader::SetUBO(size_t size, uint32_t bindingPoint, DrawType type) {
+		m_BindingPoint = bindingPoint;
+		glGenBuffers(1, &m_UBO);
 		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(UBO), &ubo);
+		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+		glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint, m_UBO);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+
+	void OpenGLShader::BindUBO(const void* ubo, size_t size) {
+		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 
 	/* Hard Code for now */
-	static uint32_t g_BindingPoint = 0u;
-	void OpenGLShader::InitUBO() {
-		glGenBuffers(1, &m_UBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_UBO);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(UBO), nullptr, GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		m_BindingPoint = g_BindingPoint;
-		glBindBufferBase(GL_UNIFORM_BUFFER, m_BindingPoint, m_UBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	}
 
 	void OpenGLShader::SetBool(const std::string& name, bool value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());

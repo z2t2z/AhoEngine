@@ -7,13 +7,14 @@ layout(location = 2) in vec2 a_TexCoords;
 layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec3 a_Bitangent;
 
-layout(std140, binding = 0) uniform CameraData{
-	vec4 u_LightPosition[4];
-	vec4 u_LightColor[4];
+layout(std140, binding = 1) uniform GeneralUBO{
 	mat4 u_View;
 	mat4 u_Projection;
-	mat4 u_LightViewMatrix; // ortho * view
 	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
+
+	vec4 u_LightPosition[4];
+	vec4 u_LightColor[4];
 	ivec4 info;
 };
 

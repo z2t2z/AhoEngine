@@ -1,5 +1,5 @@
 #type vertex
-#version 450 core
+#version 460 core
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoords;
@@ -12,57 +12,54 @@ void main() {
 }
 
 #type fragment
-#version 450 core
-
-out float color;
-
+#version 460 core
+out float out_color;
 in vec2 v_TexCoords;
 
-uniform vec3 u_LightPosition;
-uniform vec3 u_LightColor;
-uniform float u_Linear;
-uniform float u_Quadratic;
+layout(std140, binding = 2) uniform SSAOUBO {
+	mat4 u_Projection;
 
-uniform sampler2D g_PositionDepth;
-uniform sampler2D g_Normal;
-uniform sampler2D u_NoiseTexture;
+	vec4 u_Samples[64];
+	vec4 u_Info; // width, height, radius, bias
+};
 
-uniform float u_Width;
-uniform float u_Height;
+uniform sampler2D u_gPosition;
+uniform sampler2D u_gNormal;
+uniform sampler2D u_Noise;
 
-uniform float u_Radius;
-uniform int u_KernelSiz;
-
-int MAX_SAMPLES_SIZE = 64;
-uniform vec3 u_Samples[64];
-
-uniform mat4 u_Projection;
+uniform int u_KernelSize = 64;
+const int MAX_SAMPLES = 64;
 
 void main() {
-	vec3 normal = texture(g_Normal, v_TexCoords).rgb;
-	vec3 position = texture(g_PositionDepth, v_TexCoords).rgb;
-	vec2 scalingFactor = vec2(u_Width / 4.0f, u_Height / 4.0f);
-	vec3 rndVec = texture(u_NoiseTexture, v_TexCoords * scalingFactor).xyz;
+	float width = u_Info.x;
+	float height = u_Info.y;
+	float radius = u_Info.z;
+	float bias = u_Info.w;
 
-	vec3 tangent = normalize(rndVec - normal * dot(rndVec, normal));
-	vec3 bitangent = cross(normal, tangent);
-	mat3 TBN = mat3(tangent, bitangent, normal);
+	const vec2 noiseScale = vec2(width / 4.0, height / 4.0);
+	vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
+	vec3 N = normalize(texture(u_gNormal, v_TexCoords).xyz);
+	vec3 rnd = normalize(texture(u_Noise, v_TexCoords * noiseScale).xyz);
+	vec3 T = normalize(rnd - N * dot(rnd, N));
+	vec3 B = cross(N, T);
+	mat3 TBN = mat3(T, B, N); // Note: no transpose here since we are not transforming everything to tangent space but the other way around
 
-	float AO = 0.0f;
-	int MAX_I = min(MAX_SAMPLES_SIZE, u_KernelSiz);
-	for (int i = 0; i < MAX_I; i++) {
-		vec3 samplePos = TBN * u_Samples[i]; // to view space
-		samplePos = position + samplePos * u_Radius;
-	
-		vec4 offset = vec4(samplePos, 1.0f);
-		offset = u_Projection * offset;
-		offset.xyz /= offset.w;
-		offset.xyz = offset.xyz * 0.5 + 0.5;
+	float occlusion = 0.0f;
+	for (int i = 0; i < MAX_SAMPLES; i++) {
+		vec3 samplei = vec3(u_Samples[i].xyz);
+		vec3 pos = TBN * samplei;
+		pos = fragPos + pos * radius;
 
-		float depth = -texture(g_PositionDepth, offset.xy).w;
-		float rangeCheck = smoothstep(0.0, 1.0, u_Radius / abs(position.z - depth));
-		AO += (depth >= samplePos.z ? 1.0 : 0.0) * rangeCheck;
+		vec4 samplePos = vec4(pos, 1.0f);
+		samplePos = u_Projection * samplePos;
+		samplePos.xyz /= samplePos.w;
+		samplePos.xyz = samplePos.xyz * 0.5f + 0.5f; // [0, 1]
+		float sampleDepth = texture(u_gPosition, samplePos.xy).z;
+		if (sampleDepth >= pos.z + bias) { // ?
+			float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(fragPos.z - sampleDepth));
+			occlusion += rangeCheck;
+		}
 	}
-	AO = 1.0 - (AO / u_KernelSiz);
-	color = AO;
+	occlusion = 1.0 - (occlusion / u_KernelSize);
+	out_color = occlusion;
 }

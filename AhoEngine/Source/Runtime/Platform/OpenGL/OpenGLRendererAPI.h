@@ -8,5 +8,6 @@ namespace Aho {
 		virtual void SetClearColor(const glm::vec4& color) override;
 		virtual void Clear(ClearFlags flags) override;
 		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) override;
+		virtual void SetDepthTest(bool state) override;
 	};
 }

@@ -6,14 +6,20 @@ namespace Aho {
 		for (auto renderPass : m_RenderPasses) {
 			delete renderPass;
 		}
+		for (auto ubo : m_RenderUBOs) {
+			delete ubo;
+		}
 	}
 
 	void RenderPipeline::Execute() {
-		m_DepthPass->Execute(m_RenderData);
-		m_ResultPass->Execute(m_RenderData);
-		m_PickingPass->Execute(m_VirtualData);
+		m_DepthPass->Execute(m_RenderData, m_RenderUBOs[0]);
+		m_SSAOGeoPass->Execute(m_RenderData, m_RenderUBOs[0]);
+		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
+		m_SSAOLightingPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
+		m_ResultPass->Execute(m_RenderData, m_RenderUBOs[1]);
+		m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
 		if (m_DrawDebug) {
-			m_DebugPass->Execute(m_DebugData);
+			m_DebugPass->Execute(m_ScreenQuad);
 		}
 	}
 
@@ -23,6 +29,26 @@ namespace Aho {
 			return nullptr;
 		}
 		return m_RenderPasses[index]->GetRenderTarget();
+	}
+
+	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
+		switch (type) {
+			case RenderPassType::Debug:
+				return m_DebugPass->GetRenderTarget();
+			case RenderPassType::Depth:
+				return m_DepthPass->GetRenderTarget();
+			case RenderPassType::SSAO:
+				return m_SSAOPass->GetRenderTarget();
+			case RenderPassType::SSAOGeo:
+				return m_SSAOGeoPass->GetRenderTarget();
+			case RenderPassType::SSAOLighting:
+				return m_SSAOLightingPass->GetRenderTarget();
+			case RenderPassType::Final:
+				return m_ResultPass->GetRenderTarget();
+			case RenderPassType::Pick:
+				return m_PickingPass->GetRenderTarget();
+		}
+		AHO_CORE_ASSERT(true);
 	}
 
 	// TODO
@@ -61,7 +87,13 @@ namespace Aho {
 			return targetPass->GetRenderPassType() == RenderPassType::SSAO;
 		});
 		if (it != m_RenderPasses.end()) {
-			m_SSAO = *it;
+			m_SSAOPass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::SSAOLighting;
+			});
+		if (it != m_RenderPasses.end()) {
+			m_SSAOLightingPass = *it;
 		}
 	}
 } // namespace Aho

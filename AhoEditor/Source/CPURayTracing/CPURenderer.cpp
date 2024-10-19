@@ -17,12 +17,12 @@ namespace Aho {
 			return result;
 		}
 
-		thread_local std::mt19937 rng(std::random_device{}());
-		std::uniform_real_distribution<float> dist(-0.1f, 0.1f);
+		//thread_local std::mt19937 rng(std::random_device{}());
+		//std::uniform_real_distribution<float> dist(-0.1f, 0.1f);
 
-		glm::vec3 GenerateRandomVec3() {
-			return glm::vec3(dist(rng), dist(rng), dist(rng));
-		}
+		//static glm::vec3 GenerateRandomVec3() {
+		//	return glm::vec3(dist(rng), dist(rng), dist(rng));
+		//}
 
 		static void FillRandom(std::vector<float>& vec, size_t siz) {
 			while (vec.size() > siz) {
@@ -30,7 +30,7 @@ namespace Aho {
 			}
 			vec.reserve(siz);
 			while (vec.size() < siz) {
-				float v = dist(rng) + 1.0f;
+				float v = 0; // dist(rng) + 1.0f;
 				vec.push_back(v);
 			}
 		}

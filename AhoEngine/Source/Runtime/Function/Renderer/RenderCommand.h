@@ -19,30 +19,44 @@ namespace Aho {
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
+		inline static void SetDepthTest(bool state) {
+			s_RendererAPI->SetDepthTest(state);
+		}
 	private:
 		static RendererAPI* s_RendererAPI;
 	};
 
 	class RenderCommandBuffer {
 	public:
-		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Framebuffer>& renderTarget, const std::vector<Texture*>& textureBuffers) const {
+		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, 
+					 const std::shared_ptr<Shader>& shader, 
+					 const std::shared_ptr<Framebuffer>& renderTarget, 
+					 const std::vector<Texture*>& textureBuffers,
+				     const void* ubo) const {
 			shader->Bind();
 			renderTarget->Bind();
 			RenderCommand::SetClearColor(m_ClearColor);
+			RenderCommand::SetDepthTest(m_Depthtest);
 			RenderCommand::Clear(m_ClearFlags);
 			for (const auto& command : m_Commands) {
-				command(renderData, shader, textureBuffers);
+				command(renderData, shader, textureBuffers, ubo); // TODO: actually only one command is needed for now
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
 		}
-		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, const std::shared_ptr<Shader>&, const std::vector<Texture*>&)>& func) { m_Commands.push_back(func); }
+		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, 
+						const std::shared_ptr<Shader>&, 
+						const std::vector<Texture*>&, 
+						const void*)>& func) { m_Commands.push_back(func); }
+		virtual void SetDepthTest(bool state) { m_Depthtest = state; }
 		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
 		virtual void SetClearFlags(ClearFlags flags) { m_ClearFlags = flags; }
 	private:
+		bool m_Depthtest{ true };
 		glm::vec4 m_ClearColor{ 132.0f / 255.0f, 181.0f / 255.0f, 245.0f / 255.0f, 1.0f };
 		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
 	private:
-		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers)>> m_Commands;
+		// TODO
+		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo)>> m_Commands;
 	};
 }

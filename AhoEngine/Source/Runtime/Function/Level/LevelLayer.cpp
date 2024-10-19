@@ -22,9 +22,9 @@ namespace Aho {
 	}
 	
 	void LevelLayer::OnUpdate(float deltaTime) {
-		SubmitUBOData();
 		// UpdatePhysics();
 		// UpdateAnimation();
+		UpdataUBOData();
 	}
 	
 	void LevelLayer::OnImGuiRender() {
@@ -78,22 +78,36 @@ namespace Aho {
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
-	void LevelLayer::SubmitUBOData() {
+	void LevelLayer::UpdataUBOData() {
+		// TODO: better way
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		auto ubo = m_RenderLayer->GetUBO();
-		ubo->u_Projection = cam->GetProjection();
+		auto pipeline = m_RenderLayer->GetRenderer()->GetCurrentRenderPipeline();
+		UBO* ubo = static_cast<UBO*>(pipeline->GetUBO(0));
 		ubo->u_View = cam->GetView();
+		ubo->u_Projection = cam->GetProjection();
 		ubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+
+		GeneralUBO* gubo = static_cast<GeneralUBO*>(pipeline->GetUBO(1));
+		gubo->u_View = cam->GetView();
+		gubo->u_Projection = cam->GetProjection();
+		gubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
 		if (m_Update) {
-			float nearPlane = 0.1f, farPlane = 50.0f;
+			float nearPlane = 0.1f, farPlane = 85.0f;
 			glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, nearPlane, farPlane);
-			ubo->u_LightViewMatrix = proj * glm::lookAt(glm::vec3(ubo->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			auto lightMat = proj * glm::lookAt(glm::vec3(gubo->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			ubo->u_LightViewMatrix = lightMat;
+			gubo->u_LightViewMatrix = lightMat;
 		}
-		ubo->info[0] = m_LightData.lightCnt;
+		gubo->info[0] = m_LightData.lightCnt;
 		for (int i = 0; i < m_LightData.lightCnt; i++) {
-			ubo->u_LightPosition[i] = m_LightData.lightPosition[i];
-			ubo->u_LightColor[i] = m_LightData.lightColor[i];
+			gubo->u_LightPosition[i] = m_LightData.lightPosition[i];
+			gubo->u_LightColor[i] = m_LightData.lightColor[i];
 		}
+
+		SSAOUBO* subo = static_cast<SSAOUBO*>(pipeline->GetUBO(2));
+		subo->u_Projection = cam->GetProjection();
+		subo->info[0] = pipeline->GetResultPass()->GetSpecification().Width;
+		subo->info[1] = pipeline->GetResultPass()->GetSpecification().Height;
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {

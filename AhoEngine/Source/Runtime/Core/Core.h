@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem> 
+#include <glm/glm.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -46,3 +47,13 @@
 	#define AHO_ASSERT(x, ...)
 	#define AHO_CORE_ASSERT(x, ...)
 #endif // AHO_ENABLE_ASSERTS
+
+// TODO: move to a uils header
+namespace Aho::Utils {
+	inline std::mt19937 rng(std::random_device{}());
+	inline std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
+	inline glm::vec3 GenerateRandomVec3() {
+		return glm::vec3(dist(rng), dist(rng), dist(rng));
+	}
+}

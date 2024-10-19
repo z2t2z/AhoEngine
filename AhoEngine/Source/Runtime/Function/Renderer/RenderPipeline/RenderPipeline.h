@@ -14,12 +14,15 @@ namespace Aho {
 		std::shared_ptr<Framebuffer> GetDepthPass() { return m_DepthPass->GetRenderTarget(); }
 		std::shared_ptr<Framebuffer> GetDebugPass() { return m_DebugPass->GetRenderTarget(); }
 		std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
+		std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
 		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); SortRenderPasses(); }
 		virtual void SortRenderPasses();
+		virtual void AddUBO(void* ubo) { m_RenderUBOs.push_back(ubo); }
+		virtual void* GetUBO(size_t index) { return m_RenderUBOs[index]; }
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
 	protected:
@@ -29,13 +32,14 @@ namespace Aho {
 		RenderPass* m_DepthPass{ nullptr };
 		RenderPass* m_PickingPass{ nullptr };
 		RenderPass* m_SSAOGeoPass{ nullptr };
-		RenderPass* m_SSAO{ nullptr };
+		RenderPass* m_SSAOPass{ nullptr };
+		RenderPass* m_SSAOLightingPass{ nullptr };
+		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
 		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source, only renderred in picking pass
-		std::vector<std::shared_ptr<RenderData>> m_DebugData;	// TODO: Temporary
+		std::vector<std::shared_ptr<RenderData>> m_ScreenQuad;	// TODO: Temporary
 	};
-
 
 	// default forward pipeline
 	class RenderPipelineDefault : public RenderPipeline {
@@ -58,7 +62,7 @@ namespace Aho {
 			std::shared_ptr<VertexArray> quadVAO;
 			quadVAO.reset(VertexArray::Create());
 			quadVAO->Init(meshInfo);
-			m_DebugData.push_back(std::make_shared<RenderData>(quadVAO));
+			m_ScreenQuad.push_back(std::make_shared<RenderData>(quadVAO));
 			AHO_CORE_INFO("RenderPipelineDefault initialized");
 		}
 	};

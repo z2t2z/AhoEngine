@@ -4,6 +4,9 @@
 #include <glad/glad.h>
 
 namespace Aho {
+	namespace Utils {
+		Texture* CreateNoiseTexture(int siz);
+	}
 	// Not a good way I guess, for framebuffer use only
 	class FBTexture : public Texture {
 	public:
