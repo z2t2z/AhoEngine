@@ -18,6 +18,7 @@ layout(std140, binding = 1) uniform GeneralUBO{
 	ivec4 info;
 };
 
+out vec2 v_ScreenPos;
 out vec3 v_Position;
 out vec4 v_PositionLightSpace;
 out vec2 v_TexCoords;
@@ -38,10 +39,15 @@ uniform bool u_HasAOMap = false;
 uniform sampler2D u_Normal;
 
 void main() {
-	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0f);
+	vec4 ndc = u_Projection * u_View * u_Model * vec4(a_Position, 1.0f);
+	v_ScreenPos = ndc.xy / ndc.w;
+	v_ScreenPos = v_ScreenPos * 0.5f + 0.5f;
+	gl_Position = ndc;
 	v_TexCoords = a_TexCoords;
 	v_PositionLightSpace = u_LightViewMatrix * vec4(a_Position, 1.0f);
 	v_MAX_LIGHT_CNT = info[0];
+
+	
 
 	mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
 	if (u_HasNormal) {
@@ -74,6 +80,7 @@ void main() {
 
 layout(location = 0) out vec4 out_Color;
 
+in vec2 v_ScreenPos;
 in vec3 v_Position;
 in vec4 v_PositionLightSpace;
 in vec2 v_TexCoords;
@@ -86,10 +93,11 @@ flat in int v_MAX_LIGHT_CNT;
 
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_DepthMap;
+uniform sampler2D u_SSAO;
 
 uniform float u_Metalic;
 uniform float u_Roughness;
-uniform float u_AO;
+//uniform float u_AO;
 
 const float PI = 3.14159265359f;
 
@@ -165,6 +173,7 @@ float CalShadow() {
 
 void main() {
 	float intensityScalor = 1.0f;
+	float AO = texture(u_SSAO, v_ScreenPos).r;
 	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
 	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
 	vec3 Normal = v_Normal;
@@ -198,7 +207,7 @@ void main() {
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 
-	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - u_AO);
+	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - 0.5f * AO);
 	vec3 Color = Ambient + Lo * (1.0f - CalShadow());
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction

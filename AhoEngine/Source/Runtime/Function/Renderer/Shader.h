@@ -77,8 +77,7 @@ namespace Aho {
 		virtual void Unbind() const = 0;
 		virtual void Delete() const = 0;
         // Uniforms
-		virtual void SetUBO(size_t size, uint32_t bindingPoint, DrawType type) = 0;
-		virtual void BindUBO(const void* ubo, size_t size) = 0;
+		virtual void BindUBO(const void* ubo, uint32_t bindingPoint, size_t size) = 0;
 		virtual void SetBool(const std::string& name, bool value) = 0;
 		virtual void SetUint(const std::string& name, uint32_t value) = 0;
         virtual void SetInt(const std::string& name, int value) = 0;

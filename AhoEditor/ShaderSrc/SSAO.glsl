@@ -55,11 +55,11 @@ void main() {
 		samplePos.xyz /= samplePos.w;
 		samplePos.xyz = samplePos.xyz * 0.5f + 0.5f; // [0, 1]
 		float sampleDepth = texture(u_gPosition, samplePos.xy).z;
-		if (sampleDepth >= pos.z + bias) { // ?
+		if (sampleDepth >= pos.z + bias) {
 			float rangeCheck = smoothstep(0.0f, 1.0f, radius / abs(fragPos.z - sampleDepth));
 			occlusion += rangeCheck;
 		}
 	}
-	occlusion = 1.0 - (occlusion / u_KernelSize);
+	occlusion = 1.0f - (occlusion / u_KernelSize);
 	out_color = occlusion;
 }

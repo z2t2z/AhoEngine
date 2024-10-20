@@ -63,4 +63,7 @@
       <Filter>Source\EditorUI\LevelHierarchyPanel</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ShaderSrc\Blur.glsl" />
+  </ItemGroup>
 </Project>

@@ -28,6 +28,7 @@ namespace Aho {
 
 	class RenderCommandBuffer {
 	public:
+		RenderCommandBuffer() { RenderCommand::SetClearColor(m_ClearColor); }
 		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, 
 					 const std::shared_ptr<Shader>& shader, 
 					 const std::shared_ptr<Framebuffer>& renderTarget, 
@@ -35,7 +36,6 @@ namespace Aho {
 				     const void* ubo) const {
 			shader->Bind();
 			renderTarget->Bind();
-			RenderCommand::SetClearColor(m_ClearColor);
 			RenderCommand::SetDepthTest(m_Depthtest);
 			RenderCommand::Clear(m_ClearFlags);
 			for (const auto& command : m_Commands) {

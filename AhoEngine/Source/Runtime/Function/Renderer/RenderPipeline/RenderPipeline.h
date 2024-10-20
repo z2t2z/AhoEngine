@@ -34,6 +34,7 @@ namespace Aho {
 		RenderPass* m_SSAOGeoPass{ nullptr };
 		RenderPass* m_SSAOPass{ nullptr };
 		RenderPass* m_SSAOLightingPass{ nullptr };
+		RenderPass* m_BlurPass{ nullptr };
 		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis

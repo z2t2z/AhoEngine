@@ -20,6 +20,7 @@ namespace Aho {
 		void SetupForwardRenderPipeline();
 		RenderPass* SetupSSAOGeoPass();
 		RenderPass* SetupSSAOPass();
+		RenderPass* SetupSSAOBlurPass();
 		RenderPass* SetupSSAOLightingPass();
 		RenderPass* SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo);
 		RenderPass* SetupDepthPass();

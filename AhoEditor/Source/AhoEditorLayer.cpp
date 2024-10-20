@@ -158,7 +158,8 @@ namespace Aho {
 			fbo->Resize(width, height/* - ImGui::GetFrameHeight() */);
 			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Resize(width, height);
 			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAO)->Resize(width, height);
-			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOLighting)->Resize(width, height);
+			//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOLighting)->Resize(width, height);
+			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Blur)->Resize(width, height);
 			m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->Resize(0.3 * width, 0.3 * height);
 			if (m_DrawDepthMap) {
 				m_Renderer->GetCurrentRenderPipeline()->GetDebugPass()->Resize(width, height);
@@ -168,7 +169,7 @@ namespace Aho {
 
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOLighting)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Blur)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->GetLastColorAttachment();

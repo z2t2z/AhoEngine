@@ -13,7 +13,8 @@ namespace Aho {
 		Pick,
 		SSAOGeo,
 		SSAO,
-		SSAOLighting
+		SSAOLighting,
+		Blur
 		/* TODO */
 	};
 
