@@ -16,7 +16,8 @@ namespace Aho {
 		m_SSAOGeoPass->Execute(m_RenderData, m_RenderUBOs[0]);
 		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
 		m_BlurPass->Execute(m_ScreenQuad);
-		//m_SSAOLightingPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
+		m_SSRvsPass->Execute(m_ScreenQuad, m_RenderUBOs[0]);
+		//m_SSAOLightingPass->Execute(m_ScreenQuad, m_RenderUBOs[1]); deprecated, merge into the main lighting pass
 		m_ResultPass->Execute(m_RenderData, m_RenderUBOs[1]);
 		m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
 		if (m_DrawDebug) {
@@ -50,11 +51,13 @@ namespace Aho {
 				return m_PickingPass->GetRenderTarget();
 			case RenderPassType::Blur:
 				return m_BlurPass->GetRenderTarget();
+			case RenderPassType::SSRvs:
+				return m_SSRvsPass->GetRenderTarget();
 		}
 		AHO_CORE_ASSERT(true);
 	}
 
-	// TODO
+	// TODO: devise a better way
 	void RenderPipeline::SortRenderPasses() {
 		auto it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Final;
@@ -103,6 +106,12 @@ namespace Aho {
 		});
 		if (it != m_RenderPasses.end()) {
 			m_BlurPass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::SSRvs;
+		});
+		if (it != m_RenderPasses.end()) {
+			m_SSRvsPass = *it;
 		}
 	}
 } // namespace Aho

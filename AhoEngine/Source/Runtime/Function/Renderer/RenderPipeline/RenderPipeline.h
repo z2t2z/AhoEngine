@@ -9,22 +9,23 @@ namespace Aho {
 		~RenderPipeline();
 		virtual void Initialize() = 0;
 		virtual void Execute();
-		std::shared_ptr<Framebuffer> GetRenderPass(size_t index);
-		std::shared_ptr<Framebuffer> GetResultPass() { return m_ResultPass->GetRenderTarget(); }
-		std::shared_ptr<Framebuffer> GetDepthPass() { return m_DepthPass->GetRenderTarget(); }
-		std::shared_ptr<Framebuffer> GetDebugPass() { return m_DebugPass->GetRenderTarget(); }
-		std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
-		std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
+		virtual std::shared_ptr<Framebuffer> GetRenderPass(size_t index);
+		virtual std::shared_ptr<Framebuffer> GetResultPass() { return m_ResultPass->GetRenderTarget(); }
+		virtual std::shared_ptr<Framebuffer> GetDepthPass() { return m_DepthPass->GetRenderTarget(); }
+		virtual std::shared_ptr<Framebuffer> GetDebugPass() { return m_DebugPass->GetRenderTarget(); }
+		virtual std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
+		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
 		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
-		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); SortRenderPasses(); }
+		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
 		virtual void SortRenderPasses();
 		virtual void AddUBO(void* ubo) { m_RenderUBOs.push_back(ubo); }
 		virtual void* GetUBO(size_t index) { return m_RenderUBOs[index]; }
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
+		RenderPass* m_SSRvsPass{ nullptr };
 	protected:
 		bool m_DrawDebug{ false };
 		RenderPass* m_ResultPass{ nullptr };

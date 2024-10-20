@@ -26,6 +26,7 @@ namespace Aho {
 		RenderPass* SetupDepthPass();
 		RenderPass* SetupMainPass();
 		RenderPass* SetupPickingPass();
+		RenderPass* SetupSSRViewSpacePass();
 	private:
 		EventManager* m_EventManager{ nullptr };
 		Renderer* m_Renderer{ nullptr };

@@ -38,6 +38,7 @@ namespace Aho {
 				OnEvent(*m_EventManager->PopFront());
 			}
 			m_Window->OnUpdate();
+			// Calculate FPS
 			m_AccumulatedTime += deltaTime;
 			m_FPS += 1;
 			if (m_AccumulatedTime >= 1.0f) {

@@ -92,12 +92,13 @@ flat in int v_MAX_LIGHT_CNT;
 
 
 uniform sampler2D u_Diffuse;
-uniform sampler2D u_DepthMap;
+uniform sampler2D u_DepthMap; // light's perspective
 uniform sampler2D u_SSAO;
+uniform sampler2D u_Specular;
 
 uniform float u_Metalic;
 uniform float u_Roughness;
-//uniform float u_AO;
+uniform float u_AO;
 
 const float PI = 3.14159265359f;
 
@@ -204,10 +205,11 @@ void main() {
 		vec3 Numerator = NDF * G * F;
 		float Denominator = 4.0f * max(dot(Normal, viewDir), 0.0f) * max(dot(Normal, lightDir), 0.0f) + 0.0001f;
 		vec3 Specular = Numerator / Denominator;
+		vec3 ssrSpec = texture2D(u_Specular, v_ScreenPos).rgb;
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 
-	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - 0.5f * AO);
+	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - u_AO * AO);
 	vec3 Color = Ambient + Lo * (1.0f - CalShadow());
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction

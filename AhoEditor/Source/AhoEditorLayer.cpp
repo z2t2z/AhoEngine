@@ -19,7 +19,7 @@ namespace Aho {
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");			// TODO: resource layer
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "SSRViewSpace.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_PlusIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "translation.png").string());
@@ -104,10 +104,6 @@ namespace Aho {
 
 			ImGui::End();
 		}
-		if (!m_FBO) {
-			// TODO: when setting up renderLayer, fires an event
-			m_FBO = m_Renderer->GetCurrentRenderPipeline()->GetResultPass();
-		}
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
 		DrawPropertiesPanel();
@@ -133,7 +129,7 @@ namespace Aho {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
 					// Need a proper way!
-					//m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->SetShader(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
 				}
 			}
 		}
@@ -152,24 +148,21 @@ namespace Aho {
 			;
 		ImGui::Begin("Viewport", nullptr, window_flags);
 		auto [width, height] = ImGui::GetWindowSize();
-		auto fbo = m_Renderer->GetCurrentRenderPipeline()->GetResultPass();
-		auto spec = fbo->GetSpecification();
+		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetSpecification();
 		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
-			fbo->Resize(width, height/* - ImGui::GetFrameHeight() */);
-			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Resize(width, height);
-			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAO)->Resize(width, height);
-			//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOLighting)->Resize(width, height);
-			m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Blur)->Resize(width, height);
-			m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->Resize(0.3 * width, 0.3 * height);
-			if (m_DrawDepthMap) {
-				m_Renderer->GetCurrentRenderPipeline()->GetDebugPass()->Resize(width, height);
+			for (const auto& renderPass : *m_Renderer->GetCurrentRenderPipeline()) {
+				if (renderPass->GetRenderPassType() == RenderPassType::Pick) {
+					renderPass->GetRenderTarget()->Resize(width * 0.3f, height * 0.3f);
+				} else if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
+					renderPass->GetRenderTarget()->Resize(width, height);
+				}
 			}
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 
-		uint32_t RenderResult;
+		uint32_t RenderResult; // TODO: better ui for this, should be able to select any render result of any passes
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Blur)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->GetLastColorAttachment();
@@ -186,7 +179,7 @@ namespace Aho {
 		m_IsViewportFocused = ImGui::IsWindowFocused();
 		if (m_IsViewportFocused && x >= 0 && y >= 0 && x < width && y < height) {
 			m_CursorInViewport = true;
-			if (m_PickObject && !m_DrawDepthMap) {
+			if (m_PickObject) {
 				m_PickObject = false;
 				m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->Bind();
 				m_PickData = m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->ReadPixel(0, 0.3 * x, 0.3 * y);
@@ -362,7 +355,7 @@ namespace Aho {
 		}
 	}
 
-	void AhoEditorLayer::DrawToolBar() {
+	void AhoEditorLayer::DrawToolBar() { /* Deprecated */
 		ImGuiWindowFlags window_flags = 0
 			//| ImGuiWindowFlags_NoDocking
 			| ImGuiWindowFlags_NoTitleBar
@@ -440,20 +433,5 @@ namespace Aho {
 			ImGui::Text(tag.Tag.c_str());
 		});
 		ImGui::End();
-
-		//ImGui::Begin("Light Properties");
-		//auto lightData = m_LevelLayer->GetLightData();
-		//for (int i = 0; i < 1; i++) {
-		//	ImGui::Text("Light %d", i + 1);
-		//	std::string lightPos = "Light Position ";// +std::to_string(i + 1);
-		//	std::string lightColor = "Light Color ";// +std::to_string(i + 1);
-		//	//ImGui::DragFloat3(lightPos.c_str(), glm::value_ptr(lightData->lightPosition[i]), 0.01f);
-		//	//ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(lightData->lightColor[i]), 0.01f);
-		//	auto& pos = m_LevelLayer->GetUBO()->u_LightPosition[0];
-		//	ImGui::DragFloat3(lightPos.c_str(), glm::value_ptr(pos), 0.01f);
-		//	ImGui::DragFloat3(lightColor.c_str(), glm::value_ptr(m_LevelLayer->GetUBO()->u_LightColor[0]), 0.01f, 0.0f, 1.0f);
-		//	ImGui::Separator();
-		//}
-		//ImGui::End();
 	}
 }

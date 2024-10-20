@@ -42,10 +42,9 @@ namespace Aho {
 		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
-		std::shared_ptr<Framebuffer> m_FBO{ nullptr }; 
 	private:
 		Renderer* m_Renderer{ nullptr };
-		LevelLayer* m_LevelLayer{ nullptr };
+		LevelLayer* m_LevelLayer{ nullptr }; 
 		FileWatcher m_FileWatcher;
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;

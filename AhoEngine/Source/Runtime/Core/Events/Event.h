@@ -50,7 +50,6 @@ namespace Aho {
 		bool m_Handled = false;
 	};
 
-
 	// TODO: Consider using pointer here...
 	class EventDispatcher {
 		template<typename T>
@@ -71,6 +70,8 @@ namespace Aho {
 
 	class EventManager {
 	public:
+		EventManager() = default;
+		~EventManager() = default;
 		bool Empty() { return m_EventQueue.empty(); }
 		std::shared_ptr<Event> PopFront() { 
 			auto res = GetFront();

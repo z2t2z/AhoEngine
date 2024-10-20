@@ -11,7 +11,7 @@ namespace Aho {
 	class Application {
 	public:
 		Application();
-		virtual ~Application() = default;
+		virtual ~Application() { delete m_EventManager; }
 		void Run();
 		void ShutDown();
 		void OnEvent(Event& e);
@@ -30,7 +30,7 @@ namespace Aho {
 	private:
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Window> m_Window;
-		ImGuiLayer* m_ImGuiLayer;
+		ImGuiLayer* m_ImGuiLayer{ nullptr };
 		LayerStack m_LayerStack;
 	private:
 		static Application* s_Instance;

@@ -40,8 +40,10 @@ in vec2 v_TexCoords;
 in vec3 v_FragPos;
 in vec3 v_Normal;
 
+uniform sampler2D u_Diffuse;
+
 void main() {
 	g_Position = v_FragPos;
 	g_Normal = v_Normal;
-	g_Albedo = vec3(0.95f);
+	g_Albedo = texture(u_Diffuse, v_TexCoords).rgb;
 }
