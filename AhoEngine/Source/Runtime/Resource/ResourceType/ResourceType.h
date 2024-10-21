@@ -27,18 +27,18 @@ namespace Aho {
 		Vertex() { x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; }
 	};
 
-	constexpr int MAX_BONE = 4;
+	constexpr int MAX_BONES = 4;
 	struct VertexSkeletal {
 		float x, y, z;			// position
 		float nx, ny, nz;		// normal
 		float tx, ty, tz;		// tangent
 		float btx, bty, btz;	// bitangent
 		float u, v;				// texture coordinates
-		int bones[MAX_BONE];
-		float weights[MAX_BONE];
+		int bonesID[MAX_BONES];
+		float weights[MAX_BONES];
 		VertexSkeletal() { 
 			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; 
-			memset(bones, -1, sizeof(bones)); 
+			memset(bonesID, -1, sizeof(bonesID));
 			memset(weights, 0, sizeof(weights)); 
 		}
 	};
@@ -81,8 +81,11 @@ namespace Aho {
 	};
 
 	struct BoneInfo {
+		std::string name;
 		int id;				// index in finalBoneMatrices
 		glm::mat4 offset;	// offset matrix transforms vertex from model space to bone space
+		BoneInfo(int _id, const std::string& _name, const glm::mat4& _offset) : name(_name), id(_id), offset(_offset) {}
+		BoneInfo() = default;
 	};
 
 	struct SkeletalMeshInfo {

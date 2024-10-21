@@ -5,7 +5,7 @@
 
 namespace Aho {
 	enum class FBInterFormat {
-		None, RED, RGB8, RGBA8, RGB16F, RGBA16F, Depth24, Depth32F,
+		None, RED, RED32F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
 	};
 
 	enum class FBDataFormat {
@@ -34,6 +34,13 @@ namespace Aho {
 	enum class FBFilterMode {
 		None, Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest
 	};
+
+	namespace Utils {
+		static int CalculateMaximumMipmapLevels(int siz) {
+			int mipLevels = (int)floor(log2(siz)) + 1;
+			return mipLevels;
+		}
+	}
 	
 	struct FBTextureSpecification {
 		FBTextureSpecification() = default;
@@ -45,6 +52,7 @@ namespace Aho {
 		FBFilterMode filterModeMag{ FBFilterMode::None };
 		FBDataType dataType{ FBDataType::None };
 		FBDataFormat dataFormat{ FBDataFormat::None };
+		int mipLevels{ 0 };
 	};
 
 	struct FBSpecification {

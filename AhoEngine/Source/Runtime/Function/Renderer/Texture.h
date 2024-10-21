@@ -34,14 +34,17 @@ namespace Aho {
 		uint32_t Height = 1;
 		ImageFormat InternalFormat = ImageFormat::RGBA8;
 		ImageFormat Format = ImageFormat::RGBA8;
-		bool GenerateMips = true;
+		int mipmapLevels{ 0 };
 	};
 
 	class Texture {
 	public:
+		Texture() = default;
+		Texture(TextureSpecification spec) : m_Specification(spec) {}
 		virtual ~Texture() = default;
 		virtual void Invalidate() = 0;
-		virtual const TextureSpecification& GetSpecification() const = 0;
+		virtual void SetTextureSpecification(TextureSpecification& spec) { m_Specification = spec; }
+		virtual TextureSpecification& GetSpecification() = 0;
 		virtual void Reload(const std::string& path) = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
@@ -55,11 +58,14 @@ namespace Aho {
 		virtual bool IsLoaded() const = 0;
 		virtual bool operator==(const Texture& other) const = 0;
 	protected:
+		TextureSpecification m_Specification;
 		TextureType m_TextureType{ TextureType::None };
 	};
 
 	class Texture2D : public Texture {
 	public:
+		Texture2D(TextureSpecification spec) : Texture(spec) {}
+		Texture2D() = default;
 		static std::shared_ptr<Texture2D> Create(const TextureSpecification& specification);
 		static std::shared_ptr<Texture2D> Create(const std::string& path, bool filpOnLoad = false, bool grayScale = false);
 		static std::shared_ptr<Texture2D> Create();

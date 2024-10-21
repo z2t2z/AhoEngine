@@ -148,12 +148,12 @@ namespace Aho {
 			;
 		ImGui::Begin("Viewport", nullptr, window_flags);
 		auto [width, height] = ImGui::GetWindowSize();
-		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetSpecification();
+		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetSpecification();
 		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
 			for (const auto& renderPass : *m_Renderer->GetCurrentRenderPipeline()) {
 				if (renderPass->GetRenderPassType() == RenderPassType::Pick) {
 					renderPass->GetRenderTarget()->Resize(width * 0.3f, height * 0.3f);
-				} else if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
+				} else if (renderPass->GetRenderPassType() != RenderPassType::Depth && renderPass->GetRenderPassType() != RenderPassType::HiZ) {
 					renderPass->GetRenderTarget()->Resize(width, height);
 				}
 			}
@@ -165,10 +165,10 @@ namespace Aho {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->GetLastColorAttachment();
 		}
 		else {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetResultPass()->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetLastColorAttachment();
 		}
 		ImGui::Image((ImTextureID)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
@@ -181,9 +181,9 @@ namespace Aho {
 			m_CursorInViewport = true;
 			if (m_PickObject) {
 				m_PickObject = false;
-				m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->Bind();
-				m_PickData = m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->ReadPixel(0, 0.3 * x, 0.3 * y);
-				m_Renderer->GetCurrentRenderPipeline()->GetPickingPass()->Unbind();
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Bind();
+				m_PickData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->ReadPixel(0, 0.3 * x, 0.3 * y);
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Unbind();
 			}
 		}
 		else {

@@ -12,7 +12,7 @@ namespace Aho {
 		OpenGLTexture2D(const std::string& path, bool flipOnLoad = false, bool grayScale = true);
 		virtual ~OpenGLTexture2D();
 		virtual void Invalidate() { AHO_CORE_ASSERT("Should not be called for now!"); };
-		virtual const TextureSpecification& GetSpecification() const override { return m_Specification; }
+		virtual TextureSpecification& GetSpecification() override { return m_Specification; }
 		virtual void Reload(const std::string& path) {}
 		virtual uint32_t GetWidth() const override { return m_Width; }
 		virtual uint32_t GetHeight() const override { return m_Height; }
@@ -26,7 +26,7 @@ namespace Aho {
 			return m_TextureID == other.GetTextureID();
 		}
 	private:
-		TextureSpecification m_Specification;
+		int m_MipmapLevels{ 0 };
 		std::string m_Path;
 		bool m_IsLoaded = false;
 		uint32_t m_Width, m_Height;

@@ -106,8 +106,8 @@ namespace Aho {
 
 		SSAOUBO* subo = static_cast<SSAOUBO*>(pipeline->GetUBO(2));
 		subo->u_Projection = cam->GetProjection();
-		subo->info[0] = pipeline->GetResultPass()->GetSpecification().Width;
-		subo->info[1] = pipeline->GetResultPass()->GetSpecification().Height;
+		subo->info[0] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Width;
+		subo->info[1] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Height;
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {

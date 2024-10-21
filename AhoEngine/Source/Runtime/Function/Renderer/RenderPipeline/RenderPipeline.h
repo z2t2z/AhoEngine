@@ -9,12 +9,8 @@ namespace Aho {
 		~RenderPipeline();
 		virtual void Initialize() = 0;
 		virtual void Execute();
-		virtual std::shared_ptr<Framebuffer> GetRenderPass(size_t index);
-		virtual std::shared_ptr<Framebuffer> GetResultPass() { return m_ResultPass->GetRenderTarget(); }
-		virtual std::shared_ptr<Framebuffer> GetDepthPass() { return m_DepthPass->GetRenderTarget(); }
-		virtual std::shared_ptr<Framebuffer> GetDebugPass() { return m_DebugPass->GetRenderTarget(); }
-		virtual std::shared_ptr<Framebuffer> GetPickingPass() { return m_PickingPass->GetRenderTarget(); }
 		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
+		virtual RenderPass* GetRenderPass(RenderPassType type) { return nullptr; }
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
 		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
@@ -30,12 +26,13 @@ namespace Aho {
 		bool m_DrawDebug{ false };
 		RenderPass* m_ResultPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
-		RenderPass* m_DepthPass{ nullptr };
+		RenderPass* m_ShadowMapPass{ nullptr };
 		RenderPass* m_PickingPass{ nullptr };
-		RenderPass* m_SSAOGeoPass{ nullptr };
+		RenderPass* m_GBufferPass{ nullptr };
 		RenderPass* m_SSAOPass{ nullptr };
 		RenderPass* m_SSAOLightingPass{ nullptr };
 		RenderPass* m_BlurPass{ nullptr };
+		RenderPass* m_HiZPass{ nullptr };
 		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
@@ -46,9 +43,7 @@ namespace Aho {
 	// default forward pipeline
 	class RenderPipelineDefault : public RenderPipeline {
 	public:
-		RenderPipelineDefault() {
-			Initialize();
-		}
+		RenderPipelineDefault() { Initialize(); }
 		virtual void Initialize() override {
 			Vertex upperLeft, lowerLeft, upperRight, lowerRight;
 			upperLeft.x = -1.0f, upperLeft.y = 1.0f, upperLeft.u = 0.0f, upperLeft.v = 1.0f;

@@ -29,7 +29,7 @@ namespace Aho {
 	}
 
 	OpenGLTexture2D::OpenGLTexture2D(const TextureSpecification& specification)
-		: m_Specification(specification), m_Width(m_Specification.Width), m_Height(m_Specification.Height) {
+		: Texture2D(specification), m_Width(m_Specification.Width), m_Height(m_Specification.Height) {
 		m_InternalFormat = Utils::HazelImageFormatToGLInternalFormat(m_Specification.Format);
 		m_DataFormat = Utils::HazelImageFormatToGLDataFormat(m_Specification.Format);
 

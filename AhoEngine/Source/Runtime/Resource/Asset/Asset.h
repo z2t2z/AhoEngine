@@ -51,7 +51,16 @@ namespace Aho {
 	};
 
 	class SkeletalMesh : public Asset {
+	public:
 		SkeletalMesh() = default;
+		SkeletalMesh(const std::string& path) {}
+		SkeletalMesh(const std::vector<std::shared_ptr<SkeletalMeshInfo>>& SubMesh) : m_SubMesh(SubMesh) {}
+		virtual bool Load() override { return false; }
+		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
+		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator end() { return m_SubMesh.end(); }
+		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
+	private:
+		std::vector<std::shared_ptr<SkeletalMeshInfo>> m_SubMesh;
 	};
 
 	//class ShaderAsset : Asset {

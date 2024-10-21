@@ -15,7 +15,8 @@ namespace Aho {
 		SSAO,
 		SSAOLighting,
 		Blur,
-		SSRvs, 
+		SSRvs,
+		HiZ,
 		/* TODO */
 	};
 

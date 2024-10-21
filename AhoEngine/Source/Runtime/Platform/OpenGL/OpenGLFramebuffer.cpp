@@ -91,6 +91,8 @@ namespace Aho {
 			switch (format) {
 				case FBInterFormat::RED:
 					return GL_RED;
+				case FBInterFormat::RED32F:
+					return GL_R32F;
 				case FBInterFormat::RGB8:
 					return GL_RGB8;
 				case FBInterFormat::RGBA8:
@@ -244,7 +246,7 @@ namespace Aho {
 	// TODO: Mipmap level, filtering method
 	void OpenGLFramebuffer::InvalidateColorAttachment() {
 		for (size_t i = 0; i < m_ColorAttachmentSpecifications.size(); i++) {
-			const auto& spec = m_ColorAttachmentSpecifications[i];
+			auto& spec = m_ColorAttachmentSpecifications[i];
 			uint32_t id;
 			auto target = Utils::GetGLParam(spec.target);
 			auto internalFormat = Utils::GetGLParam(spec.internalFormat);
@@ -254,8 +256,14 @@ namespace Aho {
 			auto wrapModeT = Utils::GetGLParam(spec.wrapModeT);
 			auto filterModeMin = Utils::GetGLParam(spec.filterModeMin);
 			auto filterModeMag = Utils::GetGLParam(spec.filterModeMag);
+			auto& mipLevels = spec.mipLevels;
 			glCreateTextures(target, 1, &id);
 			m_ColorAttachmentTex[i]->SetTextureID(id);
+			auto& texSpec = m_ColorAttachmentTex[i]->GetSpecification();
+			texSpec.Height = m_Specification.Height;
+			texSpec.Width = m_Specification.Width;
+			// TODO: this is too stupid. Texture class needs a big refactoring
+
 			glBindTexture(target, id);
 			glTexImage2D(target, 0, internalFormat, m_Specification.Width, m_Specification.Height, 0, dataFormat, dataType, nullptr);
 			if (wrapModeS) {
@@ -265,6 +273,13 @@ namespace Aho {
 			if (filterModeMag) {
 				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filterModeMin);
 				glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filterModeMag);
+			}
+			if (mipLevels) {
+				spec.mipLevels = Utils::CalculateMaximumMipmapLevels(std::max(m_Specification.Height, m_Specification.Width));
+				texSpec.mipmapLevels = spec.mipLevels;
+				glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, spec.mipLevels);
+				glGenerateMipmap(target);
 			}
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, id, 0);
 		}

@@ -2,10 +2,21 @@
 #version 460 core
 
 layout(location = 0) in vec3 a_Position;
-layout(location = 1) in vec3 a_Normal;
-layout(location = 2) in vec2 a_TexCoords;
-layout(location = 3) in vec3 a_Tangent;
-layout(location = 4) in vec3 a_Bitangent;
+layout(location = 1) in vec2 a_TexCoords;
+
+out vec2 v_TexCoords;
+
+void main() {
+	gl_Position = vec4(a_Position, 1.0f);
+	v_TexCoords = a_TexCoords;
+}
+
+#type fragment
+#version 460 core
+
+layout(location = 0) out vec4 out_Color;
+
+in vec2 v_TexCoords;
 
 layout(std140, binding = 1) uniform GeneralUBO{
 	mat4 u_View;
@@ -15,84 +26,13 @@ layout(std140, binding = 1) uniform GeneralUBO{
 
 	vec4 u_LightPosition[4];
 	vec4 u_LightColor[4];
-	ivec4 info;
+	ivec4 u_Info;
 };
 
-out vec2 v_ScreenPos;
-out vec3 v_Position;
-out vec4 v_PositionLightSpace;
-out vec2 v_TexCoords;
-out vec3 v_ViewPosition;
-out vec3 v_LightPosition[4];
-out vec3 v_LightColor[4];
-out vec3 v_Normal;
-flat out int v_MAX_LIGHT_CNT;
-
-uniform mat4 u_Model;
-uniform bool u_HasCoords = false;
-uniform bool u_HasNormal = false;
-uniform bool u_HasDiffuse = false;
-uniform bool u_HasDepthMap = false;
-uniform bool u_HasSpecularMap = false;
-uniform bool u_HasAOMap = false;
-
-uniform sampler2D u_Normal;
-
-void main() {
-	vec4 ndc = u_Projection * u_View * u_Model * vec4(a_Position, 1.0f);
-	v_ScreenPos = ndc.xy / ndc.w;
-	v_ScreenPos = v_ScreenPos * 0.5f + 0.5f;
-	gl_Position = ndc;
-	v_TexCoords = a_TexCoords;
-	v_PositionLightSpace = u_LightViewMatrix * vec4(a_Position, 1.0f);
-	v_MAX_LIGHT_CNT = info[0];
-
-	
-
-	mat3 normalMatrix = transpose(inverse(mat3(u_Model)));
-	if (u_HasNormal) {
-		// if uses a normal map then transform to tangent space
-		vec3 T = normalize(normalMatrix * a_Tangent);
-		vec3 N = normalize(normalMatrix * a_Normal);
-		T = normalize(T - dot(T, N) * N);
-		vec3 B = cross(N, T); // NOTE: right-handed
-		mat3 TBN = transpose(mat3(T, B, N));
-		for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
-			v_LightPosition[i] = TBN * vec3(u_LightPosition[i].xyz);
-			v_LightColor[i] = vec3(u_LightColor[i].rgb);
-		}
-		v_Normal = normalize(texture(u_Normal, v_TexCoords).rgb * 2.0f - 1.0f);
-		v_Position = TBN * vec3(u_Model * vec4(a_Position, 1.0f));
-		v_ViewPosition = TBN * vec3(u_ViewPosition);
-	} else {
-		v_Normal = normalize(normalMatrix * a_Normal);
-		v_Position = vec3(u_Model * vec4(a_Position, 1.0f));
-		v_ViewPosition = vec3(u_ViewPosition);
-		for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
-			v_LightPosition[i] = vec3(u_LightPosition[i].xyz);
-			v_LightColor[i] = vec3(u_LightColor[i].rgb);
-		}
-	}
-}
-
-#type fragment
-#version 460 core
-
-layout(location = 0) out vec4 out_Color;
-
-in vec2 v_ScreenPos;
-in vec3 v_Position;
-in vec4 v_PositionLightSpace;
-in vec2 v_TexCoords;
-in vec3 v_ViewPosition;
-in vec3 v_LightPosition[4];
-in vec3 v_LightColor[4];
-in vec3 v_Normal;
-flat in int v_MAX_LIGHT_CNT;
-
-
-uniform sampler2D u_Diffuse;
 uniform sampler2D u_DepthMap; // light's perspective
+uniform sampler2D u_gPosition;
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
 uniform sampler2D u_SSAO;
 uniform sampler2D u_Specular;
 
@@ -149,55 +89,44 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float CalShadow() {
-	vec3 NDC = v_PositionLightSpace.xyz / v_PositionLightSpace.w; // [-1, 1]
-	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
-	float minDepth = texture(u_DepthMap, SS.xy).r;
-	float currDepth = SS.z;
-	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
+	//vec3 NDC = v_PositionLightSpace.xyz / v_PositionLightSpace.w; // [-1, 1]
+	//vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
+	//float minDepth = texture(u_DepthMap, SS.xy).r;
+	//float currDepth = SS.z;
+	//return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
+	return 0.0f;
 }
-
-// vec3 GetNormalFromMap() {
-//     vec3 tangentNormal = texture(u_Normal, v_TexCoords).xyz * 2.0 - 1.0;
-
-//     vec3 Q1  = dFdx(v_Position);
-//     vec3 Q2  = dFdy(v_Position);
-//     vec2 st1 = dFdx(v_TexCoords);
-//     vec2 st2 = dFdy(v_TexCoords);
-
-//     vec3 N   = normalize(v_Normal);
-//     vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-//     vec3 B  = -normalize(cross(N, T));
-//     mat3 TBN = mat3(T, B, N);
-
-//     return normalize(TBN * tangentNormal);
-// }
 
 void main() {
 	float intensityScalor = 1.0f;
-	float AO = texture(u_SSAO, v_ScreenPos).r;
-	vec3 Albedo = intensityScalor * texture(u_Diffuse, v_TexCoords).rgb;
+	float AO = texture(u_SSAO, v_TexCoords).r;
+	vec3 Albedo = intensityScalor * texture(u_gAlbedo, v_TexCoords).rgb;
 	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
-	vec3 Normal = v_Normal;
-	vec3 viewDir = normalize(v_ViewPosition - v_Position);
-
+	vec3 Normal = normalize(texture(u_gNormal, v_TexCoords).rgb);
+	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb;
+	vec3 viewPos = vec3(u_View * u_ViewPosition);
+	vec3 viewDir = normalize(viewPos - fragPos);
+	out_Color = vec4(1.0f);
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
 	F0 = mix(F0, Albedo, u_Metalic);
 
 	vec3 Lo = vec3(0.0f);
+	int v_MAX_LIGHT_CNT = u_Info.x;
 	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
-		vec3 lightDir = normalize(v_LightPosition[i] - v_Position);
-		float NdotL = max(dot(Normal, lightDir), 0.0f);
+		vec3 lightPos = vec3(u_View * u_LightPosition[i]);
+		vec3 lightDir = normalize(lightPos - fragPos);
+		float NdotL = dot(Normal, lightDir);
 		if (NdotL < 0.0f) {
 			continue;
 		}
 		// Radiance per light source
 		vec3 halfWay = normalize(viewDir + lightDir);
-		float Distance = length(v_LightPosition[i] - v_Position);
+		float Distance = length(lightPos - fragPos);
 		float Attenuation = 1.0f / (Distance * Distance); // inverse-square law, more physically correct
-		vec3 Radiance = v_LightColor[i] * (1.0f - Attenuation);
+		vec3 Radiance = u_LightColor[i].rgb * (1.0f - Attenuation);
 		// Cook-Torrance BRDF:
 		float NDF = GGX(Normal, halfWay, u_Roughness);
-		float G = GeometrySmith(Normal, v_ViewPosition, lightDir, u_Roughness);
+		float G = GeometrySmith(Normal, viewPos, lightDir, u_Roughness);
 		vec3 F = FresnelSchlick(max(dot(halfWay, viewDir), 0.0f), F0);
 		vec3 kS = F;
 		vec3 kD = vec3(1.0f) - kS;
@@ -205,7 +134,6 @@ void main() {
 		vec3 Numerator = NDF * G * F;
 		float Denominator = 4.0f * max(dot(Normal, viewDir), 0.0f) * max(dot(Normal, lightDir), 0.0f) + 0.0001f;
 		vec3 Specular = Numerator / Denominator;
-		vec3 ssrSpec = texture2D(u_Specular, v_ScreenPos).rgb;
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 

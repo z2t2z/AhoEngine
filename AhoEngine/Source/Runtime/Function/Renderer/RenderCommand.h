@@ -11,16 +11,35 @@ namespace Aho {
 	class RenderCommand {
 	public:
 		inline static void SetClearColor(const glm::vec4& color) {
-			s_RendererAPI->SetClearColor(color);
+			//s_RendererAPI->SetClearColor(color);
+			glClearColor(color.r, color.g, color.b, color.a);
 		}
 		inline static void Clear(ClearFlags flags) {
-			s_RendererAPI->Clear(flags);
+			//s_RendererAPI->Clear(flags);
+			glClear((uint32_t)flags);
 		}
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
-			s_RendererAPI->DrawIndexed(vertexArray);
+			//s_RendererAPI->DrawIndexed(vertexArray);
+			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
 		inline static void SetDepthTest(bool state) {
-			s_RendererAPI->SetDepthTest(state);
+			//s_RendererAPI->SetDepthTest(state);
+			if (state) {
+				glEnable(GL_DEPTH_TEST);
+				glDepthFunc(GL_LEQUAL);
+			}
+			else {
+				glDisable(GL_DEPTH_TEST);
+			}
+		}
+		inline static void SetViewport(uint32_t width, uint32_t height) {
+			glViewport(0, 0, width, height);
+		}
+		inline static void BindRenderTarget(uint32_t attachmentOffset, uint32_t textureID, int mipmapLevel) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentOffset, GL_TEXTURE_2D, textureID, mipmapLevel);
+		}
+		inline static void DrawBuffers(int siz, uint32_t* data) {
+			glDrawBuffers(siz, data);
 		}
 	private:
 		static RendererAPI* s_RendererAPI;
@@ -37,9 +56,11 @@ namespace Aho {
 			shader->Bind();
 			renderTarget->Bind();
 			RenderCommand::SetDepthTest(m_Depthtest);
-			RenderCommand::Clear(m_ClearFlags);
+			if (m_ClearFlags != ClearFlags::None) {
+				RenderCommand::Clear(m_ClearFlags);
+			}
 			for (const auto& command : m_Commands) {
-				command(renderData, shader, textureBuffers, ubo); // TODO: actually only one command is needed for now
+				command(renderData, shader, textureBuffers, renderTarget, ubo); // TODO: actually only one command is needed for now
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
@@ -47,6 +68,7 @@ namespace Aho {
 		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, 
 						const std::shared_ptr<Shader>&, 
 						const std::vector<Texture*>&, 
+						const std::shared_ptr<Framebuffer>&,
 						const void*)>& func) { m_Commands.push_back(func); }
 		virtual void SetDepthTest(bool state) { m_Depthtest = state; }
 		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
@@ -57,6 +79,10 @@ namespace Aho {
 		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
 	private:
 		// TODO
-		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const void* ubo)>> m_Commands;
+		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, 
+									   const std::shared_ptr<Shader>& shader, 
+									   const std::vector<Texture*>& textureBuffers, 
+									   const std::shared_ptr<Framebuffer>& renderTarget,
+									   const void* ubo)>> m_Commands;
 	};
 }

@@ -32,7 +32,7 @@ uniform sampler2D u_gAlbedo;
 uniform sampler2D u_Depth;
 
 const int MAX_ITERATIONS = 128;
-const float stepSiz = 0.04f;  // [-1, 1]^3, 200 iterations at most
+const float stepSiz = 0.04f;
 const float thickNess = 0.1f;
    
 float LinearDepth() {
@@ -58,7 +58,7 @@ void main() {
         vec3 ndc = ToNDC(nxtPos);
         vec2 uv = ndc.xy * 0.5f + 0.5f;
         float sampleDepth = textureLod(u_gPosition, uv, 0).z;
-        if (sampleDepth > nxtPos.z + thickNess) { 
+        if (sampleDepth > nxtPos.z && sampleDepth < nxtPos.z + thickNess) {
             out_color = vec4(texture(u_gAlbedo, uv).rgb, 1.0f);
             break;
         } 

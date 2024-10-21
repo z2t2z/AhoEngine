@@ -27,6 +27,7 @@ namespace Aho {
 			AHO_CORE_ERROR("Texture type not supported");
 		}
 
+		// Convert assimp matrix to glm matrx
 		static glm::mat4 MatrixConvertor(const aiMatrix4x4& from) {
 			glm::mat4 to;
 			//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
@@ -161,33 +162,29 @@ namespace Aho {
 
 		std::vector<std::shared_ptr<SkeletalMeshInfo>> subMesh;
 		std::map<std::string, BoneInfo> boneCache;
-		uint32_t boneCounter = 0;
+		uint32_t bonesCnt = 0;
 		auto RetrieveSkeletonInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
 			for (uint32_t i = 0; i < mesh->mNumBones; i++) {
-				int id = -1;
 				std::string boneName(mesh->mBones[i]->mName.C_Str());
 				if (!boneCache.contains(boneName)) {
-					BoneInfo info;
-					info.id = boneCounter++;
-					info.offset = Utils::MatrixConvertor(mesh->mBones[info.id]->mOffsetMatrix);
+					BoneInfo info(bonesCnt++, boneName, Utils::MatrixConvertor(mesh->mBones[i]->mOffsetMatrix));
 					boneCache[boneName] = info;
 				}
-				id = boneCache.at(boneName).id;
-				auto weights = mesh->mBones[id]->mWeights;
-				int numWeights = mesh->mBones[id]->mNumWeights;
-
+				int id = boneCache.at(boneName).id;
+				auto weights = mesh->mBones[i]->mWeights;
+				int numWeights = mesh->mBones[i]->mNumWeights;
 				for (uint32_t j = 0; j < numWeights; j++) {
-					int vertexId = weights[j].mVertexId;
+					int vertexID = weights[j].mVertexId;
 					float weight = weights[j].mWeight;
-					assert(vertexId <= vertices.size());
-					//SetVertexBoneData(vertices[vertexId], id, weight);
-					//for (uint32_t k = 0; k < MAX_BONE; k++) {
-					//	if (vertices[id].boneInfos[k] < 0) {
-					//		vertices[id].m_Weights[k] = weight;
-					//		vertices[id].boneInfos[k] = boneID;
-					//		break;
-					//	}
-					//}
+					AHO_CORE_ASSERT(vertexID < vertices.size(), "Incorrect skeletal mesh data");
+					VertexSkeletal& vertex = vertices[vertexID];
+					for (int k = 0; k < MAX_BONES; k++) {
+						if (vertex.bonesID[k] == -1) {
+							vertex.weights[k] = weight;
+							vertex.bonesID[k] = id;
+							break;
+						}
+					}
 				}
 			}
 		};
@@ -231,7 +228,7 @@ namespace Aho {
 					indexBuffer.push_back(face.mIndices[j]);
 				}
 			}
-			//subMesh.emplace_back(std::make_shared<MeshInfo>(vertices, indexBuffer, hasNormal, hasUVs, RetrieveMaterial(mesh, scene)));
+			subMesh.emplace_back(std::make_shared<SkeletalMeshInfo>(vertices, indexBuffer, hasNormal, hasUVs, RetrieveMaterial(mesh, scene)));
 			return true;
 		};
 
@@ -254,7 +251,7 @@ namespace Aho {
 			return true;
 		};
 		ProcessNode(scene->mRootNode, scene);
-		return nullptr;
+		return std::make_shared<SkeletalMesh>(subMesh);
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {

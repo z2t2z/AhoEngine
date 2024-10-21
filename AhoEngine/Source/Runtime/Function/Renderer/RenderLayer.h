@@ -18,15 +18,16 @@ namespace Aho {
 		Renderer* GetRenderer() { return m_Renderer; }
 	private:
 		void SetupForwardRenderPipeline();
-		RenderPass* SetupSSAOGeoPass();
+		RenderPass* SetupGBufferPass();
 		RenderPass* SetupSSAOPass();
 		RenderPass* SetupSSAOBlurPass();
 		RenderPass* SetupSSAOLightingPass();
-		RenderPass* SetupDebugPass(const std::shared_ptr<Framebuffer>& fbo);
-		RenderPass* SetupDepthPass();
+		RenderPass* SetupDebugPass();
+		RenderPass* SetupShadowMapPass();
 		RenderPass* SetupMainPass();
 		RenderPass* SetupPickingPass();
 		RenderPass* SetupSSRViewSpacePass();
+		RenderPass* SetupHiZPass();
 	private:
 		EventManager* m_EventManager{ nullptr };
 		Renderer* m_Renderer{ nullptr };

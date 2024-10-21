@@ -15,7 +15,7 @@ namespace Aho {
 		~FBTexture() { Invalidate(); }
 		void Invalidate() override { glDeleteTextures(1, &m_TextureID); }
 		void Bind(uint32_t slot) const override { glBindTextureUnit(slot, m_TextureID); }
-		virtual const TextureSpecification& GetSpecification() const override { TextureSpecification v; return v; }
+		virtual TextureSpecification& GetSpecification() override { return m_Specification; }
 		virtual void Reload(const std::string& path) override {}
 		virtual uint32_t GetWidth() const override { return 0u; }
 		virtual uint32_t GetHeight() const override { return 0u; }
@@ -26,6 +26,7 @@ namespace Aho {
 		virtual bool IsLoaded() const override { return true; }
 		virtual bool operator==(const Texture& other) const override { return m_TextureID == other.GetTextureID(); }
 	private:
+		int m_MipmapLevels{ 0 };
 		uint32_t m_TextureID{ 0u };
 	};
 	
