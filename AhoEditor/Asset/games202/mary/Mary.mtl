@@ -9,7 +9,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd D:/Projs/Aho/AhoEditor/Asset/games202/mary/mary_Diffuse.png
+map_Kd mary_Diffuse.png
 
 newmtl 材质
 Ns 899.999939
@@ -19,4 +19,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd D:/Projs/Aho/AhoEditor/Asset/games202/mary/mary_Diffuse.png
+map_Kd mary_Diffuse.png

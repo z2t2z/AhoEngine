@@ -87,14 +87,16 @@ namespace Aho {
 
 	class AssetImportedEvent : public Event {
 	public:
-		AssetImportedEvent(const std::string& filePath) : m_FilePath(filePath) {}
+		AssetImportedEvent(const std::string& filePath, bool staticMesh) : m_FilePath(filePath), m_StaticMesh(staticMesh) {}
 		static EventType GetStaticType() { return EventType::AssetImported; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 		virtual const char* GetName() const override { return "AssetImported"; }
 		virtual int GetCategoryFlags() const override { return 0; }
 		void SetFilePath(const std::string& path) { m_FilePath = path; }
 		const std::string& GetFilePath() const { return m_FilePath; }
+		bool IsStaticMesh() { return m_StaticMesh; }
 	private:
+		bool m_StaticMesh{ true };
 		std::string m_FilePath;
 	};
 

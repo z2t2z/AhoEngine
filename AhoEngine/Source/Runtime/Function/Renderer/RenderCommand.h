@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 
 namespace Aho {
+	// OpenGL Dedicated
 	class RenderCommand {
 	public:
 		inline static void SetClearColor(const glm::vec4& color) {

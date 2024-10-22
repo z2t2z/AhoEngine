@@ -57,7 +57,9 @@ uniform mat4 u_Model;
 
 void main() {
 	g_Position = v_FragPos;
-	g_Depth = gl_FragCoord.z;
+	vec4 clipSpcace = u_Projection * vec4(v_FragPos, 1.0f);
+	g_Depth = v_FragPos.z;
+
 	if (u_HasDiffuse) {
 		g_Albedo = texture(u_Diffuse, v_TexCoords).rgb;
 	}

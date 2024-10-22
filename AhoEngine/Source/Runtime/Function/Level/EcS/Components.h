@@ -63,6 +63,24 @@ namespace Aho {
 		MultiMeshComponent(const MultiMeshComponent&) = default;
 	};
 
+	struct AnimatorComponent {
+		std::vector<BoneInfo> boneInfo;
+		AnimatorComponent() = default;
+		void Update(float deltaTime) {
+
+		}
+	};
+
+
+	struct SkeletalMeshComponent {
+		uint32_t meshID{ 0u };
+		std::shared_ptr<VertexSkeletal> vertexArray;
+		SkeletalMeshComponent() = default;
+		SkeletalMeshComponent(const std::shared_ptr<VertexSkeletal>& _vertexArray, const uint32_t& id)
+			: vertexArray(_vertexArray), meshID(id) {}
+		SkeletalMeshComponent(const SkeletalMeshComponent&) = default;
+	};
+
 	// Temporary, think about how to design light class
 	struct PointLightComponent {
 		glm::vec4 color{ 0.1f, 0.12f, 0.15f, 1.0f };

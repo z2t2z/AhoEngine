@@ -22,12 +22,12 @@ uniform sampler2D u_Depth;
 void main() {
     ivec2 texelPos = ivec2(gl_FragCoord.xy);
     if (u_MipmapLevels == 0) {
-        out_Depth = texelFetch(u_Depth, gl_FragCoord.xy, 0).r;
+        out_Depth = texelFetch(u_Depth, texelPos, 0).r;
         return;
     }
-    float d0 = texelFetch(u_Depth, gl_FragCoord.xy * 2, u_MipmapLevels - 1).r;
-    float d1 = texelFetch(u_Depth, gl_FragCoord.xy * 2 + ivec2(1, 0), u_MipmapLevels - 1).r;
-    float d2 = texelFetch(u_Depth, gl_FragCoord.xy * 2 + ivec2(0, 1), u_MipmapLevels - 1).r;
-    float d3 = texelFetch(u_Depth, gl_FragCoord.xy * 2 + ivec2(1, 1), u_MipmapLevels - 1).r;
+    float d0 = texelFetch(u_Depth, texelPos * 2, u_MipmapLevels - 1).r;
+    float d1 = texelFetch(u_Depth, texelPos * 2 + ivec2(1, 0), u_MipmapLevels - 1).r;
+    float d2 = texelFetch(u_Depth, texelPos * 2 + ivec2(0, 1), u_MipmapLevels - 1).r;
+    float d3 = texelFetch(u_Depth, texelPos * 2 + ivec2(1, 1), u_MipmapLevels - 1).r;
     out_Depth = min(min(d0, d1), min(d2, d3));
 }

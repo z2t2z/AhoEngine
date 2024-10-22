@@ -19,7 +19,7 @@ namespace Aho {
 		std::shared_ptr<StaticMesh> GetSphere() { return m_Sphere; }
 		std::shared_ptr<StaticMesh> GetCylinder() { return m_Cylinder; }
 	private:
-		void LoadAssetFromFile(const std::string& path);
+		void LoadAssetFromFile(const std::string& path, bool isSkeletal);
 		template<typename T>
 		void PackEcSData(const T& res);
 		template<typename T>

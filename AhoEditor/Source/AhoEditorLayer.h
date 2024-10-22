@@ -22,6 +22,11 @@ namespace Aho {
 		void DrawLightIcons();
 		void DrawToolBar();
 	private:
+		void TryGetDragDropTarget();
+		std::string m_DroppedString;
+		bool m_ShowPopup{ false };
+		bool m_StaticMesh{ true };
+	private:
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_CurrentPath;
 	private:
@@ -32,7 +37,7 @@ namespace Aho {
 		bool m_CursorInViewport{ false };
 		bool m_PickObject{ false };
 		bool m_BlockClickingEvent{ false };
-		uint32_t m_PickData{ 998244353u };
+		uint32_t m_PickData{ 998244353u }; // TODO, try using std::optional?
 		Entity m_SelectedObject;
 		float m_DeltaTime{ 0.0f };
 	private:

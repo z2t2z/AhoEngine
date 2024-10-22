@@ -62,9 +62,7 @@ namespace Aho {
 	struct MaterialInfo {
 		std::vector<std::pair<TextureType, std::string>> materials;
 		MaterialInfo() = default;
-		bool HasMaterial() {
-			return !materials.empty();
-		}
+		bool HasMaterial() { return !materials.empty(); }
 	};
 
 	struct MeshInfo {

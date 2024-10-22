@@ -57,7 +57,7 @@ namespace Aho {
 		auto HiZPass = SetupHiZPass();
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
 		auto ssaoPass = SetupSSAOPass();
-		auto ssrViewSpace = SetupSSRViewSpacePass();
+		auto ssrViewSpace = SetupSSRPass();
 		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // this is the color attachement that contains depth info in a Hi-Z structure
 
 		// Note that order matters!
@@ -69,7 +69,7 @@ namespace Aho {
 			ssrViewSpace->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal, gAlbedo
 		}
 		ssaoPass->AddGBuffer(Utils::CreateNoiseTexture(32)); // ssaoPass: gPostion, gNormal, gNoise
-		ssrViewSpace->AddGBuffer(gBufferPass->GetRenderTarget()->GetDepthTexture()); // DepthMap, from camera side
+		ssrViewSpace->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // Depthmap, from view space
 
 		auto blurPass = SetupSSAOBlurPass();
 		blurPass->AddGBuffer(ssaoPass->GetRenderTarget()->GetTextureAttachments().back());
@@ -89,7 +89,7 @@ namespace Aho {
 		OpenGLShader::SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(SSAOUBO), 2, DrawType::Dynamic);
-		pipeline->AddUBO((void*)new UBO());
+		pipeline->AddUBO((void*)new UBO()); // TODO;
 		pipeline->AddUBO((void*)new GeneralUBO());
 		pipeline->AddUBO((void*)new SSAOUBO());
 		pipeline->SortRenderPasses();
@@ -384,7 +384,7 @@ namespace Aho {
 		return pickingPass;
 	}
 
-	RenderPass* RenderLayer::SetupSSRViewSpacePass() {
+	RenderPass* RenderLayer::SetupSSRPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
 			shader->BindUBO(ubo, 0, sizeof(GeneralUBO));
@@ -392,6 +392,8 @@ namespace Aho {
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++); // Note that order matters!
 			}
+			shader->SetInt("u_Width", renderTarget->GetSpecification().Width);
+			shader->SetInt("u_Height", renderTarget->GetSpecification().Height);
 			shader->SetInt("u_gPosition", 0);
 			shader->SetInt("u_gNormal", 1);
 			shader->SetInt("u_gAlbedo", 2);
@@ -404,7 +406,7 @@ namespace Aho {
 		});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
-		std::string FileName = (currentPath / "ShaderSrc" / "SSRViewSpace.glsl").string();
+		std::string FileName = (currentPath / "ShaderSrc" / "SSR.glsl").string();
 		auto shader = Shader::Create(FileName);
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		RenderPassDefault* renderPass = new RenderPassDefault();

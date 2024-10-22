@@ -19,7 +19,7 @@ namespace Aho {
 		m_FolderPath = std::filesystem::current_path();
 		m_CurrentPath = m_FolderPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "SSRViewSpace.glsl");			// TODO: resource layer
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "SSR.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_PlusIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "translation.png").string());
@@ -28,7 +28,6 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnDetach() {
-
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
@@ -137,6 +136,7 @@ namespace Aho {
 	}
 
 	static bool pressed = false;
+	static bool showPopup = false;
 	void AhoEditorLayer::DrawViewport() {
 		ImGuiWindowFlags window_flags = 0
 			//| ImGuiWindowFlags_NoDocking			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -228,20 +228,9 @@ namespace Aho {
 				m_BlockClickingEvent = false;
 			}
 		}
+		
+		TryGetDragDropTarget();
 
-		// Recieving a drag target
-		if (ImGui::BeginDragDropTarget()) {
-			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
-			if (payload) {
-				const char* droppedData = static_cast<const char*>(payload->Data);
-				std::string droppedString(droppedData, payload->DataSize);
-				AHO_TRACE("Payload accepted! {}", droppedString);
-				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString);
-				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
-				m_EventManager->PushBack(event);
-			}
-			ImGui::EndDragDropTarget();
-		}
 		DrawLightIcons();
 
 		 //Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
@@ -433,5 +422,45 @@ namespace Aho {
 			ImGui::Text(tag.Tag.c_str());
 		});
 		ImGui::End();
+	}
+
+	void AhoEditorLayer::TryGetDragDropTarget() {
+		// Recieving a drag target
+		if (ImGui::BeginDragDropTarget()) {
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
+			if (payload) {
+				const char* droppedData = static_cast<const char*>(payload->Data);
+				m_DroppedString = std::string(droppedData, payload->DataSize);
+				m_ShowPopup = true;
+				AHO_TRACE("Payload accepted! {}", m_DroppedString);
+				showPopup = true;
+			}
+			ImGui::EndDragDropTarget();
+		}
+		if (m_ShowPopup) {
+			ImGui::OpenPopup("Load Settings");
+		}
+		if (ImGui::BeginPopup("Load Settings")) {
+			std::string prompt = "Mesh Type: " + std::string(m_StaticMesh ? "Static Mesh" : "Skeletal Mesh");
+			ImGui::Text(prompt.c_str());
+			ImGui::Separator();
+			ImGui::Checkbox("Static Mesh", &m_StaticMesh);
+			ImGui::Separator();
+			if (ImGui::Button("Load")) {
+				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(m_DroppedString, !m_StaticMesh);
+				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
+				m_EventManager->PushBack(event);
+				m_ShowPopup = false;
+				m_DroppedString.clear();
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				m_ShowPopup = false;
+				m_DroppedString.clear();
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
 	}
 }

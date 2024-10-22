@@ -48,6 +48,11 @@ namespace Aho {
 	} // namespace Utils
 
 	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath) {
+		auto it = filePath.find_last_of('/\\');
+		std::string prefix;
+		if (it != std::string::npos) {
+			prefix = filePath.substr(0, it) + '/';
+		}
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
 		auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
@@ -65,7 +70,7 @@ namespace Aho {
 				for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 					aiString str;
 					material->GetTexture(type, i, &str);
-					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), std::string(str.data));
+					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), prefix + std::string(str.data));
 				}
 			}
 			return info;

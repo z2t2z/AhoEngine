@@ -50,6 +50,17 @@ namespace Aho {
 		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
 	};
 
+	class AnimationAsset : public Asset {
+	public:
+		AnimationAsset() = default;
+		AnimationAsset(const std::string& path) {}
+		AnimationAsset(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh) : m_SubMesh(SubMesh) {}
+		virtual bool Load() override { return false; }
+		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
+	private:
+		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
+	};
+
 	class SkeletalMesh : public Asset {
 	public:
 		SkeletalMesh() = default;

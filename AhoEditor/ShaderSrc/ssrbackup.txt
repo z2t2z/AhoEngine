@@ -1,0 +1,573 @@
+#type vertex
+#version 460 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec2 a_TexCoords;
+
+out vec2 v_TexCoords;
+
+void main() {
+	gl_Position = vec4(a_Position, 1.0f);
+	v_TexCoords = a_TexCoords;
+}
+
+#type fragment
+#version 460 core
+
+layout(location = 0) out vec4 out_color;
+layout(std140, binding = 0) uniform UBO {
+	mat4 u_View;
+	mat4 u_Projection;
+	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
+};
+
+in vec2 v_TexCoords;
+
+uniform sampler2D u_gPosition; 
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
+uniform sampler2D u_Depth;
+uniform float u_Near = 1000.0f;
+uniform float u_Far = 0.1f;
+uniform float u_MaxDisance = 100.0f; 
+
+const int MAX_ITERATIONS = 100;
+const float stepSiz = 0.04f;
+const float thickNess = 0.5f;
+   
+float LinearEyeDepth(float depth) {
+    return depth;
+    return (2.0f * u_Near * u_Far) / (u_Far + u_Near - depth * (u_Far - u_Near));
+} 
+
+vec4 ViewSpaceToClipSpace(vec3 pos) {
+    vec4 p = vec4(pos, 1.0f);
+    vec4 res = u_Projection * p;
+    return res;
+}
+
+vec3 ViewSpaceToNDC(vec3 pos) {
+    vec4 res = ViewSpaceToClipSpace(pos);
+    res /= res.w;
+    return vec3(res);
+}
+
+vec3 RayMarching() {
+    // view space
+    vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
+	vec3 normal = texture(u_gNormal, v_TexCoords).rgb; 
+    
+    // view space
+    vec3 beginPosVs = fragPos;  
+    vec3 viewDir = fragPos;
+    vec3 rayDir = normalize(reflect(viewDir, normal));
+    vec3 endPosVs = beginPosVs + rayDir * u_MaxDisance;
+
+    // clip space
+    vec4 beginPosCs = u_Projection * vec4(beginPosVs, 1.0f);
+    vec4 endPosCs = u_Projection * vec4(endPosVs, 1.0f);
+
+    float k0 = 1.0f / beginPosCs.w;
+    float k1 = 1.0f / endPosCs.w;
+    
+    // still clip space
+    vec3 q0 = beginPosCs.xyz;
+    vec3 q1 = endPosCs.xyz;
+
+    // ndc
+    vec3 v0 = ViewSpaceToNDC(beginPosVs);
+    vec3 v1 = ViewSpaceToNDC(endPosVs);
+
+    // UV space
+    vec2 p0 = q0.xy * vec2(1.0f, 1.0f) * k0 * 0.5f + 0.5f;
+    vec2 p1 = q1.xy * vec2(1.0f, 1.0f) * k1 * 0.5f + 0.5f;
+
+    // delta step
+    float ds = 1.0f / MAX_ITERATIONS;
+    float w0 = 0.0f; 
+    float w1 = 0.0f;
+
+    bool hit = false;
+    vec3 result = vec3(0.0f);
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        w1 = w0;
+        w0 += ds;
+        vec2 p = mix(p0, p1, w0);
+        vec3 q = mix(q0, q1, w0);
+        float k = mix(k0, k1, w0);
+        vec3 v = mix(v0, v1, w0); 
+        vec3 V = v / k;
+        vec3 samplePos = texture(u_gPosition, p).xyz;
+        float sampleDepth = ViewSpaceToClipSpace(samplePos).z;
+        // sampleDepth = q.z * k;
+        float rayDepth = V.z;
+        if (sampleDepth < rayDepth && sampleDepth + thickNess > rayDepth) {
+            hit = true;
+            result = texture(u_gAlbedo, p).rgb;
+            break;
+        }
+    }  
+    return result;
+}
+  
+void main() { 
+    out_color = vec4(RayMarching(), 1.0f); 
+}
+
+
+// Type2
+#type vertex
+#version 460 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec2 a_TexCoords;
+
+out vec2 v_TexCoords;
+
+void main() {
+	gl_Position = vec4(a_Position, 1.0f);
+	v_TexCoords = a_TexCoords;
+}
+
+#type fragment
+#version 460 core
+
+layout(location = 0) out vec4 out_color;
+layout(std140, binding = 0) uniform UBO {
+	mat4 u_View;
+	mat4 u_Projection;
+	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
+};
+
+in vec2 v_TexCoords;
+
+uniform sampler2D u_gPosition; 
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
+uniform sampler2D u_Depth;
+uniform float u_Near = 1000.0f;
+uniform float u_Far = 0.1f;
+uniform float u_MaxDisance = 100.0f; 
+
+const int MAX_ITERATIONS = 100;
+const float stepSiz = 0.04f;
+const float thickNess = 0.5f;
+   
+// steal from Unity
+float LinearEyeDepth(float depth) {
+    // float x = 1.0f - u_Far / u_Near; // or -x
+    // float y = u_Far / u_Near;
+    // float z = x / u_Far;
+    // float w = y / u_Far;
+    // return 1.0f / (z * depth + w);
+    return (2.0f * u_Near * u_Far) / (u_Far + u_Near - depth * (u_Far - u_Near));
+} 
+
+vec4 ViewSpaceToClipSpace(vec3 pos) {
+    vec4 p = vec4(pos, 1.0f);
+    vec4 res = u_Projection * p;
+    return res;
+}
+
+vec3 ViewSpaceToNDC(vec3 pos) {
+    vec4 res = ViewSpaceToClipSpace(pos);
+    res /= res.w;
+    return vec3(res);
+}
+
+void swap(out float lhs, out float rhs) {
+    float temp = lhs;
+    lhs = rhs;
+    rhs = temp;
+}
+
+vec3 RayMarching() {
+    vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
+	vec3 normal = texture(u_gNormal, v_TexCoords).rgb; 
+
+    // Calculate start point and end point in camera space(view space)
+    vec3 csOrig = fragPos;  
+    vec3 viewDir = fragPos;
+    vec3 rayDir = normalize(reflect(viewDir, normal));
+    vec3 csEndPoint = csOrig + rayDir * u_MaxDisance;
+
+    // TODO: Clipping
+
+    // Project into homogeneous clip space
+    vec4 H0 = u_Projection * vec4(csOrig, 1.0);
+    vec4 H1 = u_Projection * vec4(csEndPoint, 1.0);
+    float k0 = 1.0 / H0.w;
+    float k1 = 1.0 / H1.w;
+
+    // !The interpolated homogeneous version of the camera-space points
+    vec3 Q0 = csOrig * k0;
+    vec3 Q1 = csEndPoint * k1;
+
+    // Screen-space endpoints
+    vec2 P0 = H0.xy * k0;
+    vec2 P1 = H1.xy * k1;
+
+    // line degenerate
+    // P1 += vec2((length(P0, P1) < 0.01) ? 0.01 : 0.0);
+    vec2 delta = P1 - P0;
+
+    // Permute so that the primary iteration is in x to collapse
+    // all quadrant-specific DDA cases later
+    bool permute = false;
+    // if (abs(delta.x) < abs(delta.y)) { 
+    //     // This is a more-vertical line
+    //     permute = true; 
+    //     delta = delta.yx; 
+    //     P0 = P0.yx; 
+    //     P1 = P1.yx; 
+    // }
+
+    float stepDir = sign(delta.x);
+    float invdx = stepDir / delta.x;
+
+    // Track the derivatives of Q and k
+    vec3  dQ = (Q1 - Q0) * invdx;               // increment of Q
+    float dk = (k1 - k0) * invdx;               // increment of k
+    vec2  dP = vec2(stepDir, delta.y * invdx);  // increment of P
+
+    // Slide P from P0 to P1, (now-homogeneous) Q from Q0 to Q1, k from k0 to k1
+    vec2 P = P0;
+    vec3 Q = Q0; 
+    float k = k0;
+
+    float prevZMaxEstimate = csOrig.z;
+    float rayZMin = prevZMaxEstimate;
+    float rayZMax = prevZMaxEstimate;
+    float sceneZMax = rayZMax + 100;
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        P += dP;
+        Q += dQ;
+        k += dk;
+
+        rayZMin = prevZMaxEstimate;
+        rayZMax = (dQ.z * 0.5 + Q.z) / (dk * 0.5 + k);
+        if (rayZMin > rayZMax) {
+            swap(rayZMax, rayZMin);
+        }
+        float DT = 100.0f;
+        vec2 hitP = permute ? P.yx : P.xy;
+        // float surfaceDepth = LinearEyeDepth(texture(u_Depth, hitP).r);
+        vec3 pos = texture(u_gPosition, hitP).xyz;
+        float surfaceDepth = ViewSpaceToNDC(pos).z;
+        vec3 samplePos = texture(u_gPosition, hitP).xyz;
+        float sampleDepth = samplePos.z * k;
+        surfaceDepth = sampleDepth;
+        bool isBehind = (rayZMin + 0.1f <= surfaceDepth);
+        bool intersecting = (rayZMax > surfaceDepth);
+        if (rayZMax - rayZMin <= DT && rayZMax >= surfaceDepth && surfaceDepth >= rayZMin + 0.1f) {
+            return texture(u_gAlbedo, hitP).rgb;
+        }
+    }
+    return vec3(0.0f);
+}
+  
+void main() { 
+    out_color = vec4(RayMarching(), 1.0f); 
+}
+
+
+#TYPE 3
+#type vertex
+#version 460 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec2 a_TexCoords;
+
+out vec2 v_TexCoords;
+
+void main() {
+	gl_Position = vec4(a_Position, 1.0f);
+	v_TexCoords = a_TexCoords;
+}
+
+#type fragment
+#version 460 core
+
+layout(location = 0) out vec4 out_color;
+layout(std140, binding = 0) uniform UBO {
+	mat4 u_View;
+	mat4 u_Projection;
+	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
+};
+
+in vec2 v_TexCoords;
+
+uniform sampler2D u_gPosition; 
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
+uniform sampler2D u_Depth;
+uniform float u_Near = 10000.0f;
+uniform float u_Far = 0.1f;
+uniform float u_MaxDisance = 1000.0f; 
+
+const int MAX_ITERATIONS = 500;
+const float thickNess = 0.5f;
+   
+float LinearDepth(float depth) {
+    // return depth;
+    return (2.0f * u_Near * u_Far) / (u_Far + u_Near - depth * (u_Far - u_Near));
+} 
+
+vec4 ViewSpaceToClipSpace(vec3 pos) {
+    vec4 p = vec4(pos, 1.0f);
+    vec4 res = u_Projection * p;
+    return res;
+}
+
+vec3 ViewSpaceToNDC(vec3 pos) {
+    vec4 res = ViewSpaceToClipSpace(pos);
+    res /= res.w;
+    return vec3(res);
+}
+
+vec3 RayMarching() {
+    // view space
+    vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
+	vec3 normal = texture(u_gNormal, v_TexCoords).rgb; 
+    
+    // view space
+    vec3 beginPosVs = fragPos;  
+    vec3 viewDir = fragPos;
+    vec3 rayDir = normalize(reflect(viewDir, normal));
+    vec3 endPosVs = beginPosVs + rayDir * u_MaxDisance;
+
+    // clip space
+    vec4 beginPosCs = u_Projection * vec4(beginPosVs, 1.0f);
+    vec4 endPosCs = u_Projection * vec4(endPosVs, 1.0f);
+
+    float k0 = 1.0f / beginPosCs.w;
+    float k1 = 1.0f / endPosCs.w;
+    
+    // still clip space
+    vec3 q0 = beginPosCs.xyz;
+    vec3 q1 = endPosCs.xyz;
+
+    // ndc
+    // vec3 v0 = ViewSpaceToNDC(beginPosVs);
+    // vec3 v1 = ViewSpaceToNDC(endPosVs);
+
+    // UV space
+    vec2 p0 = q0.xy * k0 * 0.5f + 0.5f;
+    vec2 p1 = q1.xy * k1 * 0.5f + 0.5f;
+
+    // delta step
+    float ds = 1.0f / MAX_ITERATIONS;
+    float w0 = 0.0f; 
+    float w1 = 0.0f;
+
+    bool hit = false;
+    vec3 result = vec3(0.0f);
+    for (int i = 0; i < 10000; i++) {
+        w1 = w0;
+        w0 += 0.001f;
+        vec2 p = mix(p0, p1, w0);
+        vec3 q = mix(q0, q1, w0);
+        float k = mix(k0, k1, w0);
+        vec4 actualQ = u_Projection * vec4(q, 1.0f);
+        actualQ /= actualQ.w;
+        float sampleDepth = (texture(u_Depth, p).r);
+        if (abs(actualQ.z - q.z * k) < 0.01f) {
+            result = vec3(1.0f);
+            break;
+        }
+        float rayDepth = (q.z * k);
+        if (sampleDepth < rayDepth) {
+            hit = true;
+            // result = texture(u_gAlbedo, p).rgb;
+            // break;
+        }
+    }  
+    return result;
+}
+  
+void main() { 
+    out_color = vec4(RayMarching(), 1.0f); 
+}
+
+
+
+
+#type4
+#type vertex
+#version 460 core
+
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec2 a_TexCoords;
+
+out vec2 v_TexCoords;
+
+void main() {
+	gl_Position = vec4(a_Position, 1.0f);
+	v_TexCoords = a_TexCoords;
+}
+
+#type fragment
+#version 460 core
+
+layout(location = 0) out vec4 out_color;
+layout(std140, binding = 0) uniform UBO {
+	mat4 u_View;
+	mat4 u_Projection;
+	vec4 u_ViewPosition;
+	mat4 u_LightViewMatrix; // ortho * view
+};
+
+in vec2 v_TexCoords;
+
+uniform sampler2D u_gPosition; 
+uniform sampler2D u_gNormal;
+uniform sampler2D u_gAlbedo;
+uniform sampler2D u_Depth;
+uniform int u_Width;
+uniform int u_Height;
+uniform float u_Near = 1000.0f;
+uniform float u_Far = 0.1f;
+uniform float u_MaxDisance = 10000.0f; 
+
+const int MAX_ITERATIONS = 5000;
+const float stepSiz = 0.04f;
+const float thickNess = 0.5f;
+   
+float LinearEyeDepth(float z) {
+    // z = z * 2.0f - 1.0f;
+    return (2.0f * u_Near * u_Far) / (u_Far + u_Near - z * (u_Far - u_Near));
+} 
+
+vec4 ViewSpaceToClipSpace(vec3 pos) {
+    vec4 p = vec4(pos, 1.0f);
+    vec4 res = u_Projection * p;
+    return res;
+}
+
+vec3 ViewSpaceToNDC(vec3 pos) {
+    vec4 res = ViewSpaceToClipSpace(pos);
+    res /= res.w;
+    return vec3(res);
+}
+
+void swap(out float lhs, out float rhs) {
+    float temp = lhs;
+    lhs = rhs;
+    rhs = temp;
+}
+
+float DistanceSquared(vec2 lhs, vec2 rhs) {
+    lhs -= rhs;
+    return dot(lhs, lhs);
+}
+
+bool Inside(vec2 uv) {
+    return uv.x > 0.0f && uv.y > 0.0f && uv.x < 1.0f && uv.y < 1.0f;
+}
+
+vec3 RayMarching() {
+    // View space
+    vec3 beginPos = texture(u_gPosition, v_TexCoords).xyz;
+    // beginPos = normalize(beginPos) 
+	vec3 normal = texture(u_gNormal, v_TexCoords).xyz;
+    normal = normalize(normal);   
+    vec3 viewDir = normalize(beginPos);
+    vec3 rayDir = normalize(reflect(viewDir, normal));
+    vec3 endPos = beginPos + rayDir * u_MaxDisance;
+
+    // Clip space
+    vec4 H0 = ViewSpaceToClipSpace(beginPos);
+    vec4 H1 = ViewSpaceToClipSpace(endPos);
+    float k0 = 1.0f / H0.w;
+    float k1 = 1.0f / H1.w;
+
+    // NDC
+    vec3 N0 = ViewSpaceToNDC(beginPos);
+    vec3 N1 = ViewSpaceToNDC(endPos);
+
+    // Make it linear!
+    vec3 Q0 = beginPos * k0;
+    vec3 Q1 = endPos * k1;
+
+    // NDC
+    vec2 P0 = H0.xy * k0;
+    vec2 P1 = H1.xy * k1;
+
+    // Screen space
+    vec2 screenSize = vec2(u_Width, u_Height);
+    P0 = (P0 + 1.0) / 2.0 * screenSize;
+    P1 = (P1 + 1.0) / 2.0 * screenSize;
+    
+    // To avoid line degeneration
+    P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 1.0 : 0.0);
+
+    // Permute the direction for DDA
+    vec2 delta = P1 - P0;
+    bool permute = false;
+    if (abs(delta.x) < abs(delta.y)) {
+        permute = true;
+        delta = delta.yx;
+        P0 = P0.yx;
+        P1 = P1.yx;
+    }
+
+    float stepDir = sign(delta.x);
+    float invdx = stepDir / delta.x;
+
+    // Track the derivatives of Q and k
+    vec3 dQ = (Q1 - Q0) * invdx;
+    float dk = (k1 - k0) * invdx;
+    vec2 dP = vec2(stepDir, delta.y * invdx);
+    vec3 dN = (N1 - N0) * invdx;
+
+    float stride = 1.0f;
+    dP *= stride; 
+    dQ *= stride;
+    dk *= stride;
+
+    vec2 P = P0;
+    vec3 Q = Q0;
+    vec3 N = N0;
+    float k = k0;
+    float endX = P1.x * stepDir;
+    float prevZMaxEstimate = beginPos.z;
+    float rayZMin = prevZMaxEstimate, rayZMax = prevZMaxEstimate;
+    float sceneZMax = rayZMax + 100;
+
+    vec3 result = vec3(0.0f);
+    for (int i = 0; i < MAX_ITERATIONS && P.x < endX; i++) {
+        P += dP;
+        Q.z += dQ.z;
+        k += dk;
+        N += dN;
+
+        rayZMin = prevZMaxEstimate;
+        float rayZMax = (Q.z + dQ.z * 0.5f) / (k + dk * 0.5f);
+        prevZMaxEstimate = rayZMax;
+        if (rayZMin > rayZMax) {
+            swap(rayZMin, rayZMax);
+        }
+
+        vec2 hitPixel = permute ? P.yx : P;
+        if (hitPixel.x < 0 || hitPixel.x > u_Width || hitPixel.y < 0 || hitPixel.y > u_Height) {
+            break;
+        }
+        float sampleDepth = texelFetch(u_gPosition, ivec2(hitPixel), 0).z;
+        sampleDepth = sampleDepth;
+        sampleDepth = N.z / k;
+        
+        bool isBehind = (rayZMin + 0.1f <= sampleDepth);
+        if (isBehind && sampleDepth <= rayZMax && sampleDepth >= rayZMin) {
+            result = texelFetch(u_gAlbedo, ivec2(hitPixel), 0).rgb;
+            break;
+        }
+    }
+    return result;
+}
+  
+void main() { 
+    out_color = vec4(RayMarching(), 1.0f); 
+}
