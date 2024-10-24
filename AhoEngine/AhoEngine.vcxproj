@@ -189,11 +189,14 @@
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLTexture.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.h" />
     <ClInclude Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerBase.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerEditor.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetMetadata.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Bone.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\MeshAsset.h" />
@@ -665,6 +668,8 @@
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLVertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Input\WindowsInput.cpp" />
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Animation.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Bone.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp" />

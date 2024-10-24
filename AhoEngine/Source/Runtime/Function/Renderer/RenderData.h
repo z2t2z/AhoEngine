@@ -19,9 +19,9 @@ namespace Aho {
 		std::shared_ptr<VertexArray> GetVAO() { return m_VAO; }
 		void SetMaterial(const std::shared_ptr<Material>& mat) { m_Material = mat; }
 		std::shared_ptr<Material> GetMaterial() { return m_Material; }
-		void SetTransformParam(TransformParam t) { m_Param = t; }
 		void SetVirtual() { m_Virtual = true; }
-		TransformParam* GetTransformParam() { return &m_Param; }
+		TransformParam* GetTransformParam() { return m_Param; }
+		void SetTransformParam(TransformParam* param) { m_Param = param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		void Unbind();
 		bool IsVirtual() { return m_Virtual; }
@@ -31,7 +31,7 @@ namespace Aho {
 		bool m_Rendered{ true };
 		bool m_Virtual{ false };
 	private:
-		TransformParam m_Param;
+		TransformParam* m_Param;
 		std::shared_ptr<VertexArray> m_VAO{ nullptr };
 		std::shared_ptr<Material> m_Material{ nullptr };
 	};

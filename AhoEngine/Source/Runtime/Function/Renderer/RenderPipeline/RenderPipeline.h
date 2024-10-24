@@ -44,6 +44,12 @@ namespace Aho {
 	class RenderPipelineDefault : public RenderPipeline {
 	public:
 		RenderPipelineDefault() { Initialize(); }
+		~RenderPipelineDefault() {
+			delete m_ScreenQuad.back()->GetTransformParam();
+			/*
+				The screen quad mesh does not managed using ecs, thus its transformParam needs extra handling, should be done in different way
+			*/
+		}
 		virtual void Initialize() override {
 			Vertex upperLeft, lowerLeft, upperRight, lowerRight;
 			upperLeft.x = -1.0f, upperLeft.y = 1.0f, upperLeft.u = 0.0f, upperLeft.v = 1.0f;
@@ -60,6 +66,7 @@ namespace Aho {
 			quadVAO.reset(VertexArray::Create());
 			quadVAO->Init(meshInfo);
 			m_ScreenQuad.push_back(std::make_shared<RenderData>(quadVAO));
+			m_ScreenQuad.back()->SetTransformParam(new TransformParam());
 			AHO_CORE_INFO("RenderPipelineDefault initialized");
 		}
 	};

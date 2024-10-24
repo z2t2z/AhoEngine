@@ -21,9 +21,8 @@ namespace Aho {
 	private:
 		void LoadAssetFromFile(const std::string& path, bool isSkeletal);
 		template<typename T>
-		void PackEcSData(const T& res);
-		template<typename T>
-		void PackRenderData(const T& res);
+		void PackRenderData(const T& res, bool isSkeletal);
+		void PackAnimation(const std::shared_ptr<AnimationAsset>& animation);
 	private:
 		AssetManager* m_AssetManager;
 		EventManager* m_EventManager;

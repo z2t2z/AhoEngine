@@ -89,9 +89,11 @@ namespace Aho {
 		OpenGLShader::SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(SSAOUBO), 2, DrawType::Dynamic);
-		pipeline->AddUBO((void*)new UBO()); // TODO;
+		OpenGLShader::SetUBO(sizeof(SkeletalUBO), 3, DrawType::Dynamic);
+		pipeline->AddUBO((void*)new UBO());					// TODO;
 		pipeline->AddUBO((void*)new GeneralUBO());
 		pipeline->AddUBO((void*)new SSAOUBO());
+		pipeline->AddUBO((void*)new SkeletalUBO());
 		pipeline->SortRenderPasses();
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
 	}
@@ -99,7 +101,7 @@ namespace Aho {
 	RenderPass* RenderLayer::SetupGBufferPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
-			shader->BindUBO(ubo, 0, sizeof(UBO));
+			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			uint32_t texOffset = 0u;
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset++);

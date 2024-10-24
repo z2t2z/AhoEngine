@@ -34,29 +34,35 @@ namespace Aho {
 		}
 	}
 	
+	/* BIG TODO */
 	void ResourceLayer::LoadAssetFromFile(const std::string& path, bool isSkeletal) {
 		if (isSkeletal) {
 			auto res = AssetCreator::SkeletalMeshAssetCreator(path);
-			/* TODO */
+			auto anim = AssetCreator::AnimationAssetCreator(path, res);
+			if (!anim) {
+				AHO_CORE_WARN("Skeletal mesh does not have animation data at path {}", path);
+			}
+			PackRenderData(res, true);
+			PackAnimation(anim);
 		}
 		else {
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
 			m_AssetManager->LoadAssetFromFile(path, *res);
 			m_AssetManager->AddAsset(path, res->GetUUID(), res);
-			PackRenderData(res);
+			PackRenderData(res, false);
 		}
 		//PackEcSData(res);
 	}
 
-	template<typename T>
-	void ResourceLayer::PackEcSData(const T& res) {
-		//std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(res);
-		//m_EventManager->PushBack(e);
+	void ResourceLayer::PackAnimation(const std::shared_ptr<AnimationAsset>& animation) {
+		std::shared_ptr<UploadAnimationDataEvent> e = std::make_shared<UploadAnimationDataEvent>(animation);
+		AHO_CORE_WARN("Pushing a UploadAnimationDataEvent!");  // pass to levelLayer
+		m_EventManager->PushBack(e);
 	}
 
 	template<typename T>
-	void ResourceLayer::PackRenderData(const T& res) {
-		std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(res);
+	void ResourceLayer::PackRenderData(const T& res, bool isSkeletal) {
+		std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(res, isSkeletal);
 		AHO_CORE_WARN("Pushing a PackRenderDataEvent!");  // pass to levelLayer
 		m_EventManager->PushBack(e);
 	}

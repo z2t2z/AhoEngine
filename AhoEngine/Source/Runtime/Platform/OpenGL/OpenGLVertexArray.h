@@ -10,10 +10,11 @@ namespace Aho {
 		virtual ~OpenGLVertexArray();
 
 		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) override;
+		virtual void Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 
-		virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;
+		virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t& offset) override;
 		virtual void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) override;
 
 		virtual const std::vector<std::shared_ptr<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; }

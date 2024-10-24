@@ -1,6 +1,7 @@
 #include "Ahopch.h"
 #include "LevelLayer.h"
 #include "Runtime/Core/Log/Log.h"
+#include "Runtime/Resource/Asset/Animation/Animator.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Renderer/RenderData.h"
@@ -22,9 +23,9 @@ namespace Aho {
 	}
 	
 	void LevelLayer::OnUpdate(float deltaTime) {
-		// UpdatePhysics();
-		// UpdateAnimation();
 		UpdataUBOData();
+		// UpdatePhysics();
+		UpdateAnimation(deltaTime);
 	}
 	
 	void LevelLayer::OnImGuiRender() {
@@ -32,15 +33,21 @@ namespace Aho {
 	
 	void LevelLayer::OnEvent(Event& e) {
 		if (e.GetEventType() == EventType::PackRenderData) {
+			bool isSkeletal = ((PackRenderDataEvent*)&e)->IsSkeletalMesh();
 			auto rawData = ((PackRenderDataEvent*)&e)->GetRawData();
 			AHO_CORE_WARN("Recieving a PackRenderDataEvent!");
-			LoadStaticMeshAsset(rawData);
+			isSkeletal ? LoadSkeletalMeshAsset(static_pointer_cast<SkeletalMesh>(rawData)) : LoadStaticMeshAsset(static_pointer_cast<StaticMesh>(rawData));
 			e.SetHandled();
 		}
 		if (e.GetEventType() == EventType::AddEntity) {
 			auto type = ((AddLightSourceEvent*)&e)->GetLightType();
 			AHO_CORE_WARN("Recieing a AddLightSourceEvent!");
 			AddLightSource(type);
+			e.Handled();
+		}
+		if (e.GetEventType() == EventType::AddAnimation) {
+			auto anim = ((UploadAnimationDataEvent*)&e)->GetAnimationAssetData();
+			AddAnimation(anim);
 			e.Handled();
 		}
 	}
@@ -51,6 +58,36 @@ namespace Aho {
 		m_EventManager->PushBack(newEv);
 	}
 
+	void LevelLayer::UpdateAnimation(float deltaTime) {
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent>();
+		view.each([deltaTime, this](auto entity, auto& animator, auto& skeletal, auto& animation) {
+			const BoneNode* root = skeletal.root;
+			std::vector<glm::mat4>& globalMatrices = animator.globalMatrices;
+			float& currentTime = animator.currentTime;
+			const std::shared_ptr<AnimationAsset> anim = animation.animation;
+			currentTime += deltaTime * anim->GetTicksPerSecond();
+			currentTime = fmod(currentTime, anim->GetDuration());
+			Animator::Update(currentTime, globalMatrices, root, anim);
+
+			auto pipeline = m_RenderLayer->GetRenderer()->GetCurrentRenderPipeline();
+			SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
+			for (size_t i = 0; i < globalMatrices.size(); i++) {
+				skubo->u_BoneMatrices[i] = globalMatrices[i];
+			}
+		});
+	}
+
+	void LevelLayer::AddAnimation(const std::shared_ptr<AnimationAsset>& anim) {
+		AHO_CORE_TRACE("Adding animation");
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+		auto view = entityManager->GetView<SkeletalComponent>();
+		view.each([entityManager, anim](auto entity, auto& skeletal) {
+			entityManager->AddComponent<AnimatorComponent>(entity, anim->GetBoneCnt());
+			entityManager->AddComponent<AnimationComponent>(entity, anim);
+		});
+	}
+
 	void LevelLayer::AddLightSource(LightType lt) {
 		if (m_LightData.lightCnt == MAX_LIGHT_CNT) {
 			AHO_CORE_WARN("Maximum light count reached!");
@@ -59,6 +96,8 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto gameObject = entityManager->CreateEntity("PointLight");
 		auto& pc = entityManager->AddComponent<PointLightComponent>(gameObject);
+		TransformParam* param = new TransformParam();
+		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
 		pc.count = m_LightData.lightCnt++;
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		for (const auto& meshInfo : *m_ResourceLayer->GetCube()) {
@@ -67,11 +106,11 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-			auto& tc = entityManager->AddComponent<TransformComponent>(gameObject, renderData->GetTransformParam());
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
 			renderData->SetMaterial(mat);
+			renderData->SetTransformParam(param);
 			renderData->SetVirtual();
 			renderDataAll.push_back(renderData);
 		}
@@ -108,9 +147,15 @@ namespace Aho {
 		subo->u_Projection = cam->GetProjection();
 		subo->info[0] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Width;
 		subo->info[1] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Height;
+	
+		SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
+		skubo->u_View = cam->GetView();
+		skubo->u_Projection = cam->GetProjection();
+		skubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+		
 	}
 
-	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> rawData) {
+	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity("StaticMesh")); // TODO: give it a proper name
@@ -119,16 +164,19 @@ namespace Aho {
 
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
-		renderDataAll.reserve(rawData->size());
-		for (const auto& meshInfo : *rawData) {
+		renderDataAll.reserve(asset->size());
+		for (const auto& meshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity("subMesh");
-			entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
-			auto& tc = entityManager->AddComponent<TransformComponent>(meshEntity, renderData->GetTransformParam());
+			//entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
+			entityManager->AddComponent<MeshComponent>(meshEntity);
+			TransformParam* param = new TransformParam();
+			entityManager->AddComponent<TransformComponent>(meshEntity, param);
+			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
@@ -151,11 +199,61 @@ namespace Aho {
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
+		asset.reset(); // Free it??
 		/* TODO: Maybe check if success */
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
+	// Assume skeletal mesh is a whole mesh
 	void LevelLayer::LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset) {
+		auto entityManager = m_CurrentLevel->GetEntityManager();
 
+		Entity gameObject(entityManager->CreateEntity("SkeletalMesh")); // TODO: give it a proper name
+		entityManager->AddComponent<MeshComponent>(gameObject);
+		entityManager->AddComponent<EntityComponent>(gameObject);
+		entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), asset->GetBoneCache());
+		TransformParam* param = new TransformParam();
+		param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
+		entityManager->AddComponent<TransformComponent>(gameObject, param);
+		uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
+
+		std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		renderDataAll.reserve(asset->size());
+		if (asset->size() > 1) {
+			AHO_CORE_WARN("Skeletal mesh has more than one sub meshes, combinng as one assembly");  // TODO: add a path
+		}
+		for (const auto& skMeshInfo : *asset) {
+			std::shared_ptr<VertexArray> vao;
+			vao.reset(VertexArray::Create());
+			vao->Init(skMeshInfo);
+			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+			renderData->SetVAOs(vao);
+			std::shared_ptr<Material> mat = std::make_shared<Material>();
+			mat->SetUniform("u_EntityID", entityID);	// TODO: Should not be inside material
+			mat->SetUniform("u_AO", 0.1f);				// TODO: Should not be done this way
+			mat->SetUniform("u_Metalic", 0.2f);
+			mat->SetUniform("u_Roughness", 0.2f);
+			//entityManager->AddComponent<MaterialComponent>(gameObject, mat); // TODO;
+			renderData->SetMaterial(mat);
+			if (skMeshInfo->materialInfo.HasMaterial()) {
+				auto matEntity = entityManager->CreateEntity("subMesh");
+				for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
+					if (!textureCached.contains(path)) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+						tex->SetTextureType(type);
+						textureCached[path] = tex;
+					}
+					mat->AddTexture(textureCached.at(path));
+				}
+			}
+			renderData->SetTransformParam(param);
+			renderDataAll.push_back(renderData);
+		}
+		AHO_CORE_ASSERT(param, "Something wrong when initializing skeletal mesh's transform parameter!");
+		//entityManager->AddComponent<TransformComponent>(gameObject, param);
+		asset.reset();
+		/* TODO: Maybe check if success */
+		UploadRenderDataEventTrigger(renderDataAll);
 	}
 } // namespace Aho

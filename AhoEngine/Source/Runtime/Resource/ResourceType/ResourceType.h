@@ -3,6 +3,8 @@
 #include "Runtime/Resource/UUID/UUID.h"
 #include "Runtime/Function/Renderer/Texture.h"
 #include <vector>
+
+#define GLM_FORCE_CTOR_INIT
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -34,8 +36,8 @@ namespace Aho {
 		float tx, ty, tz;		// tangent
 		float btx, bty, btz;	// bitangent
 		float u, v;				// texture coordinates
-		int bonesID[MAX_BONES];
 		float weights[MAX_BONES];
+		int bonesID[MAX_BONES];
 		VertexSkeletal() { 
 			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; 
 			memset(bonesID, -1, sizeof(bonesID));
@@ -58,6 +60,25 @@ namespace Aho {
 		}
 	}; // TODO
 
+	struct KeyframePosition {
+		glm::vec3 attribute{ 0.0f };
+		float timeStamp{ 0.0f };
+		KeyframePosition() = default;
+		KeyframePosition(const glm::vec3& pos, float t) : attribute(pos), timeStamp(t) {}
+	};
+	struct KeyframeRotation {
+		glm::quat attribute;
+		float timeStamp{ 0.0f };
+		KeyframeRotation() = default;
+		KeyframeRotation(const glm::quat& ori, float t) : attribute(ori), timeStamp(t) {}
+	};
+	struct KeyframeScale {
+		glm::vec3 attribute{ 1.0f };
+		float timeStamp{ 0.0f };
+		KeyframeScale() = default;
+		KeyframeScale(const glm::vec3& _scale, float t) : attribute(_scale), timeStamp(t) {}
+	};
+
 	// For loading only
 	struct MaterialInfo {
 		std::vector<std::pair<TextureType, std::string>> materials;
@@ -68,8 +89,8 @@ namespace Aho {
 	struct MeshInfo {
 		std::vector<Vertex> vertexBuffer;
 		std::vector<uint32_t> indexBuffer;
-		bool hasNormal{ false };
-		bool hasUVs{ false };
+		bool hasNormal;
+		bool hasUVs;
 		MaterialInfo materialInfo; // to be removed
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
 			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) { }
@@ -78,21 +99,29 @@ namespace Aho {
 		}
 	};
 
-	struct BoneInfo {
+	struct Bone {
 		std::string name;
 		int id;				// index in finalBoneMatrices
 		glm::mat4 offset;	// offset matrix transforms vertex from model space to bone space
-		BoneInfo(int _id, const std::string& _name, const glm::mat4& _offset) : name(_name), id(_id), offset(_offset) {}
-		BoneInfo() = default;
+		bool hasAnim;
+		Bone(int _id, const std::string& _name, const glm::mat4& _offset) : name(_name), id(_id), offset(_offset), hasAnim(false) {}
+		Bone() = default;
+	};
+
+	// TODO: use a bonePool to store all bones to ensure memory contiguous
+	struct BoneNode {
+		BoneNode(Bone _bone) : bone(_bone) {}
+		~BoneNode() { for (auto child : children) delete child; }
+		Bone bone;
+		BoneNode* parent{ nullptr };
+		std::vector<BoneNode*> children;
 	};
 
 	struct SkeletalMeshInfo {
 		std::vector<VertexSkeletal> vertexBuffer;
 		std::vector<uint32_t> indexBuffer;
-		std::vector<BoneInfo> boneInfos;
-		uint32_t boneCounter{ 0u };
-		bool hasNormal{ false };
-		bool hasUVs{ false };
+		bool hasNormal;
+		bool hasUVs;
 		MaterialInfo materialInfo;
 		SkeletalMeshInfo(const std::vector<VertexSkeletal>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
 			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) {}

@@ -13,7 +13,7 @@ namespace Aho {
 
 	void RenderPipeline::Execute() {
 		m_ShadowMapPass->Execute(m_RenderData, m_RenderUBOs[0]);
-		m_GBufferPass->Execute(m_RenderData, m_RenderUBOs[0]);
+		m_GBufferPass->Execute(m_RenderData, m_RenderUBOs[3]);
 		m_HiZPass->Execute(m_ScreenQuad);
 		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
 		m_BlurPass->Execute(m_ScreenQuad);

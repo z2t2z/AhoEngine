@@ -65,6 +65,21 @@ namespace Aho {
 		}
 	};
 
+	const int MAX_BONES_CNT = 200;
+	struct alignas(16) SkeletalUBO {
+		glm::mat4 u_View{ 0.0f };
+		glm::mat4 u_Projection{ 0.0f };
+		glm::vec4 u_ViewPosition{ 0.0f };
+		glm::mat4 u_LightViewMatrix{ 0.0f };
+		glm::mat4 u_BoneMatrices[MAX_BONES_CNT];
+		SkeletalUBO() {
+			for (int i = 0; i < MAX_BONES_CNT; i++) {
+				u_BoneMatrices[i] = glm::mat4(1.0f);
+			}
+		}
+		size_t GetSize() const { return sizeof(SkeletalUBO); }
+	};
+
 	enum class DrawType {
 		Static = 0,
 		Dynamic

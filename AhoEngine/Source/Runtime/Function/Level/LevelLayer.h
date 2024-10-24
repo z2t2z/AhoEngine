@@ -35,6 +35,8 @@ namespace Aho {
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		LightData* GetLightData() { return &m_LightData; }
 	private:
+		void UpdateAnimation(float deltaTime);
+		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
 		void AddLightSource(LightType lt);
 		void UpdataUBOData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }

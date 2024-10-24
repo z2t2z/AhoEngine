@@ -110,6 +110,8 @@ void main() {
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
 	F0 = mix(F0, Albedo, u_Metalic);
 
+	vec3 specularMap = texture(u_Specular, v_TexCoords).rgb;
+	
 	vec3 Lo = vec3(0.0f);
 	int v_MAX_LIGHT_CNT = u_Info.x;
 	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {

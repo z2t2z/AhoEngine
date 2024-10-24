@@ -3,50 +3,8 @@
 #include "Runtime/Function/Renderer/Texture.h"
 #include <queue>
 #include <cstdlib>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 namespace Aho {
-	namespace Utils {
-		static TextureType AssimpTextureConvertor(aiTextureType type) {
-			switch (type) {
-				case(aiTextureType_DIFFUSE):
-					return TextureType::Diffuse;
-				case(aiTextureType_NORMALS):
-					return TextureType::Normal;
-				case(aiTextureType_HEIGHT):
-					return TextureType::Normal;
-				case(aiTextureType_SPECULAR):
-					return TextureType::Specular;
-				case(aiTextureType_METALNESS):
-					return TextureType::Metalic;
-				case(aiTextureType_AMBIENT_OCCLUSION):
-					return TextureType::AO;
-			}
-			AHO_CORE_ERROR("Texture type not supported");
-		}
-
-		// Convert assimp matrix to glm matrx
-		static glm::mat4 MatrixConvertor(const aiMatrix4x4& from) {
-			glm::mat4 to;
-			//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-			to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-			to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-			to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-			to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-			return to;
-		}
-
-		static glm::vec3 Vec3Convertor(const aiVector3D& vec) {
-			return glm::vec3(vec.x, vec.y, vec.z);
-		}
-
-		static glm::quat QuatConvertor(const aiQuaternion& pOrientation) {
-			return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
-		}
-	} // namespace Utils
-
 	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath) {
 		auto it = filePath.find_last_of('/\\');
 		std::string prefix;
@@ -144,14 +102,15 @@ namespace Aho {
 	std::shared_ptr<SkeletalMesh> AssetCreator::SkeletalMeshAssetCreator(const std::string& filePath) {
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
+		// like path settings, absolute or relative
 		auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
 		const aiScene* scene = importer.ReadFile(filePath, Flags);
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode) {
 			AHO_CORE_ERROR(importer.GetErrorString());
 			return nullptr;
 		}
+		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 
-		// TODO
 		auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
 			MaterialInfo info;
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -166,16 +125,17 @@ namespace Aho {
 		};
 
 		std::vector<std::shared_ptr<SkeletalMeshInfo>> subMesh;
-		std::map<std::string, BoneInfo> boneCache;
+		std::map<std::string, BoneNode*> boneNodeCache;
 		uint32_t bonesCnt = 0;
-		auto RetrieveSkeletonInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
+		auto RetrieveBonesInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
 			for (uint32_t i = 0; i < mesh->mNumBones; i++) {
 				std::string boneName(mesh->mBones[i]->mName.C_Str());
-				if (!boneCache.contains(boneName)) {
-					BoneInfo info(bonesCnt++, boneName, Utils::MatrixConvertor(mesh->mBones[i]->mOffsetMatrix));
-					boneCache[boneName] = info;
+				if (!boneNodeCache.contains(boneName)) {
+					BoneNode* nodeInfo = new BoneNode(Bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix)));
+					boneNodeCache[boneName] = nodeInfo;
 				}
-				int id = boneCache.at(boneName).id;
+				auto node = boneNodeCache.at(boneName);
+				int id = node->bone.id;
 				auto weights = mesh->mBones[i]->mWeights;
 				int numWeights = mesh->mBones[i]->mNumWeights;
 				for (uint32_t j = 0; j < numWeights; j++) {
@@ -223,7 +183,7 @@ namespace Aho {
 				}
 				vertices.push_back(vertex);
 			}
-			RetrieveSkeletonInfo(vertices, mesh, scene);
+			RetrieveBonesInfo(vertices, mesh, scene);
 
 			std::vector<uint32_t> indexBuffer;
 			indexBuffer.reserve(mesh->mNumVertices);
@@ -255,11 +215,101 @@ namespace Aho {
 			}
 			return true;
 		};
+
+		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
+			std::string nodeName = node->mName.C_Str();
+			if (!boneNodeCache.contains(nodeName)) {
+				BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, nodeName, Utils::AssimpMatrixConvertor(node->mTransformation)));
+				boneNodeCache[nodeName] = boneNode;
+			}
+			BoneNode* currNode = boneNodeCache[nodeName];
+			currNode->parent = parent;
+			for (uint32_t i = 0; i < node->mNumChildren; i++) {
+				auto res = self(self, node->mChildren[i], currNode);
+				if (res) {
+					currNode->children.push_back(res);
+				}
+			}
+			return currNode;
+		};
+
 		ProcessNode(scene->mRootNode, scene);
-		return std::make_shared<SkeletalMesh>(subMesh);
+		BoneNode* root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
+		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root);
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {
 		return std::make_shared<MaterialAsset>();
+	}
+	std::shared_ptr<AnimationAsset> AssetCreator::AnimationAssetCreator(const std::string& filePath, const std::shared_ptr<SkeletalMesh>& mesh) {
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate);
+		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode) {
+			AHO_CORE_ERROR(importer.GetErrorString());
+			return nullptr;
+		}
+
+		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
+		auto& boneCache = mesh->GetBoneCache();
+		size_t boneCnt = boneCache.size();
+		std::vector<std::vector<KeyframePosition>> Positions(boneCnt); // give it some paddings
+		std::vector<std::vector<KeyframeRotation>> Rotations(boneCnt);
+		std::vector<std::vector<KeyframeScale>> Scales(boneCnt);
+		auto LoadKeyframesData = [&](const aiAnimation* animation) -> void {
+			for (uint32_t i = 0; i < animation->mNumChannels; i++) {
+				auto channel = animation->mChannels[i];
+				std::string name = channel->mNodeName.data;
+				if (!boneCache.contains(name)) {
+					AHO_CORE_ASSERT(false, "Huuuuuuuh");
+					continue;
+				}
+				Bone& bone = boneCache.at(name)->bone;
+				bone.hasAnim = true;
+				// Filling animation data
+				if (Positions.size() < bone.id) {
+					Positions.resize(bone.id);
+				}
+				for (size_t i = 0; i < channel->mNumPositionKeys; i++) {
+					Positions[bone.id].emplace_back(Utils::AssimpVec3Convertor(channel->mPositionKeys[i].mValue), channel->mPositionKeys[i].mTime);
+				}
+				if (Rotations.size() < bone.id) {
+					Rotations.resize(bone.id);
+				}
+				for (size_t i = 0; i < channel->mNumRotationKeys; i++) {
+					Rotations[bone.id].emplace_back(glm::normalize(Utils::AssimpQuatConvertor(channel->mRotationKeys[i].mValue)), channel->mRotationKeys[i].mTime);
+				}
+				if (Scales.size() < bone.id) {
+					Scales.resize(bone.id);
+				}
+				for (size_t i = 0; i < channel->mNumScalingKeys; i++) {
+					Scales[bone.id].emplace_back(Utils::AssimpVec3Convertor(channel->mScalingKeys[i].mValue), channel->mScalingKeys[i].mTime);
+				}
+			}
+		};
+
+		auto animation = scene->mAnimations[0];
+		//aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
+		//globalTransformation = globalTransformation.Inverse();
+		float duration = animation->mDuration;
+		int TicksPerSecond = animation->mTicksPerSecond;
+		LoadKeyframesData(animation);
+		auto Sort = [](auto& vec) -> void {
+			std::sort(vec.begin(), vec.end(), [&](auto& lhs, auto& rhs) {
+				return lhs.timeStamp < rhs.timeStamp;
+			});
+		};
+		Positions.shrink_to_fit();
+		for (auto& vec : Positions) {
+			Sort(vec);
+		}
+		Rotations.shrink_to_fit();
+		for (auto& vec : Rotations) {
+			Sort(vec);
+		}
+		Scales.shrink_to_fit();
+		for (auto& vec : Scales) {
+			Sort(vec);
+		}
+		return std::make_shared<AnimationAsset>(Positions, Rotations, Scales, duration, TicksPerSecond, globalInverse);
 	}
 } // namespace Aho

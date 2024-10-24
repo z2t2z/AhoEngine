@@ -4,6 +4,7 @@
 #include "Runtime/Function/Camera/RuntimeCamera.h"
 #include "Runtime/Resource/Asset/MeshAsset.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
+#include "Runtime/Resource/Asset/Animation/Animation.h"
 #include <string>
 
 namespace Aho {
@@ -24,9 +25,9 @@ namespace Aho {
 	};
 
 	struct TransformComponent {
-		TransformParam* transformPara;
-		TransformComponent() { transformPara = new TransformParam(); }
+		TransformParam* transformPara{ nullptr };
 		TransformComponent(const TransformComponent&) = default;
+		~TransformComponent() { delete transformPara; }
 		TransformComponent(TransformParam* t) : transformPara(t) {}
 		glm::mat4 GetTransform() { return transformPara->GetTransform(); }
 		glm::vec3& GetTranslation() { return transformPara->Translation; }
@@ -47,16 +48,13 @@ namespace Aho {
 
 	// Temporary, consider how to design this
 	struct MeshComponent {
-		uint32_t meshID{ 0u };
-		std::shared_ptr<VertexArray> vertexArray;
-		MeshComponent() = default;
-		MeshComponent(const std::shared_ptr<VertexArray>& _vertexArray, const uint32_t& id)
-			: vertexArray(_vertexArray), meshID(id) {}
+		std::string name;
+		MeshComponent() : name{ "IDK" } {};
 		MeshComponent(const MeshComponent&) = default;
 	};
 	
 	struct MultiMeshComponent {
-		std::vector<MeshComponent> meshes;
+		std::vector<MeshComponent> meshes; // Rendering data. ?
 		MultiMeshComponent() = default;
 		MultiMeshComponent(const std::vector<MeshComponent>& _meshes)
 			: meshes(_meshes) {}
@@ -64,21 +62,31 @@ namespace Aho {
 	};
 
 	struct AnimatorComponent {
-		std::vector<BoneInfo> boneInfo;
-		AnimatorComponent() = default;
-		void Update(float deltaTime) {
-
+		std::string name;
+		float currentTime;
+		std::vector<glm::mat4> globalMatrices;
+		AnimatorComponent(size_t boneCnt) : currentTime{ 0.0f }, name{ "IAmAnimator" } {
+			globalMatrices.resize(boneCnt);
+			std::fill(globalMatrices.begin(), globalMatrices.end(), glm::mat4(1.0f));
 		}
 	};
+	
+	struct AnimationComponent {
+		std::string name;
+		std::shared_ptr<AnimationAsset> animation;
+		AnimationComponent(const std::shared_ptr<AnimationAsset>& _animation) : animation(_animation), name("IAmAnimation") {}
+	};
 
-
-	struct SkeletalMeshComponent {
-		uint32_t meshID{ 0u };
-		std::shared_ptr<VertexSkeletal> vertexArray;
-		SkeletalMeshComponent() = default;
-		SkeletalMeshComponent(const std::shared_ptr<VertexSkeletal>& _vertexArray, const uint32_t& id)
-			: vertexArray(_vertexArray), meshID(id) {}
-		SkeletalMeshComponent(const SkeletalMeshComponent&) = default;
+	// Temporary, think carefully how to design this
+	struct SkeletalComponent {
+		std::string name;
+		BoneNode* root;
+		std::map<std::string, BoneNode*> boneCache;
+		~SkeletalComponent() { delete root; }
+		SkeletalComponent(BoneNode* _root, const std::map<std::string, BoneNode*> _boneCache) 
+			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {}
+		SkeletalComponent() = default;
+		SkeletalComponent(const SkeletalComponent&) = default;
 	};
 
 	// Temporary, think about how to design light class

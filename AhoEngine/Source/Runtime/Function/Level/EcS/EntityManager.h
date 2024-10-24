@@ -30,9 +30,9 @@ namespace Aho {
 			return m_Registry.all_of<T>(entity.GetEntityHandle());
 		}
 
-		template<typename T>
+		template<typename... T>
 		auto GetView() {
-			return m_Registry.view<T>();
+			return m_Registry.view<T...>();
 		}
 
 		Entity CreateEntity(const std::string& name = std::string()) {

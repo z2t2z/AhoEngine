@@ -15,7 +15,7 @@ namespace Aho {
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
 		FileChanged, AssetImported, PackRenderData, UploadRenderData,
-		AddEntity,
+		AddEntity, AddAnimation,
 	};
 
 	enum EventCategory {
@@ -100,19 +100,20 @@ namespace Aho {
 		std::string m_FilePath;
 	};
 
-	class StaticMesh;
+	class Asset;
 	class PackRenderDataEvent : public Event {
 	public:
-		PackRenderDataEvent(const std::shared_ptr<StaticMesh>& data)
-			: m_Data(data) {
-		}
+		PackRenderDataEvent(const std::shared_ptr<Asset>& data, bool sk)
+			: m_Data(data), m_IsSkeletal(sk) {}
 		static EventType GetStaticType() { return EventType::PackRenderData; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 		virtual const char* GetName() const override { return "PackRenderData"; }
 		virtual int GetCategoryFlags() const override { return 0; }
-		std::shared_ptr<StaticMesh> GetRawData() const { return m_Data; }
+		bool IsSkeletalMesh() { return m_IsSkeletal; }
+		std::shared_ptr<Asset> GetRawData() const { return m_Data; }
 	private:
-		std::shared_ptr<StaticMesh> m_Data{ nullptr };
+		bool m_IsSkeletal{ false };
+		std::shared_ptr<Asset> m_Data{ nullptr };
 	};
 
 	class RenderData;
@@ -142,5 +143,19 @@ namespace Aho {
 		LightType GetLightType() const { return m_LightType; } // TODO: no copy
 	private:
 		LightType m_LightType;
+	};
+
+	class AnimationAsset;
+	class UploadAnimationDataEvent : public Event {
+	public:
+		UploadAnimationDataEvent(const std::shared_ptr<AnimationAsset>& anim)
+			: m_Anim(anim) {}
+		static EventType GetStaticType() { return EventType::AddAnimation; }
+		virtual EventType GetEventType() const override { return GetStaticType(); }
+		virtual const char* GetName() const override { return "AddAnimationData"; }
+		virtual int GetCategoryFlags() const override { return 0; }
+		std::shared_ptr<AnimationAsset> GetAnimationAssetData() const { return m_Anim; } // TODO: no copy
+	private:
+		std::shared_ptr<AnimationAsset> m_Anim;
 	};
 } // namespace Aho

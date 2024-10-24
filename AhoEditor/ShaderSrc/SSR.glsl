@@ -34,9 +34,9 @@ uniform float u_Near = 1000.0f;
 uniform float u_Far = 0.1f;
 uniform float u_MaxDisance = 20000.0f; 
 
-const int MAX_ITERATIONS = 1100;
+const int MAX_ITERATIONS = 500;
 const float stepSiz = 0.04f;
-const float thickNess = 0.5f;
+const float thickNess = 0.1f;
    
 float LinearEyeDepth(float z) {
     // z = z * 2.0f - 1.0f;
