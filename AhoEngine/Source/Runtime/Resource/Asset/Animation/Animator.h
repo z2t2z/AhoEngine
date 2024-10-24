@@ -11,7 +11,7 @@ namespace Aho {
 		}
 	private:
 		static void UpdateBoneTree(float currTime, std::vector<glm::mat4>& globalMatrices,
-			const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim, glm::mat4& globalTrans) {
+			const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim, glm::mat4 globalTrans) {
 			int id = currNode->bone.id;
 			std::string name = currNode->bone.name;
 			const auto& positions = anim->GetPositions(id);
@@ -29,7 +29,10 @@ namespace Aho {
 					else {
 						int prev = GetKeyframeIndex(currTime, scales);
 						int nxt = prev + 1;
-						scale = Lerp(currTime, scales[prev], scales[nxt]);
+						//scale = Lerp(currTime, scales[prev], scales[nxt]);
+						glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute, 
+							GetInterpolationFactor(scales[prev].timeStamp, scales[nxt].timeStamp, currTime));
+						scale = glm::scale(glm::mat4(1.0f), finalScale);
 					}
 				}
 				if (!rotations.empty()) {
