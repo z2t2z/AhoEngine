@@ -56,7 +56,6 @@ namespace Aho {
 				}
 				localTransform = trans * rot * scale;
 			}
-			//auto localTransform = scale * rot * trans;
 			globalTrans = globalTrans * localTransform;
 			globalMatrices[id] = globalTrans * currNode->bone.offset;
 			for (auto& childNode : currNode->children) {
