@@ -25,7 +25,7 @@ namespace Aho {
 	void LevelLayer::OnUpdate(float deltaTime) {
 		UpdataUBOData();
 		// UpdatePhysics();
-		UpdateAnimation(deltaTime);
+		//UpdateAnimation(deltaTime);
 	}
 	
 	void LevelLayer::OnImGuiRender() {

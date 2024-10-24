@@ -139,9 +139,10 @@ void main() {
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 
-	vec3 Ambient = vec3(0.03f) * Albedo * (1.0f - u_AO * AO);
+	vec3 Ambient = vec3(0.1f) * AO * Albedo;
 	vec3 Color = Ambient + Lo * (1.0f - CalShadow());
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
+	//Color = mix(specularMap, Color, 0.8f);
 	out_Color = vec4(Color, 1.0f);
 }

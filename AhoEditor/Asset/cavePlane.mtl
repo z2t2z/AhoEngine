@@ -9,5 +9,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd D:/Projs/Aho/AhoEditor/Asset/games202/ssr/cave/siEoZ_2K_Albedo.jpg
-map_Bump -bm 1.000000 D:/Projs/Aho/AhoEditor/Asset/games202/ssr/cave/siEoZ_2K_Normal_LOD0.jpg
+map_Kd games202/ssr/cave/siEoZ_2K_Albedo.jpg
+map_Bump -bm 1.000000 games202/ssr/cave/siEoZ_2K_Normal_LOD0.jpg

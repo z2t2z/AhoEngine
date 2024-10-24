@@ -9,6 +9,14 @@
 
 namespace Aho {
 	static ImGuizmo::OPERATION s_Operation = ImGuizmo::OPERATION::TRANSLATE;
+	enum class ButtonType {
+		None = 0,
+		Scale,
+		Translation,
+		Rotation
+	};
+	static ButtonType s_SelectedButton = ButtonType::None;
+
 	static const float s_ToolBarIconSize = 28.0f;
 	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
 		: Layer("EditorLayer"), m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
@@ -31,7 +39,7 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
-		m_CameraManager->Update(deltaTime, m_CursorInViewport && m_IsViewportFocused);
+		m_CameraManager->Update(deltaTime, m_IsCursorInViewport);
 		m_DeltaTime = deltaTime;
 		m_FileWatcher.PollFiles();
 	}
@@ -45,7 +53,7 @@ namespace Aho {
 			static bool open = true;
 			bool* p_open = &open;
 
-			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None | ImGuiDockNodeFlags_NoTabBar;
+			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 			if (opt_fullscreen) {
@@ -115,19 +123,22 @@ namespace Aho {
 		if (e.GetEventType() == EventType::MouseButtonPressed) {
 			e.SetHandled();
 			auto ee = (MouseButtonPressedEvent*)&e;
-			if (m_IsViewportFocused && !m_BlockClickingEvent && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
-				m_PickObject = true;
+			if (m_IsCursorInViewport && !m_IsClickingEventBlocked && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
+				m_ShouldPickObject = true;
+			}
+			else {
+				m_IsClickingEventBlocked = false;
 			}
 		}
 	}
 
+	// TODO: Don't use a polling approach
 	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
 		if (e.GetEventType() == EventType::FileChanged) {
 			const auto& FileName = e.GetFilePath();
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					// Need a proper way!
 					m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
 				}
 			}
@@ -135,8 +146,6 @@ namespace Aho {
 		return true;
 	}
 
-	static bool pressed = false;
-	static bool showPopup = false;
 	void AhoEditorLayer::DrawViewport() {
 		ImGuiWindowFlags window_flags = 0
 			//| ImGuiWindowFlags_NoDocking			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -147,20 +156,26 @@ namespace Aho {
 			//| ImGuiWindowFlags_NoSavedSettings
 			;
 		ImGui::Begin("Viewport", nullptr, window_flags);
+
+		DrawToolBarOverlay();
+
 		auto [width, height] = ImGui::GetWindowSize();
+		m_ViewportWidth = width, m_ViewportHeight = height;
 		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetSpecification();
-		if (spec.Width != width || spec.Height != height/* - ImGui::GetFrameHeight() */) {
+		if (spec.Width != m_ViewportWidth || spec.Height != m_ViewportHeight/* - ImGui::GetFrameHeight() */) {
 			for (const auto& renderPass : *m_Renderer->GetCurrentRenderPipeline()) {
 				if (renderPass->GetRenderPassType() == RenderPassType::Pick) {
-					renderPass->GetRenderTarget()->Resize(width * 0.3f, height * 0.3f);
-				} else if (renderPass->GetRenderPassType() != RenderPassType::Depth && renderPass->GetRenderPassType() != RenderPassType::HiZ) {
-					renderPass->GetRenderTarget()->Resize(width, height);
+					renderPass->GetRenderTarget()->Resize(m_ViewportWidth * 0.3f, m_ViewportHeight * 0.3f);
+				}
+				else if (renderPass->GetRenderPassType() != RenderPassType::Depth && renderPass->GetRenderPassType() != RenderPassType::HiZ) {
+					renderPass->GetRenderTarget()->Resize(m_ViewportWidth, m_ViewportHeight);
 				}
 			}
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 
-		uint32_t RenderResult; // TODO: better ui for this, should be able to select any render result of any passes
+		// TODO: Should be able to select any render result of any passes
+		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
@@ -172,111 +187,24 @@ namespace Aho {
 		}
 		ImGui::Image((ImTextureID)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
-		auto [MouseX, MouseY] = ImGui::GetMousePos();
+		auto [mouseX, mouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
-		int x = MouseX - windowPosX, y = MouseY - windowPosY; // mouse position in the current window
-		y = spec.Height - y;
+		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
+		MouseY = spec.Height - MouseY;
 		m_IsViewportFocused = ImGui::IsWindowFocused();
-		if (m_IsViewportFocused && x >= 0 && y >= 0 && x < width && y < height) {
-			m_CursorInViewport = true;
-			if (m_PickObject) {
-				m_PickObject = false;
+		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - s_ToolBarIconSize - ImGui::GetFrameHeight());
+		if (m_ShouldPickObject) {
+			m_ShouldPickObject = false;
+			if (m_IsCursorInViewport) { // If user is clicking the toolbar then ignore it
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Bind();
-				m_PickData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->ReadPixel(0, 0.3 * x, 0.3 * y);
+				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->ReadPixel(0, 0.3 * MouseX, 0.3 * MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Unbind();
 			}
 		}
-		else {
-			m_CursorInViewport = false;
-		}
 
-		// Object Picking
-		if (m_LevelLayer->GetCurrentLevel()) {
-			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-			if (entityManager->IsEntityIDValid(m_PickData)) {
-				m_SelectedObject = Entity(static_cast<entt::entity>(m_PickData));
-				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
-					m_Selected = true;
-					auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
-					auto& translation = tc.GetTranslation();
-					auto& scale = tc.GetScale();
-					auto& rotation = tc.GetRotation();
-					auto transform = tc.GetTransform();
-					// Gizmo
-					const auto& viewMat = m_CameraManager->GetMainEditorCamera()->GetView();
-					const auto& projMat = m_CameraManager->GetMainEditorCamera()->GetProjection();
-					ImGuizmo::SetOrthographic(false);
-					ImGuizmo::SetDrawlist();
-					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, width, height - ImGui::GetFrameHeight());
-					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
-
-					//TODO: use delta matrix here to avoid jittering
-					m_BlockClickingEvent = ImGuizmo::IsOver();
-					ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
-						s_Operation,
-						ImGuizmo::MODE::WORLD,
-						glm::value_ptr(transform));
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
-				}
-				else {
-					m_BlockClickingEvent = false;
-					m_Selected = false;
-				} 
-			}
-			else {
-				m_Selected = false;
-				m_BlockClickingEvent = false;
-			}
-		}
-		
+		DrawGizmo();
 		TryGetDragDropTarget();
-
 		DrawLightIcons();
-
-		 //Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
-		{
-			auto [ww, wh] = ImGui::GetWindowSize();
-			auto [wx, wy] = ImGui::GetWindowPos();
-			ImVec2 buttonPos = ImGui::GetCursorScreenPos();
-			ImVec2 backup = ImGui::GetCursorPos();
-			ImVec2 pos = {wx + 20.0f, wy + ImGui::GetFrameHeight()};
-			ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
-			ImVec2 OverLaySize{ww, 60.0f};
-			ImGui::SetNextWindowSize(OverLaySize, ImGuiCond_Always);
-			ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
-
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.85f); // alpha value
-			if (ImGui::ImageButton("add", (ImTextureID)m_PlusIcon->GetTextureID(), ImVec2{s_ToolBarIconSize ,s_ToolBarIconSize})) {
-				ImGui::OpenPopup("popup_menu");
-			}
-			ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
-			ImVec2 buttonMax = ImGui::GetItemRectMax(); // lower right
-			ImVec2 nxtPos = ImVec2(buttonMin.x, buttonMax.y);
-			ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
-			if (ImGui::BeginPopup("popup_menu")) {
-				if (ImGui::MenuItem("Light")) {
-					std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::PointLight);
-					m_EventManager->PushBack(e);
-				}
-				ImGui::EndPopup();
-			}
-			ImGui::PopStyleVar(); 
-			
-			ImVec2 IconPos = { wx + 0.85f * ww, wy + ImGui::GetFrameHeight() + 5.0f };
-			ImGui::SetCursorScreenPos(IconPos);
-			if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize })) {
-				s_Operation = ImGuizmo::OPERATION::TRANSLATE;
-			}
-			ImGui::SameLine();
-			if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize })) {
-				s_Operation = ImGuizmo::OPERATION::ROTATE;
-			}
-			ImGui::SameLine();
-			if (ImGui::ImageButton("scaleMode", (ImTextureID)m_ScaleIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize })) {
-				s_Operation = ImGuizmo::OPERATION::SCALE;
-			}
-			ImGui::End(); 
-		}
 		ImGui::End();
 	}
 
@@ -300,11 +228,11 @@ namespace Aho {
 			auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
 			ImGui::Separator();
 			ImGui::Text("Material:");
-			ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 10.0f);
 			ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
 			for (const auto& tex : *mc.material) {
-				ImGui::Image((ImTextureID)tex->GetTextureID(), ImVec2{s_ImageSize, s_ImageSize}, ImVec2{0, 1}, ImVec2{1, 0});
+				ImGui::Image((ImTextureID)tex->GetTextureID(), ImVec2{ s_ImageSize, s_ImageSize }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 			}
 		}
 		if (entityManager->HasComponent<PointLightComponent>(m_SelectedObject)) {
@@ -335,44 +263,110 @@ namespace Aho {
 				auto ndc = p / p.w;
 				auto ss = ndc * 0.5f + 0.5f;
 				if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
-					ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2};
+					ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2 };
 					ImGui::SetCursorScreenPos(pos);
 					ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
-					ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{0, 1}, ImVec2{1, 0});
+					ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 				}
 			}
 		}
 	}
 
-	void AhoEditorLayer::DrawToolBar() { /* Deprecated */
-		ImGuiWindowFlags window_flags = 0
-			//| ImGuiWindowFlags_NoDocking
-			| ImGuiWindowFlags_NoTitleBar
-			| ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove
-			| ImGuiWindowFlags_NoScrollbar
-			;
-		static bool showMenuBar = false;
-		//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-		ImGui::Begin("toolbar", nullptr, window_flags);
-		//ImGui::PopStyleVar();
-		if (ImGui::IsWindowDocked()) {
-			auto* wnd = ImGui::FindWindowByName("toolbar");
-			if (wnd) {
-				ImGuiDockNode* node = wnd->DockNode;
-				if (node) {
-					node->TabBar->Flags |= ImGuiDockNodeFlags_NoTabBar;
-					//node->WantHiddenTabBarToggle = true;
-				}
-			}
+	// Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
+	// Order matters! Should be called after DrawViewport immediately
+	void AhoEditorLayer::DrawToolBarOverlay() {
+		auto [ww, wh] = ImGui::GetWindowSize();
+		auto [wx, wy] = ImGui::GetWindowPos();
+		ImVec2 buttonPos = ImGui::GetCursorScreenPos();
+		ImVec2 backup = ImGui::GetCursorPos();
+		ImVec2 pos = { wx + 20.0f, wy + ImGui::GetFrameHeight() };
+		ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+		ImVec2 OverLaySize{ ww, 60.0f };
+		ImGui::SetNextWindowSize(OverLaySize, ImGuiCond_Always);
+		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.85f); // alpha value
+		if (ImGui::ImageButton("add", (ImTextureID)m_PlusIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize })) {
+			ImGui::OpenPopup("popup_menu");
 		}
-		if (ImGui::ImageButton("Add", (ImTextureID)m_PlusIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize })) {
-			//showMenuBar = true;
-			//ImGui::MenuItem("add", NULL, &showMenuBar);
+		ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
+		ImVec2 buttonMax = ImGui::GetItemRectMax(); // lower right
+		ImVec2 nxtPos = ImVec2(buttonMin.x, buttonMax.y);
+		ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
+		if (ImGui::BeginPopup("popup_menu")) {
+			if (ImGui::MenuItem("Light")) {
+				std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::PointLight);
+				m_EventManager->PushBack(e);
+			}
+			ImGui::EndPopup();
+		}
+		ImGui::PopStyleVar();
+
+		ImVec2 IconPos = { wx + 0.85f * ww, wy + ImGui::GetFrameHeight() + 5.0f };
+		ImGui::SetCursorScreenPos(IconPos);
+		if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize },
+			ImVec2(0, 0), ImVec2(1, 1),
+			s_SelectedButton == ButtonType::Translation ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f },
+			s_SelectedButton == ButtonType::Translation ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f })) {
+			s_SelectedButton = ButtonType::Translation;
+			s_Operation = ImGuizmo::OPERATION::TRANSLATE;
+			m_ShouldPickObject = false;
+			m_IsClickingEventBlocked = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
+			s_SelectedButton == ButtonType::Rotation ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f },
+			s_SelectedButton == ButtonType::Rotation ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f })) {
+			s_SelectedButton = ButtonType::Rotation;
+			s_Operation = ImGuizmo::OPERATION::ROTATE;
+			m_ShouldPickObject = false;
+			m_IsClickingEventBlocked = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::ImageButton("scaleMode", (ImTextureID)m_ScaleIcon->GetTextureID(), ImVec2{ s_ToolBarIconSize ,s_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
+			s_SelectedButton == ButtonType::Scale ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f },
+			s_SelectedButton == ButtonType::Scale ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f })) {
+			s_SelectedButton = ButtonType::Scale;
+			s_Operation = ImGuizmo::OPERATION::SCALE;
+			m_ShouldPickObject = false;
+			m_IsClickingEventBlocked = true;
 		}
 		ImGui::End();
 	}
-	
+
+	void AhoEditorLayer::DrawGizmo() {
+		m_Selected = false;
+		if (m_LevelLayer->GetCurrentLevel()) {
+			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+			if (entityManager->IsEntityIDValid(m_PickPixelData)) {
+				m_SelectedObject = Entity(static_cast<entt::entity>(m_PickPixelData));
+				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
+					m_Selected = true;
+					auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
+					auto& translation = tc.GetTranslation();
+					auto& scale = tc.GetScale();
+					auto& rotation = tc.GetRotation();
+					auto transform = tc.GetTransform();
+					// Gizmo
+					const auto& viewMat = m_CameraManager->GetMainEditorCamera()->GetView();
+					const auto& projMat = m_CameraManager->GetMainEditorCamera()->GetProjection();
+					ImGuizmo::SetOrthographic(false);
+					ImGuizmo::SetDrawlist();
+					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, m_ViewportWidth, m_ViewportHeight - ImGui::GetFrameHeight());
+
+					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
+					//TODO: use delta matrix here to avoid jittering
+					m_IsClickingEventBlocked = ImGuizmo::IsOver();
+					ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
+						s_Operation,
+						ImGuizmo::MODE::WORLD,
+						glm::value_ptr(transform));
+					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+				}
+			}
+		}
+	}
+
 	namespace fs = std::filesystem;
 	void AhoEditorLayer::DrawContentBrowserPanel() {
 		ImGui::Begin("Content Browser");
@@ -425,7 +419,6 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::TryGetDragDropTarget() {
-		// Recieving a drag target
 		if (ImGui::BeginDragDropTarget()) {
 			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
 			if (payload) {
@@ -433,7 +426,6 @@ namespace Aho {
 				m_DroppedString = std::string(droppedData, payload->DataSize);
 				m_ShowPopup = true;
 				AHO_TRACE("Payload accepted! {}", m_DroppedString);
-				showPopup = true;
 			}
 			ImGui::EndDragDropTarget();
 		}

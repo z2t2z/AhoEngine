@@ -20,8 +20,11 @@ namespace Aho {
 		void DrawSceneHierarchyPanel();
 		void DrawViewport();
 		void DrawLightIcons();
-		void DrawToolBar();
+		void DrawToolBarOverlay();
+		void DrawGizmo();
 	private:
+		uint32_t m_ViewportWidth;
+		uint32_t m_ViewportHeight;
 		void TryGetDragDropTarget();
 		std::string m_DroppedString;
 		bool m_ShowPopup{ false };
@@ -34,10 +37,10 @@ namespace Aho {
 		bool m_DrawDepthMap{ false };
 		bool m_PickingPass{ false };
 		bool m_IsViewportFocused{ false };
-		bool m_CursorInViewport{ false };
-		bool m_PickObject{ false };
-		bool m_BlockClickingEvent{ false };
-		uint32_t m_PickData{ 998244353u }; // TODO, try using std::optional?
+		bool m_IsCursorInViewport{ false };
+		bool m_ShouldPickObject{ false };
+		bool m_IsClickingEventBlocked{ false };
+		uint32_t m_PickPixelData{ 998244353u }; // TODO, try using std::optional?
 		Entity m_SelectedObject;
 		float m_DeltaTime{ 0.0f };
 	private:
