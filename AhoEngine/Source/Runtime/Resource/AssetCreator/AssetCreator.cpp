@@ -109,6 +109,11 @@ namespace Aho {
 			AHO_CORE_ERROR(importer.GetErrorString());
 			return nullptr;
 		}
+		auto it = filePath.find_last_of('/\\');
+		std::string prefix;
+		if (it != std::string::npos) {
+			prefix = filePath.substr(0, it) + '/';
+		}
 		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 
 		auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
@@ -118,7 +123,7 @@ namespace Aho {
 				for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 					aiString str;
 					material->GetTexture(type, i, &str);
-					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), std::string(str.data));
+					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), prefix + std::string(str.data));
 				}
 			}
 			return info;
@@ -219,10 +224,11 @@ namespace Aho {
 		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
 			std::string nodeName = node->mName.C_Str();
 			if (!boneNodeCache.contains(nodeName)) {
-				BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, nodeName, Utils::AssimpMatrixConvertor(node->mTransformation)));
+				BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, nodeName, glm::mat4(1.0f)));
 				boneNodeCache[nodeName] = boneNode;
 			}
 			BoneNode* currNode = boneNodeCache[nodeName];
+			currNode->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
 			currNode->parent = parent;
 			for (uint32_t i = 0; i < node->mNumChildren; i++) {
 				auto res = self(self, node->mChildren[i], currNode);

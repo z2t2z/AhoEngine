@@ -17,7 +17,7 @@ namespace Aho {
 			const auto& positions = anim->GetPositions(id);
 			const auto& rotations = anim->GetRotations(id);
 			const auto& scales = anim->GetScales(id);
-			glm::mat4 localTransform = glm::mat4(1.0f);
+			glm::mat4 localTransform = currNode->transform;
 			glm::mat4 scale = glm::mat4(1.0f);
 			glm::mat4 trans = glm::mat4(1.0f);
 			glm::mat4 rot = glm::mat4(1.0f);
@@ -29,7 +29,6 @@ namespace Aho {
 					else {
 						int prev = GetKeyframeIndex(currTime, scales);
 						int nxt = prev + 1;
-						//scale = Lerp(currTime, scales[prev], scales[nxt]);
 						glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute, 
 							GetInterpolationFactor(scales[prev].timeStamp, scales[nxt].timeStamp, currTime));
 						scale = glm::scale(glm::mat4(1.0f), finalScale);
@@ -55,13 +54,11 @@ namespace Aho {
 						trans = Lerp(currTime, positions[prev], positions[nxt]);
 					}
 				}
+				localTransform = trans * rot * scale;
 			}
-			auto finalTrans = trans * rot * scale;
-			//auto finalTrans = scale * rot * trans;
-			globalTrans = globalTrans * finalTrans;
-			if (currNode->bone.hasAnim) {
-				globalMatrices[id] = globalTrans * currNode->bone.offset;
-			}
+			//auto localTransform = scale * rot * trans;
+			globalTrans = globalTrans * localTransform;
+			globalMatrices[id] = globalTrans * currNode->bone.offset;
 			for (auto& childNode : currNode->children) {
 				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans);
 			}

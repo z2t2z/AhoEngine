@@ -113,6 +113,7 @@ namespace Aho {
 		BoneNode(Bone _bone) : bone(_bone) {}
 		~BoneNode() { for (auto child : children) delete child; }
 		Bone bone;
+		glm::mat4 transform;
 		BoneNode* parent{ nullptr };
 		std::vector<BoneNode*> children;
 	};
