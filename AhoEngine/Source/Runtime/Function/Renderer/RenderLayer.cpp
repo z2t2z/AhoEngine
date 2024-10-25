@@ -490,7 +490,8 @@ namespace Aho {
 		cmdBuffer->SetClearColor(glm::vec4(0.0f));
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
 			shader->BindUBO(ubo, 0, sizeof(UBO));
-			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.1f))); // TODO 
+			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f))); // TODO 
+			//shader->SetMat4("u_Model", glm::mat4(1.0f));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawLine(data->GetVAO());

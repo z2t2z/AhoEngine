@@ -60,16 +60,16 @@ namespace Aho {
 
 	void LevelLayer::UpdateAnimation(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
-		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent>();
-		view.each([deltaTime, this](auto entity, auto& animator, auto& skeletal, auto& animation) {
+		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
+		view.each([deltaTime, this](auto entity, auto& animator, auto& skeletal, auto& animation, auto& viewer) {
 			const BoneNode* root = skeletal.root;
 			std::vector<glm::mat4>& globalMatrices = animator.globalMatrices;
 			float& currentTime = animator.currentTime;
 			const std::shared_ptr<AnimationAsset> anim = animation.animation;
 			currentTime += deltaTime * anim->GetTicksPerSecond();
 			currentTime = fmod(currentTime, anim->GetDuration());
-			Animator::Update(currentTime, globalMatrices, root, anim);
-
+			Animator::Update(currentTime, globalMatrices, root, anim, viewer.viewer);
+			viewer.viewer->Reset();
 			auto pipeline = m_RenderLayer->GetRenderer()->GetCurrentRenderPipeline();
 			SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
 			for (size_t i = 0; i < globalMatrices.size(); i++) {
@@ -79,12 +79,17 @@ namespace Aho {
 	}
 
 	void LevelLayer::AddAnimation(const std::shared_ptr<AnimationAsset>& anim) {
-		AHO_CORE_TRACE("Adding animation");
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<SkeletalComponent>();
-		view.each([entityManager, anim](auto entity, auto& skeletal) {
+		view.each([entityManager, anim, this](auto entity, auto& skeletal) {
 			entityManager->AddComponent<AnimatorComponent>(entity, anim->GetBoneCnt());
 			entityManager->AddComponent<AnimationComponent>(entity, anim);
+			SkeletonViewer* viewer = new SkeletonViewer(skeletal.root);
+			entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
+			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+			renderData->SetVAOs(viewer->GetVAO());
+			renderData->SetLine();
+			UploadRenderDataEventTrigger({ renderData });
 		});
 	}
 
@@ -213,15 +218,6 @@ namespace Aho {
 		entityManager->AddComponent<MeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), asset->GetBoneCache());
-
-		m_SkeletonViewer = std::make_unique<SkeletonViewer>(asset->GetRoot());
-		{
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(m_SkeletonViewer->GetVAO());
-			renderData->SetLine();
-			UploadRenderDataEventTrigger({ renderData});
-		}
-
 
 		TransformParam* param = new TransformParam();
 		param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);

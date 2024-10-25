@@ -5,13 +5,15 @@
 namespace Aho {
 	class Animator {
 	public:
-		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices, const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim) {
+		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices, 
+			const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
 			glm::mat4 globalTrans = glm::mat4(1.0f);
-			UpdateBoneTree(currTime, globalMatrices, root, anim, globalTrans);
+			UpdateBoneTree(currTime, globalMatrices, root, anim, globalTrans, viewer);
 		}
 	private:
 		static void UpdateBoneTree(float currTime, std::vector<glm::mat4>& globalMatrices,
-			const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim, glm::mat4 globalTrans) {
+			const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim,
+			glm::mat4 globalTrans, SkeletonViewer* viewer) {
 			int id = currNode->bone.id;
 			std::string name = currNode->bone.name;
 			const auto& positions = anim->GetPositions(id);
@@ -58,8 +60,10 @@ namespace Aho {
 			}
 			globalTrans = globalTrans * localTransform;
 			globalMatrices[id] = globalTrans * currNode->bone.offset;
+			viewer->UpdateSkeletonVertices(currNode, glm::vec3(globalTrans[3]));
+
 			for (auto childNode : currNode->children) {
-				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans);
+				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans, viewer);
 			}
 		}
 

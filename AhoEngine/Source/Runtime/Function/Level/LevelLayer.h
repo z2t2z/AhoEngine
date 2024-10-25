@@ -50,7 +50,6 @@ namespace Aho {
 		bool m_Update{ true };		// TODO: temporary...
 		LightData m_LightData;		// TODO: temporary...
 	private:
-		std::unique_ptr<SkeletonViewer> m_SkeletonViewer{ nullptr };
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };

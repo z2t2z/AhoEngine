@@ -4,20 +4,20 @@
 #include "Runtime/Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Aho {
-	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size) {
+	VertexBuffer* VertexBuffer::Create(float* vertices, uint32_t size, bool dynamicDraw) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
+			case RendererAPI::API::OpenGL:  return new OpenGLVertexBuffer(vertices, size, dynamicDraw);
 		}
 
 		AHO_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
-	VertexBuffer* VertexBuffer::Create(int* vertices, uint32_t size) {
+	VertexBuffer* VertexBuffer::Create(int* vertices, uint32_t size, bool dynamicDraw) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL:  return new OpenGLVertexBuffer(vertices, size);
+			case RendererAPI::API::OpenGL:  return new OpenGLVertexBuffer(vertices, size, dynamicDraw);
 		}
 
 		AHO_CORE_ASSERT(false, "Unknown RendererAPI!");

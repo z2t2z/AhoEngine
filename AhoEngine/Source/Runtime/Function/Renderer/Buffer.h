@@ -103,8 +103,9 @@ namespace Aho {
 		virtual void Unbind() const = 0;
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
-		static VertexBuffer* Create(float* vertices, uint32_t size);
-		static VertexBuffer* Create(int* vertices, uint32_t size);
+		virtual void Reset(float* vertices, uint32_t size) = 0;
+		static VertexBuffer* Create(float* vertices, uint32_t size, bool dynamicDraw = false);
+		static VertexBuffer* Create(int* vertices, uint32_t size, bool dynamicDraw = false);
 	};
 
 	class ShaderStorageBuffer {

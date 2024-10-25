@@ -131,16 +131,23 @@ namespace Aho {
 
 		std::vector<std::shared_ptr<SkeletalMeshInfo>> subMesh;
 		std::map<std::string, BoneNode*> boneNodeCache;
+		std::map<std::string, Bone> boneCache;
 		uint32_t bonesCnt = 0;
 		auto RetrieveBonesInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
 			for (uint32_t i = 0; i < mesh->mNumBones; i++) {
 				std::string boneName(mesh->mBones[i]->mName.C_Str());
-				if (!boneNodeCache.contains(boneName)) {
-					BoneNode* nodeInfo = new BoneNode(Bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix)));
-					boneNodeCache[boneName] = nodeInfo;
+				//if (!boneNodeCache.contains(boneName)) {
+				//	BoneNode* nodeInfo = new BoneNode(Bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix)));
+				//	boneNodeCache[boneName] = nodeInfo;
+				//}
+				//auto node = boneNodeCache.at(boneName);
+				if (!boneCache.contains(boneName)) {
+					Bone bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix));
+					boneCache[boneName] = bone;
 				}
-				auto node = boneNodeCache.at(boneName);
-				int id = node->bone.id;
+				Bone& bone = boneCache[boneName];
+				//int id = node->bone.id;
+				int id = bone.id;
 				auto weights = mesh->mBones[i]->mWeights;
 				int numWeights = mesh->mBones[i]->mNumWeights;
 				for (uint32_t j = 0; j < numWeights; j++) {
@@ -222,12 +229,14 @@ namespace Aho {
 		};
 
 		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
-			std::string nodeName = node->mName.C_Str();
-			if (!boneNodeCache.contains(nodeName)) {
-				BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, nodeName, glm::mat4(1.0f)));
-				boneNodeCache[nodeName] = boneNode;
-			}
-			BoneNode* currNode = boneNodeCache[nodeName];
+			std::string boneName = node->mName.C_Str();
+			//if (!boneNodeCache.contains(boneName)) {
+			//	BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f)));
+			//	boneNodeCache[boneName] = boneNode;
+			//}
+			BoneNode* boneNode = (boneCache.contains(boneName) ? new BoneNode(boneCache[boneName]) : new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f))));
+			boneNodeCache[boneName] = boneNode;
+			BoneNode* currNode = boneNodeCache[boneName];
 			currNode->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
 			currNode->parent = parent;
 			for (uint32_t i = 0; i < node->mNumChildren; i++) {

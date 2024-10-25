@@ -24,7 +24,8 @@ namespace Aho {
 		}
 	}
 
-	OpenGLVertexArray::OpenGLVertexArray() {
+	OpenGLVertexArray::OpenGLVertexArray(bool dynamicDraw) 
+			: m_Dynamic(dynamicDraw) {
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
@@ -36,7 +37,7 @@ namespace Aho {
 		auto& vertices = lineInfo->vertices;
 		auto& indices = lineInfo->indices;
 		std::shared_ptr<VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float), m_Dynamic));
 		BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" }
 		};

@@ -5,6 +5,7 @@
 #include "Runtime/Resource/Asset/MeshAsset.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
+#include "Runtime/Function/SkeletonViewer.h"
 #include <string>
 
 namespace Aho {
@@ -87,6 +88,13 @@ namespace Aho {
 			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {}
 		SkeletalComponent() = default;
 		SkeletalComponent(const SkeletalComponent&) = default;
+	};
+
+	struct SkeletonViewerComponent {
+		std::string name;
+		SkeletonViewer* viewer;
+		SkeletonViewerComponent(SkeletonViewer* _viewer) : viewer(_viewer), name{ "Default" } {}
+		~SkeletonViewerComponent() { delete viewer; }
 	};
 
 	// Temporary, think about how to design light class

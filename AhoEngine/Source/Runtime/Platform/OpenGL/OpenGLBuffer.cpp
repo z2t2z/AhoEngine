@@ -6,16 +6,16 @@
 
 namespace Aho {
 	// VertexBuffer /////////////////////////////////////////////////////////////
-	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size) {
+	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size, bool dynamicDraw) {
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, size, vertices, dynamicDraw ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 	}
 
-	OpenGLVertexBuffer::OpenGLVertexBuffer(int* vertices, uint32_t size) {
+	OpenGLVertexBuffer::OpenGLVertexBuffer(int* vertices, uint32_t size, bool dynamicDraw) {
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, size, vertices, dynamicDraw ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 	}
 
 	OpenGLVertexBuffer::~OpenGLVertexBuffer() {
@@ -28,6 +28,11 @@ namespace Aho {
 
 	void OpenGLVertexBuffer::Unbind() const {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void OpenGLVertexBuffer::Reset(float* vertices, uint32_t size) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices); 
 	}
 
 	// IndexBuffer //////////////////////////////////////////////////////////////
