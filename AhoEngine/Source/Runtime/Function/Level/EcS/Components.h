@@ -22,7 +22,8 @@ namespace Aho {
 		EntityComponent() = default;
 		EntityComponent(const EntityComponent&) = default;
 		EntityComponent(const std::vector<entt::entity>& _entities)
-			: entities(_entities) {}
+			: entities(_entities) {
+		}
 	};
 
 	struct TransformComponent {
@@ -43,7 +44,8 @@ namespace Aho {
 		std::shared_ptr<Material> material;
 		MaterialComponent() = default;
 		MaterialComponent(std::shared_ptr<Material>& _material)
-			: material(_material) {}
+			: material(_material) {
+		}
 		MaterialComponent(const MaterialComponent&) = default;
 	};
 
@@ -53,12 +55,13 @@ namespace Aho {
 		MeshComponent() : name{ "IDK" } {};
 		MeshComponent(const MeshComponent&) = default;
 	};
-	
+
 	struct MultiMeshComponent {
 		std::vector<MeshComponent> meshes; // Rendering data. ?
 		MultiMeshComponent() = default;
 		MultiMeshComponent(const std::vector<MeshComponent>& _meshes)
-			: meshes(_meshes) {}
+			: meshes(_meshes) {
+		}
 		MultiMeshComponent(const MultiMeshComponent&) = default;
 	};
 
@@ -71,7 +74,7 @@ namespace Aho {
 			std::fill(globalMatrices.begin(), globalMatrices.end(), glm::mat4(1.0f));
 		}
 	};
-	
+
 	struct AnimationComponent {
 		std::string name;
 		std::shared_ptr<AnimationAsset> animation;
@@ -84,8 +87,9 @@ namespace Aho {
 		BoneNode* root;
 		std::map<std::string, BoneNode*> boneCache;
 		~SkeletalComponent() { delete root; }
-		SkeletalComponent(BoneNode* _root, const std::map<std::string, BoneNode*> _boneCache) 
-			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {}
+		SkeletalComponent(BoneNode* _root, const std::map<std::string, BoneNode*> _boneCache)
+			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {
+		}
 		SkeletalComponent() = default;
 		SkeletalComponent(const SkeletalComponent&) = default;
 	};
@@ -103,8 +107,9 @@ namespace Aho {
 		float intensity{ 0.5f };
 		int count{ 0 };
 		PointLightComponent() = default;
-		PointLightComponent(glm::vec4 _color, float _intensity = 1.0f) 
-			: color(_color), intensity(_intensity) {}
+		PointLightComponent(glm::vec4 _color, float _intensity = 1.0f)
+			: color(_color), intensity(_intensity) {
+		}
 		PointLightComponent(const PointLightComponent&) = default;
 	};
 }

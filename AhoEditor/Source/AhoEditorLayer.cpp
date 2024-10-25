@@ -167,7 +167,7 @@ namespace Aho {
 				if (renderPass->GetRenderPassType() == RenderPassType::Pick) {
 					renderPass->GetRenderTarget()->Resize(m_ViewportWidth * 0.3f, m_ViewportHeight * 0.3f);
 				}
-				else if (renderPass->GetRenderPassType() != RenderPassType::Depth && renderPass->GetRenderPassType() != RenderPassType::HiZ) {
+				else if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
 					renderPass->GetRenderTarget()->Resize(m_ViewportWidth, m_ViewportHeight);
 				}
 			}
@@ -180,7 +180,7 @@ namespace Aho {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::DrawLine)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetLastColorAttachment();

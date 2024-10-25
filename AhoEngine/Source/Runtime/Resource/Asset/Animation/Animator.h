@@ -5,7 +5,7 @@
 namespace Aho {
 	class Animator {
 	public:
-		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices, 
+		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
 			const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
 			glm::mat4 globalTrans = glm::mat4(1.0f);
 			UpdateBoneTree(currTime, globalMatrices, root, anim, globalTrans, viewer);
@@ -31,7 +31,7 @@ namespace Aho {
 					else {
 						int prev = GetKeyframeIndex(currTime, scales);
 						int nxt = prev + 1;
-						glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute, 
+						glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute,
 							GetInterpolationFactor(scales[prev].timeStamp, scales[nxt].timeStamp, currTime));
 						scale = glm::scale(glm::mat4(1.0f), finalScale);
 					}
@@ -58,9 +58,10 @@ namespace Aho {
 				}
 				localTransform = trans * rot * scale;
 			}
+			glm::vec3 parentPoint(globalTrans[3]);
 			globalTrans = globalTrans * localTransform;
 			globalMatrices[id] = globalTrans * currNode->bone.offset;
-			viewer->UpdateSkeletonVertices(currNode, glm::vec3(globalTrans[3]));
+			viewer->UpdateSkeletonVertices(currNode, glm::vec3(globalTrans[3]), parentPoint);
 
 			for (auto childNode : currNode->children) {
 				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans, viewer);
@@ -71,7 +72,7 @@ namespace Aho {
 		static int GetKeyframeIndex(float currTime, const T& keyframeVec) {
 			auto it = std::lower_bound(keyframeVec.begin(), keyframeVec.end(), currTime, [](const auto& info, float currTime) {
 				return info.timeStamp < currTime;
-			});
+				});
 			return std::max(0, int(std::prev(it) - keyframeVec.begin()));
 		}
 

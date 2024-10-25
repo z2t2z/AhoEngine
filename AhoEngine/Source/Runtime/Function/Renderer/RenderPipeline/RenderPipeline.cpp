@@ -28,28 +28,28 @@ namespace Aho {
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
 		switch (type) {
-			case RenderPassType::Debug:
-				return m_DebugPass->GetRenderTarget();
-			case RenderPassType::Depth:
-				return m_ShadowMapPass->GetRenderTarget();
-			case RenderPassType::SSAO:
-				return m_SSAOPass->GetRenderTarget();
-			case RenderPassType::SSAOGeo:
-				return m_GBufferPass->GetRenderTarget();
-			case RenderPassType::SSAOLighting:
-				return m_SSAOLightingPass->GetRenderTarget();
-			case RenderPassType::Final:
-				return m_ResultPass->GetRenderTarget();
-			case RenderPassType::Pick:
-				return m_PickingPass->GetRenderTarget();
-			case RenderPassType::Blur:
-				return m_BlurPass->GetRenderTarget();
-			case RenderPassType::SSRvs:
-				return m_SSRvsPass->GetRenderTarget();
-			case RenderPassType::HiZ:
-				return m_HiZPass->GetRenderTarget();
-			case RenderPassType::DrawLine:
-				return m_DrawLinePass->GetRenderTarget();
+		case RenderPassType::Debug:
+			return m_DebugPass->GetRenderTarget();
+		case RenderPassType::Depth:
+			return m_ShadowMapPass->GetRenderTarget();
+		case RenderPassType::SSAO:
+			return m_SSAOPass->GetRenderTarget();
+		case RenderPassType::SSAOGeo:
+			return m_GBufferPass->GetRenderTarget();
+		case RenderPassType::SSAOLighting:
+			return m_SSAOLightingPass->GetRenderTarget();
+		case RenderPassType::Final:
+			return m_ResultPass->GetRenderTarget();
+		case RenderPassType::Pick:
+			return m_PickingPass->GetRenderTarget();
+		case RenderPassType::Blur:
+			return m_BlurPass->GetRenderTarget();
+		case RenderPassType::SSRvs:
+			return m_SSRvsPass->GetRenderTarget();
+		case RenderPassType::HiZ:
+			return m_HiZPass->GetRenderTarget();
+		case RenderPassType::DrawLine:
+			return m_DrawLinePass->GetRenderTarget();
 		}
 		AHO_CORE_ASSERT(true);
 	}
@@ -58,61 +58,61 @@ namespace Aho {
 	void RenderPipeline::SortRenderPasses() {
 		auto it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Final;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_ResultPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Debug;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_DebugPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Depth;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_ShadowMapPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Pick;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_PickingPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::SSAOGeo;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_GBufferPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::SSAO;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_SSAOPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::SSAOLighting;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_SSAOLightingPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Blur;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_BlurPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::SSRvs;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_SSRvsPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::HiZ;
-		});
+			});
 		if (it != m_RenderPasses.end()) {
 			m_HiZPass = *it;
 		}

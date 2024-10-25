@@ -17,20 +17,19 @@ namespace Aho {
 		m_CurrentLevel = std::make_shared<Level>();
 		m_Levels.push_back(m_CurrentLevel);
 	}
-	
-	void LevelLayer::OnDetach() {
 
+	void LevelLayer::OnDetach() {
 	}
-	
+
 	void LevelLayer::OnUpdate(float deltaTime) {
 		UpdataUBOData();
 		// UpdatePhysics();
 		UpdateAnimation(deltaTime);
 	}
-	
+
 	void LevelLayer::OnImGuiRender() {
 	}
-	
+
 	void LevelLayer::OnEvent(Event& e) {
 		if (e.GetEventType() == EventType::PackRenderData) {
 			bool isSkeletal = ((PackRenderDataEvent*)&e)->IsSkeletalMesh();
@@ -75,7 +74,7 @@ namespace Aho {
 			for (size_t i = 0; i < globalMatrices.size(); i++) {
 				skubo->u_BoneMatrices[i] = globalMatrices[i];
 			}
-		});
+			});
 	}
 
 	void LevelLayer::AddAnimation(const std::shared_ptr<AnimationAsset>& anim) {
@@ -90,7 +89,7 @@ namespace Aho {
 			renderData->SetVAOs(viewer->GetVAO());
 			renderData->SetLine();
 			UploadRenderDataEventTrigger({ renderData });
-		});
+			});
 	}
 
 	void LevelLayer::AddLightSource(LightType lt) {

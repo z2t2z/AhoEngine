@@ -34,7 +34,7 @@ namespace Aho {
 		bool m_Rendered{ true };
 		bool m_Virtual{ false };
 	private:
-		TransformParam* m_Param;
+		TransformParam* m_Param{ nullptr };
 		std::shared_ptr<VertexArray> m_VAO{ nullptr };
 		std::shared_ptr<Material> m_Material{ nullptr };
 	};

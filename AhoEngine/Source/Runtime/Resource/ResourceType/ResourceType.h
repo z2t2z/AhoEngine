@@ -38,10 +38,10 @@ namespace Aho {
 		float u, v;				// texture coordinates
 		float weights[MAX_BONES];
 		int bonesID[MAX_BONES];
-		VertexSkeletal() { 
-			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; 
+		VertexSkeletal() {
+			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f;
 			memset(bonesID, -1, sizeof(bonesID));
-			memset(weights, 0, sizeof(weights)); 
+			memset(weights, 0, sizeof(weights));
 		}
 	};
 
@@ -99,7 +99,8 @@ namespace Aho {
 		bool hasUVs;
 		MaterialInfo materialInfo; // to be removed
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
-			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) { }
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) {
+		}
 		MeshInfo(const std::vector<Vertex>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV)
 			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV) {
 		}
@@ -131,8 +132,10 @@ namespace Aho {
 		bool hasUVs;
 		MaterialInfo materialInfo;
 		SkeletalMeshInfo(const std::vector<VertexSkeletal>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV, const MaterialInfo& info)
-			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) {}
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV), materialInfo(info) {
+		}
 		SkeletalMeshInfo(const std::vector<VertexSkeletal>& _vertexBuffer, const std::vector<uint32_t>& _indexBuffer, bool _hasNormal, bool _hasUV)
-			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV) {}
+			: vertexBuffer(_vertexBuffer), indexBuffer(_indexBuffer), hasNormal(_hasNormal), hasUVs(_hasUV) {
+		}
 	};
 }

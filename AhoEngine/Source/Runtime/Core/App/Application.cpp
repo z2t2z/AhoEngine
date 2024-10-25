@@ -43,7 +43,7 @@ namespace Aho {
 			// Calculate FPS
 			m_AccumulatedTime += deltaTime;
 			if (deltaTime < g_FrameTime) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(long long(floor(g_FrameTime - deltaTime))));
+				//std::this_thread::sleep_for(std::chrono::milliseconds(long long(floor(g_FrameTime - deltaTime))));
 			}
 			m_FPS += 1;
 			if (m_AccumulatedTime >= 1.0f) {

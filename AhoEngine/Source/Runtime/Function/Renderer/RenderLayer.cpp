@@ -17,7 +17,6 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnDetach() {
-
 	}
 
 	void RenderLayer::OnUpdate(float deltaTime) {
@@ -62,7 +61,7 @@ namespace Aho {
 		auto HiZPass = SetupHiZPass();
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
 		auto ssaoPass = SetupSSAOPass();
-		auto ssrViewSpace = SetupSSRPass();
+		auto ssrPass = SetupSSRPass();
 		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // this is the color attachement that contains depth info in a Hi-Z structure
 
 		// Note that order matters!
@@ -71,15 +70,15 @@ namespace Aho {
 				ssaoPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal
 			}
 			mainPass->AddGBuffer(geoPassAttachments[i]);     // gPostion, gNormal, gAlbedo
-			ssrViewSpace->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal, gAlbedo
+			ssrPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal, gAlbedo
 		}
 		ssaoPass->AddGBuffer(Utils::CreateNoiseTexture(32)); // ssaoPass: gPostion, gNormal, gNoise
-		ssrViewSpace->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // Depthmap, from view space
+		ssrPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back()); // Depthmap, from view space
 
 		auto blurPass = SetupSSAOBlurPass();
 		blurPass->AddGBuffer(ssaoPass->GetRenderTarget()->GetTextureAttachments().back());
 		mainPass->AddGBuffer(blurPass->GetRenderTarget()->GetTextureAttachments().back());     // SSAO
-		mainPass->AddGBuffer(ssrViewSpace->GetRenderTarget()->GetTextureAttachments().back()); // SSR specular
+		mainPass->AddGBuffer(ssrPass->GetRenderTarget()->GetTextureAttachments().back()); // SSR specular
 
 		pipeline->AddRenderPass(mainPass);
 		pipeline->AddRenderPass(shadowMapPass);
@@ -88,7 +87,7 @@ namespace Aho {
 		pipeline->AddRenderPass(blurPass);
 		pipeline->AddRenderPass(gBufferPass);
 		pipeline->AddRenderPass(ssaoPass);
-		pipeline->AddRenderPass(ssrViewSpace);
+		pipeline->AddRenderPass(ssrPass);
 		pipeline->AddRenderPass(HiZPass);
 		pipeline->AddRenderPass(SetupDrawLinePass());
 		// Setup UBO data, order matters!!
@@ -114,7 +113,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO_GeoPass.glsl").string());
 		RenderPassDefault* renderPass = new RenderPassDefault();
@@ -132,7 +131,7 @@ namespace Aho {
 		positionAttachment.filterModeMin = FBFilterMode::Nearest;
 		positionAttachment.filterModeMag = FBFilterMode::Nearest;
 		FBTextureSpecification normalAttachment = positionAttachment;
-		
+
 		depthAttachment = positionAttachment;
 		depthAttachment.internalFormat = FBInterFormat::RED32F;
 		depthAttachment.dataFormat = FBDataFormat::RED;
@@ -166,7 +165,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		cmdBuffer->SetClearFlags(ClearFlags::Color_Buffer);
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO.glsl").string());
@@ -204,7 +203,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		cmdBuffer->SetClearFlags(ClearFlags::Color_Buffer);
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "Blur.glsl").string();
@@ -249,7 +248,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "SSAO_LightingPass.glsl").string();
@@ -293,7 +292,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		debugPass->SetRenderCommand(cmdBuffer);
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		const auto debugShader = Shader::Create(currentPath / "ShaderSrc" / "ShadowMapDebug.glsl");
@@ -335,7 +334,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "pbrShader.glsl").string();
@@ -370,7 +369,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		RenderPassDefault* pickingPass = new RenderPassDefault();
 		pickingPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -401,8 +400,10 @@ namespace Aho {
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++); // Note that order matters!
 			}
+			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipmapLevels;
 			shader->SetInt("u_Width", renderTarget->GetSpecification().Width);
 			shader->SetInt("u_Height", renderTarget->GetSpecification().Height);
+			shader->SetInt("u_MipLevelMax", mipLevel);
 			shader->SetInt("u_gPosition", 0);
 			shader->SetInt("u_gNormal", 1);
 			shader->SetInt("u_gAlbedo", 2);
@@ -412,7 +413,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "SSR.glsl").string();
@@ -446,6 +447,7 @@ namespace Aho {
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++); // Note that order matters!
 			}
+			shader->SetInt("u_Depth", 0);
 			int height = renderTarget->GetTextureAttachments().back()->GetSpecification().Height;
 			int width = renderTarget->GetTextureAttachments().back()->GetSpecification().Width;
 			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipmapLevels;
@@ -455,15 +457,16 @@ namespace Aho {
 				int nwidth = width >> i;
 				height = std::max(nheight, 1);
 				width = std::max(nwidth, 1);
+				RenderCommand::SetViewport(width, height);
 				RenderCommand::BindRenderTarget(0, renderTarget->GetTextureAttachments().back()->GetTextureID(), i);
-				RenderCommand::SetViewport(nwidth, nheight);
+				RenderCommand::Clear(ClearFlags::Color_Buffer);
 				for (const auto& data : renderData) {
 					data->Bind(shader);
 					RenderCommand::DrawIndexed(data->GetVAO());
 					data->Unbind();
 				}
 			}
-		});
+			});
 		RenderPassDefault* HiZPass = new RenderPassDefault();
 		HiZPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -477,7 +480,7 @@ namespace Aho {
 		depthAttachment.wrapModeT = FBWrapMode::Clamp;
 		depthAttachment.filterModeMin = FBFilterMode::NearestMipmapNearest;
 		depthAttachment.filterModeMag = FBFilterMode::NearestMipmapNearest;
-		depthAttachment.mipLevels = Utils::CalculateMaximumMipmapLevels(1280);
+		depthAttachment.mipLevels = Utils::CalculateMaximumMipmapLevels(720);
 		FBSpecification fbSpec(1280u, 720u, { depthAttachment });
 		auto FBO = Framebuffer::Create(fbSpec);
 		HiZPass->SetRenderTarget(FBO);
@@ -490,14 +493,14 @@ namespace Aho {
 		cmdBuffer->SetClearColor(glm::vec4(0.0f));
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
 			shader->BindUBO(ubo, 0, sizeof(UBO));
-			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f))); // TODO 
+			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f))); // TODO
 			//shader->SetMat4("u_Model", glm::mat4(1.0f));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawLine(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		RenderPassDefault* drawLinePass = new RenderPassDefault();
 		drawLinePass->SetRenderCommand(cmdBuffer);
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -529,7 +532,7 @@ namespace Aho {
 				RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
-		});
+			});
 		RenderPassDefault* depthRenderPass = new RenderPassDefault();
 		depthRenderPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
