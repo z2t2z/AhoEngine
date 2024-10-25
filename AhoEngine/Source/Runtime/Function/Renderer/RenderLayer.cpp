@@ -35,9 +35,14 @@ namespace Aho {
 			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
 			for (const auto& pipeLine : *m_Renderer) {
 				for (const auto& data : ((UploadRenderDataEvent*)&e)->GetRawData()) {
-					pipeLine->AddVirtualRenderData(data);
-					if (!data->IsVirtual()) {
-						pipeLine->AddRenderData(data); // TODO: Memory wastage, should be optimized
+					if (data->IsLine()) {
+						pipeLine->AddLineRenderData(data);
+					}
+					else {
+						pipeLine->AddVirtualRenderData(data);
+						if (!data->IsVirtual()) {
+							pipeLine->AddRenderData(data); // TODO: Memory wastage, should be optimized
+						}
 					}
 				}
 			}
@@ -85,6 +90,7 @@ namespace Aho {
 		pipeline->AddRenderPass(ssaoPass);
 		pipeline->AddRenderPass(ssrViewSpace);
 		pipeline->AddRenderPass(HiZPass);
+		pipeline->AddRenderPass(SetupDrawLinePass());
 		// Setup UBO data, order matters!!
 		OpenGLShader::SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
@@ -130,11 +136,12 @@ namespace Aho {
 		depthAttachment = positionAttachment;
 		depthAttachment.internalFormat = FBInterFormat::RED32F;
 		depthAttachment.dataFormat = FBDataFormat::RED;
-
+		auto depthLightAttachment = depthAttachment;
 		normalAttachment.wrapModeS = FBWrapMode::None;
 		FBTextureSpecification albedoAttachment = normalAttachment;
 		albedoAttachment.dataType = FBDataType::UnsignedByte;
 		albedoAttachment.internalFormat = FBInterFormat::RGBA8;
+		// Position(view space), Normal, Albedo, Depth(view space), Depth(light space), depthComponent
 		FBSpecification fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, texSpecDepth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		renderPass->SetRenderTarget(FBO);
@@ -478,10 +485,44 @@ namespace Aho {
 		return HiZPass;
 	}
 
+	RenderPass* RenderLayer::SetupDrawLinePass() {
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		cmdBuffer->SetClearColor(glm::vec4(0.0f));
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+			shader->BindUBO(ubo, 0, sizeof(UBO));
+			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.1f))); // TODO 
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawLine(data->GetVAO());
+				data->Unbind();
+			}
+		});
+		RenderPassDefault* drawLinePass = new RenderPassDefault();
+		drawLinePass->SetRenderCommand(cmdBuffer);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "DrawLine.glsl");
+		drawLinePass->SetShader(depthShader);
+		FBTextureSpecification texSpecColor;
+		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		texSpecColor.internalFormat = FBInterFormat::RGBA8;
+		texSpecColor.dataFormat = FBDataFormat::RGBA;
+		texSpecColor.dataType = FBDataType::UnsignedByte;
+		texSpecColor.target = FBTarget::Texture2D;
+		texSpecColor.wrapModeS = FBWrapMode::Clamp;
+		texSpecColor.wrapModeT = FBWrapMode::Clamp;
+		texSpecColor.filterModeMin = FBFilterMode::Nearest;
+		texSpecColor.filterModeMag = FBFilterMode::Nearest;
+		FBSpecification fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		auto fbo = Framebuffer::Create(fbSpec);
+		drawLinePass->SetRenderTarget(fbo);
+		drawLinePass->SetRenderPassType(RenderPassType::DrawLine);
+		return drawLinePass;
+	}
+
 	RenderPass* RenderLayer::SetupShadowMapPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
 		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
-			shader->BindUBO(ubo, 0, sizeof(UBO));
+			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -501,7 +542,7 @@ namespace Aho {
 		texSpecDepth.wrapModeT = FBWrapMode::Repeat;
 		texSpecDepth.filterModeMin = FBFilterMode::Nearest;
 		texSpecDepth.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(2048, 2048, { texSpecDepth });  // Hardcode fow now
+		FBSpecification fbSpec(4096, 4096, { texSpecDepth });  // Hardcode fow now
 		auto depthFBO = Framebuffer::Create(fbSpec);
 		depthRenderPass->SetRenderTarget(depthFBO);
 		depthRenderPass->SetRenderPassType(RenderPassType::Depth);

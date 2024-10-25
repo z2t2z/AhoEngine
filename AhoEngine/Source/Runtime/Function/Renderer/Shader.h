@@ -22,7 +22,7 @@ namespace Aho {
 		glm::mat4 u_View{ 0.0f };
 		glm::mat4 u_Projection{ 0.0f };
 		glm::vec4 u_ViewPosition{ 0.0f };
-		glm::mat4 u_LightViewMatrix{ 0.0f };
+		glm::mat4 u_LightPV{ 0.0f };
 		size_t GetSize() const { return sizeof(UBO); }
 	};
 
@@ -31,7 +31,7 @@ namespace Aho {
 		glm::mat4 u_View{ 0.0f };
 		glm::mat4 u_Projection{ 0.0f };
 		glm::vec4 u_ViewPosition{ 0.0f };
-		glm::mat4 u_LightViewMatrix{ 0.0f };
+		glm::mat4 u_LightPV{ 0.0f };
 
 		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
 		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
@@ -70,7 +70,7 @@ namespace Aho {
 		glm::mat4 u_View{ 0.0f };
 		glm::mat4 u_Projection{ 0.0f };
 		glm::vec4 u_ViewPosition{ 0.0f };
-		glm::mat4 u_LightViewMatrix{ 0.0f };
+		glm::mat4 u_LightPV{ 0.0f };
 		glm::mat4 u_BoneMatrices[MAX_BONES_CNT];
 		SkeletalUBO() {
 			for (int i = 0; i < MAX_BONES_CNT; i++) {

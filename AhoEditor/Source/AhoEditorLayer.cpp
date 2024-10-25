@@ -177,7 +177,7 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::DrawLine)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->GetLastColorAttachment();
@@ -192,7 +192,7 @@ namespace Aho {
 		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
 		MouseY = spec.Height - MouseY;
 		m_IsViewportFocused = ImGui::IsWindowFocused();
-		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - s_ToolBarIconSize - ImGui::GetFrameHeight());
+		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - s_ToolBarIconSize);
 		if (m_ShouldPickObject) {
 			m_ShouldPickObject = false;
 			if (m_IsCursorInViewport) { // If user is clicking the toolbar then ignore it
@@ -298,6 +298,18 @@ namespace Aho {
 				std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::PointLight);
 				m_EventManager->PushBack(e);
 			}
+			if (ImGui::MenuItem("Cube")) {
+				// TODO
+			}
+			if (ImGui::MenuItem("Sphere")) {
+
+			}
+			if (ImGui::MenuItem("Plane")) {
+
+			}
+			if (ImGui::MenuItem("Cylinder")) {
+
+			}
 			ImGui::EndPopup();
 		}
 		ImGui::PopStyleVar();
@@ -327,7 +339,7 @@ namespace Aho {
 			s_SelectedButton == ButtonType::Scale ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f },
 			s_SelectedButton == ButtonType::Scale ? ImVec4{ 1.0f, 0.0f, 0.0f, 1.0f } : ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f })) {
 			s_SelectedButton = ButtonType::Scale;
-			s_Operation = ImGuizmo::OPERATION::SCALE;
+			s_Operation = ImGuizmo::OPERATION::SCALEU;
 			m_ShouldPickObject = false;
 			m_IsClickingEventBlocked = true;
 		}

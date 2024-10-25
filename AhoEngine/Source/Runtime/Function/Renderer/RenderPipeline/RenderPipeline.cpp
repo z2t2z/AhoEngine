@@ -12,7 +12,7 @@ namespace Aho {
 	}
 
 	void RenderPipeline::Execute() {
-		m_ShadowMapPass->Execute(m_RenderData, m_RenderUBOs[0]);
+		m_ShadowMapPass->Execute(m_RenderData, m_RenderUBOs[3]);
 		m_GBufferPass->Execute(m_RenderData, m_RenderUBOs[3]);
 		m_HiZPass->Execute(m_ScreenQuad);
 		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
@@ -20,6 +20,7 @@ namespace Aho {
 		m_SSRvsPass->Execute(m_ScreenQuad, m_RenderUBOs[0]);
 		m_ResultPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
 		m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
+		m_DrawLinePass->Execute(m_LineData, m_RenderUBOs[0]);
 		if (m_DrawDebug) {
 			m_DebugPass->Execute(m_ScreenQuad);
 		}
@@ -47,6 +48,8 @@ namespace Aho {
 				return m_SSRvsPass->GetRenderTarget();
 			case RenderPassType::HiZ:
 				return m_HiZPass->GetRenderTarget();
+			case RenderPassType::DrawLine:
+				return m_DrawLinePass->GetRenderTarget();
 		}
 		AHO_CORE_ASSERT(true);
 	}
@@ -112,6 +115,12 @@ namespace Aho {
 		});
 		if (it != m_RenderPasses.end()) {
 			m_HiZPass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::DrawLine;
+			});
+		if (it != m_RenderPasses.end()) {
+			m_DrawLinePass = *it;
 		}
 	}
 } // namespace Aho

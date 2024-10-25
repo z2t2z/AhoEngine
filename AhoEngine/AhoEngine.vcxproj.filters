@@ -1599,6 +1599,7 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Bone.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h" />
+    <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

@@ -17,6 +17,7 @@ namespace Aho {
 		Blur,
 		SSRvs,
 		HiZ,
+		DrawLine,
 		/* TODO */
 	};
 

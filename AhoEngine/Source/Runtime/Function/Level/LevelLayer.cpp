@@ -25,7 +25,7 @@ namespace Aho {
 	void LevelLayer::OnUpdate(float deltaTime) {
 		UpdataUBOData();
 		// UpdatePhysics();
-		//UpdateAnimation(deltaTime);
+		UpdateAnimation(deltaTime);
 	}
 	
 	void LevelLayer::OnImGuiRender() {
@@ -130,12 +130,19 @@ namespace Aho {
 		gubo->u_View = cam->GetView();
 		gubo->u_Projection = cam->GetProjection();
 		gubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+
+		SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
+		skubo->u_View = cam->GetView();
+		skubo->u_Projection = cam->GetProjection();
+		skubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+
 		if (m_Update) {
-			float nearPlane = 0.1f, farPlane = 85.0f;
-			glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, nearPlane, farPlane);
+			float nearPlane = 0.1f, farPlane = 1000.0f;
+			glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
 			auto lightMat = proj * glm::lookAt(glm::vec3(gubo->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			ubo->u_LightViewMatrix = lightMat;
-			gubo->u_LightViewMatrix = lightMat;
+			ubo->u_LightPV = lightMat;
+			gubo->u_LightPV = lightMat;
+			skubo->u_LightPV = lightMat;
 		}
 		gubo->info[0] = m_LightData.lightCnt;
 		for (int i = 0; i < m_LightData.lightCnt; i++) {
@@ -147,12 +154,6 @@ namespace Aho {
 		subo->u_Projection = cam->GetProjection();
 		subo->info[0] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Width;
 		subo->info[1] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Height;
-	
-		SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
-		skubo->u_View = cam->GetView();
-		skubo->u_Projection = cam->GetProjection();
-		skubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
-		
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
@@ -212,6 +213,16 @@ namespace Aho {
 		entityManager->AddComponent<MeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), asset->GetBoneCache());
+
+		m_SkeletonViewer = std::make_unique<SkeletonViewer>(asset->GetRoot());
+		{
+			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+			renderData->SetVAOs(m_SkeletonViewer->GetVAO());
+			renderData->SetLine();
+			UploadRenderDataEventTrigger({ renderData});
+		}
+
+
 		TransformParam* param = new TransformParam();
 		param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
 		entityManager->AddComponent<TransformComponent>(gameObject, param);

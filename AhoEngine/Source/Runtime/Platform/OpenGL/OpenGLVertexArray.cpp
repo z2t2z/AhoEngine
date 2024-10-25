@@ -32,6 +32,23 @@ namespace Aho {
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
+	void OpenGLVertexArray::Init(const std::shared_ptr<LineInfo>& lineInfo) {
+		auto& vertices = lineInfo->vertices;
+		auto& indices = lineInfo->indices;
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+		BufferLayout layout = {
+			{ ShaderDataType::Float3, "a_Position" }
+		};
+		vertexBuffer->SetLayout(layout);
+		uint32_t offset = 0;
+		AddVertexBuffer(vertexBuffer, offset);
+		std::shared_ptr<IndexBuffer> indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
+		SetIndexBuffer(indexBuffer);
+	}
+
+
 	void OpenGLVertexArray::Init(const std::shared_ptr<MeshInfo>& meshInfo) {
 		std::vector<float> vertices;
 		vertices.reserve(meshInfo->vertexBuffer.size() * 14u);

@@ -18,11 +18,11 @@ layout(location = 0) out vec4 out_Color;
 
 in vec2 v_TexCoords;
 
-layout(std140, binding = 1) uniform GeneralUBO{
+layout(std140, binding = 1) uniform GeneralUBO {
 	mat4 u_View;
 	mat4 u_Projection;
 	vec4 u_ViewPosition;
-	mat4 u_LightViewMatrix; // ortho * view
+	mat4 u_LightPV; // ortho * view
 
 	vec4 u_LightPosition[4];
 	vec4 u_LightColor[4];
@@ -88,13 +88,15 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 	return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-float CalShadow() {
-	//vec3 NDC = v_PositionLightSpace.xyz / v_PositionLightSpace.w; // [-1, 1]
-	//vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
-	//float minDepth = texture(u_DepthMap, SS.xy).r;
-	//float currDepth = SS.z;
-	//return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
-	return 0.0f;
+float CalShadow(vec3 fragPos) {
+	// TODO: slow
+	vec3 worldPos = (inverse(u_View) * vec4(fragPos, 1.0f)).xyz;
+	vec4 lsPos = u_LightPV * vec4(worldPos, 1.0f);
+	vec3 NDC = lsPos.xyz;// / lsPos.w; // [-1, 1]
+	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
+	float minDepth = texture(u_DepthMap, SS.xy).r;
+	float currDepth = SS.z;
+	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
 }
 
 void main() {
@@ -140,7 +142,7 @@ void main() {
 	}
 
 	vec3 Ambient = vec3(0.1f) * AO * Albedo;
-	vec3 Color = Ambient + Lo * (1.0f - CalShadow());
+	vec3 Color = Ambient + Lo * (1.0f - CalShadow(fragPos));
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	//Color = mix(specularMap, Color, 0.8f);

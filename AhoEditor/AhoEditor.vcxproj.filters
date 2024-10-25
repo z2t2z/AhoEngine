@@ -66,5 +66,6 @@
   <ItemGroup>
     <None Include="ShaderSrc\Blur.glsl" />
     <None Include="ShaderSrc\HiZ.glsl" />
+    <None Include="ShaderSrc\DrawLine.glsl" />
   </ItemGroup>
 </Project>

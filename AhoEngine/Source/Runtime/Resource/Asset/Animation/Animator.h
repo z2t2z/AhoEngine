@@ -21,7 +21,7 @@ namespace Aho {
 			glm::mat4 scale = glm::mat4(1.0f);
 			glm::mat4 trans = glm::mat4(1.0f);
 			glm::mat4 rot = glm::mat4(1.0f);
-			if (currNode->bone.hasAnim) {
+			if (true) {
 				if (!scales.empty()) {
 					if (scales.size() == 1) {
 						scale = glm::scale(glm::mat4(1.0f), scales[0].attribute);
@@ -58,7 +58,7 @@ namespace Aho {
 			}
 			globalTrans = globalTrans * localTransform;
 			globalMatrices[id] = globalTrans * currNode->bone.offset;
-			for (auto& childNode : currNode->children) {
+			for (auto childNode : currNode->children) {
 				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans);
 			}
 		}

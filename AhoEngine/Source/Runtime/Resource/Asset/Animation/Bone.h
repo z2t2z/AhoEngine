@@ -5,6 +5,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-namespace Aho{
+namespace Aho {
 
 }

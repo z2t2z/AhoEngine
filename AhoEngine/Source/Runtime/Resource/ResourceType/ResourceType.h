@@ -86,6 +86,12 @@ namespace Aho {
 		bool HasMaterial() { return !materials.empty(); }
 	};
 
+	struct LineInfo {
+		std::vector<float> vertices;
+		std::vector<uint32_t> indices;
+		LineInfo(const std::vector<float>& _vertices, const std::vector<uint32_t>& _indices) : vertices(_vertices), indices(_indices) {}
+	};
+
 	struct MeshInfo {
 		std::vector<Vertex> vertexBuffer;
 		std::vector<uint32_t> indexBuffer;

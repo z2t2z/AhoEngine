@@ -3,6 +3,7 @@
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Function/Renderer/RenderLayer.h"
 #include "Runtime/Resource/ResourceLayer.h"
+#include "Runtime/Function/SkeletonViewer.h"
 #include "Level.h"
 #include <thread>
 #include <future>
@@ -49,6 +50,7 @@ namespace Aho {
 		bool m_Update{ true };		// TODO: temporary...
 		LightData m_LightData;		// TODO: temporary...
 	private:
+		std::unique_ptr<SkeletonViewer> m_SkeletonViewer{ nullptr };
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };

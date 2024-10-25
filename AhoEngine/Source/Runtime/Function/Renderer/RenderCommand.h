@@ -19,6 +19,10 @@ namespace Aho {
 			//s_RendererAPI->Clear(flags);
 			glClear((uint32_t)flags);
 		}
+		inline static void DrawLine(const std::shared_ptr<VertexArray>& vertexArray) {
+			glLineWidth(2.5f);
+			glDrawElements(GL_LINES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+		}
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
 			//s_RendererAPI->DrawIndexed(vertexArray);
 			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);

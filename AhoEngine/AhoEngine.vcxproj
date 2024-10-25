@@ -191,6 +191,7 @@
     <ClInclude Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h" />
+    <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManagerBase.h" />

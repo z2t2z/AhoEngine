@@ -22,6 +22,8 @@ namespace Aho {
 		PushOverlay(m_ImGuiLayer);
 	}
 
+	constexpr float g_FrameTime = 10.0f;
+
 	void Application::Run() {
 		while (m_Running) {
 			float currTime = (float)glfwGetTime();
@@ -40,6 +42,9 @@ namespace Aho {
 			m_Window->OnUpdate();
 			// Calculate FPS
 			m_AccumulatedTime += deltaTime;
+			if (deltaTime < g_FrameTime) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(long long(floor(g_FrameTime - deltaTime))));
+			}
 			m_FPS += 1;
 			if (m_AccumulatedTime >= 1.0f) {
 				AHO_CORE_TRACE("{}", m_FPS);

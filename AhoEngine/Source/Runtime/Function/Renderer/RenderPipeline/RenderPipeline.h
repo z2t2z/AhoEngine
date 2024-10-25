@@ -14,6 +14,7 @@ namespace Aho {
 		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_RenderData.push_back(data); }
 		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
+		virtual void AddLineRenderData(const std::shared_ptr<RenderData>& data) { m_LineData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { m_RenderData.insert(m_RenderData.end(), data.begin(), data.end()); }
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
 		virtual void SortRenderPasses();
@@ -33,8 +34,10 @@ namespace Aho {
 		RenderPass* m_SSAOLightingPass{ nullptr };
 		RenderPass* m_BlurPass{ nullptr };
 		RenderPass* m_HiZPass{ nullptr };
+		RenderPass* m_DrawLinePass{ nullptr };
 		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO
 		std::vector<RenderPass*> m_RenderPasses;	
+		std::vector<std::shared_ptr<RenderData>> m_LineData;
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
 		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source, only renderred in picking pass
 		std::vector<std::shared_ptr<RenderData>> m_ScreenQuad;	// TODO: Temporary

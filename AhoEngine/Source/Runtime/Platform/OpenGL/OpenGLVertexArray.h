@@ -9,6 +9,7 @@ namespace Aho {
 		OpenGLVertexArray();
 		virtual ~OpenGLVertexArray();
 
+		virtual void Init(const std::shared_ptr<LineInfo>& lineInfo) override;
 		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) override;
 		virtual void Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) override;
 		virtual void Bind() const override;

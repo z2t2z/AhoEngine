@@ -11,6 +11,7 @@ namespace Aho {
 		virtual ~VertexArray() {}
 		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) = 0;
 		virtual void Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) = 0;
+		virtual void Init(const std::shared_ptr<LineInfo>& lineInfo) = 0;
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 

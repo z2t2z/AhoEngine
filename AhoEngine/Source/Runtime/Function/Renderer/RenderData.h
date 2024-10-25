@@ -20,12 +20,15 @@ namespace Aho {
 		void SetMaterial(const std::shared_ptr<Material>& mat) { m_Material = mat; }
 		std::shared_ptr<Material> GetMaterial() { return m_Material; }
 		void SetVirtual() { m_Virtual = true; }
+		void SetLine() { m_IsLine = true; }
 		TransformParam* GetTransformParam() { return m_Param; }
 		void SetTransformParam(TransformParam* param) { m_Param = param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		void Unbind();
+		bool IsLine() { return m_IsLine; }
 		bool IsVirtual() { return m_Virtual; }
 	private:
+		bool m_IsLine{ false };
 		bool m_Loaded{ true };
 		bool m_Deleted{ false };
 		bool m_Rendered{ true };
