@@ -25,7 +25,7 @@ namespace Aho {
 	}
 
 	OpenGLVertexArray::OpenGLVertexArray(bool dynamicDraw) 
-			: m_Dynamic(dynamicDraw) {
+		: m_Dynamic(dynamicDraw), m_Offset{ 0U } {
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 
@@ -42,8 +42,7 @@ namespace Aho {
 			{ ShaderDataType::Float3, "a_Position" }
 		};
 		vertexBuffer->SetLayout(layout);
-		uint32_t offset = 0;
-		AddVertexBuffer(vertexBuffer, offset);
+		AddVertexBuffer(vertexBuffer);
 		std::shared_ptr<IndexBuffer> indexBuffer;
 		indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
 		SetIndexBuffer(indexBuffer);
@@ -89,8 +88,7 @@ namespace Aho {
 			layout.Push({ ShaderDataType::Float3, "a_Bitangent" });
 		}
 		vertexBuffer->SetLayout(layout);
-		uint32_t offset = 0;
-		AddVertexBuffer(vertexBuffer, offset);
+		AddVertexBuffer(vertexBuffer);
 		
 		std::shared_ptr<IndexBuffer> indexBuffer;
 		indexBuffer.reset(IndexBuffer::Create(meshInfo->indexBuffer.data(), meshInfo->indexBuffer.size()));
@@ -144,8 +142,7 @@ namespace Aho {
 		}
 		layout.Push({ ShaderDataType::Float4, "a_BoneWeights" });
 		vertexBuffer->SetLayout(layout);
-		uint32_t offset = 0u;
-		AddVertexBuffer(vertexBuffer, offset);
+		AddVertexBuffer(vertexBuffer);
 
 		if (!verticesI.empty()) {
 			std::shared_ptr<VertexBuffer> vertexBufferI;
@@ -154,7 +151,7 @@ namespace Aho {
 				{ ShaderDataType::Int4, "a_BoneID" }
 			};
 			vertexBufferI->SetLayout(layoutI);
-			AddVertexBuffer(vertexBufferI, offset);
+			AddVertexBuffer(vertexBufferI);
 		}
 
 		std::shared_ptr<IndexBuffer> indexBuffer;
@@ -170,7 +167,48 @@ namespace Aho {
 		glBindVertexArray(0);
 	}
 
-	void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, uint32_t& offset) {
+
+	void OpenGLVertexArray::SetInstancedTransform(const std::vector<glm::mat4>& transform, bool dynamicDraw) {
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		m_InstanceAmount = transform.size();
+		vertexBuffer.reset(VertexBuffer::Create((float*)&transform[0], m_InstanceAmount * sizeof(glm::mat4), dynamicDraw));
+		
+		//glBindVertexArray(m_RendererID);
+		Bind();
+		vertexBuffer->Bind();
+		// set attribute pointers for matrix (4 times vec4)
+		glEnableVertexAttribArray(7);
+		glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+
+		glEnableVertexAttribArray(8);
+		glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+		
+		glEnableVertexAttribArray(9);
+		glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+
+		glEnableVertexAttribArray(10);
+		glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+
+		glVertexAttribDivisor(7, 1);
+		glVertexAttribDivisor(8, 1);
+		glVertexAttribDivisor(9, 1);
+		glVertexAttribDivisor(10, 1);
+
+		m_VertexBuffers.push_back(vertexBuffer);
+		vertexBuffer->Unbind();
+		Unbind();
+	}
+
+	void OpenGLVertexArray::UpdateInstancedTransform(const std::vector<glm::mat4>& transform) {
+		// TODO;
+		Bind();
+		m_VertexBuffers.back()->Bind();
+		m_VertexBuffers.back()->Reset((float*)&transform[0], m_InstanceAmount * sizeof(glm::mat4));
+		m_VertexBuffers.back()->Unbind();
+		Unbind();
+	}
+
+	void OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) {
 		AHO_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
@@ -179,22 +217,22 @@ namespace Aho {
 		const auto& layout = vertexBuffer->GetLayout();
 		for (const auto& element : layout) {
 			if (element.Type == ShaderDataType::Int4) {
-				glVertexAttribIPointer(offset,
+				glVertexAttribIPointer(m_Offset,
 					element.GetComponentCount(),
 					Utils::ShaderDataTypeToOpenGLBaseType(element.Type),
 					layout.GetStride(),
 					(const void*)element.Offset);
 			}
 			else {
-				glVertexAttribPointer(offset,
+				glVertexAttribPointer(m_Offset,
 					element.GetComponentCount(),
 					Utils::ShaderDataTypeToOpenGLBaseType(element.Type),
 					element.Normalized ? GL_TRUE : GL_FALSE,
 					layout.GetStride(),
 					(const void*)element.Offset);
 			}
-			glEnableVertexAttribArray(offset);
-			offset++;
+			glEnableVertexAttribArray(m_Offset);
+			m_Offset++;
 		}
 
 		m_VertexBuffers.push_back(vertexBuffer);

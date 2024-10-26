@@ -3,69 +3,90 @@
 #include "Runtime/Resource/Asset/Animation/Animation.h"
 
 namespace Aho {
+	static bool s_SkeletalVisualized = true;
 	class Animator {
 	public:
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
-			const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
-			glm::mat4 globalTrans = glm::mat4(1.0f);
-			UpdateBoneTree(currTime, globalMatrices, root, anim, globalTrans, viewer);
+							const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
+			UpdateSkeletonTree(currTime, globalMatrices, glm::mat4(1.0f), anim, root, nullptr, glm::vec3(0.0f), viewer);
+			viewer->UpdateRenderData();
 		}
 	private:
-		static void UpdateBoneTree(float currTime, std::vector<glm::mat4>& globalMatrices,
-			const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim,
-			glm::mat4 globalTrans, SkeletonViewer* viewer) {
+		static void UpdateSkeletonTree(float currTime, std::vector<glm::mat4>& globalMatrices, glm::mat4 globalTrans, const std::shared_ptr<AnimationAsset>& anim,
+										const BoneNode* currNode, const BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
+			glm::mat4 localTransform = GetAnimationFinalMatrix(currTime, currNode, anim);
+			globalTrans = globalTrans * localTransform;
+
+			const BoneNode* nxtValidParent = validParent;
+			glm::vec3 nxtParentPos = parentPos;
+			if (s_SkeletalVisualized) {
+				if (currNode->bone.name.find("$AssimpFbx$") == std::string::npos) {
+					glm::vec3 currPos(globalTrans[3]);
+					currPos /= 100.0f;
+					if (validParent && parentPos != glm::vec3(0.0f)) {
+						glm::vec3 CtoP = parentPos - currPos;
+						glm::vec3 up(0.0f, 0.01f, 0.0f);
+						glm::mat4 scale = glm::scale(glm::mat4(1.0f), -glm::vec3(glm::length(CtoP)));
+						auto axis = glm::cross(up, CtoP);
+						float angle = glm::acos(glm::dot(glm::normalize(up), glm::normalize(CtoP)));
+						glm::quat q = glm::angleAxis(angle, glm::normalize(axis));
+						glm::mat4 rotation = glm::toMat4(q);
+						glm::mat4 translation = glm::translate(glm::mat4(1.0f), parentPos);
+						viewer->Update(currNode, translation * rotation * scale);
+					}
+					nxtValidParent = currNode;
+					nxtParentPos = currPos;
+				}
+			}
+
+			globalMatrices[currNode->bone.id] = globalTrans * currNode->bone.offset;
+			for (auto child : currNode->children) {
+				UpdateSkeletonTree(currTime, globalMatrices, globalTrans, anim, child, nxtValidParent, nxtParentPos, viewer);
+			}
+		}
+
+		static glm::mat4 GetAnimationFinalMatrix(float currTime, const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim) {
 			int id = currNode->bone.id;
 			std::string name = currNode->bone.name;
 			const auto& positions = anim->GetPositions(id);
 			const auto& rotations = anim->GetRotations(id);
 			const auto& scales = anim->GetScales(id);
-			glm::mat4 localTransform = currNode->transform;
 			glm::mat4 scale = glm::mat4(1.0f);
 			glm::mat4 trans = glm::mat4(1.0f);
 			glm::mat4 rot = glm::mat4(1.0f);
-			if (true) {
-				if (!scales.empty()) {
-					if (scales.size() == 1) {
-						scale = glm::scale(glm::mat4(1.0f), scales[0].attribute);
-					}
-					else {
-						int prev = GetKeyframeIndex(currTime, scales);
-						int nxt = prev + 1;
-						glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute,
-							GetInterpolationFactor(scales[prev].timeStamp, scales[nxt].timeStamp, currTime));
-						scale = glm::scale(glm::mat4(1.0f), finalScale);
-					}
+			if (!scales.empty()) {
+				if (scales.size() == 1) {
+					scale = glm::scale(glm::mat4(1.0f), scales[0].attribute);
 				}
-				if (!rotations.empty()) {
-					if (rotations.size() == 1) {
-						rot = glm::toMat4(glm::normalize(rotations[0].attribute));
-					}
-					else {
-						int prev = GetKeyframeIndex(currTime, rotations);
-						int nxt = prev + 1;
-						rot = Slerp(currTime, rotations[prev], rotations[nxt]);
-					}
+				else {
+					int prev = GetKeyframeIndex(currTime, scales);
+					int nxt = prev + 1;
+					glm::vec3 finalScale = glm::mix(scales[prev].attribute, scales[nxt].attribute,
+						GetInterpolationFactor(scales[prev].timeStamp, scales[nxt].timeStamp, currTime));
+					scale = glm::scale(glm::mat4(1.0f), finalScale);
 				}
-				if (!positions.empty()) {
-					if (positions.size() == 1) {
-						trans = glm::translate(glm::mat4(1.0f), positions[0].attribute);
-					}
-					else {
-						int prev = GetKeyframeIndex(currTime, positions);
-						int nxt = prev + 1;
-						trans = Lerp(currTime, positions[prev], positions[nxt]);
-					}
-				}
-				localTransform = trans * rot * scale;
 			}
-			glm::vec3 parentPoint(globalTrans[3]);
-			globalTrans = globalTrans * localTransform;
-			globalMatrices[id] = globalTrans * currNode->bone.offset;
-			viewer->UpdateSkeletonVertices(currNode, glm::vec3(globalTrans[3]), parentPoint);
-
-			for (auto childNode : currNode->children) {
-				UpdateBoneTree(currTime, globalMatrices, childNode, anim, globalTrans, viewer);
+			if (!rotations.empty()) {
+				if (rotations.size() == 1) {
+					rot = glm::toMat4(glm::normalize(rotations[0].attribute));
+				}
+				else {
+					int prev = GetKeyframeIndex(currTime, rotations);
+					int nxt = prev + 1;
+					rot = Slerp(currTime, rotations[prev], rotations[nxt]);
+				}
 			}
+			if (!positions.empty()) {
+				if (positions.size() == 1) {
+					trans = glm::translate(glm::mat4(1.0f), positions[0].attribute);
+				}
+				else {
+					int prev = GetKeyframeIndex(currTime, positions);
+					int nxt = prev + 1;
+					trans = Lerp(currTime, positions[prev], positions[nxt]);
+				}
+			}
+			return trans * rot * scale;
 		}
 
 		template<typename T>

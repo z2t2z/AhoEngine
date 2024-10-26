@@ -24,10 +24,13 @@ namespace Aho {
 		TransformParam* GetTransformParam() { return m_Param; }
 		void SetTransformParam(TransformParam* param) { m_Param = param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
+		void SetInstanced() { m_Instanced = true; };
 		void Unbind();
 		bool IsLine() { return m_IsLine; }
 		bool IsVirtual() { return m_Virtual; }
+		bool IsInstanced() { return m_Instanced; }
 	private:
+		bool m_Instanced{ false };
 		bool m_IsLine{ false };
 		bool m_Loaded{ true };
 		bool m_Deleted{ false };

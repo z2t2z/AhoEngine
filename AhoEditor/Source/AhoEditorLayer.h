@@ -22,6 +22,8 @@ namespace Aho {
 		void DrawLightIcons();
 		void DrawToolBarOverlay();
 		void DrawGizmo();
+		template<typename T>
+		void DrawNode(const T& node);
 	private:
 		uint32_t m_ViewportWidth;
 		uint32_t m_ViewportHeight;

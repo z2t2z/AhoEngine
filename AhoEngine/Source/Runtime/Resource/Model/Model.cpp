@@ -90,7 +90,7 @@ namespace Aho {
 
         vertexBuffer->SetLayout(layout);
         uint32_t offset = 0;
-        vertexArray->AddVertexBuffer(vertexBuffer, offset);
+        vertexArray->AddVertexBuffer(vertexBuffer);
 
         std::vector<uint32_t> indices;
         for (uint32_t i = 0; i < mesh->mNumFaces; i++) {

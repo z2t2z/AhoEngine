@@ -405,6 +405,28 @@ namespace Aho {
 		ImGui::End();
 	}
 
+	template<typename T>
+	void AhoEditorLayer::DrawNode(const T& node) {
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+		std::string showName = node->bone.name;
+		if (showName.empty()) {
+			showName = "empty";
+		}
+		if (ImGui::TreeNodeEx(showName.c_str(), flags)) {
+			//if (ImGui::IsItemClicked()) {
+			//	//selectedNode = node;
+			//}
+
+			for (const auto& child : node->children) {
+				DrawNode(child);
+			}
+
+			ImGui::TreePop();
+		}
+	}
+
+	static Entity s_SelectedEntity;
+	static bool s_IsSelected;
 	void AhoEditorLayer::DrawSceneHierarchyPanel() {
 		ImGui::Begin("Scene Hierarchy");
 		auto scene = m_LevelLayer->GetCurrentLevel();
@@ -412,21 +434,22 @@ namespace Aho {
 			ImGui::End();
 			return;
 		}
-		//for (const auto& each : scene->GetEntityManager()->GetView<TagComponent>()) {
-		//}
-		//if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
-		//	//m_SelectionContext = {};
-		//}
-			//Right-click on blank space
-		//if (ImGui::BeginPopupContextWindow(nullptr, 1)) {
-		//	if (ImGui::MenuItem("Create Empty Entity"))
-		//		//m_Context->CreateAObject("Empty Entity");
-		//	ImGui::EndPopup();
-		//}
-		auto view = scene->GetEntityManager()->GetView<TagComponent>();
-		view.each([](auto entity, TagComponent& tag) {
-			ImGui::Text(tag.Tag.c_str());
-		});
+		auto entityManager = scene->GetEntityManager();
+		auto view = scene->GetEntityManager()->GetView<TagComponent, TransformComponent>();
+		view.each([&](auto entity, TagComponent& tag, TransformComponent& tc) {
+			s_IsSelected = entity == s_SelectedEntity;
+			ImGui::Selectable(tag.Tag.c_str(), &s_IsSelected);
+			if (ImGui::IsItemClicked()) {
+				s_SelectedEntity = entity;
+			}
+			if (entityManager->HasComponent<SkeletalComponent>(s_SelectedEntity)) {
+				const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);
+				DrawNode(skeletalComponent.root);
+			}
+
+			});
+		
+
 		ImGui::End();
 	}
 

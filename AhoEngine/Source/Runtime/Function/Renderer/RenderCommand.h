@@ -27,6 +27,9 @@ namespace Aho {
 			//s_RendererAPI->DrawIndexed(vertexArray);
 			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
+		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount) {
+			glDrawElementsInstanced(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0, amount);
+		}
 		inline static void SetDepthTest(bool state) {
 			//s_RendererAPI->SetDepthTest(state);
 			if (state) {
@@ -53,11 +56,11 @@ namespace Aho {
 	class RenderCommandBuffer {
 	public:
 		RenderCommandBuffer() { RenderCommand::SetClearColor(m_ClearColor); }
-		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, 
-					 const std::shared_ptr<Shader>& shader, 
-					 const std::shared_ptr<Framebuffer>& renderTarget, 
-					 const std::vector<Texture*>& textureBuffers,
-				     const void* ubo) const {
+		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData,	// Meshes to render
+					 const std::shared_ptr<Shader>& shader, 						// Shader to use
+					 const std::shared_ptr<Framebuffer>& renderTarget, 				// G-Buffer textures
+					 const std::vector<Texture*>& textureBuffers,					// Render target
+				     const void* ubo) const {										// Uniform block object
 			shader->Bind();
 			renderTarget->Bind();
 			RenderCommand::SetDepthTest(m_Depthtest);
@@ -83,11 +86,10 @@ namespace Aho {
 		glm::vec4 m_ClearColor{ 132.0f / 255.0f, 181.0f / 255.0f, 245.0f / 255.0f, 1.0f };
 		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
 	private:
-		// TODO
-		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData, 
-									   const std::shared_ptr<Shader>& shader, 
-									   const std::vector<Texture*>& textureBuffers, 
-									   const std::shared_ptr<Framebuffer>& renderTarget,
-									   const void* ubo)>> m_Commands;
+		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,	
+									   const std::shared_ptr<Shader>& shader,						
+									   const std::vector<Texture*>& textureBuffers,					
+									   const std::shared_ptr<Framebuffer>& renderTarget,			
+									   const void* ubo)>> m_Commands;								
 	};
 }

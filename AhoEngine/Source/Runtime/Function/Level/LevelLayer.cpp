@@ -68,13 +68,12 @@ namespace Aho {
 			currentTime += deltaTime * anim->GetTicksPerSecond();
 			currentTime = fmod(currentTime, anim->GetDuration());
 			Animator::Update(currentTime, globalMatrices, root, anim, viewer.viewer);
-			viewer.viewer->Reset();
 			auto pipeline = m_RenderLayer->GetRenderer()->GetCurrentRenderPipeline();
 			SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
 			for (size_t i = 0; i < globalMatrices.size(); i++) {
 				skubo->u_BoneMatrices[i] = globalMatrices[i];
 			}
-			});
+		});
 	}
 
 	void LevelLayer::AddAnimation(const std::shared_ptr<AnimationAsset>& anim) {
@@ -84,11 +83,23 @@ namespace Aho {
 			entityManager->AddComponent<AnimatorComponent>(entity, anim->GetBoneCnt());
 			entityManager->AddComponent<AnimationComponent>(entity, anim);
 			SkeletonViewer* viewer = new SkeletonViewer(skeletal.root);
+			const auto& nodeTransform = viewer->GetBoneTransform();
+			std::vector<std::shared_ptr<RenderData>> boneData;
+			for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
+				std::shared_ptr<VertexArray> vao;
+				vao.reset(VertexArray::Create());
+				vao->Init(meshInfo);
+				vao->SetInstancedTransform(nodeTransform, true);
+				std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+				renderData->SetVAOs(vao);
+				//renderData->SetTransformParam(param);
+				renderData->SetInstanced();
+				boneData.push_back(renderData);
+				viewer->SetRenderData(renderData);
+			}
+			UploadRenderDataEventTrigger(boneData);
+
 			entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(viewer->GetVAO());
-			renderData->SetLine();
-			UploadRenderDataEventTrigger({ renderData });
 			});
 	}
 

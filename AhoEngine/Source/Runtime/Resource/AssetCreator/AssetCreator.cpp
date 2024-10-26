@@ -103,7 +103,7 @@ namespace Aho {
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
 		// like path settings, absolute or relative
-		auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;
+		auto Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace;	// | aiProcess_PreTransformVertices;
 		const aiScene* scene = importer.ReadFile(filePath, Flags);
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode) {
 			AHO_CORE_ERROR(importer.GetErrorString());

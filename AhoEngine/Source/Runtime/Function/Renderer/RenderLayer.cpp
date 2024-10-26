@@ -110,7 +110,14 @@ namespace Aho {
 			uint32_t texOffset = 0u;
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset++);
-				RenderCommand::DrawIndexed(data->GetVAO());
+				if (data->IsInstanced()) {
+					shader->SetBool("u_IsInstanced", true);
+					RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
+				}
+				else {
+					shader->SetBool("u_IsInstanced", false);
+					//RenderCommand::DrawIndexed(data->GetVAO());
+				}
 				data->Unbind();
 			}
 			});
@@ -366,7 +373,7 @@ namespace Aho {
 			shader->BindUBO(ubo, 0, sizeof(UBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
-				RenderCommand::DrawIndexed(data->GetVAO());
+				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
 			});
@@ -526,7 +533,7 @@ namespace Aho {
 			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			for (const auto& data : renderData) {
 				data->Bind(shader);
-				RenderCommand::DrawIndexed(data->GetVAO());
+				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
 			}
 			});
