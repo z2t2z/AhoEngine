@@ -45,7 +45,11 @@ vec3 ToNDC(vec3 pos) {
     res /= res.w;
     return vec3(res);
 }
-  
+
+bool Inside(vec2 uv) {
+    return uv.x > 0.0f && uv.y > 0.0f && uv.x < 1.0f && uv.y < 1.0f;
+}
+
 void main() { 
     // Calculations are inside view space
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
@@ -57,7 +61,11 @@ void main() {
         vec3 nxtPos = fragPos + reflectDir * stepSiz * i; 
         vec3 ndc = ToNDC(nxtPos);
         vec2 uv = ndc.xy * 0.5f + 0.5f;
+        if (!Inside(uv)) {
+            break;
+        }
         float sampleDepth = textureLod(u_gPosition, uv, 0).z;
+        sampleDepth = textureLod(u_Depth, uv, 0).r;
         if (sampleDepth > nxtPos.z && sampleDepth < nxtPos.z + thickNess) {
             out_color = vec4(texture(u_gAlbedo, uv).rgb, 1.0f);
             break;

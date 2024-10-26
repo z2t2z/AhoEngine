@@ -243,7 +243,6 @@ namespace Aho {
 		return pixelData;
 	}
 
-	// TODO: Mipmap level, filtering method
 	void OpenGLFramebuffer::InvalidateColorAttachment() {
 		for (size_t i = 0; i < m_ColorAttachmentSpecifications.size(); i++) {
 			auto& spec = m_ColorAttachmentSpecifications[i];

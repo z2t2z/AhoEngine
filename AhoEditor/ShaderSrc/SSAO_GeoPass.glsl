@@ -24,7 +24,7 @@ out vec3 v_FragPosLight;
 out vec3 v_Normal;
 out vec3 v_Tangent;
 out vec2 v_TexCoords;
-
+out vec3 v_Ndc;
 uniform mat4 u_Model;
 
 void main() {
@@ -55,7 +55,8 @@ void main() {
 	v_TexCoords = a_TexCoords;
 	v_Normal = transformedNormal;
 	v_Tangent = transformedTangent;
-
+	v_Ndc = gl_Position.xyz / gl_Position.w;
+	v_Ndc = v_Ndc * 0.5f + 0.5f;
 	vec4 lightClipSpace = u_LightPV * u_Model * finalPos;
 	//v_FragPosLight = lightClipSpace.xyz / lightClipSpace.w;
 	v_FragPosLight = v_FragPosLight;
@@ -80,6 +81,7 @@ layout(std140, binding = 3) uniform SkeletalUBO{
 };
 
 in vec3 v_FragPos;
+in vec3 v_Ndc;
 in vec3 v_FragPosLight;
 in vec3 v_Normal;
 in vec3 v_Tangent;
@@ -93,6 +95,7 @@ uniform mat4 u_Model;
 
 void main() {
 	g_Position = v_FragPos;
+	//g_Depth = pow(v_Ndc.z, 0.5);
 	g_Depth = v_FragPos.z;
 	g_DepthLight = v_FragPosLight.z * 0.5f + 0.5f;
 

@@ -33,9 +33,9 @@ uniform int u_Height;
 uniform int u_MipLevelMax;
 uniform float u_Near = 1000.0f;
 uniform float u_Far = 0.1f;
-uniform float u_MaxDisance = 20000.0f; 
+uniform float u_MaxDisance = 10.0f; 
 
-const int MAX_ITERATIONS = 3000;
+const int MAX_ITERATIONS = 300;
 const float stepSiz = 0.04f;
 const float thickNess = 0.05f;
    
@@ -71,6 +71,12 @@ bool Inside(vec2 uv) {
     return uv.x > 0.0f && uv.y > 0.0f && uv.x < 1.0f && uv.y < 1.0f;
 }
 
+float dither[16] = {
+    0.1, 0.5, 0.125, 0.625,
+    0.75, 0.25, 0.875, 0.375,
+    0.187, 0.687, 0.0625, 0.562,
+    0.937, 0.437, 0.812, 0.312
+};
 // DDA
 vec3 RayMarching() {
     // View space
@@ -88,13 +94,13 @@ vec3 RayMarching() {
     float k0 = 1.0f / H0.w;
     float k1 = 1.0f / H1.w;
 
-    // For interpolation
-    vec3 Q0 = beginPos * k0;
-    vec3 Q1 = endPos * k1;
+    // Perspective correction
+    vec3 Q0 = beginPos / H0.w;
+    vec3 Q1 = endPos / H1.w;
 
     // NDC
-    vec2 P0 = H0.xy * k0;
-    vec2 P1 = H1.xy * k1;
+    vec2 P0 = H0.xy / H0.w;
+    vec2 P1 = H1.xy / H1.w;
 
     // Screen space
     vec2 screenSize = vec2(u_Width, u_Height);
@@ -102,7 +108,7 @@ vec3 RayMarching() {
     P1 = (P1 * 0.5 + 0.5) * screenSize;
     
     // To avoid line degeneration
-    P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 1.0 : 0.0);
+    P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 0.01 : 0.0);
 
     // Permute the direction for DDA
     vec2 delta = P1 - P0;
@@ -122,7 +128,7 @@ vec3 RayMarching() {
     float dk = (k1 - k0) * invdx;
     vec2 dP = vec2(stepDir, delta.y * invdx);
 
-    float stride = 1.0f;
+    float stride = 0.1f;
     dP *= stride; 
     dQ *= stride;
     dk *= stride;
@@ -223,7 +229,7 @@ vec3 HiZ() {
     float dk = (k1 - k0) * invdx;
     vec2 dP = vec2(stepDir, delta.y * invdx);
 
-    float stride = 1.0f;
+    float stride = 3.0f;
     dP *= stride;
     dQ *= stride;
     dk *= stride;
@@ -247,12 +253,12 @@ vec3 HiZ() {
         Q.z += dQ.z * d;
         k += dk * d;
 
-        rayZMin = prevZMaxEstimate;
-        float rayZMax = (Q.z + dQ.z * 0.5f) / (k + dk * 0.5f);
-        if (rayZMin > rayZMax) {
-            swap(rayZMin, rayZMax);
-        }
-        prevZMaxEstimate = rayZMax;
+        // rayZMin = prevZMaxEstimate;
+        // float rayZMax = (Q.z + dQ.z * 0.5f) / (k + dk * 0.5f);
+        // if (rayZMin > rayZMax) {
+        //     swap(rayZMin, rayZMax);
+        // }
+        // prevZMaxEstimate = rayZMax;
 
         float rayDepth = Q.z / k;
         vec2 hitPixel = permute ? P.yx : P;
@@ -260,28 +266,34 @@ vec3 HiZ() {
         hitPixel /= pow(2, mipLevel);
         float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
 
-        if (rayDepth < sampleDepth) {
-            if (rayDepth + thickNess > sampleDepth) {
+        if (rayDepth + 0.0001f < sampleDepth) {
+            if (rayDepth + thickNess > sampleDepth + 0.0001f) {
                 if (mipLevel == 0) {
                     result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
-                    // result = vec3(1.0f, 1.0f, 1.0f);
                     break;
                 }
             }
-            mipLevel -= 1;
-            if (mipLevel < 0) {
-                break;
-            }
+            mipLevel = max(0, mipLevel - 1);
             P -= dP * d;
             Q.z -= dQ.z * d;
             k -= dk * d;
         }
         else {
-            if (mipLevel == mipLevelCount) {
-                break;
-            }
-            mipLevel += 1;
+            mipLevel = min(mipLevelCount, mipLevel + 1);
         }
+        // if (sampleDepth - rayDepth > 0.0001) {
+        //     if (mipLevel == 0) {
+        //         result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
+        //         break;
+        //     } else {
+        //         mipLevel -= 1;
+        //         P -= dP * d;
+        //         Q.z -= dQ.z * d;
+        //         k -= dk * d;
+        //     }
+        // } else {
+        //     mipLevel += 1;
+        // }
     }
     return result;
 }

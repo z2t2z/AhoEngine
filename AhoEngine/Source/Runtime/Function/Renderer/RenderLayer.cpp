@@ -63,7 +63,7 @@ namespace Aho {
 		auto ssaoPass = SetupSSAOPass();
 		auto ssrPass = SetupSSRPass();
 		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // this is the color attachement that contains depth info in a Hi-Z structure
-
+		HiZPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back());
 		// Note that order matters!
 		for (int i = 0; i < 3; i++) {
 			if (i < 2) {
@@ -448,16 +448,13 @@ namespace Aho {
 				texBuffer->Bind(texOffset++); // Note that order matters!
 			}
 			shader->SetInt("u_Depth", 0);
+			shader->SetInt("u_SelfDepth", 1);
 			int height = renderTarget->GetTextureAttachments().back()->GetSpecification().Height;
 			int width = renderTarget->GetTextureAttachments().back()->GetSpecification().Width;
 			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipmapLevels;
 			for (int i = 0; i < mipLevel; i++) {
 				shader->SetInt("u_MipmapLevels", i);
-				int nheight = height >> i;
-				int nwidth = width >> i;
-				height = std::max(nheight, 1);
-				width = std::max(nwidth, 1);
-				RenderCommand::SetViewport(width, height);
+				RenderCommand::SetViewport(std::max(1, width >> i), std::max(height >> i, 1));
 				RenderCommand::BindRenderTarget(0, renderTarget->GetTextureAttachments().back()->GetTextureID(), i);
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 				for (const auto& data : renderData) {
@@ -480,7 +477,7 @@ namespace Aho {
 		depthAttachment.wrapModeT = FBWrapMode::Clamp;
 		depthAttachment.filterModeMin = FBFilterMode::NearestMipmapNearest;
 		depthAttachment.filterModeMag = FBFilterMode::NearestMipmapNearest;
-		depthAttachment.mipLevels = Utils::CalculateMaximumMipmapLevels(720);
+		depthAttachment.mipLevels = Utils::CalculateMaximumMipmapLevels(1280);
 		FBSpecification fbSpec(1280u, 720u, { depthAttachment });
 		auto FBO = Framebuffer::Create(fbSpec);
 		HiZPass->SetRenderTarget(FBO);

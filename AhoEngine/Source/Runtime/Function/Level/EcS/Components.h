@@ -90,7 +90,6 @@ namespace Aho {
 		SkeletalComponent(BoneNode* _root, const std::map<std::string, BoneNode*> _boneCache)
 			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {
 		}
-		SkeletalComponent() = default;
 		SkeletalComponent(const SkeletalComponent&) = default;
 	};
 
