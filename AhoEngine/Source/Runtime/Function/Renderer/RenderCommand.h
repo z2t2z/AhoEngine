@@ -40,6 +40,12 @@ namespace Aho {
 				glDisable(GL_DEPTH_TEST);
 			}
 		}
+		inline static void SetPolygonModeLine() {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		inline static void SetPolygonModeFill() {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 		inline static void SetViewport(uint32_t width, uint32_t height) {
 			glViewport(0, 0, width, height);
 		}

@@ -67,5 +67,6 @@
     <None Include="ShaderSrc\Blur.glsl" />
     <None Include="ShaderSrc\HiZ.glsl" />
     <None Include="ShaderSrc\DrawLine.glsl" />
+    <None Include="ShaderSrc\Postprocessing.glsl" />
   </ItemGroup>
 </Project>

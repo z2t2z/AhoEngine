@@ -80,7 +80,9 @@ layout(location = 0) out vec3 g_Position;
 layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out float g_Depth;
-layout(location = 4) out float g_DepthLight;
+layout(location = 4) out uint g_Entity;
+// layout(location = 5) out float g_DepthLight;
+
 const int MAX_BONES = 200;
 const int MAX_BONE_INFLUENCE = 4;
 layout(std140, binding = 3) uniform SkeletalUBO{
@@ -104,12 +106,13 @@ uniform bool u_HasNormal;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;
 uniform mat4 u_Model;
+uniform uint u_EntityID;
 
 void main() {
 	g_Position = v_FragPos;
 	g_Depth = v_FragPos.z;
-	g_DepthLight = v_FragPosLight.z * 0.5f + 0.5f;
-
+	// g_DepthLight = v_FragPosLight.z * 0.5f + 0.5f;
+	g_Entity = u_EntityID;
 	if (u_HasDiffuse) {
 		g_Albedo = texture(u_Diffuse, v_TexCoords).rgb;
 	}

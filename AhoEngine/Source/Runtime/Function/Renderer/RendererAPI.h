@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-#include "glm/glm.hpp"
 #include "Buffer.h"
 #include "VertexArrayr.h"
+#include <memory>
+#include "glm/glm.hpp"
 
 namespace Aho {
 	enum class ClearFlags {
@@ -19,7 +19,6 @@ namespace Aho {
 		lhs = lhs | rhs;
 		return lhs;
 	}
-
 	class RendererAPI {
 	public:
 		enum class API {

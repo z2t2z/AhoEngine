@@ -253,23 +253,16 @@ vec3 HiZ() {
         Q.z += dQ.z * d;
         k += dk * d;
 
-        // rayZMin = prevZMaxEstimate;
-        // float rayZMax = (Q.z + dQ.z * 0.5f) / (k + dk * 0.5f);
-        // if (rayZMin > rayZMax) {
-        //     swap(rayZMin, rayZMax);
-        // }
-        // prevZMaxEstimate = rayZMax;
-
-        float rayDepth = Q.z / k;
-        vec2 hitPixel = permute ? P.yx : P;
-        vec2 bhitPixel = hitPixel;
-        hitPixel /= pow(2, mipLevel);
-        float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
-
-        if (rayDepth + 0.0001f < sampleDepth) {
-            if (rayDepth + thickNess > sampleDepth + 0.0001f) {
+        float rayDepth = (Q.z + dQ.z * d * 0.5f) / (k + dk * d * 0.5f);
+        vec2 tryHitPixel = P + dP * d * 0.5f;
+        vec2 UV = tryHitPixel;
+        tryHitPixel = permute ? tryHitPixel.yx : tryHitPixel;
+        tryHitPixel /= pow(2, mipLevel);
+        float trySampleDepth = texelFetch(u_Depth, ivec2(tryHitPixel), mipLevel).r;
+        if (rayDepth + 0.0001f < trySampleDepth) {
+            if (rayDepth + thickNess > trySampleDepth + 0.0001f) {
                 if (mipLevel == 0) {
-                    result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
+                    result = texelFetch(u_gAlbedo, ivec2(UV), 0).rgb;
                     break;
                 }
             }
@@ -281,18 +274,27 @@ vec3 HiZ() {
         else {
             mipLevel = min(mipLevelCount, mipLevel + 1);
         }
-        // if (sampleDepth - rayDepth > 0.0001) {
-        //     if (mipLevel == 0) {
-        //         result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
-        //         break;
-        //     } else {
-        //         mipLevel -= 1;
-        //         P -= dP * d;
-        //         Q.z -= dQ.z * d;
-        //         k -= dk * d;
+
+
+        // vec2 hitPixel = permute ? P.yx : P;
+        // vec2 bhitPixel = hitPixel;
+        // hitPixel /= pow(2, mipLevel);
+        // float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
+
+        // if (rayDepth + 0.0001f < sampleDepth) {
+        //     if (rayDepth + thickNess > sampleDepth + 0.0001f) {
+        //         if (mipLevel == 0) {
+        //             result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
+        //             break;
+        //         }
         //     }
-        // } else {
-        //     mipLevel += 1;
+        //     mipLevel = max(0, mipLevel - 1);
+        //     P -= dP * d;
+        //     Q.z -= dQ.z * d;
+        //     k -= dk * d;
+        // }
+        // else {
+        //     mipLevel = min(mipLevelCount, mipLevel + 1);
         // }
     }
     return result;

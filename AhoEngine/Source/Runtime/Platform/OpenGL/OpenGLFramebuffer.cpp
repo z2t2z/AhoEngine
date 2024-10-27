@@ -91,6 +91,8 @@ namespace Aho {
 			switch (format) {
 				case FBInterFormat::RED:
 					return GL_RED;
+				case FBInterFormat::UINT:
+					return GL_R32UI;
 				case FBInterFormat::RED32F:
 					return GL_R32F;
 				case FBInterFormat::RGB8:
@@ -114,6 +116,8 @@ namespace Aho {
 			switch (format) {
 				case FBDataFormat::RED:
 					return GL_RED;
+				case FBDataFormat::UINT:
+					return GL_RED_INTEGER;
 				case FBDataFormat::RGB:
 					return GL_RGB;
 				case FBDataFormat::RGBA:
@@ -224,8 +228,12 @@ namespace Aho {
 		return m_DepthTex;
 	}
 
-	std::vector<Texture*> OpenGLFramebuffer::GetTextureAttachments() {
+	const std::vector<Texture*>& OpenGLFramebuffer::GetTextureAttachments() {
 		return m_ColorAttachmentTex;
+	}
+
+	Texture* OpenGLFramebuffer::GetTextureAttachment(int index) {
+		return m_ColorAttachmentTex[index];
 	}
 
 	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) {
@@ -239,7 +247,10 @@ namespace Aho {
 		}
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		uint32_t pixelData;
-		glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixelData);
+		auto dataFormat = m_ColorAttachmentSpecifications[attachmentIndex].dataFormat;
+		auto dataType = m_ColorAttachmentSpecifications[attachmentIndex].dataType;
+		glReadPixels(x, y, 1, 1, Utils::GetGLParam(dataFormat), Utils::GetGLParam(dataType), &pixelData);
+		AHO_CORE_WARN("{}", pixelData);
 		return pixelData;
 	}
 

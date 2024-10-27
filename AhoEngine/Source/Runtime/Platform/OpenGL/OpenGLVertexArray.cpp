@@ -167,7 +167,7 @@ namespace Aho {
 		glBindVertexArray(0);
 	}
 
-
+	// TODO: hardcode the pointers!!
 	void OpenGLVertexArray::SetInstancedTransform(const std::vector<glm::mat4>& transform, bool dynamicDraw) {
 		std::shared_ptr<VertexBuffer> vertexBuffer;
 		m_InstanceAmount = transform.size();

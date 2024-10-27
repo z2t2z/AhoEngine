@@ -40,7 +40,8 @@ namespace Aho {
 		virtual void Unbind() override;
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		virtual Texture* GetDepthTexture() override;
-		virtual std::vector<Texture*> GetTextureAttachments() override;
+		virtual const std::vector<Texture*>& GetTextureAttachments() override;
+		virtual Texture* GetTextureAttachment(int index) override;
 		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) override;
 		virtual uint32_t GetDepthAttachment() override { return m_DepthAttachment; }
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const override { 

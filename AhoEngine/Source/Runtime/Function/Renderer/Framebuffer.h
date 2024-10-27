@@ -5,11 +5,11 @@
 
 namespace Aho {
 	enum class FBInterFormat {
-		None, RED, RED32F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
+		None, RED, UINT, RED32F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
 	};
 
 	enum class FBDataFormat {
-		None, RED, RGB, RGBA, DepthComponent,
+		None, RED, UINT, RGB, RGBA, DepthComponent,
 	};
 
 	enum class FBDataType {
@@ -73,7 +73,8 @@ namespace Aho {
 		virtual void Invalidate() = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual Texture* GetDepthTexture() = 0;
-		virtual std::vector<Texture*> GetTextureAttachments() = 0;
+		virtual const std::vector<Texture*>& GetTextureAttachments() = 0;
+		virtual Texture* GetTextureAttachment(int index) = 0;
 		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) = 0;
 		virtual uint32_t GetDepthAttachment() = 0;
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;

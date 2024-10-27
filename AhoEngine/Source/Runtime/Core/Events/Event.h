@@ -16,6 +16,7 @@ namespace Aho {
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
 		FileChanged, AssetImported, PackRenderData, UploadRenderData,
 		AddEntity, AddAnimation,
+		SetEntityID,
 	};
 
 	enum EventCategory {

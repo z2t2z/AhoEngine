@@ -177,7 +177,7 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::DrawLine)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
@@ -192,13 +192,14 @@ namespace Aho {
 		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
 		MouseY = spec.Height - MouseY;
 		m_IsViewportFocused = ImGui::IsWindowFocused();
-		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - s_ToolBarIconSize);
+		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - s_ToolBarIconSize - ImGui::GetFrameHeight());
 		if (m_ShouldPickObject) {
 			m_ShouldPickObject = false;
 			if (m_IsCursorInViewport) { // If user is clicking the toolbar then ignore it
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Bind();
-				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->ReadPixel(0, 0.3 * MouseX, 0.3 * MouseY);
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Pick)->Unbind();
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
+				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(4, MouseX, MouseY);
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
+				GlobalState::selectedEntityID = m_PickPixelData;
 			}
 		}
 
@@ -412,16 +413,23 @@ namespace Aho {
 		if (showName.empty()) {
 			showName = "empty";
 		}
-		if (ImGui::TreeNodeEx(showName.c_str(), flags)) {
-			//if (ImGui::IsItemClicked()) {
-			//	//selectedNode = node;
-			//}
+		if (showName.find("Assimp") != std::string::npos) {
+			if (ImGui::TreeNodeEx(showName.c_str(), flags)) {
+				//if (ImGui::IsItemClicked()) {
+				//	//selectedNode = node;
+				//}
 
+				for (const auto& child : node->children) {
+					DrawNode(child);
+				}
+
+				ImGui::TreePop();
+			}
+		}
+		else {
 			for (const auto& child : node->children) {
 				DrawNode(child);
 			}
-
-			ImGui::TreePop();
 		}
 	}
 

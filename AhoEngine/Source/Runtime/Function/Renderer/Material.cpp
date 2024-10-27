@@ -46,7 +46,7 @@ namespace Aho {
         }
         for (const auto& [name, val] : m_UniformFloat) {
             if (name == "u_AO") {
-                shader->SetBool("u_HasAO", true);
+                shader->SetBool("u_HasAO", true); // TODO
             }
             shader->SetFloat(name, val);
         }

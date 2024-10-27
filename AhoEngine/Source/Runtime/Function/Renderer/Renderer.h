@@ -9,6 +9,12 @@
 #include <glm/glm.hpp>
 
 namespace Aho {
+	// TODO; Seems like a big bad way
+	class GlobalState {
+	public:
+		static uint32_t selectedEntityID;
+	};
+
 	class Renderer {
 	public:
 		Renderer();

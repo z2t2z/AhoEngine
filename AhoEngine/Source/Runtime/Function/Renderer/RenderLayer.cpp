@@ -38,10 +38,7 @@ namespace Aho {
 						pipeLine->AddLineRenderData(data);
 					}
 					else {
-						pipeLine->AddVirtualRenderData(data);
-						if (!data->IsVirtual()) {
-							pipeLine->AddRenderData(data); // TODO: Memory wastage, should be optimized
-						}
+						pipeLine->AddRenderData(data); // TODO: Memory wastage, should be optimized
 					}
 				}
 			}
@@ -62,7 +59,7 @@ namespace Aho {
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
 		auto ssaoPass = SetupSSAOPass();
 		auto ssrPass = SetupSSRPass();
-		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back()); // this is the color attachement that contains depth info in a Hi-Z structure
+		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachment(3)); // this is the color attachement that contains depth info in a Hi-Z structure
 		HiZPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back());
 		// Note that order matters!
 		for (int i = 0; i < 3; i++) {
@@ -80,6 +77,10 @@ namespace Aho {
 		mainPass->AddGBuffer(blurPass->GetRenderTarget()->GetTextureAttachments().back());     // SSAO
 		mainPass->AddGBuffer(ssrPass->GetRenderTarget()->GetTextureAttachments().back()); // SSR specular
 
+		auto postProcessingPass = SetupPostProcessingPass();
+		postProcessingPass->AddGBuffer(mainPass->GetRenderTarget()->GetTextureAttachments().back());
+		postProcessingPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachments().back());
+
 		pipeline->AddRenderPass(mainPass);
 		pipeline->AddRenderPass(shadowMapPass);
 		pipeline->AddRenderPass(debugPass);
@@ -90,6 +91,7 @@ namespace Aho {
 		pipeline->AddRenderPass(ssrPass);
 		pipeline->AddRenderPass(HiZPass);
 		pipeline->AddRenderPass(SetupDrawLinePass());
+		pipeline->AddRenderPass(postProcessingPass);
 		// Setup UBO data, order matters!!
 		OpenGLShader::SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
 		OpenGLShader::SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
@@ -110,13 +112,17 @@ namespace Aho {
 			uint32_t texOffset = 0u;
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset++);
-				if (data->IsInstanced()) {
+				if (data->IsInstanced()) { // TODO: move to debug
 					shader->SetBool("u_IsInstanced", true);
+					RenderCommand::SetPolygonModeLine();
+					RenderCommand::SetDepthTest(false);
 					RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
+					RenderCommand::SetDepthTest(true);
+					RenderCommand::SetPolygonModeFill();
 				}
 				else {
 					shader->SetBool("u_IsInstanced", false);
-					//RenderCommand::DrawIndexed(data->GetVAO());
+					RenderCommand::DrawIndexed(data->GetVAO());
 				}
 				data->Unbind();
 			}
@@ -147,8 +153,12 @@ namespace Aho {
 		FBTextureSpecification albedoAttachment = normalAttachment;
 		albedoAttachment.dataType = FBDataType::UnsignedByte;
 		albedoAttachment.internalFormat = FBInterFormat::RGBA8;
+		auto entityAttachment = depthAttachment;
+		entityAttachment.internalFormat = FBInterFormat::UINT;
+		entityAttachment.dataFormat = FBDataFormat::UINT;
+		entityAttachment.dataType = FBDataType::UnsignedInt;
 		// Position(view space), Normal, Albedo, Depth(view space), Depth(light space), depthComponent
-		FBSpecification fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, texSpecDepth });
+		FBSpecification fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, entityAttachment, texSpecDepth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		renderPass->SetRenderTarget(FBO);
 		renderPass->SetRenderPassType(RenderPassType::SSAOGeo);
@@ -525,6 +535,44 @@ namespace Aho {
 		drawLinePass->SetRenderTarget(fbo);
 		drawLinePass->SetRenderPassType(RenderPassType::DrawLine);
 		return drawLinePass;
+	}
+
+	RenderPass* RenderLayer::SetupPostProcessingPass() {
+		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
+		cmdBuffer->SetClearColor(glm::vec4(0.0f));
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				texBuffer->Bind(texOffset++); // Note that order matters!
+			}
+			shader->SetUint("u_SelectedEntityID", GlobalState::selectedEntityID);
+			shader->SetInt("u_Result", 0);
+			shader->SetInt("u_gEntity", 1);
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			});
+		RenderPassDefault* postProcessingPass = new RenderPassDefault();
+		postProcessingPass->SetRenderCommand(cmdBuffer);
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		auto pp = Shader::Create(currentPath / "ShaderSrc" / "Postprocessing.glsl");
+		postProcessingPass->SetShader(pp);
+		FBTextureSpecification texSpecColor;
+		texSpecColor.internalFormat = FBInterFormat::RGBA8;
+		texSpecColor.dataFormat = FBDataFormat::RGBA;
+		texSpecColor.dataType = FBDataType::UnsignedByte;
+		texSpecColor.target = FBTarget::Texture2D;
+		texSpecColor.wrapModeS = FBWrapMode::Clamp;
+		texSpecColor.wrapModeT = FBWrapMode::Clamp;
+		texSpecColor.filterModeMin = FBFilterMode::Nearest;
+		texSpecColor.filterModeMag = FBFilterMode::Nearest;
+		FBSpecification fbSpec(1280u, 720u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		auto fbo = Framebuffer::Create(fbSpec);
+		postProcessingPass->SetRenderTarget(fbo);
+		postProcessingPass->SetRenderPassType(RenderPassType::PostProcessing);
+		return postProcessingPass;
 	}
 
 	RenderPass* RenderLayer::SetupShadowMapPass() {

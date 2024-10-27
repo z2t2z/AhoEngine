@@ -19,7 +19,8 @@ namespace Aho {
 		m_BlurPass->Execute(m_ScreenQuad);
 		m_SSRvsPass->Execute(m_ScreenQuad, m_RenderUBOs[0]);
 		m_ResultPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
-		m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
+		m_PostProcessingPass->Execute(m_ScreenQuad);
+		//m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
 		m_DrawLinePass->Execute(m_LineData, m_RenderUBOs[0]);
 		if (m_DrawDebug) {
 			m_DebugPass->Execute(m_ScreenQuad);
@@ -50,6 +51,8 @@ namespace Aho {
 			return m_HiZPass->GetRenderTarget();
 		case RenderPassType::DrawLine:
 			return m_DrawLinePass->GetRenderTarget();
+		case RenderPassType::PostProcessing:
+			return m_PostProcessingPass->GetRenderTarget();
 		}
 		AHO_CORE_ASSERT(true);
 	}
@@ -121,6 +124,12 @@ namespace Aho {
 			});
 		if (it != m_RenderPasses.end()) {
 			m_DrawLinePass = *it;
+		}
+		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
+			return targetPass->GetRenderPassType() == RenderPassType::PostProcessing;
+			});
+		if (it != m_RenderPasses.end()) {
+			m_PostProcessingPass = *it;
 		}
 	}
 } // namespace Aho

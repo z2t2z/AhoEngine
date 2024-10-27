@@ -35,7 +35,8 @@ namespace Aho {
 		RenderPass* m_BlurPass{ nullptr };
 		RenderPass* m_HiZPass{ nullptr };
 		RenderPass* m_DrawLinePass{ nullptr };
-		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO
+		RenderPass* m_PostProcessingPass{ nullptr };
+		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO; 3: skeletal info
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_LineData;
 		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis

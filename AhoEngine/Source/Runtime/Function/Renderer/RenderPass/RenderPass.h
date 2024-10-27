@@ -18,6 +18,7 @@ namespace Aho {
 		SSRvs,
 		HiZ,
 		DrawLine,
+		PostProcessing,
 		/* TODO */
 	};
 
@@ -55,4 +56,9 @@ namespace Aho {
 			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers, ubo);
 		}
 	};
+
+	// TODO;
+	//class RenderPassPostProcessing : public RenderPass {
+
+	//};
 };
