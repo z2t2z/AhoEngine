@@ -9,39 +9,15 @@
 #include <set>
 
 namespace Aho {
-	static void CreateUnitSphere(float x, float y, float z, std::vector<float>& vertices, std::vector<unsigned int>& indices) {
-		const float t = (1.0 + sqrt(5.0)) / 2.0;
-		std::vector<glm::vec3> baseVertices = {
-			{-1,  t,  0}, { 1,  t,  0}, {-1, -t,  0}, { 1, -t,  0},
-			{ 0, -1,  t}, { 0,  1,  t}, { 0, -1, -t}, { 0,  1, -t},
-			{ t,  0, -1}, { t,  0,  1}, {-t,  0, -1}, {-t,  0,  1}
-		};
-		for (auto& v : baseVertices) {
-			v = glm::normalize(v) + glm::vec3(x, y, z);
-			vertices.push_back(v.x);
-			vertices.push_back(v.y);
-			vertices.push_back(v.z);
-		}
-		std::vector<unsigned int> baseIndices = {
-			 0, 11,  5,    0,  5,  1,    0,  1,  7,    0,  7, 10,    0, 10, 11,
-			 1,  5,  9,    5, 11,  4,   11, 10,  2,   10,  7,  6,    7,  1,  8,
-			 3,  9,  4,    3,  4,  2,    3,  2,  6,    3,  6,  8,    3,  8,  9,
-			 4,  9,  5,    2,  4, 11,    6,  2, 10,    8,  6,  7,    9,  8,  1
-		};
-		for (auto& idx : baseIndices) {
-			idx += indices.size();
-		}
-		indices.insert(indices.end(), baseIndices.begin(), baseIndices.end());
-	}
-
+	// Helper for visualizing the skeleton
 	class SkeletonViewer {
 	public:
-		SkeletonViewer(BoneNode* root)
-			: m_Root(root) {
-			BuildSkeletonVertices();
+		SkeletonViewer(BoneNode* root) : m_Root(root) {
+			BuildSkeleton();
 		}
 		~SkeletonViewer() = default;
 		const std::vector<glm::mat4>& GetBoneTransform() { return m_BoneTransform; }
+		const std::map<const BoneNode*, uint32_t>& GetBoneNodeIndexMap() { return m_NodeIndexMap; }
 		void Update(const BoneNode* curr, const glm::mat4& updateMatrix) {
 			if (m_NodeIndexMap.contains(curr)) {
 				m_BoneTransform[m_NodeIndexMap.at(curr)] = updateMatrix;
@@ -51,20 +27,10 @@ namespace Aho {
 			}
 		}
 		void SetShouldUpdate(bool state) { m_ShouldUpd = state; }
-		bool GetShouldUpdate() { return m_ShouldUpd; }
-		void SetRenderData(std::shared_ptr<RenderData>& data) { m_RenderData = data; }
-		void UpdateRenderData() {
-			//m_RenderData->SetDebug(false);
-			m_RenderData->SetRendered(m_ShouldUpd);
-			if (!m_ShouldUpd) {
-				return;
-			}
-			auto vao = m_RenderData->GetVAO();
-			vao->UpdateInstancedTransform(m_BoneTransform);
-		}
-		
+		bool ShouldUpdate() { return m_ShouldUpd; }
+
 	private:
-		void BuildSkeletonVertices() {
+		void BuildSkeleton() {
 			auto dfs = [&](auto self, const BoneNode* curr, const BoneNode* parent, glm::vec3 parentPos, glm::mat4 globalMatrix) -> void {
 				glm::mat4 localMatrix = curr->transform;
 				globalMatrix = globalMatrix * localMatrix;
@@ -95,10 +61,34 @@ namespace Aho {
 		}
 	private:
 		bool m_ShouldUpd{ true };
-		std::set<const BoneNode*> m_BoneSet;
-		std::shared_ptr<RenderData> m_RenderData;
-		BoneNode* m_Root;
 		std::map<const BoneNode*, uint32_t> m_NodeIndexMap;
 		std::vector<glm::mat4> m_BoneTransform;
+		BoneNode* m_Root;
 	};
+
+	static void CreateUnitSphere(float x, float y, float z, std::vector<float>& vertices, std::vector<unsigned int>& indices) {
+		const float t = (1.0 + sqrt(5.0)) / 2.0;
+		std::vector<glm::vec3> baseVertices = {
+			{-1,  t,  0}, { 1,  t,  0}, {-1, -t,  0}, { 1, -t,  0},
+			{ 0, -1,  t}, { 0,  1,  t}, { 0, -1, -t}, { 0,  1, -t},
+			{ t,  0, -1}, { t,  0,  1}, {-t,  0, -1}, {-t,  0,  1}
+		};
+		for (auto& v : baseVertices) {
+			v = glm::normalize(v) + glm::vec3(x, y, z);
+			vertices.push_back(v.x);
+			vertices.push_back(v.y);
+			vertices.push_back(v.z);
+		}
+		std::vector<unsigned int> baseIndices = {
+			 0, 11,  5,    0,  5,  1,    0,  1,  7,    0,  7, 10,    0, 10, 11,
+			 1,  5,  9,    5, 11,  4,   11, 10,  2,   10,  7,  6,    7,  1,  8,
+			 3,  9,  4,    3,  4,  2,    3,  2,  6,    3,  6,  8,    3,  8,  9,
+			 4,  9,  5,    2,  4, 11,    6,  2, 10,    8,  6,  7,    9,  8,  1
+		};
+		for (auto& idx : baseIndices) {
+			idx += indices.size();
+		}
+		indices.insert(indices.end(), baseIndices.begin(), baseIndices.end());
+	}
+
 } // namespace Aho

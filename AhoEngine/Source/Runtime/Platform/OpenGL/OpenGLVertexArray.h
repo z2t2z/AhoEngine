@@ -15,6 +15,7 @@ namespace Aho {
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 		virtual uint32_t GetInstanceAmount() const override { return m_InstanceAmount; }
+		virtual void SetInstancedAmount(uint32_t amount) override { m_InstanceAmount = amount; }
 		virtual void SetInstancedTransform(const std::vector<glm::mat4>& transform, bool dynamicDraw) override;
 		virtual void UpdateInstancedTransform(const std::vector<glm::mat4>& transform) override;
 		virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;

@@ -13,21 +13,25 @@ void main() {
 
 #type fragment
 #version 460 core
-
 layout(location = 0) out vec4 out_Color;
 
-in vec2 v_TexCoords;
-
-layout(std140, binding = 1) uniform GeneralUBO {
+layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_View;
+	mat4 u_ViewInv;
 	mat4 u_Projection;
+	mat4 u_ProjectionInv;
 	vec4 u_ViewPosition;
-	mat4 u_LightPV; // ortho * view
-
-	vec4 u_LightPosition[4];
-	vec4 u_LightColor[4];
-	ivec4 u_Info;
 };
+
+const int MAX_LIGHT_CNT = 10;
+layout(std140, binding = 1) uniform LightUBO {
+	mat4 u_LightPV[MAX_LIGHT_CNT];
+	vec4 u_LightPosition[MAX_LIGHT_CNT];
+	vec4 u_LightColor[MAX_LIGHT_CNT];
+	ivec4 u_Info[MAX_LIGHT_CNT]; // Enabled status; Light type; ...
+};
+
+in vec2 v_TexCoords;
 
 uniform sampler2D u_DepthMap; // light's perspective
 uniform sampler2D u_gPosition;
@@ -89,9 +93,8 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float CalShadow(vec3 fragPos) {
-	// TODO: slow
-	vec3 worldPos = (inverse(u_View) * vec4(fragPos, 1.0f)).xyz;
-	vec4 lsPos = u_LightPV * vec4(worldPos, 1.0f);
+	vec3 worldPos = (u_ViewInv * vec4(fragPos, 1.0f)).xyz;
+	vec4 lsPos = u_LightPV[0] * vec4(worldPos, 1.0f);
 	vec3 NDC = lsPos.xyz;// / lsPos.w; // [-1, 1]
 	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
 	float minDepth = texture(u_DepthMap, SS.xy).r;
@@ -115,8 +118,10 @@ void main() {
 	vec3 specularMap = texture(u_Specular, v_TexCoords).rgb;
 	
 	vec3 Lo = vec3(0.0f);
-	int v_MAX_LIGHT_CNT = u_Info.x;
-	for (int i = 0; i < v_MAX_LIGHT_CNT; i++) {
+	for (int i = 0; i < MAX_LIGHT_CNT; i++) {
+		if (u_Info[i].x == 0) {
+			break;
+		}
 		vec3 lightPos = vec3(u_View * u_LightPosition[i]);
 		vec3 lightDir = normalize(lightPos - fragPos);
 		float NdotL = dot(Normal, lightDir);

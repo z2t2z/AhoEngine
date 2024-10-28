@@ -66,7 +66,7 @@ namespace Aho {
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
 			(*it)->OnEvent(e);
-			if (e.Handled() && e.GetEventType() == EventType::AddEntity) {
+			if (e.Handled() && e.GetEventType() == EventType::AddLight) {
 				AHO_CORE_ERROR("{}", (*it)->GetDebugName());
 				break;
 			}

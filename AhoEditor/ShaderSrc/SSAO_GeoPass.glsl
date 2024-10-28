@@ -8,16 +8,20 @@ layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec3 a_Bitangent;
 layout(location = 5) in vec4 a_BoneWeights;
 layout(location = 6) in ivec4 a_BoneID;
-layout(location = 7) in mat4 a_InstancedTransform;
 
-const int MAX_BONES = 500;
-const int MAX_BONE_INFLUENCE = 4;
-layout(std140, binding = 3) uniform SkeletalUBO {
+layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_View;
+	mat4 u_ViewInv;
 	mat4 u_Projection;
+	mat4 u_ProjectionInv;
 	vec4 u_ViewPosition;
-	mat4 u_LightPV; // ortho * view
-	mat4 u_BoneMatrices[MAX_BONES];
+};
+
+// For animation, read by vertices
+const int MAX_BONE_INFLUENCE = 4;
+const int MAX_BONES_CNT = 500;
+layout(std140, binding = 3) uniform AnimationUBO {
+	mat4 u_BoneMatrices[MAX_BONES_CNT];
 };
 
 uniform mat4 u_Model;
@@ -30,34 +34,33 @@ out vec3 v_Normal;
 out vec3 v_Tangent;
 out vec2 v_TexCoords;
 out vec3 v_Ndc;
-out flat mat3 v_NormalMatrix;
 
 void main() {
 	vec3 normal = a_Normal;
 	vec3 tangent = a_Tangent;
 	mat4 skinningMatrix = mat4(0.0f);
-	bool hasInfo = false;
+	bool hasAnimationInfo = false;
 	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
 		int id = a_BoneID[i];
 		if (id == -1) {
 			continue;
 		}
 		id += u_BoneOffset;
-		if (id >= MAX_BONES) {
+		if (id >= MAX_BONES_CNT) {
 			skinningMatrix = mat4(1.0f);
 			break;
 		}
-		hasInfo = true;
+		hasAnimationInfo = true;
 		skinningMatrix += a_BoneWeights[i] * u_BoneMatrices[id];
 	}
-	if (!hasInfo) {
+	if (!hasAnimationInfo) {
 		skinningMatrix = mat4(1.0f);
 	}
 
-	mat4 finalModelMat = u_IsInstanced ? u_Model * a_InstancedTransform * skinningMatrix : u_Model * skinningMatrix;
+	mat4 finalModelMat = u_Model * skinningMatrix;
 
 	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
-	v_NormalMatrix = transpose(inverse(mat3(u_View * finalModelMat)));
+	mat3 v_NormalMatrix = transpose(inverse(mat3(u_View * finalModelMat)));
 
 	v_FragPos = PosViewSpace.xyz;
 	gl_Position = u_Projection * PosViewSpace;
@@ -78,23 +81,12 @@ layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out float g_Depth;
 layout(location = 4) out uint g_Entity;
 
-const int MAX_BONES = 500;
-const int MAX_BONE_INFLUENCE = 4;
-layout(std140, binding = 3) uniform SkeletalUBO{
-	mat4 u_View;
-	mat4 u_Projection;
-	vec4 u_ViewPosition;
-	mat4 u_LightPV; // ortho * view
-	mat4 u_BoneMatrices[MAX_BONES];
-};
-
 in vec3 v_FragPos;
 in vec3 v_Ndc;
 in vec3 v_FragPosLight;
 in vec3 v_Normal;
 in vec3 v_Tangent;
 in vec2 v_TexCoords;
-in flat mat3 v_NormalMatrix;
 
 uniform bool u_HasDiffuse;
 uniform bool u_HasNormal;

@@ -139,7 +139,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
+					//m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
 				}
 			}
 		}
@@ -244,36 +244,36 @@ namespace Aho {
 			ImGui::Separator();
 			ImGui::Text("Light Color:");
 			ImGui::ColorPicker3("Color Picker", glm::value_ptr(pc.color));
-			auto lightData = m_LevelLayer->GetLightData();
-			lightData->lightPosition[pc.count] = glm::vec4(translation, 1.0f);
-			lightData->lightColor[pc.count] = glm::vec4(pc.color);
+			//auto lightData = m_LevelLayer->GetLightData();
+			//lightData->lightPosition[pc.count] = glm::vec4(translation, 1.0f);
+			//lightData->lightColor[pc.count] = glm::vec4(pc.color);
 		}
 		ImGui::End();
 	}
 
 	static const float s_LightVisSize = 74.0f;
 	void AhoEditorLayer::DrawLightIcons() {
-		const auto lightData = m_LevelLayer->GetLightData();
-		if (lightData->lightCnt) {
-			const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
-			const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
-			auto [ww, wh] = ImGui::GetWindowSize();
-			auto [wx, wy] = ImGui::GetWindowPos();
-			for (int i = 0; i < lightData->lightCnt; i++) {
-				auto p = proj * view * lightData->lightPosition[i];
-				if (p.w <= 0.0f) {
-					continue;
-				}
-				auto ndc = p / p.w;
-				auto ss = ndc * 0.5f + 0.5f;
-				if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
-					ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2 };
-					ImGui::SetCursorScreenPos(pos);
-					ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
-					ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-				}
-			}
-		}
+		//const auto lightData = m_LevelLayer->GetLightData();
+		//if (lightData->lightCnt) {
+		//	const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
+		//	const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
+		//	auto [ww, wh] = ImGui::GetWindowSize();
+		//	auto [wx, wy] = ImGui::GetWindowPos();
+		//	for (int i = 0; i < lightData->lightCnt; i++) {
+		//		auto p = proj * view * lightData->lightPosition[i];
+		//		if (p.w <= 0.0f) {
+		//			continue;
+		//		}
+		//		auto ndc = p / p.w;
+		//		auto ss = ndc * 0.5f + 0.5f;
+		//		if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
+		//			ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2 };
+		//			ImGui::SetCursorScreenPos(pos);
+		//			ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
+		//			ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		//		}
+		//	}
+		//}
 	}
 
 	// Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!

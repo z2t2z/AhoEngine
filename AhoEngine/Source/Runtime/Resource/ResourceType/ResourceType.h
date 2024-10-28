@@ -7,6 +7,7 @@
 #define GLM_FORCE_CTOR_INIT
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -48,7 +49,13 @@ namespace Aho {
 	struct TransformParam {
 		glm::vec3 Translation;
 		glm::vec3 Scale;
-		glm::vec3 Rotation; // in degrees
+		glm::vec3 Rotation;
+		glm::quat Orientation;
+		TransformParam(const glm::mat4& transform) {
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(transform, Scale, Orientation, Translation, skew, perspective);
+		}
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() {
 			glm::mat4 result(1.0f);

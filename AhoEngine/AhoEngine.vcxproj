@@ -180,6 +180,8 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLContext.h" />
@@ -645,6 +647,7 @@
     <ClCompile Include="Source\Runtime\Core\Layer\LayerStack.cpp" />
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\Level.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp" />
@@ -659,6 +662,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLContext.cpp" />

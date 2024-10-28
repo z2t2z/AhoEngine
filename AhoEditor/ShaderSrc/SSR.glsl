@@ -15,11 +15,12 @@ void main() {
 #version 460 core
 
 layout(location = 0) out vec4 out_color;
-layout(std140, binding = 0) uniform UBO {
+layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_View;
+	mat4 u_ViewInv;
 	mat4 u_Projection;
+	mat4 u_ProjectionInv;
 	vec4 u_ViewPosition;
-	mat4 u_LightViewMatrix; // ortho * view
 };
 
 in vec2 v_TexCoords;

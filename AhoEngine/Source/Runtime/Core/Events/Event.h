@@ -15,7 +15,7 @@ namespace Aho {
 		KeyPressed, KeyReleased, KeyTyped,
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled,
 		FileChanged, AssetImported, PackRenderData, UploadRenderData,
-		AddEntity, AddAnimation,
+		AddLight, AddAnimation,
 		SetEntityID,
 	};
 
@@ -137,7 +137,7 @@ namespace Aho {
 	public:
 		AddLightSourceEvent(LightType lt)
 			: m_LightType(lt) {}
-		static EventType GetStaticType() { return EventType::AddEntity; }
+		static EventType GetStaticType() { return EventType::AddLight; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 		virtual const char* GetName() const override { return "AddLight"; }
 		virtual int GetCategoryFlags() const override { return 0; }

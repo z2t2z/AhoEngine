@@ -12,8 +12,9 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnAttach() {
-		AHO_CORE_INFO("Renderer on attach");
+		AHO_CORE_INFO("RenderLayer on attach");
 		SetupForwardRenderPipeline();
+		SetupUBO();
 	}
 
 	void RenderLayer::OnDetach() {
@@ -96,25 +97,23 @@ namespace Aho {
 		pipeline->AddRenderPass(HiZPass);
 		pipeline->AddRenderPass(SetupDrawLinePass());
 		pipeline->AddRenderPass(postProcessingPass);
-		// Setup UBO data, order matters!!
-		OpenGLShader::SetUBO(sizeof(UBO), 0, DrawType::Dynamic);
-		OpenGLShader::SetUBO(sizeof(GeneralUBO), 1, DrawType::Dynamic);
-		OpenGLShader::SetUBO(sizeof(SSAOUBO), 2, DrawType::Dynamic);
-		OpenGLShader::SetUBO(sizeof(SkeletalUBO), 3, DrawType::Dynamic);
-		pipeline->AddUBO((void*)new UBO());					// TODO;
-		pipeline->AddUBO((void*)new GeneralUBO());
-		pipeline->AddUBO((void*)new SSAOUBO());
-		pipeline->AddUBO((void*)new SkeletalUBO());
 		pipeline->SortRenderPasses();
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
+	}
+
+	void RenderLayer::SetupUBO() {
+		UBOManager::RegisterUBO<CameraUBO>(0);
+		UBOManager::RegisterUBO<LightUBO>(1);
+		UBOManager::RegisterUBO<RandomKernelUBO>(2); RandomKernelUBO rndUBO; UBOManager::UpdateUBOData(2, rndUBO);
+		UBOManager::RegisterUBO<AnimationUBO>(3);
+		UBOManager::RegisterUBO<SkeletonUBO>(4);
 	}
 
 	RenderPass* RenderLayer::SetupDebugPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
 		RenderPassDefault* debugPass = new RenderPassDefault();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			renderTarget->EnableAttachments(4, 2);
 			RenderCommand::Clear(ClearFlags::Depth_Buffer);
 			for (const auto& data : renderData) {
@@ -145,9 +144,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupGBufferPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			renderTarget->EnableAttachments(0, 6);
 			RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
 			for (const auto& data : renderData) {
@@ -208,11 +206,10 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupSSAOPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
-			shader->BindUBO(ubo, 2, sizeof(SSAOUBO));
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++);
@@ -228,7 +225,6 @@ namespace Aho {
 			renderTarget->Unbind();
 			shader->Unbind();
 		});
-		cmdBuffer->SetClearFlags(ClearFlags::Color_Buffer);
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO.glsl").string());
 		RenderPassDefault* renderPass = new RenderPassDefault();
@@ -254,7 +250,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupSSAOBlurPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
@@ -298,8 +294,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupSSAOLightingPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
-			shader->BindUBO(ubo, 1, sizeof(GeneralUBO));
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++); // Note that order matters!
@@ -343,9 +338,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupShadingPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			shader->BindUBO(ubo, 1, sizeof(GeneralUBO));
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
 			uint32_t texOffset = 0u;
@@ -394,9 +388,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupPickingPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
-			
-			shader->BindUBO(ubo, 0, sizeof(UBO));
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
@@ -428,9 +420,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupSSRPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			shader->BindUBO(ubo, 0, sizeof(GeneralUBO));
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
 			uint32_t texOffset = 0u;
@@ -481,7 +472,7 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupHiZPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
@@ -531,17 +522,15 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupDrawLinePass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->SetClearColor(glm::vec4(0.0f));
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
-			shader->BindUBO(ubo, 0, sizeof(UBO));
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f))); // TODO
 			for (const auto& data : renderData) {
 				AHO_CORE_ASSERT(false);
 				data->Bind(shader);
-				RenderCommand::DrawLine(data->GetVAO());
+				RenderCommand::DrawIndexed(data->GetVAO(), true);
 				data->Unbind();
 			}
-			});
+		});
 		RenderPassDefault* drawLinePass = new RenderPassDefault();
 		drawLinePass->SetRenderCommand(cmdBuffer);
 		std::filesystem::path currentPath = std::filesystem::current_path();
@@ -567,8 +556,7 @@ namespace Aho {
 	// Draw object outlines, lights, skeletons, etc.
 	RenderPass* RenderLayer::SetupPostProcessingPass() {
 		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->SetClearColor(glm::vec4(0.0f));
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
@@ -612,9 +600,8 @@ namespace Aho {
 
 	RenderPass* RenderLayer::SetupShadowMapPass() {
 		RenderCommandBuffer* cmdBufferDepth = new RenderCommandBuffer();
-		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget, const void* ubo) {
+		cmdBufferDepth->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			shader->BindUBO(ubo, 3, sizeof(SkeletalUBO));
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Depth_Buffer);
 			for (const auto& data : renderData) {

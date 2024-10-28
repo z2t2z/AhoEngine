@@ -15,6 +15,7 @@ namespace Aho {
 		virtual void SetInstancedTransform(const std::vector<glm::mat4>& transform, bool dynamicDraw) = 0;
 		virtual void UpdateInstancedTransform(const std::vector<glm::mat4>& transform) = 0;
 		virtual uint32_t GetInstanceAmount() const = 0;
+		virtual void SetInstancedAmount(uint32_t amount) = 0;
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 		virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) = 0;

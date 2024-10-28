@@ -26,13 +26,6 @@ void main() {
 	uvec4 texelValue = texelFetch(u_gEntity, texelPos, 0);
 	uint sampleID = texelValue.r;
 	vec4 debugColor = texelFetch(u_Debug, texelPos, 0);
-	// if (color.r == 1.0f && color.g == 1.0f) {
-	// 	out_Color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	// } else {
-	// 	out_Color = vec4(texelFetch(u_Result, texelPos, 0).rgb, 1.0f);
-	// }
-	// out_Color = texelFetch(u_Result, texelPos, 0) + texelFetch(u_Debug, texelPos, 0);
-	// return;
 
 	if (sampleID == u_SelectedEntityID || u_SelectedEntityID > 500) {
 		out_Color = vec4(texelFetch(u_Result, texelPos, 0).rgb, 1.0f);

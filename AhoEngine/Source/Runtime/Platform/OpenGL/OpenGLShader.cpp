@@ -17,8 +17,6 @@ namespace Aho {
 		}
 	} // namespace Aho::Utils
 
-	std::unordered_map<uint32_t, uint32_t> OpenGLShader::s_UBO;
-
 	OpenGLShader::OpenGLShader(const std::string& filepath) : m_FilePath(filepath) {
 		std::string source = ReadFile(filepath);
 		if (source.empty()) {
@@ -200,27 +198,27 @@ namespace Aho {
 		m_ShaderID = program;
 	}
 
-	void OpenGLShader::SetUBO(size_t size, uint32_t bindingPoint, DrawType type) {
-		if (!s_UBO.contains(bindingPoint)) {
-			if (s_UBO.size() == MAX_UBO) {
-				return;
-			}
-			uint32_t uboID;
-			glGenBuffers(1, &uboID);
-			glBindBuffer(GL_UNIFORM_BUFFER, uboID);
-			glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-			glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, uboID);
-			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-			s_UBO.emplace(bindingPoint, uboID);
-		}
-	}
+	//void OpenGLShader::SetUBO(size_t size, uint32_t bindingPoint, DrawType type) {
+	//	if (!s_UBO.contains(bindingPoint)) {
+	//		if (s_UBO.size() == MAX_UBO) {
+	//			return;
+	//		}
+	//		uint32_t uboID;
+	//		glGenBuffers(1, &uboID);
+	//		glBindBuffer(GL_UNIFORM_BUFFER, uboID);
+	//		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+	//		glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, uboID);
+	//		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	//		s_UBO.emplace(bindingPoint, uboID);
+	//	}
+	//}
 
-	void OpenGLShader::BindUBO(const void* ubo, uint32_t bindingPoint, size_t size) {
-		AHO_CORE_ASSERT(s_UBO.contains(bindingPoint));
-		glBindBuffer(GL_UNIFORM_BUFFER, s_UBO.at(bindingPoint));
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, ubo);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	}
+	//void OpenGLShader::BindUBO(const void* ubo, uint32_t bindingPoint, size_t size) {
+	//	AHO_CORE_ASSERT(s_UBO.contains(bindingPoint));
+	//	glBindBuffer(GL_UNIFORM_BUFFER, s_UBO.at(bindingPoint));
+	//	glBufferSubData(GL_UNIFORM_BUFFER, 0, size, ubo);
+	//	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	//}
 
 	/* Hard Code for now */
 

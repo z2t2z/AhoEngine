@@ -15,17 +15,12 @@ namespace Aho {
 			glClearColor(color.r, color.g, color.b, color.a);
 		}
 		inline static void Clear(ClearFlags flags) {
-			//s_RendererAPI->Clear(flags);
 			glClear((uint32_t)flags);
-		}
-		inline static void DrawLine(const std::shared_ptr<VertexArray>& vertexArray) {
-			glDrawElements(GL_LINES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
 		inline static void SetLineWidth(float width = 2.5f) {
 			glLineWidth(2.5f);
 		}
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, bool DrawLine = false) {
-			//s_RendererAPI->DrawIndexed(vertexArray);
 			glDrawElements(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
 		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount, bool DrawLine = false) {
@@ -62,33 +57,23 @@ namespace Aho {
 
 	class RenderCommandBuffer {
 	public:
-		RenderCommandBuffer() { RenderCommand::SetClearColor(m_ClearColor); }
+		RenderCommandBuffer() = default;
 		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData,	// Meshes to render
 					 const std::shared_ptr<Shader>& shader, 						// Shader to use
-					 const std::shared_ptr<Framebuffer>& renderTarget, 				// G-Buffer textures
-					 const std::vector<Texture*>& textureBuffers,					// Render target
-				     const void* ubo) const {										// Uniform block object
+					 const std::shared_ptr<Framebuffer>& renderTarget, 				// RenderTarget 
+					 const std::vector<Texture*>& textureBuffers) const {			// G-Buffer textures
 			for (const auto& command : m_Commands) {
-				command(renderData, shader, textureBuffers, renderTarget, ubo); // TODO: actually only one command is needed for now
+				command(renderData, shader, textureBuffers, renderTarget);			// TODO: actually only one command is needed for now
 			}
 		}
 		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, 
 						const std::shared_ptr<Shader>&, 
 						const std::vector<Texture*>&, 
-						const std::shared_ptr<Framebuffer>&,
-						const void*)>& func) { m_Commands.push_back(func); }
-		virtual void SetDepthTest(bool state) { m_Depthtest = state; }
-		virtual void SetClearColor(glm::vec4 color) { m_ClearColor = color; }
-		virtual void SetClearFlags(ClearFlags flags) { m_ClearFlags = flags; }
-	private:
-		bool m_Depthtest{ true };
-		glm::vec4 m_ClearColor{ 132.0f / 255.0f, 181.0f / 255.0f, 245.0f / 255.0f, 1.0f };
-		ClearFlags m_ClearFlags{ ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer };
+						const std::shared_ptr<Framebuffer>&)>& func) { m_Commands.push_back(func); }
 	private:
 		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,	
 									   const std::shared_ptr<Shader>& shader,						
 									   const std::vector<Texture*>& textureBuffers,					
-									   const std::shared_ptr<Framebuffer>& renderTarget,			
-									   const void* ubo)>> m_Commands;								
+									   const std::shared_ptr<Framebuffer>& renderTarget)>> m_Commands;
 	};
 }

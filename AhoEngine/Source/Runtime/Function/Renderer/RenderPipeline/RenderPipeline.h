@@ -18,12 +18,10 @@ namespace Aho {
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
 		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
 		virtual void SortRenderPasses();
-		virtual void AddUBO(void* ubo) { m_RenderUBOs.push_back(ubo); }
-		virtual void* GetUBO(size_t index) { return m_RenderUBOs[index]; }
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
-		RenderPass* m_SSRvsPass{ nullptr };
 	protected:
+		RenderPass* m_SSRvsPass{ nullptr };
 		RenderPass* m_ShadingPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
 		RenderPass* m_ShadowMapPass{ nullptr };
@@ -35,7 +33,6 @@ namespace Aho {
 		RenderPass* m_HiZPass{ nullptr };
 		RenderPass* m_DrawLinePass{ nullptr };
 		RenderPass* m_PostProcessingPass{ nullptr };
-		std::vector<void*> m_RenderUBOs; // NOTE: Order matters!! 0: base UBO, 1: general UBO, 2: SSAO dedicated UBO; 3: skeletal info
 		std::vector<RenderPass*> m_RenderPasses;	
 		std::vector<std::shared_ptr<RenderData>> m_LineData;
 		std::vector<std::shared_ptr<RenderData>> m_DebugData;

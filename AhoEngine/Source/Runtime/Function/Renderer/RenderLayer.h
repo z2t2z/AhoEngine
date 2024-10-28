@@ -2,6 +2,7 @@
 #include "Renderer.h"
 #include "Runtime/Core/Layer/Layer.h"
 #include "Runtime/Function/Camera/CameraManager.h"
+#include "Runtime/Function/Renderer/UBOManager.h"
 #include <memory>
 
 namespace Aho {
@@ -17,7 +18,9 @@ namespace Aho {
 		void SetRenderer(Renderer* renderer) { m_Renderer = renderer; }
 		Renderer* GetRenderer() { return m_Renderer; }
 	private:
+		// TODO: move these to Renderer
 		void SetupForwardRenderPipeline();
+		void SetupUBO();
 		RenderPass* SetupGBufferPass();
 		RenderPass* SetupSSAOPass();
 		RenderPass* SetupSSAOBlurPass();

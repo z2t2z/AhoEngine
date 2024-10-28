@@ -1600,6 +1600,8 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h" />
     <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1730,5 +1732,7 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Bone.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Animation.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
   </ItemGroup>
 </Project>

@@ -32,7 +32,7 @@ namespace Aho {
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
 		virtual RenderPassType GetRenderPassType() { return m_RenderPassType; }
 		virtual void SetRenderPassType(RenderPassType type) { m_RenderPassType = type; }
-		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const void* ubo = nullptr) = 0;
+		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) = 0;
 		virtual void AddGBuffer(Texture* tex) { m_TextureBuffers.push_back(tex); }
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
 		virtual RenderCommandBuffer* GetRenderCommandBuffer() { return m_RenderCommandBuffer; }
@@ -53,8 +53,8 @@ namespace Aho {
 		virtual void Initialize() override {
 			AHO_CORE_INFO("Forward render pass initialized");
 		}
-		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData, const void* ubo) override {
-			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers, ubo);
+		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) override {
+			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
 		}
 	};
 

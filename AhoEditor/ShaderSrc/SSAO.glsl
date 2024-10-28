@@ -16,10 +16,18 @@ void main() {
 out float out_color;
 in vec2 v_TexCoords;
 
-layout(std140, binding = 2) uniform SSAOUBO {
+layout(std140, binding = 0) uniform CameraUBO {
+	mat4 u_View;
+	mat4 u_ViewInv;
 	mat4 u_Projection;
+	mat4 u_ProjectionInv;
+	vec4 u_ViewPosition;
+};
 
-	vec4 u_Samples[64];
+const int SAMPLES_CNT = 64;
+// For ssao pass
+layout(std140, binding = 2) uniform RandomKernelUBO {
+	vec4 u_Samples[SAMPLES_CNT];
 	vec4 u_Info; // width, height, radius, bias
 };
 
@@ -31,8 +39,8 @@ uniform int u_KernelSize = 64;
 const int MAX_SAMPLES = 64;
 
 void main() {
-	float width = u_Info.x;
-	float height = u_Info.y;
+	float width = textureSize(u_gPosition, 0).x;
+	float height = textureSize(u_gPosition, 0).y;
 	float radius = u_Info.z;
 	float bias = u_Info.w;
 

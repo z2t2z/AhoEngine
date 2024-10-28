@@ -9,8 +9,8 @@ namespace Aho {
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
 							const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
 			UpdateSkeletonTree(currTime, globalMatrices, glm::mat4(1.0f), anim, root, nullptr, glm::vec3(0.0f), viewer);
-			viewer->UpdateRenderData();
 		}
+
 	private:
 		static void UpdateSkeletonTree(float currTime, std::vector<glm::mat4>& globalMatrices, glm::mat4 globalTrans, const std::shared_ptr<AnimationAsset>& anim,
 										const BoneNode* currNode, const BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
@@ -19,7 +19,7 @@ namespace Aho {
 
 			const BoneNode* nxtValidParent = validParent;
 			glm::vec3 nxtParentPos = parentPos;
-			if (viewer->GetShouldUpdate()) {
+			if (viewer->ShouldUpdate()) {
 				if (currNode->bone.name.find("$AssimpFbx$") == std::string::npos) {
 					glm::vec3 currPos(globalTrans[3]);
 					if (validParent && parentPos != glm::vec3(0.0f)) {

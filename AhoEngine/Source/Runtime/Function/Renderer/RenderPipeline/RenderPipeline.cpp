@@ -6,51 +6,48 @@ namespace Aho {
 		for (auto renderPass : m_RenderPasses) {
 			delete renderPass;
 		}
-		for (auto ubo : m_RenderUBOs) {
-			delete ubo;
-		}
 	}
 
 	void RenderPipeline::Execute() {
-		m_ShadowMapPass->Execute(m_RenderData, m_RenderUBOs[3]);
-		m_GBufferPass->Execute(m_RenderData, m_RenderUBOs[3]);
-		m_DebugPass->Execute(m_DebugData, m_RenderUBOs[3]);
+		m_ShadowMapPass->Execute(m_RenderData);
+		m_GBufferPass->Execute(m_RenderData);
+		m_DebugPass->Execute(m_DebugData);
 		m_HiZPass->Execute(m_ScreenQuad);
-		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
+		m_SSAOPass->Execute(m_ScreenQuad);
 		m_BlurPass->Execute(m_ScreenQuad);
-		m_SSRvsPass->Execute(m_ScreenQuad, m_RenderUBOs[0]);
-		m_ShadingPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
+		m_SSRvsPass->Execute(m_ScreenQuad);
+		m_ShadingPass->Execute(m_ScreenQuad);
 		m_PostProcessingPass->Execute(m_ScreenQuad);
 	}
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
 		switch (type) {
-		case RenderPassType::Debug:
-			return m_DebugPass->GetRenderTarget();
-		case RenderPassType::Depth:
-			return m_ShadowMapPass->GetRenderTarget();
-		case RenderPassType::SSAO:
-			return m_SSAOPass->GetRenderTarget();
-		case RenderPassType::SSAOGeo:
-			return m_GBufferPass->GetRenderTarget();
-		case RenderPassType::SSAOLighting:
-			return m_SSAOLightingPass->GetRenderTarget();
-		case RenderPassType::Shading:
-			return m_ShadingPass->GetRenderTarget();
-		case RenderPassType::Pick:
-			return m_PickingPass->GetRenderTarget();
-		case RenderPassType::Blur:
-			return m_BlurPass->GetRenderTarget();
-		case RenderPassType::SSRvs:
-			return m_SSRvsPass->GetRenderTarget();
-		case RenderPassType::HiZ:
-			return m_HiZPass->GetRenderTarget();
-		case RenderPassType::DrawLine:
-			return m_DrawLinePass->GetRenderTarget();
-		case RenderPassType::PostProcessing:
-			return m_PostProcessingPass->GetRenderTarget();
+			case RenderPassType::Debug:
+				return m_DebugPass->GetRenderTarget();
+			case RenderPassType::Depth:
+				return m_ShadowMapPass->GetRenderTarget();
+			case RenderPassType::SSAO:
+				return m_SSAOPass->GetRenderTarget();
+			case RenderPassType::SSAOGeo:
+				return m_GBufferPass->GetRenderTarget();
+			case RenderPassType::SSAOLighting:
+				return m_SSAOLightingPass->GetRenderTarget();
+			case RenderPassType::Shading:
+				return m_ShadingPass->GetRenderTarget();
+			case RenderPassType::Pick:
+				return m_PickingPass->GetRenderTarget();
+			case RenderPassType::Blur:
+				return m_BlurPass->GetRenderTarget();
+			case RenderPassType::SSRvs:
+				return m_SSRvsPass->GetRenderTarget();
+			case RenderPassType::HiZ:
+				return m_HiZPass->GetRenderTarget();
+			case RenderPassType::DrawLine:
+				return m_DrawLinePass->GetRenderTarget();
+			case RenderPassType::PostProcessing:
+				return m_PostProcessingPass->GetRenderTarget();
 		}
-		AHO_CORE_ASSERT(true);
+		AHO_CORE_ASSERT(0);
 	}
 
 	// TODO: devise a better way

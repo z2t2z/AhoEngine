@@ -53,6 +53,7 @@ namespace Aho::Utils {
 	inline std::mt19937 rng(std::random_device{}());
 	inline std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
+	// Generate a random vec3 ranging from [-1.0, 1.0]
 	inline glm::vec3 GenerateRandomVec3() {
 		return glm::vec3(dist(rng), dist(rng), dist(rng));
 	}

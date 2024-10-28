@@ -67,12 +67,14 @@ namespace Aho {
 
 	struct AnimatorComponent {
 		std::string name;
+		int boneOffset;
 		float currentTime;
 		std::vector<glm::mat4> globalMatrices;
 		AnimatorComponent(size_t boneCnt) : currentTime{ 0.0f }, name{ "IAmAnimator" } {
 			globalMatrices.resize(boneCnt);
 			std::fill(globalMatrices.begin(), globalMatrices.end(), glm::mat4(1.0f));
 		}
+		static int s_BoneOffset;
 	};
 
 	struct AnimationComponent {
@@ -93,6 +95,17 @@ namespace Aho {
 		SkeletalComponent(const SkeletalComponent&) = default;
 	};
 
+	struct BoneComponent {
+		std::string name;
+		BoneComponent(const std::string& _name) : name(_name) {}
+	};
+
+	struct BonesComponent {
+		std::vector<BoneComponent> bones;
+		BonesComponent() = default;
+		BonesComponent(const std::vector<BoneComponent>& _bones) : bones(_bones) {}
+	};
+
 	struct SkeletonViewerComponent {
 		std::string name;
 		SkeletonViewer* viewer;
@@ -102,13 +115,15 @@ namespace Aho {
 
 	// Temporary, think about how to design light class
 	struct PointLightComponent {
+		int index;
 		glm::vec4 color{ 0.1f, 0.12f, 0.15f, 1.0f };
-		float intensity{ 0.5f };
-		int count{ 0 };
+		bool castShadow{ false };
 		PointLightComponent() = default;
-		PointLightComponent(glm::vec4 _color, float _intensity = 1.0f)
-			: color(_color), intensity(_intensity) {
+		PointLightComponent(glm::vec4 _color)
+			: color(_color) {
 		}
 		PointLightComponent(const PointLightComponent&) = default;
+		
+		static int s_PointLightCnt;
 	};
 }
