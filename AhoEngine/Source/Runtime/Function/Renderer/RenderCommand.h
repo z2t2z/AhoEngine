@@ -12,7 +12,6 @@ namespace Aho {
 	class RenderCommand {
 	public:
 		inline static void SetClearColor(const glm::vec4& color) {
-			//s_RendererAPI->SetClearColor(color);
 			glClearColor(color.r, color.g, color.b, color.a);
 		}
 		inline static void Clear(ClearFlags flags) {
@@ -20,15 +19,17 @@ namespace Aho {
 			glClear((uint32_t)flags);
 		}
 		inline static void DrawLine(const std::shared_ptr<VertexArray>& vertexArray) {
-			glLineWidth(2.5f);
 			glDrawElements(GL_LINES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
-		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray) {
-			//s_RendererAPI->DrawIndexed(vertexArray);
-			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+		inline static void SetLineWidth(float width = 2.5f) {
+			glLineWidth(2.5f);
 		}
-		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount) {
-			glDrawElementsInstanced(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0, amount);
+		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, bool DrawLine = false) {
+			//s_RendererAPI->DrawIndexed(vertexArray);
+			glDrawElements(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+		}
+		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount, bool DrawLine = false) {
+			glDrawElementsInstanced(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0, amount);
 		}
 		inline static void SetDepthTest(bool state) {
 			//s_RendererAPI->SetDepthTest(state);
@@ -67,17 +68,9 @@ namespace Aho {
 					 const std::shared_ptr<Framebuffer>& renderTarget, 				// G-Buffer textures
 					 const std::vector<Texture*>& textureBuffers,					// Render target
 				     const void* ubo) const {										// Uniform block object
-			shader->Bind();
-			renderTarget->Bind();
-			RenderCommand::SetDepthTest(m_Depthtest);
-			if (m_ClearFlags != ClearFlags::None) {
-				RenderCommand::Clear(m_ClearFlags);
-			}
 			for (const auto& command : m_Commands) {
 				command(renderData, shader, textureBuffers, renderTarget, ubo); // TODO: actually only one command is needed for now
 			}
-			renderTarget->Unbind();
-			shader->Unbind();
 		}
 		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, 
 						const std::shared_ptr<Shader>&, 

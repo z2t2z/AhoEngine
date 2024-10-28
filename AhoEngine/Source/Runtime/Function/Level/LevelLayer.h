@@ -50,6 +50,7 @@ namespace Aho {
 		bool m_Update{ true };		// TODO: temporary...
 		LightData m_LightData;		// TODO: temporary...
 	private:
+		int m_SkeletalMeshBoneOffset{ 0 };
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };

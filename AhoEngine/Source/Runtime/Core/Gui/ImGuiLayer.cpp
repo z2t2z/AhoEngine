@@ -35,8 +35,8 @@ namespace Aho {
 		auto path = std::filesystem::current_path().parent_path();
 		AHO_CORE_TRACE(path.string());
 		// TODO: Font manager
-		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Bold.ttf").string().c_str(), 18.0f);
-		auto font = io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Regular.ttf").string().c_str(), 18.0f);
+		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Bold.ttf").string().c_str(), 13.0f);
+		auto font = io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Regular.ttf").string().c_str(), 13.0f);
 		io.FontDefault = font;
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());

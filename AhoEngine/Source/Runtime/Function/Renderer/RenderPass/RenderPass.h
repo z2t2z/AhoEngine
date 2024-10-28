@@ -8,7 +8,8 @@ namespace Aho {
 	enum class RenderPassType {
 		None = 0,
 		Debug,
-		Final,
+		//Final,
+		Shading,
 		Depth,
 		Pick,
 		SSAOGeo,
@@ -41,7 +42,7 @@ namespace Aho {
 	protected:
 		std::vector<Texture*> m_TextureBuffers; // G-buffers are stored here 
 		RenderPassType m_RenderPassType{ RenderPassType::None };
-		std::shared_ptr<Shader> m_Shader{ nullptr };   // Currently each render pass is completed using a single shader
+		std::shared_ptr<Shader> m_Shader{ nullptr };   // Currently each render pass uses a single shader
 		RenderCommandBuffer* m_RenderCommandBuffer{ nullptr };
 	};
 

@@ -10,7 +10,7 @@ layout(location = 5) in vec4 a_BoneWeights;
 layout(location = 6) in ivec4 a_BoneID;
 layout(location = 7) in mat4 a_InstancedTransform;
 
-const int MAX_BONES = 200;
+const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 layout(std140, binding = 3) uniform SkeletalUBO {
 	mat4 u_View;
@@ -22,7 +22,7 @@ layout(std140, binding = 3) uniform SkeletalUBO {
 
 uniform mat4 u_Model;
 uniform bool u_IsInstanced;
-uniform bool u_IsSkeletal;
+uniform int u_BoneOffset;
 
 out vec3 v_FragPos;
 out vec3 v_FragPosLight;
@@ -33,7 +33,6 @@ out vec3 v_Ndc;
 out flat mat3 v_NormalMatrix;
 
 void main() {
-	vec4 finalPos = vec4(a_Position, 1.0f);
 	vec3 normal = a_Normal;
 	vec3 tangent = a_Tangent;
 	mat4 skinningMatrix = mat4(0.0f);
@@ -43,6 +42,7 @@ void main() {
 		if (id == -1) {
 			continue;
 		}
+		id += u_BoneOffset;
 		if (id >= MAX_BONES) {
 			skinningMatrix = mat4(1.0f);
 			break;
@@ -52,24 +52,20 @@ void main() {
 	}
 	if (!hasInfo) {
 		skinningMatrix = mat4(1.0f);
-	} else {
-		finalPos = skinningMatrix * vec4(a_Position, 1.0f);
-		normal = normalize(mat3(transpose(inverse(skinningMatrix))) * a_Normal);
-		tangent = normalize(mat3(transpose(inverse(skinningMatrix))) * a_Tangent);
 	}
 
-	vec4 PosViewSpace = u_View * (u_IsInstanced ? a_InstancedTransform : u_Model) * finalPos;
-	v_NormalMatrix = transpose(inverse(mat3(u_View * (u_IsInstanced ? a_InstancedTransform : u_Model))));
+	mat4 finalModelMat = u_IsInstanced ? u_Model * a_InstancedTransform * skinningMatrix : u_Model * skinningMatrix;
+
+	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
+	v_NormalMatrix = transpose(inverse(mat3(u_View * finalModelMat)));
 
 	v_FragPos = PosViewSpace.xyz;
 	gl_Position = u_Projection * PosViewSpace;
 	v_TexCoords = a_TexCoords;
-	v_Normal = normal;
-	v_Tangent = tangent;
+	v_Normal = v_NormalMatrix * a_Normal;
+	v_Tangent = v_NormalMatrix * a_Tangent;
 	v_Ndc = gl_Position.xyz / gl_Position.w;
 	v_Ndc = v_Ndc * 0.5f + 0.5f;
-	vec4 lightClipSpace = u_LightPV * u_Model * finalPos;
-	//v_FragPosLight = lightClipSpace.xyz / lightClipSpace.w;
 	v_FragPosLight = v_FragPosLight;
 }
 
@@ -81,9 +77,8 @@ layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out float g_Depth;
 layout(location = 4) out uint g_Entity;
-// layout(location = 5) out float g_DepthLight;
 
-const int MAX_BONES = 200;
+const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 layout(std140, binding = 3) uniform SkeletalUBO{
 	mat4 u_View;
@@ -103,34 +98,29 @@ in flat mat3 v_NormalMatrix;
 
 uniform bool u_HasDiffuse;
 uniform bool u_HasNormal;
+uniform bool u_IsDebug;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normal;
 uniform mat4 u_Model;
 uniform uint u_EntityID;
 
 void main() {
+	g_Entity = u_EntityID;
 	g_Position = v_FragPos;
 	g_Depth = v_FragPos.z;
-	// g_DepthLight = v_FragPosLight.z * 0.5f + 0.5f;
-	g_Entity = u_EntityID;
-	if (u_HasDiffuse) {
-		g_Albedo = texture(u_Diffuse, v_TexCoords).rgb;
-	}
-	else {
-		g_Albedo = vec3(0.9f);
-	}
+	g_Albedo = u_HasDiffuse ? texture(u_Diffuse, v_TexCoords).rgb : vec3(0.9f);
 
 	if (!u_HasNormal) {
-		g_Normal = normalize(v_NormalMatrix * v_Normal);
+		g_Normal = normalize(v_Normal);
 	}
 	else {
-		vec3 T = normalize(v_NormalMatrix * v_Tangent);
-		vec3 N = normalize(v_NormalMatrix * v_Normal);
+		vec3 T = normalize(v_Tangent);
+		vec3 N = normalize(v_Normal);
 		T = normalize(T - dot(T, N) * N);
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
 		vec3 normalMap = texture(u_Normal, v_TexCoords).rgb;
-		normalMap = normalize(normalMap * 2.0f - 1.0f);
-		g_Normal = TBN * normalMap;
+		normalMap = normalMap * 2.0f - 1.0f;
+		g_Normal = normalize(TBN * normalMap);
 	}
 }

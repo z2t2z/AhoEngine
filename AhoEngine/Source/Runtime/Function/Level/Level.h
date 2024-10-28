@@ -13,6 +13,7 @@ namespace Aho {
 		~Level() { delete m_EntityManager; }
 		EntityManager* GetEntityManager() { return m_EntityManager; }
 	private:
+		std::vector<Entity> m_Entities;
 		EntityManager* m_EntityManager{ nullptr };
 	};
 }

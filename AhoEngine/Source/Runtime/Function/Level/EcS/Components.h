@@ -85,10 +85,10 @@ namespace Aho {
 	struct SkeletalComponent {
 		std::string name;
 		BoneNode* root;
-		std::map<std::string, BoneNode*> boneCache;
+		int offset;
 		~SkeletalComponent() { delete root; }
-		SkeletalComponent(BoneNode* _root, const std::map<std::string, BoneNode*> _boneCache)
-			: root(_root), boneCache(_boneCache), name{ "IamSkeletal" } {
+		SkeletalComponent(BoneNode* _root, int _offset)
+			: root(_root), offset(_offset), name{ _root->bone.name } {
 		}
 		SkeletalComponent(const SkeletalComponent&) = default;
 	};

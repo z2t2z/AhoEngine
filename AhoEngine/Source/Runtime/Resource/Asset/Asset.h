@@ -26,13 +26,17 @@ namespace Aho {
 
 	class Asset {
 	public:
+		Asset() = default;
+		Asset(const std::string& name) : m_Name(name) {}
 		virtual ~Asset() = default;
 		virtual bool Load() { return true; };
 		//virtual bool Save() = 0;
 		bool IsLoaded() { return m_IsLoaded; }
 		UUID GetUUID() { return m_UUID; }
+		std::string GetName() { return m_Name; }
 	protected:
 		UUID m_UUID;
+		std::string m_Name;
 		std::string m_Path;
 		bool m_IsLoaded{ false };
 	};
@@ -40,7 +44,7 @@ namespace Aho {
 	class StaticMesh : public Asset {
 	public:
 		StaticMesh() = default;
-		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh) : m_SubMesh(SubMesh) {}
+		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh, const std::string& name) : m_SubMesh(SubMesh), Asset(name) {}
 		std::vector<std::shared_ptr<MeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<MeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
@@ -51,13 +55,14 @@ namespace Aho {
 	class SkeletalMesh : public Asset {
 	public:
 		//SkeletalMesh(const std::string& path) {}
-		SkeletalMesh(const std::vector<std::shared_ptr<SkeletalMeshInfo>>& SubMesh, const std::map<std::string, BoneNode*>& boneCache, BoneNode* root)
-			: m_SubMesh(SubMesh), m_BoneCache(boneCache), m_Root(root) {}
+		SkeletalMesh(const std::vector<std::shared_ptr<SkeletalMeshInfo>>& SubMesh, const std::map<std::string, BoneNode*>& boneCache, BoneNode* root, const std::string& name)
+			: m_SubMesh(SubMesh), m_BoneCache(boneCache), m_Root(root), Asset(name) {}
 		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		BoneNode* GetRoot() { return m_Root; }
 		std::map<std::string, BoneNode*>& GetBoneCache() { return m_BoneCache; } // read only?
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
+		uint32_t GetBoneCnt() { return m_BoneCache.size(); }
 	private:
 		BoneNode* m_Root;
 		std::map<std::string, BoneNode*> m_BoneCache;

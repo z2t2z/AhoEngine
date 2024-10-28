@@ -5,11 +5,21 @@
 #include <cstdlib>
 
 namespace Aho {
+	uint32_t AssetCreator::s_MeshCnt = 0;
+
 	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath) {
 		auto it = filePath.find_last_of('/\\');
 		std::string prefix;
 		if (it != std::string::npos) {
 			prefix = filePath.substr(0, it) + '/';
+		}
+		std::string fileName = filePath.substr(it);
+		it = fileName.find_last_of('.');
+		if (it != std::string::npos) {
+			fileName = fileName.substr(0, it);
+		}
+		if (fileName.empty()) {
+			fileName = "Untitled" + std::to_string(s_MeshCnt++);
 		}
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
@@ -96,7 +106,7 @@ namespace Aho {
 		};
 		ProcessNode(scene->mRootNode, scene);
 
-		return std::make_shared<StaticMesh>(subMesh);
+		return std::make_shared<StaticMesh>(subMesh, fileName);
 	}
 
 	std::shared_ptr<SkeletalMesh> AssetCreator::SkeletalMeshAssetCreator(const std::string& filePath) {
@@ -114,6 +124,15 @@ namespace Aho {
 		if (it != std::string::npos) {
 			prefix = filePath.substr(0, it) + '/';
 		}
+		std::string fileName = filePath.substr(it);
+		it = fileName.find_last_of('.');
+		if (it != std::string::npos) {
+			fileName = fileName.substr(0, it);
+		}
+		if (fileName.empty()) {
+			fileName = "Untitled" + std::to_string(s_MeshCnt++);
+		}
+
 		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 
 		auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
@@ -250,7 +269,7 @@ namespace Aho {
 
 		ProcessNode(scene->mRootNode, scene);
 		BoneNode* root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
-		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root);
+		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName);
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {

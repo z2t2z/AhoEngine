@@ -57,5 +57,7 @@ namespace Aho {
 		static std::shared_ptr<SkeletalMesh> SkeletalMeshAssetCreator(const std::string& filePath);
 		static std::shared_ptr<MaterialAsset> MaterialAssetCreator(const std::string& filePath);
 		static std::shared_ptr<AnimationAsset> AnimationAssetCreator(const std::string& filePath, const std::shared_ptr<SkeletalMesh>& mesh);
+	private:
+		static uint32_t s_MeshCnt;
 	};
 }

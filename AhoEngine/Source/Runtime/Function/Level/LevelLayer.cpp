@@ -70,37 +70,40 @@ namespace Aho {
 			Animator::Update(currentTime, globalMatrices, root, anim, viewer.viewer);
 			auto pipeline = m_RenderLayer->GetRenderer()->GetCurrentRenderPipeline();
 			SkeletalUBO* skubo = static_cast<SkeletalUBO*>(pipeline->GetUBO(3));
+			int offset = skeletal.offset;
 			for (size_t i = 0; i < globalMatrices.size(); i++) {
-				skubo->u_BoneMatrices[i] = globalMatrices[i];
+				skubo->u_BoneMatrices[i + offset] = globalMatrices[i];
 			}
 		});
 	}
 
 	void LevelLayer::AddAnimation(const std::shared_ptr<AnimationAsset>& anim) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
-		auto view = entityManager->GetView<SkeletalComponent>();
-		view.each([entityManager, anim, this](auto entity, auto& skeletal) {
-			entityManager->AddComponent<AnimatorComponent>(entity, anim->GetBoneCnt());
-			entityManager->AddComponent<AnimationComponent>(entity, anim);
-			SkeletonViewer* viewer = new SkeletonViewer(skeletal.root);
-			const auto& nodeTransform = viewer->GetBoneTransform();
-			std::vector<std::shared_ptr<RenderData>> boneData;
-			for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
-				std::shared_ptr<VertexArray> vao;
-				vao.reset(VertexArray::Create());
-				vao->Init(meshInfo);
-				vao->SetInstancedTransform(nodeTransform, true);
-				std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-				renderData->SetVAOs(vao);
-				//renderData->SetTransformParam(param);
-				renderData->SetInstanced();
-				boneData.push_back(renderData);
-				viewer->SetRenderData(renderData);
+		auto view = entityManager->GetView<SkeletalComponent, TransformComponent>();
+		view.each([entityManager, anim, this](auto entity, auto& skeletal, auto& transformComponent) {
+			if (!entityManager->HasComponent<AnimatorComponent>(entity)) {
+				SkeletonViewer* viewer = new SkeletonViewer(skeletal.root);
+				entityManager->AddComponent<AnimatorComponent>(entity, anim->GetBoneCnt());
+				entityManager->AddComponent<AnimationComponent>(entity, anim);
+				entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
+				const auto& nodeTransform = viewer->GetBoneTransform();
+				std::vector<std::shared_ptr<RenderData>> boneData;
+				for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
+					std::shared_ptr<VertexArray> vao;
+					vao.reset(VertexArray::Create());
+					vao->Init(meshInfo);
+					vao->SetInstancedTransform(nodeTransform, true);
+					std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+					renderData->SetVAOs(vao);
+					renderData->SetTransformParam(transformComponent.transformPara);
+					renderData->SetInstanced();
+					renderData->SetDebug();
+					boneData.push_back(renderData);
+					viewer->SetRenderData(renderData);
+				}
+				UploadRenderDataEventTrigger(boneData);
 			}
-			UploadRenderDataEventTrigger(boneData);
-
-			entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
-			});
+		});
 	}
 
 	void LevelLayer::AddLightSource(LightType lt) {
@@ -115,7 +118,7 @@ namespace Aho {
 		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
 		pc.count = m_LightData.lightCnt++;
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		for (const auto& meshInfo : *m_ResourceLayer->GetCube()) {
+		for (const auto& meshInfo : *m_ResourceLayer->GetSphere()) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
 			vao->Init(meshInfo);
@@ -126,7 +129,7 @@ namespace Aho {
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
 			renderData->SetMaterial(mat);
 			renderData->SetTransformParam(param);
-			renderData->SetVirtual();
+			renderData->SetDebug();
 			renderDataAll.push_back(renderData);
 		}
 		UploadRenderDataEventTrigger(renderDataAll);
@@ -152,8 +155,8 @@ namespace Aho {
 		skubo->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
 
 		if (m_Update) {
-			float nearPlane = 0.1f, farPlane = 1000.0f;
-			glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
+			float nearPlane = 0.1f, farPlane = 30.0f;
+			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
 			auto lightMat = proj * glm::lookAt(glm::vec3(gubo->u_LightPosition[0]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			ubo->u_LightPV = lightMat;
 			gubo->u_LightPV = lightMat;
@@ -167,14 +170,14 @@ namespace Aho {
 
 		SSAOUBO* subo = static_cast<SSAOUBO*>(pipeline->GetUBO(2));
 		subo->u_Projection = cam->GetProjection();
-		subo->info[0] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Width;
-		subo->info[1] = pipeline->GetRenderPassTarget(RenderPassType::Final)->GetSpecification().Height;
+		subo->info[0] = pipeline->GetRenderPassTarget(RenderPassType::Shading)->GetSpecification().Width;
+		subo->info[1] = pipeline->GetRenderPassTarget(RenderPassType::Shading)->GetSpecification().Height;
 	}
 
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
-		Entity gameObject(entityManager->CreateEntity("StaticMesh")); // TODO: give it a proper name
+		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MultiMeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 
@@ -224,11 +227,11 @@ namespace Aho {
 	void LevelLayer::LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
-		Entity gameObject(entityManager->CreateEntity("SkeletalMesh")); // TODO: give it a proper name
+		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
-		entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), asset->GetBoneCache());
-
+		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
+		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
 		param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
@@ -251,6 +254,7 @@ namespace Aho {
 			mat->SetUniform("u_AO", 0.1f);				// TODO: Should not be done this way
 			mat->SetUniform("u_Metalic", 0.2f);
 			mat->SetUniform("u_Roughness", 0.2f);
+			mat->SetUniform("u_BoneOffset", skeletalComponent.offset);
 			//entityManager->AddComponent<MaterialComponent>(gameObject, mat); // TODO;
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {

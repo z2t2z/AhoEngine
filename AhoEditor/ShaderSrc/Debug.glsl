@@ -1,5 +1,6 @@
 #type vertex
 #version 460 core
+
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoords;
@@ -19,12 +20,11 @@ layout(std140, binding = 3) uniform SkeletalUBO{
 	mat4 u_BoneMatrices[MAX_BONES];
 };
 
+uniform mat4 u_Model;
 uniform bool u_IsInstanced;
 uniform int u_BoneOffset;
-uniform mat4 u_Model;
 
 void main() {
-	vec4 finalPos = vec4(a_Position, 1.0f);
 	mat4 skinningMatrix = mat4(0.0f);
 	bool hasInfo = false;
 	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
@@ -42,16 +42,21 @@ void main() {
 	}
 	if (!hasInfo) {
 		skinningMatrix = mat4(1.0f);
-	} else {
-		finalPos = skinningMatrix * vec4(a_Position, 1.0f);
 	}
-	gl_Position = u_LightPV * (u_IsInstanced ? u_Model * a_InstancedTransform : u_Model) * finalPos;
-}
 
+	mat4 finalModelMat = u_IsInstanced ? u_Model * a_InstancedTransform * skinningMatrix : u_Model * skinningMatrix;
+	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
+	gl_Position = u_Projection * PosViewSpace;
+}
 
 #type fragment
 #version 460 core
+layout(location = 0) out uint g_Entity;
+layout(location = 1) out vec4 out_Color;
+
+uniform uint u_EntityID;
 
 void main() {
-	//gl_FragDepth = gl_FragCoord.z;
+	g_Entity = u_EntityID;
+	out_Color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 }

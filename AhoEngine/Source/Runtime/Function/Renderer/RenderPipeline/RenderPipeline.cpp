@@ -14,17 +14,13 @@ namespace Aho {
 	void RenderPipeline::Execute() {
 		m_ShadowMapPass->Execute(m_RenderData, m_RenderUBOs[3]);
 		m_GBufferPass->Execute(m_RenderData, m_RenderUBOs[3]);
+		m_DebugPass->Execute(m_DebugData, m_RenderUBOs[3]);
 		m_HiZPass->Execute(m_ScreenQuad);
 		m_SSAOPass->Execute(m_ScreenQuad, m_RenderUBOs[2]);
 		m_BlurPass->Execute(m_ScreenQuad);
 		m_SSRvsPass->Execute(m_ScreenQuad, m_RenderUBOs[0]);
-		m_ResultPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
+		m_ShadingPass->Execute(m_ScreenQuad, m_RenderUBOs[1]);
 		m_PostProcessingPass->Execute(m_ScreenQuad);
-		//m_PickingPass->Execute(m_VirtualData, m_RenderUBOs[0]);
-		m_DrawLinePass->Execute(m_LineData, m_RenderUBOs[0]);
-		if (m_DrawDebug) {
-			m_DebugPass->Execute(m_ScreenQuad);
-		}
 	}
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
@@ -39,8 +35,8 @@ namespace Aho {
 			return m_GBufferPass->GetRenderTarget();
 		case RenderPassType::SSAOLighting:
 			return m_SSAOLightingPass->GetRenderTarget();
-		case RenderPassType::Final:
-			return m_ResultPass->GetRenderTarget();
+		case RenderPassType::Shading:
+			return m_ShadingPass->GetRenderTarget();
 		case RenderPassType::Pick:
 			return m_PickingPass->GetRenderTarget();
 		case RenderPassType::Blur:
@@ -60,10 +56,10 @@ namespace Aho {
 	// TODO: devise a better way
 	void RenderPipeline::SortRenderPasses() {
 		auto it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
-			return targetPass->GetRenderPassType() == RenderPassType::Final;
+			return targetPass->GetRenderPassType() == RenderPassType::Shading;
 			});
 		if (it != m_RenderPasses.end()) {
-			m_ResultPass = *it;
+			m_ShadingPass = *it;
 		}
 		it = std::find_if(m_RenderPasses.begin(), m_RenderPasses.end(), [](RenderPass* targetPass) {
 			return targetPass->GetRenderPassType() == RenderPassType::Debug;

@@ -65,7 +65,7 @@ namespace Aho {
 		}
 	};
 
-	const int MAX_BONES_CNT = 200;
+	const int MAX_BONES_CNT = 500;
 	struct alignas(16) SkeletalUBO {
 		glm::mat4 u_View{ 0.0f };
 		glm::mat4 u_Projection{ 0.0f };

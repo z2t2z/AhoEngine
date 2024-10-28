@@ -91,7 +91,7 @@ namespace Aho {
 			static bool sens = false;
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
-					ImGui::MenuItem("DebugView", NULL, &m_DrawDepthMap);
+					ImGui::MenuItem("DebugView", NULL, &GlobalState::g_ShowDebug);
 					ImGui::MenuItem("PickingPass", NULL, &m_PickingPass);
 					if (ImGui::BeginMenu("Camera Options")) {
 						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
@@ -161,13 +161,10 @@ namespace Aho {
 
 		auto [width, height] = ImGui::GetWindowSize();
 		m_ViewportWidth = width, m_ViewportHeight = height;
-		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetSpecification();
+		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Shading)->GetSpecification();
 		if (spec.Width != m_ViewportWidth || spec.Height != m_ViewportHeight/* - ImGui::GetFrameHeight() */) {
 			for (const auto& renderPass : *m_Renderer->GetCurrentRenderPipeline()) {
-				if (renderPass->GetRenderPassType() == RenderPassType::Pick) {
-					renderPass->GetRenderTarget()->Resize(m_ViewportWidth * 0.3f, m_ViewportHeight * 0.3f);
-				}
-				else if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
+				if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
 					renderPass->GetRenderTarget()->Resize(m_ViewportWidth, m_ViewportHeight);
 				}
 			}
@@ -177,13 +174,14 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->GetLastColorAttachment();
+			//GlobalState::g_ShowDebug = true;
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Final)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
 		}
 		ImGui::Image((ImTextureID)RenderResult, ImVec2{ width, height }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
@@ -199,7 +197,12 @@ namespace Aho {
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
 				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(4, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
-				GlobalState::selectedEntityID = m_PickPixelData;
+				AHO_CORE_WARN("Gbuffer pass: {}", m_PickPixelData);
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->Bind();
+				uint32_t temp = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->ReadPixel(0, MouseX, MouseY, true);
+				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->Unbind();
+				AHO_CORE_WARN("Debug pass: {}", temp);
+				GlobalState::g_SelectedEntityID = m_PickPixelData;
 			}
 		}
 
@@ -449,6 +452,8 @@ namespace Aho {
 			ImGui::Selectable(tag.Tag.c_str(), &s_IsSelected);
 			if (ImGui::IsItemClicked()) {
 				s_SelectedEntity = entity;
+				m_PickPixelData = static_cast<uint32_t>(entity);
+				GlobalState::g_SelectedEntityID = m_PickPixelData;
 			}
 			if (entityManager->HasComponent<SkeletalComponent>(s_SelectedEntity)) {
 				const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);

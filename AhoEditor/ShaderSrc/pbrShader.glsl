@@ -96,7 +96,7 @@ float CalShadow(vec3 fragPos) {
 	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
 	float minDepth = texture(u_DepthMap, SS.xy).r;
 	float currDepth = SS.z;
-	return currDepth < minDepth + 0.001f ? 0.0f : 1.0f;
+	return currDepth < minDepth + 0.0001f ? 0.0f : 1.0f;
 }
 
 void main() {

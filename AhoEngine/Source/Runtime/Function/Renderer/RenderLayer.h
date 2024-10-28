@@ -24,7 +24,7 @@ namespace Aho {
 		RenderPass* SetupSSAOLightingPass();
 		RenderPass* SetupDebugPass();
 		RenderPass* SetupShadowMapPass();
-		RenderPass* SetupMainPass();
+		RenderPass* SetupShadingPass();
 		RenderPass* SetupPickingPass();
 		RenderPass* SetupSSRPass();
 		RenderPass* SetupHiZPass();

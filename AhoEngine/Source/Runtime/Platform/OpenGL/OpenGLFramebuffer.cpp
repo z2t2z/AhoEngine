@@ -188,6 +188,10 @@ namespace Aho {
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_DepthAttachment);
 			m_DepthTex->SetTextureID(m_DepthAttachment);
 			glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 		}
@@ -195,6 +199,7 @@ namespace Aho {
 		// if has color attachments, invalidate them
 		if (!m_ColorAttachmentSpecifications.empty()) {
 			InvalidateColorAttachment();
+			RebindSharedAttachments();
 			glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
 		}
 		else {
@@ -208,6 +213,7 @@ namespace Aho {
 	void OpenGLFramebuffer::Bind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
+		glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
 	}
 
 	void OpenGLFramebuffer::Unbind() {
@@ -224,6 +230,43 @@ namespace Aho {
 		Invalidate();
 	}
 
+	void OpenGLFramebuffer::EnableAttachments(uint32_t start, uint32_t cnt) {
+		if (cnt == 0) {
+			cnt = m_Attchments.size();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
+		if (cnt == 0) {
+			glDrawBuffer(GL_NONE);
+			glReadBuffer(GL_NONE);
+		}
+		else {
+			glDrawBuffers(cnt, m_Attchments.data() + start);
+		}
+	}
+
+	void OpenGLFramebuffer::BindSharedColorAttachment(Texture* attachment) {
+		Bind();
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + m_ColorAttachmentTex.size() + m_SharedAttachmentTex.size(), GL_TEXTURE_2D, attachment->GetTextureID(), 0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			AHO_CORE_ASSERT("Binding shared color attachment failed");
+		}
+		m_Attchments.push_back(GL_COLOR_ATTACHMENT0 + m_ColorAttachmentTex.size() + m_SharedAttachmentTex.size());
+		m_SharedAttachmentTex.push_back(attachment);
+		glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
+		Unbind();
+	}
+
+	void OpenGLFramebuffer::BindSharedDepthAttachment(Texture* attachment) {
+		Bind();
+		m_SharedDepthTex = attachment;
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, attachment->GetTextureID(), 0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			AHO_CORE_ASSERT("Binding shared depth attachment failed");
+		}
+		Unbind();
+	}
+
 	Texture* OpenGLFramebuffer::GetDepthTexture() {
 		return m_DepthTex;
 	}
@@ -236,8 +279,9 @@ namespace Aho {
 		return m_ColorAttachmentTex[index];
 	}
 
-	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y) {
-		if (attachmentIndex >= m_ColorAttachmentTex.size()) {
+	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, bool shared) {
+		const auto& readSource = shared ? m_SharedAttachmentTex : m_ColorAttachmentTex;
+		if (attachmentIndex >= readSource.size()) {
 			AHO_CORE_ERROR("Attachment index out of bound: {}", attachmentIndex);
 			return 0u;
 		}
@@ -245,12 +289,14 @@ namespace Aho {
 			AHO_CORE_ERROR("Attempting to read pixel data from an invalid position: {0}, {1}", x, y);
 			return 0u;
 		}
-		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		uint32_t offset = shared ? m_ColorAttachmentTex.size() : 0;
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + offset + attachmentIndex);
 		uint32_t pixelData;
-		auto dataFormat = m_ColorAttachmentSpecifications[attachmentIndex].dataFormat;
-		auto dataType = m_ColorAttachmentSpecifications[attachmentIndex].dataType;
-		glReadPixels(x, y, 1, 1, Utils::GetGLParam(dataFormat), Utils::GetGLParam(dataType), &pixelData);
-		AHO_CORE_WARN("{}", pixelData);
+		// TODO;;
+		//auto dataFormat = readSource[attachmentIndex]->GetSpecification().dataFormat;
+		//auto dataType = readSource.dataType;
+		//glReadPixels(x, y, 1, 1, Utils::GetGLParam(dataFormat), Utils::GetGLParam(dataType), &pixelData);
+		glReadPixels(x, y, 1, 1, Utils::GetGLParam(FBDataFormat::UINT), GL_UNSIGNED_BYTE, &pixelData);
 		return pixelData;
 	}
 
@@ -292,6 +338,20 @@ namespace Aho {
 				glGenerateMipmap(target);
 			}
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, id, 0);
+		}
+	}
+
+	void OpenGLFramebuffer::RebindSharedAttachments() {
+		uint32_t offset = m_ColorAttachmentTex.size();
+		for (auto colorAttachment : m_SharedAttachmentTex) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + offset, GL_TEXTURE_2D, colorAttachment->GetTextureID(), 0);
+			offset++;
+		}
+		if (m_SharedDepthTex) {
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_SharedDepthTex->GetTextureID(), 0);
+		}
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			AHO_CORE_ASSERT("Binding shared depth attachment failed");
 		}
 	}
 }

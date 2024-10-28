@@ -20,6 +20,9 @@ namespace Aho {
 		//glEnable(GL_CULL_FACE);    
 		//glCullFace(GL_BACK);       
 		//glFrontFace(GL_CCW);       
+		//GLint maxUniformBlockSize;
+		//glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockSize);
+		//AHO_CORE_INFO("{}", maxUniformBlockSize);
 
 		//AHO_CORE_INFO("OpenGL Info:");
 		//AHO_CORE_INFO("Vendor: {0}", glGetString(GL_VENDOR));
