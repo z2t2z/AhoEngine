@@ -148,52 +148,49 @@ namespace Aho {
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		{
-			CameraUBO* camUBO = new CameraUBO();
-			camUBO->u_View = cam->GetView();
-			camUBO->u_Projection = cam->GetProjection();
-			camUBO->u_ViewInv = cam->GetViewInv();
-			camUBO->u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
-			UBOManager::UpdateUBOData<CameraUBO>(0, *camUBO);
-			delete camUBO;
+			CameraUBO camUBO;
+			camUBO.u_View = cam->GetView();
+			camUBO.u_Projection = cam->GetProjection();
+			camUBO.u_ViewInv = cam->GetViewInv();
+			camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+			UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 		}
 
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
-			LightUBO* lightUBO = new LightUBO();
+			LightUBO lightUBO;
 			auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
 			view.each([&](auto entity, auto& pc, auto& tc) {
 				int index = pc.index;
 				if (pc.castShadow) {
-					float nearPlane = 0.1f, farPlane = 50.0f;
+					float nearPlane = 0.1f, farPlane = 20.0f;
 					glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-					auto lightMat = proj * glm::lookAt(glm::vec3(lightUBO->u_LightPosition[index]), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
-					lightUBO->u_LightPV[index] = lightMat;
+					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
+					lightUBO.u_LightPV[index] = lightMat;
 				}
-				lightUBO->u_Info[index].x = 1; // Flag: enabled or not
-				lightUBO->u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
-				lightUBO->u_LightColor[index] = pc.color;
+				lightUBO.u_Info[index].x = 1; // Flag: enabled or not
+				lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
+				lightUBO.u_LightColor[index] = pc.color;
 			});
-			UBOManager::UpdateUBOData<LightUBO>(1, *lightUBO);
-			delete lightUBO;
+			UBOManager::UpdateUBOData<LightUBO>(1, lightUBO);
 		}
 
 		{
 			auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
-			AnimationUBO* animationUBO = new AnimationUBO();
+			AnimationUBO animationUBO;
 			view.each([&](auto entity, auto& animator, auto& skeletal, auto& anim, auto& viewer) {
 				const BoneNode* root = skeletal.root;
 				const std::vector<glm::mat4>& globalMatrices = animator.globalMatrices;
 				int offset = animator.boneOffset;
 				for (size_t i = 0; i < globalMatrices.size(); i++) {
-					animationUBO->u_BoneMatrices[i + offset] = globalMatrices[i];
+					animationUBO.u_BoneMatrices[i + offset] = globalMatrices[i];
 				}
 			});
-			UBOManager::UpdateUBOData<AnimationUBO>(3, *animationUBO);
-			delete animationUBO;
+			UBOManager::UpdateUBOData<AnimationUBO>(3, animationUBO);
 		}
 
 		{
-			SkeletonUBO* skeletonUBO = new SkeletonUBO();
+			SkeletonUBO skeletonUBO;
 			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, EntityComponent>();
 			view.each([&](auto entity, auto& viewerComponent, auto& animatorComponent, auto& entityComponent) {
 				const auto& boneTransform = viewerComponent.viewer->GetBoneTransform();
@@ -201,13 +198,12 @@ namespace Aho {
 				const auto& entities = entityComponent.entities;
 				AHO_CORE_ASSERT(entities.size() == boneTransform.size());
 				for (size_t i = 0; i < boneTransform.size(); i++) {
-					skeletonUBO->u_BoneMatrices[i] = boneTransform[i];
-					skeletonUBO->u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
+					skeletonUBO.u_BoneMatrices[i] = boneTransform[i];
+					skeletonUBO.u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
 					//AHO_CORE_WARN("{}", skeletonUBO->u_BoneEntityID[i]);
 				}
 			});
-			UBOManager::UpdateUBOData<SkeletonUBO>(4, *skeletonUBO);
-			delete skeletonUBO;
+			UBOManager::UpdateUBOData<SkeletonUBO>(4, skeletonUBO);
 		}
 	}
 

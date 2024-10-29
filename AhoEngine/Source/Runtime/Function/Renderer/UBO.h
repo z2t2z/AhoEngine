@@ -53,7 +53,7 @@ namespace Aho {
 		glm::ivec4 u_Info[MAX_LIGHT_CNT]; // Enabled status; Light type; ...
 		LightUBO() {
 			for (int i = 0; i < MAX_LIGHT_CNT; i++) {
-				u_LightPosition[i] = u_LightColor[i] = glm::vec4(1.0f);
+				u_LightPosition[i] = u_LightColor[i] = glm::vec4(0.0f);
 				u_LightPosition[i].w = 1.0f;
 				u_Info[i] = glm::ivec4(0);
 			}

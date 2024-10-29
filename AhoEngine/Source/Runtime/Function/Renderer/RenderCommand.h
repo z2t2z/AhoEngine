@@ -5,6 +5,7 @@
 #include "RenderData.h"
 #include "Framebuffer.h"
 #include <memory>
+#include <glm/glm.hpp>
 #include <glad/glad.h>
 
 namespace Aho {
@@ -51,6 +52,7 @@ namespace Aho {
 		inline static void DrawBuffers(int siz, uint32_t* data) {
 			glDrawBuffers(siz, data);
 		}
+		static glm::vec4 s_DefaultClearColor;
 	private:
 		static RendererAPI* s_RendererAPI;
 	};

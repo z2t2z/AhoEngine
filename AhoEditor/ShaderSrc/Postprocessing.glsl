@@ -27,7 +27,7 @@ void main() {
 	uint sampleID = texelValue.r;
 	vec4 debugColor = texelFetch(u_Debug, texelPos, 0);
 
-	if (sampleID == u_SelectedEntityID || u_SelectedEntityID > 500) {
+	if (sampleID == u_SelectedEntityID || u_SelectedEntityID > 500 || u_SelectedEntityID == 0) {
 		out_Color = vec4(texelFetch(u_Result, texelPos, 0).rgb, 1.0f);
 	}
 	else {

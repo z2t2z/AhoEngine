@@ -115,7 +115,9 @@ namespace Aho {
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(4, 2);
+			RenderCommand::SetClearColor(glm::vec4(0.0f));
 			RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
+			RenderCommand::SetClearColor(RenderCommand::s_DefaultClearColor);
 			for (const auto& data : renderData) {
 				if (!data->ShouldBeRendered()) {
 					continue;
@@ -123,9 +125,7 @@ namespace Aho {
 				data->Bind(shader);
 				if (data->IsInstanced()) {
 					shader->SetBool("u_IsInstanced", true);
-					//RenderCommand::SetDepthTest(false);
 					RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()); // Draw skeleton using lines
-					//RenderCommand::SetDepthTest(true);
 				}
 				else {
 					shader->SetBool("u_IsInstanced", false);

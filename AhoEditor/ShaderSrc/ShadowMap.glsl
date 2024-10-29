@@ -44,9 +44,7 @@ void main() {
 		hasAnimationInfo = true;
 		skinningMatrix += a_BoneWeights[i] * u_BoneMatrices[id];
 	}
-	if (!hasAnimationInfo) {
-		skinningMatrix = mat4(1.0f);
-	} else {
+	if (hasAnimationInfo) {
 		finalPos = skinningMatrix * vec4(a_Position, 1.0f);
 	}
 	gl_Position = u_LightPV[0] * u_Model * finalPos;

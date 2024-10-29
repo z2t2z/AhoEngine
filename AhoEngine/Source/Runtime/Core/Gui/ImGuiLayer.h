@@ -19,7 +19,7 @@ namespace Aho {
 
 		void Begin();
 		void End();
-
+		void SetColorStyle();
 	private:
 		float m_Time = 0.0f;
 	

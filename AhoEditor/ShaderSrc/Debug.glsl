@@ -52,5 +52,5 @@ in flat uint v_EntityID;
 
 void main() {
 	g_Entity = v_EntityID;
-	out_Color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	out_Color = vec4(0.35f, 0.35f, 0.35f, 1.0f);
 }

@@ -70,7 +70,7 @@ namespace Aho {
 			m_ScreenQuad.back()->SetTransformParam(new TransformParam());
 			AHO_CORE_INFO("RenderPipelineDefault initialized");
 			RenderCommand::SetDepthTest(true);
-			RenderCommand::SetClearColor(glm::vec4{ 132.0f / 255.0f, 181.0f / 255.0f, 245.0f / 255.0f, 1.0f });
+			RenderCommand::SetClearColor(RenderCommand::s_DefaultClearColor);
 		}
 	};
 } // namespace Aho

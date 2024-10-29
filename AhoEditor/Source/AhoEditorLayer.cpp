@@ -220,9 +220,12 @@ namespace Aho {
 		auto& translation = tc.GetTranslation();
 		auto& scale = tc.GetScale();
 		auto& rotation = tc.GetRotation();
-		ImGui::DragFloat3("Translation", glm::value_ptr(translation), 0.1f);
-		ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f);
-		ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 0.1f); // in degrees
+		//ImGui::DragFloat3("Translation", glm::value_ptr(translation), 0.1f);
+		//ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.1f);
+		//ImGui::DragFloat3("Rotation", glm::value_ptr(rotation), 0.1f); // in degrees
+		DrawVec3Control("Translation", translation);
+		DrawVec3Control("Scale", scale);
+		DrawVec3Control("Rotation", rotation);
 
 		if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
 			auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
@@ -244,29 +247,27 @@ namespace Aho {
 		ImGui::End();
 	}
 
-	static const float s_LightVisSize = 74.0f;
+	static const float s_LightVisSize = 60.0f;
 	void AhoEditorLayer::DrawLightIcons() {
-		//const auto lightData = m_LevelLayer->GetLightData();
-		//if (lightData->lightCnt) {
-		//	const auto& proj = m_CameraManager->GetMainEditorCamera()->GetProjection();
-		//	const auto& view = m_CameraManager->GetMainEditorCamera()->GetView();
-		//	auto [ww, wh] = ImGui::GetWindowSize();
-		//	auto [wx, wy] = ImGui::GetWindowPos();
-		//	for (int i = 0; i < lightData->lightCnt; i++) {
-		//		auto p = proj * view * lightData->lightPosition[i];
-		//		if (p.w <= 0.0f) {
-		//			continue;
-		//		}
-		//		auto ndc = p / p.w;
-		//		auto ss = ndc * 0.5f + 0.5f;
-		//		if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
-		//			ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2 };
-		//			ImGui::SetCursorScreenPos(pos);
-		//			ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
-		//			ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-		//		}
-		//	}
-		//}
+		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+		const auto& projMat = m_CameraManager->GetMainEditorCamera()->GetProjection();
+		const auto& viewMat = m_CameraManager->GetMainEditorCamera()->GetView();
+		auto [ww, wh] = ImGui::GetWindowSize();
+		auto [wx, wy] = ImGui::GetWindowPos();
+		auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
+		view.each([&](auto entity, auto& pointLiightComponent, auto& transformComponent) {
+			auto clipSpace = projMat * viewMat * glm::vec4(transformComponent.GetTranslation(), 1.0f);
+			if (clipSpace.w > 0.0f) {
+				auto ndc = clipSpace / clipSpace.w;
+				auto ss = ndc * 0.5f + 0.5f;
+				if (ss.x >= 0.0f && ss.x <= 1.0f && ss.y >= 0.0f && ss.y <= 1.0f) {
+					ImVec2 pos{ wx + ww * ss.x - s_LightVisSize / 2, wy + wh * (1.0f - ss.y) - s_LightVisSize / 2 };
+					ImGui::SetCursorScreenPos(pos);
+					ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
+					ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+				}
+			}
+		});
 	}
 
 	// Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
@@ -453,10 +454,75 @@ namespace Aho {
 				DrawNode(skeletalComponent.root);
 			}
 
-			});
+		});
 		
 
 		ImGui::End();
+	}
+
+	void AhoEditorLayer::DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth) {
+		ImGuiIO& io = ImGui::GetIO();
+		auto boldFont = io.Fonts->Fonts[0];
+
+		ImGui::PushID(label.c_str());
+
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, columnWidth);
+		ImGui::Text(label.c_str());
+		ImGui::NextColumn();
+
+		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
+
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("X", buttonSize))
+			values.x = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Y", buttonSize))
+			values.y = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Z", buttonSize))
+			values.z = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+
+		ImGui::PopStyleVar();
+
+		ImGui::Columns(1);
+
+		ImGui::PopID();
 	}
 
 	void AhoEditorLayer::TryGetDragDropTarget() {

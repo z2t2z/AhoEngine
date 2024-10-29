@@ -93,6 +93,9 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float CalShadow(vec3 fragPos) {
+	if (u_Info[0].x == 0) {
+		return 0.0f;
+	}
 	vec3 worldPos = (u_ViewInv * vec4(fragPos, 1.0f)).xyz;
 	vec4 lsPos = u_LightPV[0] * vec4(worldPos, 1.0f);
 	vec3 NDC = lsPos.xyz;// / lsPos.w; // [-1, 1]
@@ -147,7 +150,7 @@ void main() {
 	}
 
 	vec3 Ambient = vec3(0.1f) * AO * Albedo;
-	vec3 Color = Ambient + Lo * (1.0f - CalShadow(fragPos));
+	vec3 Color = Ambient + Lo * (1.0f - 0.0f);
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 	//Color = mix(specularMap, Color, 0.8f);
