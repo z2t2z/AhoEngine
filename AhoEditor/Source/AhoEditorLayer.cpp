@@ -198,10 +198,6 @@ namespace Aho {
 				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(4, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
 				AHO_CORE_WARN("Gbuffer pass: {}", m_PickPixelData);
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->Bind();
-				uint32_t temp = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->ReadPixel(0, MouseX, MouseY, true);
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->Unbind();
-				AHO_CORE_WARN("Debug pass: {}", temp);
 				GlobalState::g_SelectedEntityID = m_PickPixelData;
 			}
 		}
@@ -244,9 +240,6 @@ namespace Aho {
 			ImGui::Separator();
 			ImGui::Text("Light Color:");
 			ImGui::ColorPicker3("Color Picker", glm::value_ptr(pc.color));
-			//auto lightData = m_LevelLayer->GetLightData();
-			//lightData->lightPosition[pc.count] = glm::vec4(translation, 1.0f);
-			//lightData->lightColor[pc.count] = glm::vec4(pc.color);
 		}
 		ImGui::End();
 	}

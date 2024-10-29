@@ -81,7 +81,7 @@ namespace Aho {
 	};
 
 	// For animation, read by vertices
-	constexpr int MAX_BONES_CNT = 500;
+	constexpr int MAX_BONES_CNT = 200;
 	struct alignas(16) AnimationUBO {
 		glm::mat4 u_BoneMatrices[MAX_BONES_CNT];
 		AnimationUBO() {
@@ -94,10 +94,13 @@ namespace Aho {
 	// For visual debugging
 	struct alignas(16) SkeletonUBO {
 		glm::mat4 u_BoneMatrices[MAX_BONES_CNT];
-		std::array<uint32_t, MAX_BONES_CNT> u_BoneEntityID{ 0 };
+		//std::array<uint32_t, MAX_BONES_CNT> u_BoneEntityID{ 0 };
+		//uint32_t u_BoneEntityID[MAX_BONES_CNT];
+		glm::ivec4 u_BoneEntityID[MAX_BONES_CNT];
 		SkeletonUBO() {
 			for (int i = 0; i < MAX_BONES_CNT; i++) {
 				u_BoneMatrices[i] = glm::mat4(1.0f);
+				u_BoneEntityID[i] = glm::ivec4(10000000);
 			}
 		}
 	};

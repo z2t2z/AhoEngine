@@ -23,7 +23,7 @@ namespace Aho {
 
 	void LevelLayer::OnUpdate(float deltaTime) {
 		// UpdatePhysics();
-		UpdateAnimation(deltaTime);
+		//UpdateAnimation(deltaTime);
 		UpdataUBOData();
 	}
 
@@ -82,13 +82,32 @@ namespace Aho {
 
 				// Adding all its bones to the ecs system
 				const auto& nodeIndexMap = viewer->GetBoneNodeIndexMap();
+				const auto& map = viewer->GetBoneTransform();
 				auto& entityComponent = entityManager->AddComponent<EntityComponent>(entity);
-				for (const auto& [boneNode, index] : nodeIndexMap) {
-					auto boneEntity = entityManager->CreateEntity(boneNode->bone.name);
-					TransformParam* param = new TransformParam(boneNode->transform);  // Note that adding the model-space transform here
-					entityManager->AddComponent<TransformComponent>(boneEntity, param);
+				for (int i = 0; i < map.size(); i++) {
+					auto boneEntity = entityManager->CreateEntity(std::to_string(i));
+					//TransformParam* param = new TransformParam(boneNode->transform);  // Note that adding the model-space transform here
+					//entityManager->AddComponent<TransformComponent>(boneEntity, param);
 					entityComponent.entities.push_back(boneEntity.GetEntityHandle());
+					AHO_CORE_WARN("{}", static_cast<uint32_t>(boneEntity.GetEntityHandle()));
 				}
+
+				// Also upload a bone render data set as debug for skeleton visualization
+				std::vector<std::shared_ptr<RenderData>> renderDataAll;
+				for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
+					std::shared_ptr<VertexArray> vao;
+					vao.reset(VertexArray::Create());
+					vao->Init(meshInfo);
+					std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+					renderData->SetVAOs(vao);
+					renderData->SetDebug();
+					renderData->SetInstanced();
+					vao->SetInstancedAmount(map.size());
+					//AHO_CORE_ERROR("{}", asset->GetBoneCnt());
+					renderData->SetTransformParam(transformComponent.transformPara);
+					renderDataAll.push_back(renderData);
+				}
+				UploadRenderDataEventTrigger(renderDataAll);
 			}
 		});
 
@@ -141,8 +160,8 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
 			LightUBO* lightUBO = new LightUBO();
-			auto view0 = entityManager->GetView<PointLightComponent, TransformComponent>();
-			view0.each([&](auto entity, auto& pc, auto& tc) {
+			auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
+			view.each([&](auto entity, auto& pc, auto& tc) {
 				int index = pc.index;
 				if (pc.castShadow) {
 					float nearPlane = 0.1f, farPlane = 50.0f;
@@ -158,10 +177,10 @@ namespace Aho {
 			delete lightUBO;
 		}
 
-		auto view1 = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
 		{
+			auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
 			AnimationUBO* animationUBO = new AnimationUBO();
-			view1.each([&](auto entity, auto& animator, auto& skeletal, auto& anim, auto& viewer) {
+			view.each([&](auto entity, auto& animator, auto& skeletal, auto& anim, auto& viewer) {
 				const BoneNode* root = skeletal.root;
 				const std::vector<glm::mat4>& globalMatrices = animator.globalMatrices;
 				int offset = animator.boneOffset;
@@ -175,12 +194,16 @@ namespace Aho {
 
 		{
 			SkeletonUBO* skeletonUBO = new SkeletonUBO();
-			view1.each([&](auto entity, auto& animator, auto& skeletal, auto& anim, auto& viewer) {
-				const BoneNode* root = skeletal.root;
-				const auto& boneTransform = viewer.viewer->GetBoneTransform();
-				int offset = animator.boneOffset;
+			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, EntityComponent>();
+			view.each([&](auto entity, auto& viewerComponent, auto& animatorComponent, auto& entityComponent) {
+				const auto& boneTransform = viewerComponent.viewer->GetBoneTransform();
+				int offset = animatorComponent.boneOffset;
+				const auto& entities = entityComponent.entities;
+				AHO_CORE_ASSERT(entities.size() == boneTransform.size());
 				for (size_t i = 0; i < boneTransform.size(); i++) {
 					skeletonUBO->u_BoneMatrices[i] = boneTransform[i];
+					skeletonUBO->u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
+					//AHO_CORE_WARN("{}", skeletonUBO->u_BoneEntityID[i]);
 				}
 			});
 			UBOManager::UpdateUBOData<SkeletonUBO>(4, *skeletonUBO);
@@ -198,13 +221,14 @@ namespace Aho {
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
+		int index = 0;
 		for (const auto& meshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity("subMesh");
+			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
 			//entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
 			entityManager->AddComponent<MeshComponent>(meshEntity);
 			TransformParam* param = new TransformParam();
@@ -219,7 +243,7 @@ namespace Aho {
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
-				auto matEntity = entityManager->CreateEntity("subMesh");
+				//auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
@@ -243,7 +267,6 @@ namespace Aho {
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MeshComponent>(gameObject);
-		//entityManager->AddComponent<EntityComponent>(gameObject);
 		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
 		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
@@ -255,8 +278,9 @@ namespace Aho {
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
 		if (asset->size() > 1) {
-			AHO_CORE_WARN("Skeletal mesh has more than one sub meshes, combinng as one assembly");  // TODO: add a path
+			// WARN
 		}
+		int index = 0;
 		for (const auto& skMeshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -272,7 +296,7 @@ namespace Aho {
 			//entityManager->AddComponent<MaterialComponent>(gameObject, mat); // TODO;
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {
-				auto matEntity = entityManager->CreateEntity("subMesh");
+				//auto matEntity = entityManager->CreateEntity(asset->GetName() + "_mat_" + std::to_string(index++));
 				for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
@@ -286,21 +310,7 @@ namespace Aho {
 			renderDataAll.push_back(renderData);
 		}
 		AHO_CORE_ASSERT(param, "Something wrong when initializing skeletal mesh's transform parameter!");
-
-		// Also upload a bone render data set as debug for skeleton visualization
-		for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			renderData->SetDebug();
-			renderData->SetInstanced();
-			vao->SetInstancedAmount(asset->GetBoneCnt());
-			renderData->SetTransformParam(param);
-			renderDataAll.push_back(renderData);
-		}
-		//asset.reset();
+		asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 } // namespace Aho

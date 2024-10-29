@@ -19,7 +19,7 @@ layout(std140, binding = 0) uniform CameraUBO {
 
 // For animation, read by vertices
 const int MAX_BONE_INFLUENCE = 4;
-const int MAX_BONES_CNT = 500;
+const int MAX_BONES_CNT = 200;
 layout(std140, binding = 3) uniform AnimationUBO {
 	mat4 u_BoneMatrices[MAX_BONES_CNT];
 };
