@@ -155,17 +155,11 @@ namespace Aho {
 		auto RetrieveBonesInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
 			for (uint32_t i = 0; i < mesh->mNumBones; i++) {
 				std::string boneName(mesh->mBones[i]->mName.C_Str());
-				//if (!boneNodeCache.contains(boneName)) {
-				//	BoneNode* nodeInfo = new BoneNode(Bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix)));
-				//	boneNodeCache[boneName] = nodeInfo;
-				//}
-				//auto node = boneNodeCache.at(boneName);
 				if (!boneCache.contains(boneName)) {
 					Bone bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix));
 					boneCache[boneName] = bone;
 				}
 				Bone& bone = boneCache[boneName];
-				//int id = node->bone.id;
 				int id = bone.id;
 				auto weights = mesh->mBones[i]->mWeights;
 				int numWeights = mesh->mBones[i]->mNumWeights;
@@ -249,32 +243,65 @@ namespace Aho {
 
 		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
 			std::string boneName = node->mName.C_Str();
-			//if (!boneNodeCache.contains(boneName)) {
-			//	BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f)));
-			//	boneNodeCache[boneName] = boneNode;
-			//}
-			BoneNode* boneNode = (boneCache.contains(boneName) ? new BoneNode(boneCache[boneName]) : new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f))));
+			BoneNode* boneNode;
+			if (boneCache.contains(boneName)) {
+				boneNode = new BoneNode(boneCache[boneName]);
+				boneNode->hasInfluence = true;
+			}
+			else {
+				boneNode = new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f)));
+			}
 			boneNodeCache[boneName] = boneNode;
-			BoneNode* currNode = boneNodeCache[boneName];
-			currNode->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
-			currNode->parent = parent;
+			boneNode->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
+			boneNode->transformParam = new TransformParam(glm::mat4(1.0f));
+			boneNode->parent = parent;
 			for (uint32_t i = 0; i < node->mNumChildren; i++) {
-				auto res = self(self, node->mChildren[i], currNode);
+				auto res = self(self, node->mChildren[i], boneNode);
 				if (res) {
-					currNode->children.push_back(res);
+					boneNode->children.push_back(res);
 				}
 			}
-			return currNode;
+			return boneNode;
+		};
+
+		auto Valid = [&](const aiNode* node) -> bool {
+			AHO_CORE_WARN("Checking bone: {}", node->mName.C_Str());
+			return boneCache.contains(node->mName.C_Str());
+		};
+
+		uint32_t testcnt = 0;
+		auto BuildHierarchyIgnoreExtraBones = [&](auto self, const aiNode* node, BoneNode* parent, BoneNode*& root) -> void {
+			if (Valid(node)) {
+				testcnt++;
+				BoneNode* curr = new BoneNode(boneCache.at(node->mName.C_Str()));
+				boneNodeCache[node->mName.C_Str()] = curr;
+				curr->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
+				curr->transformParam = new TransformParam(glm::mat4(1.0f));
+				curr->hasInfluence = true;
+				if (!parent) {
+					root = curr;
+				}
+				else {
+					curr->parent = parent;
+					parent->children.push_back(curr);
+				}
+				parent = curr;
+			}
+			for (uint32_t i = 0; i < node->mNumChildren; i++) {
+				self(self, node->mChildren[i], parent, root);
+			}
 		};
 
 		ProcessNode(scene->mRootNode, scene);
 		BoneNode* root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
-		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName);
+		AHO_CORE_ASSERT(root);
+		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName, boneCache.size());
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {
 		return std::make_shared<MaterialAsset>();
 	}
+
 	std::shared_ptr<AnimationAsset> AssetCreator::AnimationAssetCreator(const std::string& filePath, const std::shared_ptr<SkeletalMesh>& mesh) {
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate);
@@ -285,7 +312,7 @@ namespace Aho {
 
 		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 		auto& boneCache = mesh->GetBoneCache();
-		size_t boneCnt = boneCache.size();
+		size_t boneCnt = mesh->GetBoneCnt();
 		std::vector<std::vector<KeyframePosition>> Positions(boneCnt); // give it some paddings
 		std::vector<std::vector<KeyframeRotation>> Rotations(boneCnt);
 		std::vector<std::vector<KeyframeScale>> Scales(boneCnt);
@@ -294,36 +321,33 @@ namespace Aho {
 				auto channel = animation->mChannels[i];
 				std::string name = channel->mNodeName.data;
 				if (!boneCache.contains(name)) {
-					AHO_CORE_ASSERT(false, "Huuuuuuuh");
+					AHO_CORE_ERROR("Missing bone : {}", name);
+					continue;
+				}
+				AHO_CORE_WARN(name);
+				BoneNode* currNode = boneCache.at(name);
+				if (!currNode->hasInfluence) {
 					continue;
 				}
 				Bone& bone = boneCache.at(name)->bone;
 				bone.hasAnim = true;
 				// Filling animation data
-				if (Positions.size() < bone.id) {
-					Positions.resize(bone.id);
-				}
 				for (size_t i = 0; i < channel->mNumPositionKeys; i++) {
+					AHO_CORE_ASSERT(currNode->hasInfluence);
 					Positions[bone.id].emplace_back(Utils::AssimpVec3Convertor(channel->mPositionKeys[i].mValue), channel->mPositionKeys[i].mTime);
 				}
-				if (Rotations.size() < bone.id) {
-					Rotations.resize(bone.id);
-				}
 				for (size_t i = 0; i < channel->mNumRotationKeys; i++) {
+					AHO_CORE_ASSERT(currNode->hasInfluence);
 					Rotations[bone.id].emplace_back(glm::normalize(Utils::AssimpQuatConvertor(channel->mRotationKeys[i].mValue)), channel->mRotationKeys[i].mTime);
 				}
-				if (Scales.size() < bone.id) {
-					Scales.resize(bone.id);
-				}
 				for (size_t i = 0; i < channel->mNumScalingKeys; i++) {
+					AHO_CORE_ASSERT(currNode->hasInfluence);
 					Scales[bone.id].emplace_back(Utils::AssimpVec3Convertor(channel->mScalingKeys[i].mValue), channel->mScalingKeys[i].mTime);
 				}
 			}
 		};
 
 		auto animation = scene->mAnimations[0];
-		//aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
-		//globalTransformation = globalTransformation.Inverse();
 		float duration = animation->mDuration;
 		int TicksPerSecond = animation->mTicksPerSecond;
 		LoadKeyframesData(animation);

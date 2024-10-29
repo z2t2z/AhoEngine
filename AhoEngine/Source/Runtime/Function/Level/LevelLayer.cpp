@@ -23,7 +23,7 @@ namespace Aho {
 
 	void LevelLayer::OnUpdate(float deltaTime) {
 		// UpdatePhysics();
-		//UpdateAnimation(deltaTime);
+		UpdateSkeleton(deltaTime);
 		UpdataUBOData();
 	}
 
@@ -57,7 +57,7 @@ namespace Aho {
 		m_EventManager->PushBack(newEv);
 	}
 
-	void LevelLayer::UpdateAnimation(float deltaTime) {
+	void LevelLayer::UpdateSkeleton(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
 		view.each([deltaTime, this](auto entity, auto& animator, auto& skeletal, auto& animation, auto& viewer) {
@@ -84,12 +84,12 @@ namespace Aho {
 				const auto& nodeIndexMap = viewer->GetBoneNodeIndexMap();
 				const auto& map = viewer->GetBoneTransform();
 				auto& entityComponent = entityManager->AddComponent<EntityComponent>(entity);
-				for (int i = 0; i < map.size(); i++) {
-					auto boneEntity = entityManager->CreateEntity(std::to_string(i));
-					//TransformParam* param = new TransformParam(boneNode->transform);  // Note that adding the model-space transform here
-					//entityManager->AddComponent<TransformComponent>(boneEntity, param);
+				for (const auto& [node, index] : nodeIndexMap) {
+					auto boneEntity = entityManager->CreateEntity(node->bone.name);
+					BoneNode* nonConstNode = new BoneNode(*node);
+					entityManager->AddComponent<BoneComponent>(boneEntity, nonConstNode, node->bone.name);
+					entityManager->AddComponent<TransformComponent>(boneEntity, nonConstNode->transformParam);
 					entityComponent.entities.push_back(boneEntity.GetEntityHandle());
-					AHO_CORE_WARN("{}", static_cast<uint32_t>(boneEntity.GetEntityHandle()));
 				}
 
 				// Also upload a bone render data set as debug for skeleton visualization
@@ -103,7 +103,6 @@ namespace Aho {
 					renderData->SetDebug();
 					renderData->SetInstanced();
 					vao->SetInstancedAmount(map.size());
-					//AHO_CORE_ERROR("{}", asset->GetBoneCnt());
 					renderData->SetTransformParam(transformComponent.transformPara);
 					renderDataAll.push_back(renderData);
 				}

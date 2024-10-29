@@ -24,7 +24,7 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 	private:
-		void UpdateAnimation(float deltaTime);
+		void UpdateSkeleton(float deltaTime);
 		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
 		void AddLightSource(LightType lt);
 		void UpdataUBOData();

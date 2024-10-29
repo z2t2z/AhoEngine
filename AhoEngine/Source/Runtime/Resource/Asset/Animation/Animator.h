@@ -4,6 +4,8 @@
 
 namespace Aho {
 	static bool s_SkeletalVisualized = true;
+	static bool s_Animated = true;
+	static bool debug = false;
 	class Animator {
 	public:
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
@@ -14,9 +16,15 @@ namespace Aho {
 	private:
 		static void UpdateSkeletonTree(float currTime, std::vector<glm::mat4>& globalMatrices, glm::mat4 globalTrans, const std::shared_ptr<AnimationAsset>& anim,
 										const BoneNode* currNode, const BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
-			glm::mat4 localTransform = GetAnimationFinalMatrix(currTime, currNode, anim);
+			//glm::mat4 localTransform = currNode->transformParam->GetTransformQuat();
+			//glm::mat4 localTransform = currNode->transformParam->GetTransformQuat();
+			glm::mat4 localTransform = glm::mat4(1.0f);
+			if (currNode->hasInfluence && s_Animated) {
+				glm::mat4 translation, rotation, scale;
+				GetAnimationKeyframeMatrix(currTime, currNode, translation, rotation, scale, anim);
+				localTransform = translation * rotation * localTransform * scale;
+			}
 			globalTrans = globalTrans * localTransform;
-
 			const BoneNode* nxtValidParent = validParent;
 			glm::vec3 nxtParentPos = parentPos;
 			if (viewer->ShouldUpdate()) {
@@ -37,22 +45,23 @@ namespace Aho {
 					nxtParentPos = currPos;
 				}
 			}
-
-			globalMatrices[currNode->bone.id] = globalTrans * currNode->bone.offset;
+			if (currNode->hasInfluence) {
+				globalMatrices[currNode->bone.id] = globalTrans * (s_Animated ? currNode->bone.offset : glm::mat4(1.0f));
+			}
 			for (auto child : currNode->children) {
 				UpdateSkeletonTree(currTime, globalMatrices, globalTrans, anim, child, nxtValidParent, nxtParentPos, viewer);
 			}
 		}
 
-		static glm::mat4 GetAnimationFinalMatrix(float currTime, const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim) {
+		static void GetAnimationKeyframeMatrix(float currTime, const BoneNode* currNode, glm::mat4& trans, glm::mat4& rot, glm::mat4& scale, const std::shared_ptr<AnimationAsset>& anim) {
 			int id = currNode->bone.id;
 			std::string name = currNode->bone.name;
 			const auto& positions = anim->GetPositions(id);
 			const auto& rotations = anim->GetRotations(id);
 			const auto& scales = anim->GetScales(id);
-			glm::mat4 scale = glm::mat4(1.0f);
-			glm::mat4 trans = glm::mat4(1.0f);
-			glm::mat4 rot = glm::mat4(1.0f);
+			//glm::mat4 scale = glm::mat4(1.0f);
+			//glm::mat4 trans = glm::mat4(1.0f);
+			//glm::mat4 rot = glm::mat4(1.0f);
 			if (!scales.empty()) {
 				if (scales.size() == 1) {
 					scale = glm::scale(glm::mat4(1.0f), scales[0].attribute);
@@ -85,7 +94,6 @@ namespace Aho {
 					trans = Lerp(currTime, positions[prev], positions[nxt]);
 				}
 			}
-			return trans * rot * scale;
 		}
 
 		template<typename T>

@@ -54,16 +54,19 @@ namespace Aho {
 
 	class SkeletalMesh : public Asset {
 	public:
-		//SkeletalMesh(const std::string& path) {}
-		SkeletalMesh(const std::vector<std::shared_ptr<SkeletalMeshInfo>>& SubMesh, const std::map<std::string, BoneNode*>& boneCache, BoneNode* root, const std::string& name)
-			: m_SubMesh(SubMesh), m_BoneCache(boneCache), m_Root(root), Asset(name) {}
+		SkeletalMesh(const std::vector<std::shared_ptr<SkeletalMeshInfo>>& SubMesh, 
+					const std::map<std::string, BoneNode*>& boneCache, 
+					//const std::map<std::string, 
+					BoneNode* root, const std::string& name, uint32_t cnt)
+			: m_SubMesh(SubMesh), m_BoneCache(boneCache), m_Root(root), m_BonesCnt(cnt), Asset(name) {}
 		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<SkeletalMeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		BoneNode* GetRoot() { return m_Root; }
 		std::map<std::string, BoneNode*>& GetBoneCache() { return m_BoneCache; } // read only?
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
-		uint32_t GetBoneCnt() { return m_BoneCache.size(); }
+		uint32_t GetBoneCnt() { return m_BonesCnt; }
 	private:
+		uint32_t m_BonesCnt; // bones cnt that have actual influence on vertice
 		BoneNode* m_Root;
 		std::map<std::string, BoneNode*> m_BoneCache;
 		std::vector<std::shared_ptr<SkeletalMeshInfo>> m_SubMesh;

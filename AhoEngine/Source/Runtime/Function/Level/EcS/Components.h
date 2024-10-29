@@ -28,8 +28,8 @@ namespace Aho {
 
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
-		TransformComponent(const TransformComponent&) = default;
 		~TransformComponent() { delete transformPara; }
+		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(TransformParam* t) : transformPara(t) {}
 		glm::mat4 GetTransform() { return transformPara->GetTransform(); }
 		glm::vec3& GetTranslation() { return transformPara->Translation; }
@@ -96,14 +96,9 @@ namespace Aho {
 	};
 
 	struct BoneComponent {
+		BoneNode* node;
 		std::string name;
-		BoneComponent(const std::string& _name) : name(_name) {}
-	};
-
-	struct BonesComponent {
-		std::vector<BoneComponent> bones;
-		BonesComponent() = default;
-		BonesComponent(const std::vector<BoneComponent>& _bones) : bones(_bones) {}
+		BoneComponent(BoneNode* _node, const std::string& _name) : node(_node), name(_name) {}
 	};
 
 	struct SkeletonViewerComponent {

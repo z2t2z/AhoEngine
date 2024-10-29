@@ -51,19 +51,42 @@ namespace Aho {
 		glm::vec3 Scale;
 		glm::vec3 Rotation;
 		glm::quat Orientation;
+		glm::vec3 Skew;
+		glm::vec4 Perspective;
 		TransformParam(const glm::mat4& transform) {
-			glm::vec3 skew;
-			glm::vec4 perspective;
-			glm::decompose(transform, Scale, Orientation, Translation, skew, perspective);
+			glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
 		}
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() {
-			glm::mat4 result(1.0f);
-			result = glm::rotate(result, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			result = glm::rotate(result, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			result = glm::rotate(result, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-			result = glm::translate(glm::mat4(1.0f), Translation) * result * glm::scale(glm::mat4(1.0f), Scale);
-			return result;
+			//glm::mat4 result(1.0f);
+			//result = glm::rotate(result, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+			//result = glm::rotate(result, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+			//result = glm::rotate(result, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+			//result = glm::translate(glm::mat4(1.0f), Translation) * result * glm::scale(glm::mat4(1.0f), Scale);
+			Orientation = EulerToQuaternion(Rotation.x, Rotation.y, Rotation.z);
+			return GetTransformQuat();
+		}
+		glm::mat4 GetTransformQuat() {
+			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Orientation) * glm::scale(glm::mat4(1.0f), Scale);
+		}
+		static glm::quat EulerToQuaternion(float roll, float pitch, float yaw) {
+			roll = glm::radians(roll);
+			pitch = glm::radians(pitch);
+			yaw = glm::radians(yaw);
+
+			float cy = cos(yaw * 0.5f);
+			float sy = sin(yaw * 0.5f);
+			float cp = cos(pitch * 0.5f);
+			float sp = sin(pitch * 0.5f);
+			float cr = cos(roll * 0.5f);
+			float sr = sin(roll * 0.5f);
+
+			glm::quat q;
+			q.w = cr * cp * cy + sr * sp * sy;
+			q.x = sr * cp * cy - cr * sp * sy;
+			q.y = cr * sp * cy + sr * cp * sy;
+			q.z = cr * cp * sy - sr * sp * cy;
+			return q;
 		}
 	}; // TODO
 
@@ -127,6 +150,10 @@ namespace Aho {
 		BoneNode(Bone _bone) : bone(_bone) {}
 		~BoneNode() { for (auto child : children) delete child; }
 		Bone bone;
+		bool hasInfluence{ false };
+		// Local transform
+		TransformParam* transformParam{ nullptr };
+		// Transform comes in from file
 		glm::mat4 transform;
 		BoneNode* parent{ nullptr };
 		std::vector<BoneNode*> children;
