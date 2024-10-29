@@ -453,10 +453,7 @@ namespace Aho {
 				const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);
 				DrawNode(skeletalComponent.root);
 			}
-
 		});
-		
-
 		ImGui::End();
 	}
 

@@ -18,7 +18,6 @@ layout(std140, binding = 0) uniform CameraUBO {
 const int MAX_BONES_CNT = 200;
 layout(std140, binding = 4) uniform SkeletonUBO {
 	mat4 u_BoneMatrices[MAX_BONES_CNT];
-	// uint u_BoneEntityID[MAX_BONES_CNT];
 	uvec4 u_BoneEntityID[MAX_BONES_CNT];
 };
 

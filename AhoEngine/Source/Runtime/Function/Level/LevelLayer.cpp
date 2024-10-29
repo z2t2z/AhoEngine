@@ -23,7 +23,7 @@ namespace Aho {
 
 	void LevelLayer::OnUpdate(float deltaTime) {
 		// UpdatePhysics();
-		//UpdateAnimation(deltaTime);
+		UpdateAnimation(deltaTime);
 		UpdataUBOData();
 	}
 
@@ -80,16 +80,15 @@ namespace Aho {
 				entityManager->AddComponent<AnimationComponent>(entity, anim);
 				entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
 
+				auto& entityComponent = entityManager->AddComponent<EntityComponent>(entity); // store all bone entities
 				// Adding all its bones to the ecs system
+				const auto& transformMap = viewer->GetTransformMap();
 				const auto& nodeIndexMap = viewer->GetBoneNodeIndexMap();
-				const auto& map = viewer->GetBoneTransform();
-				auto& entityComponent = entityManager->AddComponent<EntityComponent>(entity);
-				for (int i = 0; i < map.size(); i++) {
-					auto boneEntity = entityManager->CreateEntity(std::to_string(i));
-					//TransformParam* param = new TransformParam(boneNode->transform);  // Note that adding the model-space transform here
-					//entityManager->AddComponent<TransformComponent>(boneEntity, param);
+				AHO_CORE_ASSERT(transformMap.size() == nodeIndexMap.size());
+				for (const auto& [node, transform] : transformMap) {
+					auto boneEntity = entityManager->CreateEntity(node->bone.name);
+					entityManager->AddComponent<TransformComponent>(boneEntity, node->transformParam); // Note that adding the model-space transform
 					entityComponent.entities.push_back(boneEntity.GetEntityHandle());
-					AHO_CORE_WARN("{}", static_cast<uint32_t>(boneEntity.GetEntityHandle()));
 				}
 
 				// Also upload a bone render data set as debug for skeleton visualization
@@ -102,8 +101,7 @@ namespace Aho {
 					renderData->SetVAOs(vao);
 					renderData->SetDebug();
 					renderData->SetInstanced();
-					vao->SetInstancedAmount(map.size());
-					//AHO_CORE_ERROR("{}", asset->GetBoneCnt());
+					vao->SetInstancedAmount(transformMap.size());
 					renderData->SetTransformParam(transformComponent.transformPara);
 					renderDataAll.push_back(renderData);
 				}
@@ -194,13 +192,18 @@ namespace Aho {
 			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, EntityComponent>();
 			view.each([&](auto entity, auto& viewerComponent, auto& animatorComponent, auto& entityComponent) {
 				const auto& boneTransform = viewerComponent.viewer->GetBoneTransform();
+				const auto& transformMap = viewerComponent.viewer->GetTransformMap();
+				const auto& nodeIndexMap = viewerComponent.viewer->GetBoneNodeIndexMap();
 				int offset = animatorComponent.boneOffset;
 				const auto& entities = entityComponent.entities;
-				AHO_CORE_ASSERT(entities.size() == boneTransform.size());
-				for (size_t i = 0; i < boneTransform.size(); i++) {
-					skeletonUBO.u_BoneMatrices[i] = boneTransform[i];
+				AHO_CORE_ASSERT(entities.size() == transformMap.size());
+				size_t i = 0;
+				for (const auto& [node, transform] : transformMap) {
+					//skeletonUBO.u_BoneMatrices[node->bone.id] = boneTransform[i];
+					//skeletonUBO.u_BoneEntityID[node->bone.id].x = static_cast<uint32_t>(entities[i++]);
+					skeletonUBO.u_BoneMatrices[i] = boneTransform[nodeIndexMap.at(node)];
 					skeletonUBO.u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
-					//AHO_CORE_WARN("{}", skeletonUBO->u_BoneEntityID[i]);
+					i += 1;
 				}
 			});
 			UBOManager::UpdateUBOData<SkeletonUBO>(4, skeletonUBO);

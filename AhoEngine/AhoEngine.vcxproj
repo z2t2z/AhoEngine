@@ -161,6 +161,7 @@
     <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\EditorCamera.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h" />
+    <ClInclude Include="Source\Runtime\Function\Gameplay\IKSolver.h" />
     <ClInclude Include="Source\Runtime\Function\Level\EcS\Components.h" />
     <ClInclude Include="Source\Runtime\Function\Level\EcS\Entity.h" />
     <ClInclude Include="Source\Runtime\Function\Level\EcS\EntityManager.h" />

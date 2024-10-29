@@ -47,25 +47,71 @@ namespace Aho {
 	};
 
 	struct TransformParam {
-		glm::vec3 Translation;
-		glm::vec3 Scale;
-		glm::vec3 Rotation;
+		glm::vec3 Translation{ 0.0f };
+		glm::vec3 Scale{ 1.0f };
+		glm::vec3 Rotation{ 0.0f };
 		glm::quat Orientation;
 		TransformParam(const glm::mat4& transform) {
-			glm::vec3 skew;
-			glm::vec4 perspective;
-			glm::decompose(transform, Scale, Orientation, Translation, skew, perspective);
+			glm::vec3 Skew;
+			glm::vec4 Perspective;
+			glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
+			Rotation = QuaternionToEuler(Orientation);
+			Rotation.x = glm::degrees(Rotation.x);
+			Rotation.y = glm::degrees(Rotation.y);
+			Rotation.z = glm::degrees(Rotation.z);
 		}
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() {
-			glm::mat4 result(1.0f);
-			result = glm::rotate(result, glm::radians(Rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-			result = glm::rotate(result, glm::radians(Rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-			result = glm::rotate(result, glm::radians(Rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-			result = glm::translate(glm::mat4(1.0f), Translation) * result * glm::scale(glm::mat4(1.0f), Scale);
-			return result;
+			Orientation = EulerToQuaternion(Rotation.x, Rotation.y, Rotation.z);
+			return GetTransformQuat();
 		}
+		glm::mat4 GetTransformQuat() {
+			return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Orientation) * glm::scale(glm::mat4(1.0f), Scale);
+		}
+		static glm::vec3 QuaternionToEuler(const glm::quat& q) {
+			glm::vec3 euler;
+
+			// Roll (x-axis rotation)
+			float sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+			float cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+			euler.x = std::atan2(sinr_cosp, cosr_cosp);
+
+			// Pitch (y-axis rotation)
+			float sinp = 2 * (q.w * q.y - q.z * q.x);
+			if (std::abs(sinp) >= 1)
+				euler.y = std::copysign(glm::half_pi<float>(), sinp);  // Use 90 degrees if out of range
+			else
+				euler.y = std::asin(sinp);
+
+			// Yaw (z-axis rotation)
+			float siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+			float cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+			euler.z = std::atan2(siny_cosp, cosy_cosp);
+
+			return euler;
+		}
+
+		static glm::quat EulerToQuaternion(float roll, float pitch, float yaw) {
+			roll = glm::radians(roll);
+			pitch = glm::radians(pitch);
+			yaw = glm::radians(yaw);
+
+			float cy = cos(yaw * 0.5f);
+			float sy = sin(yaw * 0.5f);
+			float cp = cos(pitch * 0.5f);
+			float sp = sin(pitch * 0.5f);
+			float cr = cos(roll * 0.5f);
+			float sr = sin(roll * 0.5f);
+
+			glm::quat q;
+			q.w = cr * cp * cy + sr * sp * sy;
+			q.x = sr * cp * cy - cr * sp * sy;
+			q.y = cr * sp * cy + sr * cp * sy;
+			q.z = cr * cp * sy - sr * sp * cy;
+			return q;
+		} // TODO: move to some math.h
 	}; // TODO
+
 
 	struct KeyframePosition {
 		glm::vec3 attribute{ 0.0f };
@@ -127,7 +173,9 @@ namespace Aho {
 		BoneNode(Bone _bone) : bone(_bone) {}
 		~BoneNode() { for (auto child : children) delete child; }
 		Bone bone;
+		bool hasInfluence{ false };
 		glm::mat4 transform;
+		TransformParam* transformParam{ nullptr };
 		BoneNode* parent{ nullptr };
 		std::vector<BoneNode*> children;
 	};

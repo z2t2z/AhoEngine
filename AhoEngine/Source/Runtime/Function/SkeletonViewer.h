@@ -16,9 +16,11 @@ namespace Aho {
 			BuildSkeleton();
 		}
 		~SkeletonViewer() = default;
+
 		const std::vector<glm::mat4>& GetBoneTransform() { return m_BoneTransform; }
-		const std::map<const BoneNode*, uint32_t>& GetBoneNodeIndexMap() { return m_NodeIndexMap; }
-		void Update(const BoneNode* curr, const glm::mat4& updateMatrix) {
+		const std::map<BoneNode*, uint32_t>& GetBoneNodeIndexMap() { return m_NodeIndexMap; }
+		const std::map<BoneNode*, glm::mat4>& GetTransformMap() { return m_TransformMap; }
+		void Update(BoneNode* curr, const glm::mat4& updateMatrix) {
 			if (m_NodeIndexMap.contains(curr)) {
 				m_BoneTransform[m_NodeIndexMap.at(curr)] = updateMatrix;
 			}
@@ -31,7 +33,7 @@ namespace Aho {
 
 	private:
 		void BuildSkeleton() {
-			auto dfs = [&](auto self, const BoneNode* curr, const BoneNode* parent, glm::vec3 parentPos, glm::mat4 globalMatrix) -> void {
+			auto dfs = [&](auto self, BoneNode* curr, const BoneNode* parent, glm::vec3 parentPos, glm::mat4 globalMatrix) -> void {
 				glm::mat4 localMatrix = curr->transform;
 				globalMatrix = globalMatrix * localMatrix;
 				glm::vec3 currPos = glm::vec3(globalMatrix[3]);
@@ -49,6 +51,7 @@ namespace Aho {
 						glm::mat4 translation = glm::translate(glm::mat4(1.0f), parentPos);
 						m_NodeIndexMap[curr] = m_BoneTransform.size();
 						m_BoneTransform.push_back(translation * rotate * scale);
+						m_TransformMap[curr] = translation * rotate * scale;
 					}
 					nxtParent = curr;
 					nxtParentPoint = currPos;
@@ -61,7 +64,8 @@ namespace Aho {
 		}
 	private:
 		bool m_ShouldUpd{ true };
-		std::map<const BoneNode*, uint32_t> m_NodeIndexMap;
+		std::map<BoneNode*, uint32_t> m_NodeIndexMap;
+		std::map<BoneNode*, glm::mat4> m_TransformMap;
 		std::vector<glm::mat4> m_BoneTransform;
 		BoneNode* m_Root;
 	};

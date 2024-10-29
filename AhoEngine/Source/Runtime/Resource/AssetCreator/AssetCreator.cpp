@@ -257,7 +257,9 @@ namespace Aho {
 			boneNodeCache[boneName] = boneNode;
 			BoneNode* currNode = boneNodeCache[boneName];
 			currNode->transform = Utils::AssimpMatrixConvertor(node->mTransformation);
+			currNode->transformParam = new TransformParam(glm::mat4(1.0f));
 			currNode->parent = parent;
+			currNode->hasInfluence = boneCache.contains(boneName);
 			for (uint32_t i = 0; i < node->mNumChildren; i++) {
 				auto res = self(self, node->mChildren[i], currNode);
 				if (res) {
@@ -269,7 +271,7 @@ namespace Aho {
 
 		ProcessNode(scene->mRootNode, scene);
 		BoneNode* root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
-		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName);
+		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName, boneCache.size());
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {
@@ -285,7 +287,7 @@ namespace Aho {
 
 		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 		auto& boneCache = mesh->GetBoneCache();
-		size_t boneCnt = boneCache.size();
+		size_t boneCnt = mesh->GetBoneCnt();
 		std::vector<std::vector<KeyframePosition>> Positions(boneCnt); // give it some paddings
 		std::vector<std::vector<KeyframeRotation>> Rotations(boneCnt);
 		std::vector<std::vector<KeyframeScale>> Scales(boneCnt);

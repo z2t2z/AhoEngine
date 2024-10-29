@@ -7,17 +7,17 @@ namespace Aho {
 	class Animator {
 	public:
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
-							const BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
+							BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
 			UpdateSkeletonTree(currTime, globalMatrices, glm::mat4(1.0f), anim, root, nullptr, glm::vec3(0.0f), viewer);
 		}
 
 	private:
 		static void UpdateSkeletonTree(float currTime, std::vector<glm::mat4>& globalMatrices, glm::mat4 globalTrans, const std::shared_ptr<AnimationAsset>& anim,
-										const BoneNode* currNode, const BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
-			glm::mat4 localTransform = GetAnimationFinalMatrix(currTime, currNode, anim);
+										BoneNode* currNode, BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
+			glm::mat4 localTransform = GetAnimationFinalMatrix(currTime, currNode, anim) * currNode->transformParam->GetTransform();
 			globalTrans = globalTrans * localTransform;
 
-			const BoneNode* nxtValidParent = validParent;
+			BoneNode* nxtValidParent = validParent;
 			glm::vec3 nxtParentPos = parentPos;
 			if (viewer->ShouldUpdate()) {
 				if (currNode->bone.name.find("$AssimpFbx$") == std::string::npos) {
@@ -37,14 +37,18 @@ namespace Aho {
 					nxtParentPos = currPos;
 				}
 			}
-
-			globalMatrices[currNode->bone.id] = globalTrans * currNode->bone.offset;
+			if (currNode->hasInfluence) {
+				globalMatrices[currNode->bone.id] = globalTrans * currNode->bone.offset;
+			}
 			for (auto child : currNode->children) {
 				UpdateSkeletonTree(currTime, globalMatrices, globalTrans, anim, child, nxtValidParent, nxtParentPos, viewer);
 			}
 		}
 
 		static glm::mat4 GetAnimationFinalMatrix(float currTime, const BoneNode* currNode, const std::shared_ptr<AnimationAsset>& anim) {
+			if (!currNode->hasInfluence) {
+				return glm::mat4(1.0f);
+			}
 			int id = currNode->bone.id;
 			std::string name = currNode->bone.name;
 			const auto& positions = anim->GetPositions(id);

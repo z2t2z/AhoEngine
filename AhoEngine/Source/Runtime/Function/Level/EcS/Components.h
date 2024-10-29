@@ -29,7 +29,7 @@ namespace Aho {
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
 		TransformComponent(const TransformComponent&) = default;
-		~TransformComponent() { delete transformPara; }
+		//~TransformComponent() { delete transformPara; }
 		TransformComponent(TransformParam* t) : transformPara(t) {}
 		glm::mat4 GetTransform() { return transformPara->GetTransform(); }
 		glm::vec3& GetTranslation() { return transformPara->Translation; }

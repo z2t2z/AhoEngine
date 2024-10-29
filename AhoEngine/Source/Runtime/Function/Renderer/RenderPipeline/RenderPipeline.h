@@ -47,9 +47,6 @@ namespace Aho {
 		RenderPipelineDefault() { Initialize(); }
 		~RenderPipelineDefault() {
 			delete m_ScreenQuad.back()->GetTransformParam();
-			/*
-				The screen quad mesh does not managed using ecs, thus its transformParam needs extra handling, should be done in different way
-			*/
 		}
 		virtual void Initialize() override {
 			Vertex upperLeft, lowerLeft, upperRight, lowerRight;
