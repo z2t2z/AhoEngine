@@ -95,7 +95,7 @@ namespace Aho {
 					ImGui::MenuItem("PickingPass", NULL, &m_PickingPass);
 					if (ImGui::BeginMenu("Camera Options")) {
 						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
-						ImGui::SliderFloat("Camera Speed", &m_CameraManager->GetSpeed(), 0.0f, 10.0f);
+						ImGui::SliderFloat("Camera Speed", &m_CameraManager->GetSpeed(), 0.0f, 100.0f);
 						ImGui::EndMenu();
 					}
 
@@ -216,6 +216,9 @@ namespace Aho {
 			return;
 		}
 		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+		auto& Tagc = entityManager->GetComponent<TagComponent>(m_SelectedObject);
+		ImGui::Text(Tagc.Tag.c_str());
+		ImGui::Separator();
 		auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
 		auto& translation = tc.GetTranslation();
 		auto& scale = tc.GetScale();

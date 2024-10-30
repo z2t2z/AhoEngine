@@ -149,17 +149,11 @@ namespace Aho {
 		};
 
 		std::vector<std::shared_ptr<SkeletalMeshInfo>> subMesh;
-		std::map<std::string, BoneNode*> boneNodeCache;
 		std::map<std::string, Bone> boneCache;
 		uint32_t bonesCnt = 0;
 		auto RetrieveBonesInfo = [&](std::vector<VertexSkeletal>& vertices, aiMesh* mesh, const aiScene* scene) -> void {
 			for (uint32_t i = 0; i < mesh->mNumBones; i++) {
 				std::string boneName(mesh->mBones[i]->mName.C_Str());
-				//if (!boneNodeCache.contains(boneName)) {
-				//	BoneNode* nodeInfo = new BoneNode(Bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix)));
-				//	boneNodeCache[boneName] = nodeInfo;
-				//}
-				//auto node = boneNodeCache.at(boneName);
 				if (!boneCache.contains(boneName)) {
 					Bone bone(bonesCnt++, boneName, Utils::AssimpMatrixConvertor(mesh->mBones[i]->mOffsetMatrix));
 					boneCache[boneName] = bone;
@@ -247,6 +241,8 @@ namespace Aho {
 			return true;
 		};
 
+		uint32_t actualBoneCnt = 0;
+		std::map<std::string, BoneNode*> boneNodeCache;
 		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
 			std::string boneName = node->mName.C_Str();
 			//if (!boneNodeCache.contains(boneName)) {
@@ -266,12 +262,47 @@ namespace Aho {
 					currNode->children.push_back(res);
 				}
 			}
+			if (currNode->hasInfluence) {
+				AHO_CORE_WARN(boneName);
+			}
+			actualBoneCnt += currNode->hasInfluence;
 			return currNode;
 		};
 
+		BoneNode* root{ nullptr };
+		std::vector<BoneNode*> temp;
+		auto RemoveExtraBones = [&](auto self, const aiNode* node, BoneNode* parent, glm::mat4 globalMatrix4) -> void {
+			std::string name = node->mName.C_Str();
+			glm::mat4 localMatrix4 = Utils::AssimpMatrixConvertor(node->mTransformation);
+			globalMatrix4 = globalMatrix4 * localMatrix4;
+			if (boneCache.contains(name)) {
+				BoneNode* bone = new BoneNode(boneCache.at(name));
+				boneNodeCache[name] = bone;
+				temp.push_back(bone);
+				bone->transformParam = new TransformParam(glm::mat4(1.0f));
+				bone->hasInfluence = true;
+				bone->transform = globalMatrix4;
+				if (!root) {
+					root = bone;
+				}
+				else {
+					AHO_CORE_ASSERT(parent);
+					bone->parent = parent;
+					bone->parent->children.push_back(bone);
+				}
+				globalMatrix4 = glm::mat4(1.0f);
+				parent = bone;
+			}
+			for (uint32_t i = 0; i < node->mNumChildren; i++) {
+				self(self, node->mChildren[i], parent, globalMatrix4);
+			}
+		};
+
 		ProcessNode(scene->mRootNode, scene);
-		BoneNode* root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
-		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName, boneCache.size());
+		//BoneNode* Root = BuildHierarchy(BuildHierarchy, scene->mRootNode, nullptr);
+		RemoveExtraBones(RemoveExtraBones, scene->mRootNode, nullptr, glm::mat4(1.0f));
+		AHO_CORE_ASSERT(root);
+		return std::make_shared<SkeletalMesh>(subMesh, boneNodeCache, root, fileName, boneNodeCache.size());
 	}
 
 	std::shared_ptr<MaterialAsset> AssetCreator::MaterialAssetCreator(const std::string& filePath) {
@@ -288,19 +319,19 @@ namespace Aho {
 		auto globalInverse = Utils::AssimpMatrixConvertor(scene->mRootNode->mTransformation.Inverse());
 		auto& boneCache = mesh->GetBoneCache();
 		size_t boneCnt = mesh->GetBoneCnt();
-		std::vector<std::vector<KeyframePosition>> Positions(boneCnt); // give it some paddings
+		std::vector<std::vector<KeyframePosition>> Positions(boneCnt); 
 		std::vector<std::vector<KeyframeRotation>> Rotations(boneCnt);
 		std::vector<std::vector<KeyframeScale>> Scales(boneCnt);
 		auto LoadKeyframesData = [&](const aiAnimation* animation) -> void {
 			for (uint32_t i = 0; i < animation->mNumChannels; i++) {
 				auto channel = animation->mChannels[i];
 				std::string name = channel->mNodeName.data;
+				//AHO_CORE_WARN(name);
 				if (!boneCache.contains(name)) {
 					AHO_CORE_ASSERT(false, "Huuuuuuuh");
 					continue;
 				}
 				Bone& bone = boneCache.at(name)->bone;
-				bone.hasAnim = true;
 				// Filling animation data
 				if (Positions.size() < bone.id) {
 					Positions.resize(bone.id);

@@ -17,35 +17,42 @@ namespace Aho {
 		}
 		~SkeletonViewer() = default;
 
-		const std::vector<glm::mat4>& GetBoneTransform() { return m_BoneTransform; }
-		const std::map<BoneNode*, uint32_t>& GetBoneNodeIndexMap() { return m_NodeIndexMap; }
-		const std::map<BoneNode*, glm::mat4>& GetTransformMap() { return m_TransformMap; }
+		std::vector<glm::mat4>& GetBoneTransform() { return m_BoneTransform; }
+		std::map<BoneNode*, uint32_t>& GetBoneNodeIndexMap() { return m_NodeIndexMap; }
+		std::map<BoneNode*, glm::mat4>& GetTransformMap() { return m_TransformMap; }
+
 		void Update(BoneNode* curr, const glm::mat4& updateMatrix) {
 			if (m_NodeIndexMap.contains(curr)) {
 				m_BoneTransform[m_NodeIndexMap.at(curr)] = updateMatrix;
+				m_TransformMap[curr] = updateMatrix;
 			}
 			else {
 				AHO_CORE_ERROR("huh");
 			}
 		}
+
+		// Update visual skeleton or not
 		void SetShouldUpdate(bool state) { m_ShouldUpd = state; }
+
+		// Update visual skeleton or not
 		bool ShouldUpdate() { return m_ShouldUpd; }
 
 	private:
 		void BuildSkeleton() {
 			auto dfs = [&](auto self, BoneNode* curr, const BoneNode* parent, glm::vec3 parentPos, glm::mat4 globalMatrix) -> void {
+				AHO_CORE_ASSERT(curr->hasInfluence);
 				glm::mat4 localMatrix = curr->transform;
 				globalMatrix = globalMatrix * localMatrix;
-				glm::vec3 currPos = glm::vec3(globalMatrix[3]);
 				const BoneNode* nxtParent = parent;
 				glm::vec3 nxtParentPoint = parentPos;
-				if (curr->bone.name.find("$AssimpFbx$") == std::string::npos) {
+				if (curr->hasInfluence || curr->children.empty()) {
+					glm::vec3 currPos = glm::vec3(globalMatrix[3]);
 					if (parent && parentPos != glm::vec3(0.0f)) {		// Assume the root node is fixed at the origin
-						glm::vec3 CtoP = parentPos - currPos;
-						glm::vec3 up(0.0f, 1.0f, 0.0f);
-						glm::mat4 scale = glm::scale(glm::mat4(1.0f), -glm::vec3(glm::length(CtoP)));
-						auto axis = glm::cross(up, CtoP);
-						float angle = glm::acos(glm::dot(glm::normalize(up), glm::normalize(CtoP)));
+						glm::vec3 PtoC = currPos - parentPos;
+						glm::vec3 d(0.0f, -1.0f, 0.0f);
+						glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(glm::length(PtoC)));
+						auto axis = glm::cross(d, PtoC);
+						float angle = glm::acos(glm::dot(d, glm::normalize(PtoC)));
 						glm::quat q = glm::angleAxis(angle, glm::normalize(axis));
 						glm::mat4 rotate = glm::toMat4(q);
 						glm::mat4 translation = glm::translate(glm::mat4(1.0f), parentPos);

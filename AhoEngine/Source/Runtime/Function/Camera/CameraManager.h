@@ -21,7 +21,8 @@ namespace Aho {
     class CameraManager {
     public:
         CameraManager() {
-            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.1f, 10000.0f);
+            //cam->MoveBackward(100.0f);
             m_Cameras.push_back(cam);
         }
         ~CameraManager() = default;
@@ -81,7 +82,7 @@ namespace Aho {
         float& GetSpeed() { return m_Speed; }
     private:
         float m_Sensitivity{ 2.0f };
-        float m_Speed{ 5.0f };
+        float m_Speed{ 50.0f };
         float m_LastMouseX = 0.0f, m_LastMouseY = 0.0f;
         std::vector<std::shared_ptr<Camera>> m_Cameras;
     };

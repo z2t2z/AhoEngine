@@ -1602,7 +1602,7 @@
     <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
-    <ClInclude Include="Source\Runtime\Function\Gameplay\IKSolver.h" />
+    <ClInclude Include="Source\Runtime\Function\Gameplay\IK.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

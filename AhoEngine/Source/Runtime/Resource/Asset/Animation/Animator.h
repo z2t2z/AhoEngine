@@ -4,30 +4,48 @@
 
 namespace Aho {
 	static bool s_SkeletalVisualized = true;
+	static bool g_PrintOnce = true;
+	static bool g_BindingPose = true;
 	class Animator {
 	public:
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
 							BoneNode* root, const std::shared_ptr<AnimationAsset>& anim, SkeletonViewer* viewer) {
+			g_PrintOnce = false;
 			UpdateSkeletonTree(currTime, globalMatrices, glm::mat4(1.0f), anim, root, nullptr, glm::vec3(0.0f), viewer);
+		}
+
+		static void ApplyPose(std::vector<glm::mat4>& globalMatrices, BoneNode* root) {
+			auto dfs = [&](auto self, BoneNode* curr) -> void {
+				if (curr->hasInfluence) {
+					globalMatrices[curr->bone.id] = globalMatrices[curr->bone.id] * curr->bone.offset;
+				}
+				for (auto child : curr->children) {
+					self(self, child);
+				}
+			};
+			dfs(dfs, root);
 		}
 
 	private:
 		static void UpdateSkeletonTree(float currTime, std::vector<glm::mat4>& globalMatrices, glm::mat4 globalTrans, const std::shared_ptr<AnimationAsset>& anim,
 										BoneNode* currNode, BoneNode* validParent, glm::vec3 parentPos, SkeletonViewer* viewer) {
-			glm::mat4 localTransform = GetAnimationFinalMatrix(currTime, currNode, anim) * currNode->transformParam->GetTransform();
+			glm::mat4 localTransform = (g_BindingPose ? currNode->transform : GetAnimationFinalMatrix(currTime, currNode, anim)) * currNode->transformParam->GetTransform();
 			globalTrans = globalTrans * localTransform;
-
+			currNode->global = globalTrans;
 			BoneNode* nxtValidParent = validParent;
 			glm::vec3 nxtParentPos = parentPos;
+			if (g_PrintOnce) {
+				AHO_CORE_WARN("P: {}, Cur: {}", (validParent ? validParent->bone.name : "null"), currNode->bone.name);
+			}
 			if (viewer->ShouldUpdate()) {
-				if (currNode->bone.name.find("$AssimpFbx$") == std::string::npos) {
+				if (currNode->hasInfluence || currNode->children.empty()) {
 					glm::vec3 currPos(globalTrans[3]);
 					if (validParent && parentPos != glm::vec3(0.0f)) {
-						glm::vec3 CtoP = parentPos - currPos;
-						glm::vec3 up(0.0f, 1.0f, 0.0f);
-						glm::mat4 scale = glm::scale(glm::mat4(1.0f), -glm::vec3(glm::length(CtoP)));
-						auto axis = glm::cross(up, CtoP);
-						float angle = glm::acos(glm::dot(glm::normalize(up), glm::normalize(CtoP)));
+						glm::vec3 PtoC = currPos - parentPos;
+						glm::vec3 d(0.0f, -1.0f, 0.0f);
+						glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(glm::length(PtoC)));
+						auto axis = glm::cross(d, PtoC);
+						float angle = glm::acos(glm::dot(d, glm::normalize(PtoC)));
 						glm::quat q = glm::angleAxis(angle, glm::normalize(axis));
 						glm::mat4 rotation = glm::toMat4(q);
 						glm::mat4 translation = glm::translate(glm::mat4(1.0f), parentPos);
@@ -36,10 +54,14 @@ namespace Aho {
 					nxtValidParent = currNode;
 					nxtParentPos = currPos;
 				}
+				else {
+					AHO_CORE_ASSERT(false);
+				}
 			}
 			if (currNode->hasInfluence) {
-				globalMatrices[currNode->bone.id] = globalTrans * currNode->bone.offset;
+				globalMatrices[currNode->bone.id] = globalTrans; // *currNode->bone.offset;
 			}
+			currNode->global = globalTrans;
 			for (auto child : currNode->children) {
 				UpdateSkeletonTree(currTime, globalMatrices, globalTrans, anim, child, nxtValidParent, nxtParentPos, viewer);
 			}

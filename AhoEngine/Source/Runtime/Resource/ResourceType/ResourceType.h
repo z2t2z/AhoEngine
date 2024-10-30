@@ -163,8 +163,7 @@ namespace Aho {
 		std::string name;
 		int id;				// index in finalBoneMatrices
 		glm::mat4 offset;	// offset matrix transforms vertex from model space to bone space
-		bool hasAnim;
-		Bone(int _id, const std::string& _name, const glm::mat4& _offset) : name(_name), id(_id), offset(_offset), hasAnim(false) {}
+		Bone(int _id, const std::string& _name, const glm::mat4& _offset) : name(_name), id(_id), offset(_offset) {}
 		Bone() = default;
 	};
 
@@ -175,6 +174,7 @@ namespace Aho {
 		Bone bone;
 		bool hasInfluence{ false };
 		glm::mat4 transform;
+		glm::mat4 global;
 		TransformParam* transformParam{ nullptr };
 		BoneNode* parent{ nullptr };
 		std::vector<BoneNode*> children;

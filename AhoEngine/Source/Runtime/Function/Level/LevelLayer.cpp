@@ -8,7 +8,12 @@
 #include "Runtime/Function/Renderer/Texture.h"
 #include <unordered_map>
 
+#include "Runtime/Function/Gameplay/IK.h"
+
 namespace Aho {
+	static BoneNode* g_Node;
+	static BoneNode* g_Endeffector;
+	static TransformParam* g_Param;
 	LevelLayer::LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
 		: Layer("LevelLayer"), m_RenderLayer(renderLayer), m_ResourceLayer(resourceLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
@@ -64,6 +69,9 @@ namespace Aho {
 			animator.currentTime += deltaTime * animation.animation->GetTicksPerSecond();
 			animator.currentTime = fmod(animator.currentTime, animation.animation->GetDuration());
 			Animator::Update(animator.currentTime, animator.globalMatrices, skeletal.root, animation.animation, viewer.viewer);
+
+			IKSolver::FABRIK(viewer.viewer, animator.globalMatrices, g_Node, g_Endeffector, g_Param->Translation);
+			Animator::ApplyPose(animator.globalMatrices, skeletal.root);
 		});
 	}
 
@@ -86,8 +94,14 @@ namespace Aho {
 				const auto& nodeIndexMap = viewer->GetBoneNodeIndexMap();
 				AHO_CORE_ASSERT(transformMap.size() == nodeIndexMap.size());
 				for (const auto& [node, transform] : transformMap) {
+					if (node->bone.name.find("LeftShoulder") != std::string::npos) {
+						g_Node = node;
+					}
+					if (node->bone.name.find("LeftHandIndex1") != std::string::npos) {
+						g_Endeffector = node;
+					}
 					auto boneEntity = entityManager->CreateEntity(node->bone.name);
-					entityManager->AddComponent<TransformComponent>(boneEntity, node->transformParam); // Note that adding the model-space transform
+					entityManager->AddComponent<TransformComponent>(boneEntity, node->transformParam); // Note that adding the delta transform
 					entityComponent.entities.push_back(boneEntity.GetEntityHandle());
 				}
 
@@ -123,6 +137,8 @@ namespace Aho {
 		}
 
 		TransformParam* param = new TransformParam();
+		param->Translation = glm::vec3(0.0f, 10.0f, 10.0f);
+		g_Param = param;
 		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		for (const auto& meshInfo : *m_ResourceLayer->GetSphere()) {
@@ -175,20 +191,20 @@ namespace Aho {
 
 		{
 			auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
-			AnimationUBO animationUBO;
+			AnimationUBO* animationUBO = new AnimationUBO();
 			view.each([&](auto entity, auto& animator, auto& skeletal, auto& anim, auto& viewer) {
 				const BoneNode* root = skeletal.root;
 				const std::vector<glm::mat4>& globalMatrices = animator.globalMatrices;
 				int offset = animator.boneOffset;
 				for (size_t i = 0; i < globalMatrices.size(); i++) {
-					animationUBO.u_BoneMatrices[i + offset] = globalMatrices[i];
+					animationUBO->u_BoneMatrices[i + offset] = globalMatrices[i];
 				}
 			});
-			UBOManager::UpdateUBOData<AnimationUBO>(3, animationUBO);
+			UBOManager::UpdateUBOData<AnimationUBO>(3, *animationUBO);
 		}
 
 		{
-			SkeletonUBO skeletonUBO;
+			SkeletonUBO* skeletonUBO = new SkeletonUBO();
 			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, EntityComponent>();
 			view.each([&](auto entity, auto& viewerComponent, auto& animatorComponent, auto& entityComponent) {
 				const auto& boneTransform = viewerComponent.viewer->GetBoneTransform();
@@ -199,14 +215,12 @@ namespace Aho {
 				AHO_CORE_ASSERT(entities.size() == transformMap.size());
 				size_t i = 0;
 				for (const auto& [node, transform] : transformMap) {
-					//skeletonUBO.u_BoneMatrices[node->bone.id] = boneTransform[i];
-					//skeletonUBO.u_BoneEntityID[node->bone.id].x = static_cast<uint32_t>(entities[i++]);
-					skeletonUBO.u_BoneMatrices[i] = boneTransform[nodeIndexMap.at(node)];
-					skeletonUBO.u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
+					skeletonUBO->u_BoneMatrices[i] = boneTransform[nodeIndexMap.at(node)];
+					skeletonUBO->u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
 					i += 1;
 				}
 			});
-			UBOManager::UpdateUBOData<SkeletonUBO>(4, skeletonUBO);
+			UBOManager::UpdateUBOData<SkeletonUBO>(4, *skeletonUBO);
 		}
 	}
 
@@ -269,7 +283,7 @@ namespace Aho {
 		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
 		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
-		param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
+		//param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
 		uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 

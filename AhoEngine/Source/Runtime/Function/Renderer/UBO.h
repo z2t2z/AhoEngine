@@ -94,8 +94,6 @@ namespace Aho {
 	// For visual debugging
 	struct alignas(16) SkeletonUBO {
 		glm::mat4 u_BoneMatrices[MAX_BONES_CNT];
-		//std::array<uint32_t, MAX_BONES_CNT> u_BoneEntityID{ 0 };
-		//uint32_t u_BoneEntityID[MAX_BONES_CNT];
 		glm::ivec4 u_BoneEntityID[MAX_BONES_CNT];
 		SkeletonUBO() {
 			for (int i = 0; i < MAX_BONES_CNT; i++) {

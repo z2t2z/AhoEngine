@@ -38,7 +38,7 @@ void main() {
 		v_EntityID = u_EntityID;
 		finalModelMat = u_Model;
 	}
-	vec4 PosViewSpace = u_View * finalModelMat * mat4(1.0f) * vec4(a_Position, 1.0f);
+	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
 	gl_Position = u_Projection * PosViewSpace;
 }
 

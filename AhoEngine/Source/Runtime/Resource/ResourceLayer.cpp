@@ -14,7 +14,7 @@ namespace Aho {
 		m_AssetManager->LoadAssetFromFile(path / "Sphere.obj", *m_Sphere);
 		m_AssetManager->LoadAssetFromFile(path / "Cylinder.obj", *m_Cylinder);
 		//m_AssetManager->LoadAssetFromFile(path / "Bone.obj", *m_Bone);
-		m_Bone = AssetCreator::MeshAssetCreater((path / "Bone.obj").string());
+		m_Bone = AssetCreator::MeshAssetCreater((path / "DownBone.obj").string());
 	}
 
 	void ResourceLayer::OnAttach() {
