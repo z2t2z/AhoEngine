@@ -38,9 +38,9 @@ namespace Aho {
 	
 	CPURenderer::CPURenderer() {
 		//m_TexSpec.GenerateMips = false;
-		m_TexSpec.Format = ImageFormat::RGBA8;
+		m_TexSpec.dataFormat = TexDataFormat::RGBA;
+		m_TexSpec.internalFormat = TexInterFormat::RGBA32F;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
-		m_TexSpec.InternalFormat = ImageFormat::RGBA32F;
 		m_Noise = Texture2D::Create(m_TexSpec);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\compute.glsl";
@@ -57,11 +57,11 @@ namespace Aho {
 		// Leakage?
 		m_SSBO.reset(ShaderStorageBuffer::Create(width * height * sizeof(uint32_t)));
 		m_SSBOAccumulate.reset(ShaderStorageBuffer::Create(width * height * sizeof(glm::vec4)));
-		m_TexSpec.Width = width;
-		m_TexSpec.Height = height;
-		m_TexSpec.Format = ImageFormat::RGBA8;
+		m_TexSpec.width = width;
+		m_TexSpec.height = height;
+		m_TexSpec.dataFormat = TexDataFormat::RGBA;
+		m_TexSpec.internalFormat = TexInterFormat::RGBA32F;
 		m_FinalImage = Texture2D::Create(m_TexSpec);
-		m_TexSpec.Format = ImageFormat::RGBA32F;
 		m_Noise = Texture2D::Create(m_TexSpec);
 		Utils::FillRandom(m_Random, width * height * 3);
 		m_Noise->SetData(m_Random.data(), m_Random.size());
@@ -198,7 +198,7 @@ namespace Aho {
 
 			ray.Origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
 			//ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * Utils::GenerateRandomVec3());
-			ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * m_Random[y * m_TexSpec.Width + x]);
+			ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * m_Random[y * m_TexSpec.width + x]);
 		}
 
 		return glm::vec4(color, 1.0f);

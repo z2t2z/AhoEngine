@@ -3,6 +3,7 @@
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Function/Renderer/Shader.h"
 #include "Runtime/Platform/OpenGL/OpenGLShader.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Platform/OpenGL/OpenGLFramebuffer.h"
 #include <imgui.h>
 
@@ -58,7 +59,7 @@ namespace Aho {
 		auto HiZPass = SetupHiZPass();
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
 
-		/* Debug pass use the same FBO as gbufferPass */
+		/* Debug pass use the same TexO as gbufferPass */
 		debugPass->SetRenderTarget(gBufferPass->GetRenderTarget());
 
 		auto ssaoPass = SetupSSAOPass();
@@ -96,7 +97,6 @@ namespace Aho {
 		pipeline->AddRenderPass(ssaoPass);
 		pipeline->AddRenderPass(ssrPass);
 		pipeline->AddRenderPass(HiZPass);
-		pipeline->AddRenderPass(SetupDrawLinePass());
 		pipeline->AddRenderPass(postProcessingPass);
 		pipeline->SortRenderPasses();
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
@@ -175,34 +175,34 @@ namespace Aho {
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification positionAttachment, depthAttachment, depthComponent;
-		depthComponent.dataFormat = FBDataFormat::DepthComponent;
-		positionAttachment.internalFormat = FBInterFormat::RGBA16F;
-		positionAttachment.dataFormat = FBDataFormat::RGBA;
-		positionAttachment.dataType = FBDataType::Float;
-		positionAttachment.target = FBTarget::Texture2D;
-		positionAttachment.wrapModeS = FBWrapMode::Clamp;
-		positionAttachment.wrapModeT = FBWrapMode::Clamp;
-		positionAttachment.filterModeMin = FBFilterMode::Nearest;
-		positionAttachment.filterModeMag = FBFilterMode::Nearest;
-		FBTextureSpecification normalAttachment = positionAttachment;
+		TexSpec positionAttachment, depthAttachment, depthComponent;
+		depthComponent.dataFormat = TexDataFormat::DepthComponent;
+		positionAttachment.internalFormat = TexInterFormat::RGBA16F;
+		positionAttachment.dataFormat = TexDataFormat::RGBA;
+		positionAttachment.dataType = TexDataType::Float;
+		positionAttachment.target = TexTarget::Texture2D;
+		positionAttachment.wrapModeS = TexWrapMode::Clamp;
+		positionAttachment.wrapModeT = TexWrapMode::Clamp;
+		positionAttachment.filterModeMin = TexFilterMode::Nearest;
+		positionAttachment.filterModeMag = TexFilterMode::Nearest;
+		TexSpec normalAttachment = positionAttachment;
 
 		depthAttachment = positionAttachment;
-		depthAttachment.internalFormat = FBInterFormat::RED32F;
-		depthAttachment.dataFormat = FBDataFormat::RED;
+		depthAttachment.internalFormat = TexInterFormat::RED32F;
+		depthAttachment.dataFormat = TexDataFormat::RED;
 		auto depthLightAttachment = depthAttachment;
-		normalAttachment.wrapModeS = FBWrapMode::None;
-		FBTextureSpecification albedoAttachment = normalAttachment;
-		albedoAttachment.dataType = FBDataType::UnsignedByte;
-		albedoAttachment.internalFormat = FBInterFormat::RGBA8;
+		normalAttachment.wrapModeS = TexWrapMode::None;
+		TexSpec albedoAttachment = normalAttachment;
+		albedoAttachment.dataType = TexDataType::UnsignedByte;
+		albedoAttachment.internalFormat = TexInterFormat::RGBA8;
 		auto entityAttachment = depthAttachment;
-		entityAttachment.internalFormat = FBInterFormat::UINT;
-		entityAttachment.dataFormat = FBDataFormat::UINT;
-		entityAttachment.dataType = FBDataType::UnsignedInt;
+		entityAttachment.internalFormat = TexInterFormat::UINT;
+		entityAttachment.dataFormat = TexDataFormat::UINT;
+		entityAttachment.dataType = TexDataType::UnsignedInt;
 		auto debugAttachment = albedoAttachment;
-		FBSpecification fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, entityAttachment, debugAttachment, depthComponent });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, entityAttachment, debugAttachment, depthComponent });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::SSAOGeo);
 		return renderPass;
 	}
@@ -227,26 +227,26 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		auto shader = Shader::Create((currentPath / "ShaderSrc" / "SSAO.glsl").string());
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification ssaoColor;
-		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		TexSpec ssaoColor;
+		TexSpec texSpecDepth; texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
 		{
-			ssaoColor.internalFormat = FBInterFormat::RED;
-			ssaoColor.dataFormat = FBDataFormat::RED;
-			ssaoColor.dataType = FBDataType::Float;
-			ssaoColor.target = FBTarget::Texture2D;
-			ssaoColor.filterModeMin = FBFilterMode::Nearest;
-			ssaoColor.filterModeMag = FBFilterMode::Nearest;
+			ssaoColor.internalFormat = TexInterFormat::RED;
+			ssaoColor.dataFormat = TexDataFormat::RED;
+			ssaoColor.dataType = TexDataType::Float;
+			ssaoColor.target = TexTarget::Texture2D;
+			ssaoColor.filterModeMin = TexFilterMode::Nearest;
+			ssaoColor.filterModeMag = TexFilterMode::Nearest;
 		}
-		FBSpecification fbSpec(1280u, 720u, { ssaoColor });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { ssaoColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::SSAO);
 		return renderPass;
 	}
@@ -269,7 +269,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "Blur.glsl").string();
 		auto shader = Shader::Create(FileName);
@@ -277,20 +277,20 @@ namespace Aho {
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification texSpecColor;
+		TexSpec texSpecColor;
 		{
-			texSpecColor.internalFormat = FBInterFormat::RED;
-			texSpecColor.dataFormat = FBDataFormat::RED;
-			texSpecColor.dataType = FBDataType::Float;
-			texSpecColor.target = FBTarget::Texture2D;
-			texSpecColor.wrapModeS = FBWrapMode::Clamp;
-			texSpecColor.wrapModeT = FBWrapMode::Clamp;
-			texSpecColor.filterModeMin = FBFilterMode::Nearest;
-			texSpecColor.filterModeMag = FBFilterMode::Nearest;
+			texSpecColor.internalFormat = TexInterFormat::RED;
+			texSpecColor.dataFormat = TexDataFormat::RED;
+			texSpecColor.dataType = TexDataType::Float;
+			texSpecColor.target = TexTarget::Texture2D;
+			texSpecColor.wrapModeS = TexWrapMode::Clamp;
+			texSpecColor.wrapModeT = TexWrapMode::Clamp;
+			texSpecColor.filterModeMin = TexFilterMode::Nearest;
+			texSpecColor.filterModeMag = TexFilterMode::Nearest;
 		}
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::Blur);
 		return renderPass;
 	}
@@ -320,21 +320,21 @@ namespace Aho {
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification texSpecColor;
-		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
+		TexSpec texSpecColor;
+		TexSpec texSpecDepth; texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
 		{
-			texSpecColor.internalFormat = FBInterFormat::RGBA8;
-			texSpecColor.dataFormat = FBDataFormat::RGBA;
-			texSpecColor.dataType = FBDataType::UnsignedByte;
-			texSpecColor.target = FBTarget::Texture2D;
-			texSpecColor.wrapModeS = FBWrapMode::Clamp;
-			texSpecColor.wrapModeT = FBWrapMode::Clamp;
-			texSpecColor.filterModeMin = FBFilterMode::Nearest;
-			texSpecColor.filterModeMag = FBFilterMode::Nearest;
+			texSpecColor.internalFormat = TexInterFormat::RGBA8;
+			texSpecColor.dataFormat = TexDataFormat::RGBA;
+			texSpecColor.dataType = TexDataType::UnsignedByte;
+			texSpecColor.target = TexTarget::Texture2D;
+			texSpecColor.wrapModeS = TexWrapMode::Clamp;
+			texSpecColor.wrapModeT = TexWrapMode::Clamp;
+			texSpecColor.filterModeMin = TexFilterMode::Nearest;
+			texSpecColor.filterModeMag = TexFilterMode::Nearest;
 		}
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::SSAOLighting);
 		return renderPass;
 	}
@@ -362,7 +362,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "pbrShader.glsl").string();
@@ -371,19 +371,19 @@ namespace Aho {
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification texSpecColor;
-		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
-		texSpecColor.internalFormat = FBInterFormat::RGBA8;
-		texSpecColor.dataFormat = FBDataFormat::RGBA;
-		texSpecColor.dataType = FBDataType::UnsignedByte;
-		texSpecColor.target = FBTarget::Texture2D;
-		texSpecColor.wrapModeS = FBWrapMode::Clamp;
-		texSpecColor.wrapModeT = FBWrapMode::Clamp;
-		texSpecColor.filterModeMin = FBFilterMode::Nearest;
-		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		TexSpec texSpecColor;
+		TexSpec texSpecDepth; texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
+		texSpecColor.internalFormat = TexInterFormat::RGBA8;
+		texSpecColor.dataFormat = TexDataFormat::RGBA;
+		texSpecColor.dataType = TexDataType::UnsignedByte;
+		texSpecColor.target = TexTarget::Texture2D;
+		texSpecColor.wrapModeS = TexWrapMode::Clamp;
+		texSpecColor.wrapModeT = TexWrapMode::Clamp;
+		texSpecColor.filterModeMin = TexFilterMode::Nearest;
+		texSpecColor.filterModeMag = TexFilterMode::Nearest;
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::Shading);
 		return renderPass;
 	}
@@ -397,23 +397,23 @@ namespace Aho {
 				data->Unbind();
 			}
 
-		});
+			});
 		RenderPassDefault* pickingPass = new RenderPassDefault();
 		pickingPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto pickingShader = Shader::Create(currentPath / "ShaderSrc" / "MousePicking.glsl");
 		pickingPass->SetShader(pickingShader);
-		FBTextureSpecification texSpecColor;
-		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
-		texSpecColor.internalFormat = FBInterFormat::RGBA8;
-		texSpecColor.dataFormat = FBDataFormat::RGBA;
-		texSpecColor.dataType = FBDataType::UnsignedByte;
-		texSpecColor.target = FBTarget::Texture2D;
-		texSpecColor.wrapModeS = FBWrapMode::Clamp;
-		texSpecColor.wrapModeT = FBWrapMode::Clamp;
-		texSpecColor.filterModeMin = FBFilterMode::Nearest;
-		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		TexSpec texSpecColor;
+		TexSpec texSpecDepth; texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
+		texSpecColor.internalFormat = TexInterFormat::RGBA8;
+		texSpecColor.dataFormat = TexDataFormat::RGBA;
+		texSpecColor.dataType = TexDataType::UnsignedByte;
+		texSpecColor.target = TexTarget::Texture2D;
+		texSpecColor.wrapModeS = TexWrapMode::Clamp;
+		texSpecColor.wrapModeT = TexWrapMode::Clamp;
+		texSpecColor.filterModeMin = TexFilterMode::Nearest;
+		texSpecColor.filterModeMag = TexFilterMode::Nearest;
+		FBSpec fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
 		auto fbo = Framebuffer::Create(fbSpec);
 		pickingPass->SetRenderTarget(fbo);
 		pickingPass->SetRenderPassType(RenderPassType::Pick);
@@ -430,7 +430,7 @@ namespace Aho {
 			for (const auto& texBuffer : textureBuffers) {
 				texBuffer->Bind(texOffset++); // Note that order matters!
 			}
-			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipmapLevels;
+			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipLevels;
 			shader->SetInt("u_Width", renderTarget->GetSpecification().Width);
 			shader->SetInt("u_Height", renderTarget->GetSpecification().Height);
 			shader->SetInt("u_MipLevelMax", mipLevel);
@@ -445,7 +445,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 
 		std::filesystem::path currentPath = std::filesystem::current_path(); // TODO: Shoule be inside a config? or inside a global settings struct
 		std::string FileName = (currentPath / "ShaderSrc" / "SSR.glsl").string();
@@ -454,20 +454,20 @@ namespace Aho {
 		RenderPassDefault* renderPass = new RenderPassDefault();
 		renderPass->SetShader(shader);
 		renderPass->SetRenderCommand(cmdBuffer);
-		FBTextureSpecification texSpecColor;
+		TexSpec texSpecColor;
 		{
-			texSpecColor.internalFormat = FBInterFormat::RGBA8;
-			texSpecColor.dataFormat = FBDataFormat::RGBA;
-			texSpecColor.dataType = FBDataType::UnsignedByte;
-			texSpecColor.target = FBTarget::Texture2D;
-			texSpecColor.wrapModeS = FBWrapMode::Clamp;
-			texSpecColor.wrapModeT = FBWrapMode::Clamp;
-			texSpecColor.filterModeMin = FBFilterMode::Nearest;
-			texSpecColor.filterModeMag = FBFilterMode::Nearest;
+			texSpecColor.internalFormat = TexInterFormat::RGBA8;
+			texSpecColor.dataFormat = TexDataFormat::RGBA;
+			texSpecColor.dataType = TexDataType::UnsignedByte;
+			texSpecColor.target = TexTarget::Texture2D;
+			texSpecColor.wrapModeS = TexWrapMode::Clamp;
+			texSpecColor.wrapModeT = TexWrapMode::Clamp;
+			texSpecColor.filterModeMin = TexFilterMode::Nearest;
+			texSpecColor.filterModeMag = TexFilterMode::Nearest;
 		}
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor });
-		auto FBO = Framebuffer::Create(fbSpec);
-		renderPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		renderPass->SetRenderTarget(TexO);
 		renderPass->SetRenderPassType(RenderPassType::SSRvs);
 		return renderPass;
 	}
@@ -484,9 +484,9 @@ namespace Aho {
 			}
 			shader->SetInt("u_Depth", 0);
 			shader->SetInt("u_SelfDepth", 1);
-			int height = renderTarget->GetTextureAttachments().back()->GetSpecification().Height;
-			int width = renderTarget->GetTextureAttachments().back()->GetSpecification().Width;
-			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipmapLevels;
+			int height = renderTarget->GetTextureAttachments().back()->GetSpecification().height;
+			int width = renderTarget->GetTextureAttachments().back()->GetSpecification().width;
+			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipLevels;
 			for (int i = 0; i < mipLevel; i++) {
 				shader->SetInt("u_MipmapLevels", i);
 				RenderCommand::SetViewport(std::max(1, width >> i), std::max(height >> i, 1));
@@ -500,59 +500,26 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		RenderPassDefault* HiZPass = new RenderPassDefault();
 		HiZPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "HiZ.glsl");
 		HiZPass->SetShader(depthShader);
-		FBTextureSpecification depthAttachment;
-		depthAttachment.target = FBTarget::Texture2D;
-		depthAttachment.internalFormat = FBInterFormat::RED32F;
-		depthAttachment.dataFormat = FBDataFormat::RED;
-		depthAttachment.wrapModeS = FBWrapMode::Clamp;
-		depthAttachment.wrapModeT = FBWrapMode::Clamp;
-		depthAttachment.filterModeMin = FBFilterMode::NearestMipmapNearest;
-		depthAttachment.filterModeMag = FBFilterMode::NearestMipmapNearest;
+		TexSpec depthAttachment;
+		depthAttachment.target = TexTarget::Texture2D;
+		depthAttachment.internalFormat = TexInterFormat::RED32F;
+		depthAttachment.dataFormat = TexDataFormat::RED;
+		depthAttachment.wrapModeS = TexWrapMode::Clamp;
+		depthAttachment.wrapModeT = TexWrapMode::Clamp;
+		depthAttachment.filterModeMin = TexFilterMode::NearestMipmapNearest;
+		depthAttachment.filterModeMag = TexFilterMode::NearestMipmapNearest;
 		depthAttachment.mipLevels = Utils::CalculateMaximumMipmapLevels(1280);
-		FBSpecification fbSpec(1280u, 720u, { depthAttachment });
-		auto FBO = Framebuffer::Create(fbSpec);
-		HiZPass->SetRenderTarget(FBO);
+		FBSpec fbSpec(1280u, 720u, { depthAttachment });
+		auto TexO = Framebuffer::Create(fbSpec);
+		HiZPass->SetRenderTarget(TexO);
 		HiZPass->SetRenderPassType(RenderPassType::HiZ);
 		return HiZPass;
-	}
-
-	RenderPass* RenderLayer::SetupDrawLinePass() {
-		RenderCommandBuffer* cmdBuffer = new RenderCommandBuffer();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-			shader->SetMat4("u_Model", glm::scale(glm::mat4(1.0f), glm::vec3(0.01f))); // TODO
-			for (const auto& data : renderData) {
-				AHO_CORE_ASSERT(false);
-				data->Bind(shader);
-				RenderCommand::DrawIndexed(data->GetVAO(), true);
-				data->Unbind();
-			}
-		});
-		RenderPassDefault* drawLinePass = new RenderPassDefault();
-		drawLinePass->SetRenderCommand(cmdBuffer);
-		std::filesystem::path currentPath = std::filesystem::current_path();
-		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "DrawLine.glsl");
-		drawLinePass->SetShader(depthShader);
-		FBTextureSpecification texSpecColor;
-		FBTextureSpecification texSpecDepth; texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
-		texSpecColor.internalFormat = FBInterFormat::RGBA8;
-		texSpecColor.dataFormat = FBDataFormat::RGBA;
-		texSpecColor.dataType = FBDataType::UnsignedByte;
-		texSpecColor.target = FBTarget::Texture2D;
-		texSpecColor.wrapModeS = FBWrapMode::Clamp;
-		texSpecColor.wrapModeT = FBWrapMode::Clamp;
-		texSpecColor.filterModeMin = FBFilterMode::Nearest;
-		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
-		auto fbo = Framebuffer::Create(fbSpec);
-		drawLinePass->SetRenderTarget(fbo);
-		drawLinePass->SetRenderPassType(RenderPassType::DrawLine);
-		return drawLinePass;
 	}
 
 	// Draw object outlines, lights, skeletons, etc.
@@ -578,22 +545,22 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		RenderPassDefault* postProcessingPass = new RenderPassDefault();
 		postProcessingPass->SetRenderCommand(cmdBuffer);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto pp = Shader::Create(currentPath / "ShaderSrc" / "Postprocessing.glsl");
 		postProcessingPass->SetShader(pp);
-		FBTextureSpecification texSpecColor;
-		texSpecColor.internalFormat = FBInterFormat::RGBA8;
-		texSpecColor.dataFormat = FBDataFormat::RGBA;
-		texSpecColor.dataType = FBDataType::UnsignedByte;
-		texSpecColor.target = FBTarget::Texture2D;
-		texSpecColor.wrapModeS = FBWrapMode::Clamp;
-		texSpecColor.wrapModeT = FBWrapMode::Clamp;
-		texSpecColor.filterModeMin = FBFilterMode::Nearest;
-		texSpecColor.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(1280u, 720u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		TexSpec texSpecColor;
+		texSpecColor.internalFormat = TexInterFormat::RGBA8;
+		texSpecColor.dataFormat = TexDataFormat::RGBA;
+		texSpecColor.dataType = TexDataType::UnsignedByte;
+		texSpecColor.target = TexTarget::Texture2D;
+		texSpecColor.wrapModeS = TexWrapMode::Clamp;
+		texSpecColor.wrapModeT = TexWrapMode::Clamp;
+		texSpecColor.filterModeMin = TexFilterMode::Nearest;
+		texSpecColor.filterModeMag = TexFilterMode::Nearest;
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
 		auto fbo = Framebuffer::Create(fbSpec);
 		postProcessingPass->SetRenderTarget(fbo);
 		postProcessingPass->SetRenderPassType(RenderPassType::PostProcessing);
@@ -623,23 +590,23 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		RenderPassDefault* depthRenderPass = new RenderPassDefault();
 		depthRenderPass->SetRenderCommand(cmdBufferDepth);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		auto depthShader = Shader::Create(currentPath / "ShaderSrc" / "ShadowMap.glsl");
 		depthRenderPass->SetShader(depthShader);
-		FBTextureSpecification texSpecDepth;
-		texSpecDepth.dataFormat = FBDataFormat::DepthComponent;
-		texSpecDepth.internalFormat = FBInterFormat::Depth24;	// ......
-		texSpecDepth.dataType = FBDataType::Float;
-		texSpecDepth.wrapModeS = FBWrapMode::Repeat;
-		texSpecDepth.wrapModeT = FBWrapMode::Repeat;
-		texSpecDepth.filterModeMin = FBFilterMode::Nearest;
-		texSpecDepth.filterModeMag = FBFilterMode::Nearest;
-		FBSpecification fbSpec(2048, 2048, { texSpecDepth });  // Hardcode fow now
-		auto depthFBO = Framebuffer::Create(fbSpec);
-		depthRenderPass->SetRenderTarget(depthFBO);
+		TexSpec texSpecDepth;
+		texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
+		texSpecDepth.internalFormat = TexInterFormat::Depth24;	// ......
+		texSpecDepth.dataType = TexDataType::Float;
+		texSpecDepth.wrapModeS = TexWrapMode::Repeat;
+		texSpecDepth.wrapModeT = TexWrapMode::Repeat;
+		texSpecDepth.filterModeMin = TexFilterMode::Nearest;
+		texSpecDepth.filterModeMag = TexFilterMode::Nearest;
+		FBSpec fbSpec(2048, 2048, { texSpecDepth });  // Hardcode fow now
+		auto depthTexO = Framebuffer::Create(fbSpec);
+		depthRenderPass->SetRenderTarget(depthTexO);
 		depthRenderPass->SetRenderPassType(RenderPassType::Depth);
 		return depthRenderPass;
 	}

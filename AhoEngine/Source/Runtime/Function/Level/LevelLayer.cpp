@@ -260,7 +260,7 @@ namespace Aho {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
-						tex->SetTextureType(type);
+						tex->SetTexType(type);
 						textureCached[path] = tex;
 					}
 					mat->AddTexture(textureCached.at(path));
@@ -311,7 +311,7 @@ namespace Aho {
 				for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
-						tex->SetTextureType(type);
+						tex->SetTexType(type);
 						textureCached[path] = tex;
 					}
 					mat->AddTexture(textureCached.at(path));

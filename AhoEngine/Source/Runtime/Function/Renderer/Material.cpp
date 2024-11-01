@@ -14,23 +14,23 @@ namespace Aho {
         for (size_t i = 0; i < m_Textures.size(); i++) {
             const auto& texture = m_Textures[i];
             texture->Bind(i + texOffset);
-            auto type = texture->GetTextureType();
+            auto type = texture->GetTexType();
             switch (type) {
-                case TextureType::Diffuse:
+                case TexType::Albedo:
                     shader->SetBool("u_HasDiffuse", true);
                     shader->SetInt("u_Diffuse", i + texOffset);
                     break;
-                case TextureType::Normal:
+                case TexType::Normal:
                     shader->SetBool("u_HasNormal", true);
                     shader->SetInt("u_Normal", i + texOffset);
                     break;
-                case TextureType::Specular:
+                case TexType::Specular:
                     shader->SetInt("u_Specular", i + texOffset);
                     break;
-                case TextureType::Roughness:
+                case TexType::Roughness:
                     shader->SetInt("u_Roughness", i + texOffset);
                     break;
-                case TextureType::Depth:
+                case TexType::Depth:
                     shader->SetInt("u_DepthMap", i + texOffset);
                     break;
                 default:

@@ -134,7 +134,7 @@ namespace Aho {
 
 	// For loading only
 	struct MaterialInfo {
-		std::vector<std::pair<TextureType, std::string>> materials;
+		std::vector<std::pair<TexType, std::string>> materials;
 		MaterialInfo() = default;
 		bool HasMaterial() { return !materials.empty(); }
 	};

@@ -44,7 +44,7 @@ namespace Aho {
 		std::shared_ptr<ShaderStorageBuffer> m_SSBOAccumulate;
 		/*  Temporary! */
 
-		TextureSpecification m_TexSpec;
+		TexSpec m_TexSpec;
 		std::shared_ptr<Texture2D> m_FinalImage;
 		std::shared_ptr<Texture2D> m_Noise;
 		Settings m_Settings;

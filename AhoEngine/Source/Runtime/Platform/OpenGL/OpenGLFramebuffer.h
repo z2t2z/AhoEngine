@@ -4,36 +4,9 @@
 #include <glad/glad.h>
 
 namespace Aho {
-	namespace Utils {
-		Texture* CreateNoiseTexture(int siz);
-	}
-	// Not a good way I guess, for framebuffer use only
-	class FBTexture : public Texture {
-	public:
-		FBTexture() = default;
-		FBTexture(uint32_t id) : m_TextureID(id) {}
-		~FBTexture() { Invalidate(); }
-		void Invalidate() override { glDeleteTextures(1, &m_TextureID); }
-		void Bind(uint32_t slot) const override { glBindTextureUnit(slot, m_TextureID); }
-		virtual TextureSpecification& GetSpecification() override { return m_Specification; }
-		virtual void Reload(const std::string& path) override {}
-		virtual uint32_t GetWidth() const override { return 0u; }
-		virtual uint32_t GetHeight() const override { return 0u; }
-		virtual uint32_t GetTextureID() const override { return m_TextureID; }
-		virtual void SetTextureID(uint32_t id) override { m_TextureID = id; }
-		virtual const std::string& GetPath() const override { return "error at FBTexture"; }
-		virtual void SetData(void* data, uint32_t size) override {}
-		virtual bool IsLoaded() const override { return true; }
-		virtual bool operator==(const Texture& other) const override { return m_TextureID == other.GetTextureID(); }
-	private:
-		int m_MipmapLevels{ 0 };
-		uint32_t m_TextureID{ 0u };
-	};
-	
-
 	class OpenGLFramebuffer : public Framebuffer {
 	public:
-		OpenGLFramebuffer(const FBSpecification& spec);
+		OpenGLFramebuffer(const FBSpec& spec);
 		virtual ~OpenGLFramebuffer();
 		void Invalidate() override;
 		virtual void Bind() override;
@@ -55,18 +28,16 @@ namespace Aho {
 			AHO_CORE_ASSERT(!m_ColorAttachmentTex.empty(), "Colorattachment is empty!");
 			return m_ColorAttachmentTex.back()->GetTextureID();
 		}
-		virtual const FBSpecification& GetSpecification() const override { return m_Specification; }
+		virtual const FBSpec& GetSpecification() const override { return m_Specification; }
 	private:
 		void InvalidateColorAttachment();
 		void RebindSharedAttachments();
 	private:
 		uint32_t m_FBO{ 0u };
-		uint32_t m_ColorAttachment{ 0u };
 		uint32_t m_DepthAttachment{ 0u };
 	private:
-		FBSpecification m_Specification;
-		FBTextureSpecification m_DepthAttachmentSpecification;
-		std::vector<FBTextureSpecification> m_ColorAttachmentSpecifications;
+		FBSpec m_Specification;
+		TexSpec m_DepthAttachmentSpecification;
 	private:
 		std::vector<GLenum> m_Attchments;
 		std::vector<Texture*> m_ColorAttachmentTex;
@@ -74,4 +45,5 @@ namespace Aho {
 		Texture* m_DepthTex{ nullptr };
 		Texture* m_SharedDepthTex{ nullptr };
 	};
+
 }

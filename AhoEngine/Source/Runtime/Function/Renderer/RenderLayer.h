@@ -31,7 +31,6 @@ namespace Aho {
 		RenderPass* SetupPickingPass();
 		RenderPass* SetupSSRPass();
 		RenderPass* SetupHiZPass();
-		RenderPass* SetupDrawLinePass();
 		RenderPass* SetupPostProcessingPass();
 	private:
 		EventManager* m_EventManager{ nullptr };

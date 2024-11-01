@@ -4,7 +4,7 @@
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 
 namespace Aho {
-	std::shared_ptr<Texture2D> Texture2D::Create(const TextureSpecification& specification) {
+	std::shared_ptr<Texture2D> Texture2D::Create(const TexSpec& specification) {
 		switch (Renderer::GetAPI()) {
 			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLTexture2D>(specification);

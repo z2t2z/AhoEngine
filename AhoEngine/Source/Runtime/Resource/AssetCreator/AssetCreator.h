@@ -13,20 +13,20 @@
 
 namespace Aho {
 	namespace Utils {
-		static TextureType AssimpTextureConvertor(aiTextureType type) {
+		static TexType AssimpTextureConvertor(aiTextureType type) {
 			switch (type) {
 			case(aiTextureType_DIFFUSE):
-				return TextureType::Diffuse;
+				return TexType::Albedo;
 			case(aiTextureType_NORMALS):
-				return TextureType::Normal;
+				return TexType::Normal;
 			case(aiTextureType_HEIGHT):
-				return TextureType::Normal;
+				return TexType::Normal;
 			case(aiTextureType_SPECULAR):
-				return TextureType::Specular;
+				return TexType::Specular;
 			case(aiTextureType_METALNESS):
-				return TextureType::Metalic;
+				return TexType::Metalic;
 			case(aiTextureType_AMBIENT_OCCLUSION):
-				return TextureType::AO;
+				return TexType::AO;
 			}
 			AHO_CORE_ERROR("Texture type not supported");
 		}

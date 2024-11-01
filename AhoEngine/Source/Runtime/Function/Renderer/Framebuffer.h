@@ -4,65 +4,14 @@
 #include <memory>
 
 namespace Aho {
-	enum class FBInterFormat {
-		None, RED, UINT, RED32F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
-	};
-
-	enum class FBDataFormat {
-		None, RED, UINT, RGB, RGBA, DepthComponent,
-	};
-
-	enum class FBDataType {
-		None, UnsignedByte, Float, UnsignedInt
-	};
-
-	enum class FBTarget {
-		None, Texture1D, Texture2D, Texture3D, TextureCubemap
-	};
-	enum class FBMipmapLevel {
-		None, MipMapLevelBase, MipMapLevelMax
-	};
-	enum class FBWrapType {
-		None, WrapS, WrapT
-	};
-	enum class FBWrapMode {
-		None, Clamp, Repeat, MirrorRepeat
-	};
-	enum class FBFilterType {
-		None, FilterMin, FilterMag
-	};
-	enum class FBFilterMode {
-		None, Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest
-	};
-
-	namespace Utils {
-		static int CalculateMaximumMipmapLevels(int siz) {
-			int mipLevels = (int)floor(log2(siz)) + 1;
-			return mipLevels;
+	// Framebuffer specification
+	struct FBSpec {
+		FBSpec() = default;
+		FBSpec(uint32_t width, uint32_t height, const std::initializer_list<TexSpec>& attachments)
+			: Width(width), Height(height), Attachments(attachments) {
 		}
-	}
-	
-	struct FBTextureSpecification {
-		FBTextureSpecification() = default;
-		FBInterFormat internalFormat{ FBInterFormat::None };
-		FBTarget target{ FBTarget::None };
-		FBWrapMode wrapModeS{ FBWrapMode::None };
-		FBWrapMode wrapModeT{ FBWrapMode::None };
-		FBFilterMode filterModeMin{ FBFilterMode::None };
-		FBFilterMode filterModeMag{ FBFilterMode::None };
-		FBDataType dataType{ FBDataType::None };
-		FBDataFormat dataFormat{ FBDataFormat::None };
-		int mipLevels{ 0 };
-	};
-
-	struct FBSpecification {
-		FBSpecification() = default;
-		FBSpecification(uint32_t width, uint32_t height, const std::initializer_list<FBTextureSpecification>& attachments)
-			: Width(width), Height(height), Attachments(attachments) {}
 		uint32_t Width = 0, Height = 0;
-		std::vector<FBTextureSpecification> Attachments;
-		//uint32_t Samples = 1;	// what for?
-		//bool SwapChainTarget = false; // for vulkan
+		std::vector<TexSpec> Attachments;
 	};
 
 	class Framebuffer {
@@ -82,8 +31,8 @@ namespace Aho {
 		virtual uint32_t GetDepthAttachment() = 0;
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
 		virtual const uint32_t GetLastColorAttachment() const = 0;
-		virtual const FBSpecification& GetSpecification() const = 0;
-		static std::shared_ptr<Framebuffer> Create(const FBSpecification& spec);
+		virtual const FBSpec& GetSpecification() const = 0;
+		static std::shared_ptr<Framebuffer> Create(const FBSpec& spec);
 	};
 }
 
