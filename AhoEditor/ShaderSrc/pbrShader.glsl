@@ -38,7 +38,6 @@ uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
 uniform sampler2D u_gAlbedo;
 uniform sampler2D u_SSAO;
-uniform sampler2D u_Specular;
 
 uniform float u_Metalic;
 uniform float u_Roughness;
@@ -117,8 +116,6 @@ void main() {
 	out_Color = vec4(1.0f);
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
 	F0 = mix(F0, Albedo, u_Metalic);
-
-	vec3 specularMap = texture(u_Specular, v_TexCoords).rgb;
 	
 	vec3 Lo = vec3(0.0f);
 	for (int i = 0; i < MAX_LIGHT_CNT; i++) {
@@ -153,6 +150,5 @@ void main() {
 	vec3 Color = Ambient + Lo * (1.0f - 0.0f);
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
-	//Color = mix(specularMap, Color, 0.8f);
 	out_Color = vec4(Color, 1.0f);
 }

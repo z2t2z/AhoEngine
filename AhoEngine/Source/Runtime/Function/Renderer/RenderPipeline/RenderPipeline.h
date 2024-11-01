@@ -20,8 +20,8 @@ namespace Aho {
 		virtual void SortRenderPasses();
 		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
 		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
-	protected:
 		RenderPass* m_SSRvsPass{ nullptr };
+	protected:
 		RenderPass* m_ShadingPass{ nullptr };
 		RenderPass* m_DebugPass{ nullptr };
 		RenderPass* m_ShadowMapPass{ nullptr };

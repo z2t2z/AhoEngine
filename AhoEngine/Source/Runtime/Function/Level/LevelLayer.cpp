@@ -6,9 +6,9 @@
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Renderer/RenderData.h"
 #include "Runtime/Function/Renderer/Texture.h"
+#include "Runtime/Function/Gameplay/IK.h"
 #include <unordered_map>
 
-#include "Runtime/Function/Gameplay/IK.h"
 
 namespace Aho {
 	static BoneNode* g_Node;
@@ -70,7 +70,7 @@ namespace Aho {
 			animator.currentTime = fmod(animator.currentTime, animation.animation->GetDuration());
 			Animator::Update(animator.currentTime, animator.globalMatrices, skeletal.root, animation.animation, viewer.viewer);
 
-			IKSolver::FABRIK(viewer.viewer, animator.globalMatrices, g_Node, g_Endeffector, g_Param->Translation);
+			//IKSolver::FABRIK(viewer.viewer, animator.globalMatrices, g_Node, g_Endeffector, g_Param->Translation);
 			Animator::ApplyPose(animator.globalMatrices, skeletal.root);
 		});
 	}
@@ -100,7 +100,7 @@ namespace Aho {
 					if (node->bone.name.find("LeftHandIndex1") != std::string::npos) {
 						g_Endeffector = node;
 					}
-					auto boneEntity = entityManager->CreateEntity(node->bone.name);
+					auto boneEntity = entityManager->CreateEntity();
 					entityManager->AddComponent<TransformComponent>(boneEntity, node->transformParam); // Note that adding the delta transform
 					entityComponent.entities.push_back(boneEntity.GetEntityHandle());
 				}
@@ -128,7 +128,7 @@ namespace Aho {
 	void LevelLayer::AddLightSource(LightType lt) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<PointLightComponent>();
-		auto gameObject = entityManager->CreateEntity("PointLight" + std::to_string(view.size()));
+		auto gameObject = entityManager->CreateEntity("PointLight " + std::to_string(view.size()));
 		auto& pc = entityManager->AddComponent<PointLightComponent>(gameObject);
 		pc.index = PointLightComponent::s_PointLightCnt++;
 		if (pc.index == 0) {
@@ -158,7 +158,7 @@ namespace Aho {
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
-	// TODO: Partially update
+	// TODO: subdata update
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		{
@@ -230,7 +230,8 @@ namespace Aho {
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MultiMeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
-
+		TransformParam* param = new TransformParam();
+		entityManager->AddComponent<TransformComponent>(gameObject, param);
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
@@ -241,10 +242,10 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
+			auto meshEntity = entityManager->CreateEntity();
 			//entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
+			//TransformParam* param = new TransformParam();
 			entityManager->AddComponent<MeshComponent>(meshEntity);
-			TransformParam* param = new TransformParam();
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -256,7 +257,6 @@ namespace Aho {
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
-				//auto matEntity = entityManager->CreateEntity("subMesh");
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
@@ -306,10 +306,8 @@ namespace Aho {
 			mat->SetUniform("u_Metalic", 0.2f);
 			mat->SetUniform("u_Roughness", 0.2f);
 			mat->SetUniform("u_BoneOffset", skeletalComponent.offset);
-			//entityManager->AddComponent<MaterialComponent>(gameObject, mat); // TODO;
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {
-				//auto matEntity = entityManager->CreateEntity(asset->GetName() + "_mat_" + std::to_string(index++));
 				for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);

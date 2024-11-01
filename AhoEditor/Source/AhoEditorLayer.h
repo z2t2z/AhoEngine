@@ -6,7 +6,7 @@
 namespace Aho {
 	class AhoEditorLayer : public Layer {
 	public:
-		AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
+		AhoEditorLayer(LevelLayer* levellayer, ResourceLayer* resourceLayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~AhoEditorLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -34,6 +34,7 @@ namespace Aho {
 		bool m_StaticMesh{ true };
 	private:
 		std::filesystem::path m_FolderPath;
+		std::filesystem::path m_AssetPath;
 		std::filesystem::path m_CurrentPath;
 	private:
 		bool m_Selected{ false };
@@ -48,16 +49,18 @@ namespace Aho {
 		float m_DeltaTime{ 0.0f };
 	private:
 		//std::unique_ptr<Texture2D> m_LightIcon; ??
+		std::shared_ptr<Texture2D> m_CursorIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_PlusIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
 	private:
-		Renderer* m_Renderer{ nullptr };
 		LevelLayer* m_LevelLayer{ nullptr }; 
-		FileWatcher m_FileWatcher;
+		ResourceLayer* m_ResourceLayer{ nullptr };
+		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
+		FileWatcher m_FileWatcher;
 		std::shared_ptr<CameraManager> m_CameraManager;
 	};
 }

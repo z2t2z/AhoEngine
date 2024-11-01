@@ -15,8 +15,8 @@ namespace Aho {
 		m_HiZPass->Execute(m_ScreenQuad);
 		m_SSAOPass->Execute(m_ScreenQuad);
 		m_BlurPass->Execute(m_ScreenQuad);
-		m_SSRvsPass->Execute(m_ScreenQuad);
 		m_ShadingPass->Execute(m_ScreenQuad);
+		m_SSRvsPass->Execute(m_ScreenQuad);
 		m_PostProcessingPass->Execute(m_ScreenQuad);
 	}
 

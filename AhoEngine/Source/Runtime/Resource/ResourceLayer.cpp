@@ -10,10 +10,10 @@ namespace Aho {
 		m_Cube = std::make_shared<StaticMesh>();
 		m_Sphere = std::make_shared<StaticMesh>();
 		m_Cylinder = std::make_shared<StaticMesh>();
+		m_Plane = AssetCreator::MeshAssetCreater((path / "Floor.obj").string());
 		m_AssetManager->LoadAssetFromFile(path / "Cube.obj", *m_Cube);
 		m_AssetManager->LoadAssetFromFile(path / "Sphere.obj", *m_Sphere);
 		m_AssetManager->LoadAssetFromFile(path / "Cylinder.obj", *m_Cylinder);
-		//m_AssetManager->LoadAssetFromFile(path / "Bone.obj", *m_Bone);
 		m_Bone = AssetCreator::MeshAssetCreater((path / "DownBone.obj").string());
 	}
 

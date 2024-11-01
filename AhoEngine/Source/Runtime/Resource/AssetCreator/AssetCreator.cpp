@@ -18,6 +18,11 @@ namespace Aho {
 		if (it != std::string::npos) {
 			fileName = fileName.substr(0, it);
 		}
+		it = fileName.find_first_not_of('/\\'); 
+		if (it != std::string::npos) {
+			fileName = fileName.substr(it);
+		}
+
 		if (fileName.empty()) {
 			fileName = "Untitled" + std::to_string(s_MeshCnt++);
 		}
@@ -245,10 +250,6 @@ namespace Aho {
 		std::map<std::string, BoneNode*> boneNodeCache;
 		auto BuildHierarchy = [&](auto self, const aiNode* node, BoneNode* parent) -> BoneNode* {
 			std::string boneName = node->mName.C_Str();
-			//if (!boneNodeCache.contains(boneName)) {
-			//	BoneNode* boneNode = new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f)));
-			//	boneNodeCache[boneName] = boneNode;
-			//}
 			BoneNode* boneNode = (boneCache.contains(boneName) ? new BoneNode(boneCache[boneName]) : new BoneNode(Bone(bonesCnt++, boneName, glm::mat4(1.0f))));
 			boneNodeCache[boneName] = boneNode;
 			BoneNode* currNode = boneNodeCache[boneName];
@@ -328,7 +329,7 @@ namespace Aho {
 				std::string name = channel->mNodeName.data;
 				//AHO_CORE_WARN(name);
 				if (!boneCache.contains(name)) {
-					AHO_CORE_ASSERT(false, "Huuuuuuuh");
+					AHO_CORE_ERROR("Does not have bone {} when loading", name);
 					continue;
 				}
 				Bone& bone = boneCache.at(name)->bone;

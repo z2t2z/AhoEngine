@@ -40,7 +40,7 @@ namespace Aho {
 	private:
 		void BuildSkeleton() {
 			auto dfs = [&](auto self, BoneNode* curr, const BoneNode* parent, glm::vec3 parentPos, glm::mat4 globalMatrix) -> void {
-				AHO_CORE_ASSERT(curr->hasInfluence);
+				//AHO_CORE_ASSERT(curr->hasInfluence);
 				glm::mat4 localMatrix = curr->transform;
 				globalMatrix = globalMatrix * localMatrix;
 				const BoneNode* nxtParent = parent;

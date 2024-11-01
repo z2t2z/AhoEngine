@@ -34,11 +34,11 @@ uniform int u_Height;
 uniform int u_MipLevelMax;
 uniform float u_Near = 1000.0f;
 uniform float u_Far = 0.1f;
-uniform float u_MaxDisance = 10.0f; 
+uniform float u_MaxDisance = 100.0f; 
 
-const int MAX_ITERATIONS = 300;
+const int MAX_ITERATIONS = 100;
 const float stepSiz = 0.04f;
-const float thickNess = 0.05f;
+const float thickNess = 0.1f;
    
 float LinearEyeDepth(float z) {
     // z = z * 2.0f - 1.0f;
@@ -230,7 +230,7 @@ vec3 HiZ() {
     float dk = (k1 - k0) * invdx;
     vec2 dP = vec2(stepDir, delta.y * invdx);
 
-    float stride = 3.0f;
+    float stride = 1.0f;
     dP *= stride;
     dQ *= stride;
     dk *= stride;
@@ -254,16 +254,16 @@ vec3 HiZ() {
         Q.z += dQ.z * d;
         k += dk * d;
 
-        float rayDepth = (Q.z + dQ.z * d * 0.5f) / (k + dk * d * 0.5f);
-        vec2 tryHitPixel = P + dP * d * 0.5f;
-        vec2 UV = tryHitPixel;
-        tryHitPixel = permute ? tryHitPixel.yx : tryHitPixel;
-        tryHitPixel /= pow(2, mipLevel);
-        float trySampleDepth = texelFetch(u_Depth, ivec2(tryHitPixel), mipLevel).r;
-        if (rayDepth + 0.0001f < trySampleDepth) {
-            if (rayDepth + thickNess > trySampleDepth + 0.0001f) {
+        float rayDepth = Q.z / k;
+        vec2 hitPixel = permute ? P.yx : P;
+        vec2 bhitPixel = hitPixel;
+        hitPixel /= pow(2, mipLevel);
+        float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
+
+        if (rayDepth + 0.01f < sampleDepth) {
+            if (rayDepth + thickNess > sampleDepth + 0.01f) {
                 if (mipLevel == 0) {
-                    result = texelFetch(u_gAlbedo, ivec2(UV), 0).rgb;
+                    result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
                     break;
                 }
             }
@@ -275,28 +275,6 @@ vec3 HiZ() {
         else {
             mipLevel = min(mipLevelCount, mipLevel + 1);
         }
-
-
-        // vec2 hitPixel = permute ? P.yx : P;
-        // vec2 bhitPixel = hitPixel;
-        // hitPixel /= pow(2, mipLevel);
-        // float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
-
-        // if (rayDepth + 0.0001f < sampleDepth) {
-        //     if (rayDepth + thickNess > sampleDepth + 0.0001f) {
-        //         if (mipLevel == 0) {
-        //             result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
-        //             break;
-        //         }
-        //     }
-        //     mipLevel = max(0, mipLevel - 1);
-        //     P -= dP * d;
-        //     Q.z -= dQ.z * d;
-        //     k -= dk * d;
-        // }
-        // else {
-        //     mipLevel = min(mipLevelCount, mipLevel + 1);
-        // }
     }
     return result;
 }

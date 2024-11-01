@@ -62,6 +62,12 @@ namespace Aho {
 				internalFormat = GL_RGB8;
 				dataFormat = GL_RGB;
 			}
+			else if (channels == 2) {
+				if (channels == 2) {
+					internalFormat = GL_RG8;   
+					dataFormat = GL_RG;        
+				}
+			}
 			else if (channels == 1) {
 				internalFormat = GL_R8; 
 				dataFormat = GL_RED;    

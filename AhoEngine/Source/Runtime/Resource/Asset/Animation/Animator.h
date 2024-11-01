@@ -5,7 +5,7 @@
 namespace Aho {
 	static bool s_SkeletalVisualized = true;
 	static bool g_PrintOnce = true;
-	static bool g_BindingPose = true;
+	static bool g_BindingPose = false;
 	class Animator {
 	public:
 		static void Update(float currTime, std::vector<glm::mat4>& globalMatrices,
@@ -55,7 +55,7 @@ namespace Aho {
 					nxtParentPos = currPos;
 				}
 				else {
-					AHO_CORE_ASSERT(false);
+					//AHO_CORE_ASSERT(false);
 				}
 			}
 			if (currNode->hasInfluence) {

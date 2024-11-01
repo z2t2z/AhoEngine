@@ -10,13 +10,13 @@ namespace Aho {
 			//PushLayer(new RayTracingLayer());
 			Renderer* renderer = new Renderer();
 			auto cameraManager = std::make_shared<CameraManager>();
-			cameraManager->GetMainEditorCamera()->MoveBackward(1.0f);
+			cameraManager->GetMainEditorCamera()->MoveBackward(10.0f);
 			AssetManager* assetManager = new AssetManager();
 			auto eventManager = GetEventManager();
 			auto renderLayer = new RenderLayer(eventManager, renderer, cameraManager);
 			auto resourceLayer = new ResourceLayer(eventManager, assetManager);
 			auto levelLayer = new LevelLayer(renderLayer, resourceLayer, eventManager, cameraManager);
-			auto editorLayer = new AhoEditorLayer(levelLayer, eventManager, renderer, cameraManager);
+			auto editorLayer = new AhoEditorLayer(levelLayer, resourceLayer, eventManager, renderer, cameraManager);
 			PushLayer(renderLayer);
 			PushLayer(levelLayer);
 			PushLayer(resourceLayer);

@@ -19,6 +19,7 @@ namespace Aho {
 		std::shared_ptr<StaticMesh> GetSphere() { return m_Sphere; }
 		std::shared_ptr<StaticMesh> GetCylinder() { return m_Cylinder; }
 		std::shared_ptr<StaticMesh> GetBone() { return m_Bone; }
+		std::shared_ptr<StaticMesh> GetPlane() { return m_Plane; }
 	private:
 		void LoadAssetFromFile(const std::string& path, bool isSkeletal);
 		template<typename T>
@@ -30,6 +31,7 @@ namespace Aho {
 	private:
 		std::shared_ptr<StaticMesh> m_Bone{ nullptr };
 		std::shared_ptr<StaticMesh> m_Cube{ nullptr };
+		std::shared_ptr<StaticMesh> m_Plane{ nullptr };
 		std::shared_ptr<StaticMesh> m_Sphere{nullptr};
 		std::shared_ptr<StaticMesh> m_Cylinder{nullptr};
 	};

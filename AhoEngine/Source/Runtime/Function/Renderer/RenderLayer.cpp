@@ -69,17 +69,18 @@ namespace Aho {
 		for (int i = 0; i < 3; i++) {
 			if (i < 2) {
 				ssaoPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal
+				ssrPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal
 			}
 			shadingPass->AddGBuffer(geoPassAttachments[i]);     // gPostion, gNormal, gAlbedo
-			ssrPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal, gAlbedo
 		}
 		ssaoPass->AddGBuffer(Utils::CreateNoiseTexture(32)); // ssaoPass: gPostion, gNormal, gNoise
+		ssrPass->AddGBuffer(shadingPass->GetRenderTarget()->GetTextureAttachments().back()); // SSR based on the rendered image
+
 		ssrPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back()); // Depthmap, from view space
 
 		auto blurPass = SetupSSAOBlurPass();
 		blurPass->AddGBuffer(ssaoPass->GetRenderTarget()->GetTextureAttachments().back());
 		shadingPass->AddGBuffer(blurPass->GetRenderTarget()->GetTextureAttachments().back());     // SSAO
-		shadingPass->AddGBuffer(ssrPass->GetRenderTarget()->GetTextureAttachments().back()); // SSR specular
 
 		auto postProcessingPass = SetupPostProcessingPass();
 		postProcessingPass->AddGBuffer(shadingPass->GetRenderTarget()->GetTextureAttachments().back());
@@ -353,7 +354,6 @@ namespace Aho {
 			shader->SetInt("u_gNormal", 2);
 			shader->SetInt("u_gAlbedo", 3);
 			shader->SetInt("u_SSAO", 4);
-			shader->SetInt("u_Specular", 5);
 			for (const auto& data : renderData) {
 				//data-> TODO: no needs to bind material uniforms
 				data->Bind(shader, texOffset);
