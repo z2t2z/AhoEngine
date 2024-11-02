@@ -15,6 +15,7 @@ namespace Aho {
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt) override;
 		virtual void BindSharedColorAttachment(Texture* attachment) override;
 		virtual void BindSharedDepthAttachment(Texture* attachment) override;
+		virtual void BindCubeMap(Texture* tex, int index, int attachmentID) override;
 		virtual Texture* GetDepthTexture() override;
 		virtual const std::vector<Texture*>& GetTextureAttachments() override;
 		virtual Texture* GetTextureAttachment(int index) override;

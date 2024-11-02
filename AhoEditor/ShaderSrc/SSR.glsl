@@ -38,7 +38,7 @@ uniform float u_MaxDisance = 100.0f;
 
 const int MAX_ITERATIONS = 100;
 const float stepSiz = 0.04f;
-const float thickNess = 0.1f;
+const float thickNess = 0.08f;
    
 float LinearEyeDepth(float z) {
     // z = z * 2.0f - 1.0f;
@@ -129,7 +129,7 @@ vec3 RayMarching() {
     float dk = (k1 - k0) * invdx;
     vec2 dP = vec2(stepDir, delta.y * invdx);
 
-    float stride = 0.1f;
+    float stride = 1.0f;
     dP *= stride; 
     dQ *= stride;
     dk *= stride;

@@ -8,10 +8,10 @@
 namespace Aho {
 	// Texture parameters
 	enum class TexInterFormat {
-		None, RED, UINT, RED32F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
+		None, RED, UINT, RED32F, RG8, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
 	};
 	enum class TexDataFormat {
-		None, RED, UINT, RGB, RGBA, DepthComponent,
+		None, RED, UINT, RG, RGB, RGBA, DepthComponent,
 	};
 	enum class TexDataType {
 		None, UnsignedByte, Float, UnsignedInt
@@ -35,6 +35,7 @@ namespace Aho {
 		TexDataType dataType{ TexDataType::UnsignedByte };
 		TexWrapMode wrapModeS{ TexWrapMode::Clamp };
 		TexWrapMode wrapModeT{ TexWrapMode::Clamp };
+		TexWrapMode wrapModeR{ TexWrapMode::Clamp };
 		TexFilterMode filterModeMin{ TexFilterMode::Linear };
 		TexFilterMode filterModeMag{ TexFilterMode::Linear };
 		int mipLevels{ 0 };

@@ -7,11 +7,7 @@
 #include <glm/glm.hpp>
 
 namespace Aho {
-	//Material(std::string& filepath) { m_Shader = Shader::Create(filepath); }
-	//void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; m_Outdated = true; }
-	//std::shared_ptr<Shader> GetShader() const { return m_Shader; }
 	// Future TODO: different types, translucent
-	//std::shared_ptr<Shader> m_Shader;
 
 	class Material {
 	public:

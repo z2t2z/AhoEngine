@@ -38,6 +38,8 @@ uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
 uniform sampler2D u_gAlbedo;
 uniform sampler2D u_SSAO;
+uniform sampler2D u_Specular;
+uniform samplerCube u_Irradiance;
 
 uniform float u_Metalic;
 uniform float u_Roughness;
@@ -105,16 +107,18 @@ float CalShadow(vec3 fragPos) {
 }
 
 void main() {
-	float intensityScalor = 1.0f;
 	float AO = texture(u_SSAO, v_TexCoords).r;
-	vec3 Albedo = intensityScalor * texture(u_gAlbedo, v_TexCoords).rgb;
+	vec3 Albedo = texture(u_gAlbedo, v_TexCoords).rgb;
 	Albedo = pow(Albedo, vec3(2.2f)); // To linear space
 	vec3 Normal = normalize(texture(u_gNormal, v_TexCoords).rgb);
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb;
 	vec3 viewPos = vec3(u_View * u_ViewPosition);
 	vec3 viewDir = normalize(viewPos - fragPos);
 	out_Color = vec4(1.0f);
+
+	vec3 specular = texture(u_Specular, v_TexCoords).rgb;
 	vec3 F0 = vec3(0.04f); // Fresnel Schlick
+	//vec3 F0 = specular;
 	F0 = mix(F0, Albedo, u_Metalic);
 	
 	vec3 Lo = vec3(0.0f);
@@ -146,7 +150,13 @@ void main() {
 		Lo += (kD * Albedo / PI + Specular) * Radiance * NdotL;
 	}
 
-	vec3 Ambient = vec3(0.1f) * AO * Albedo;
+	vec3 kS = FresnelSchlick(max(dot(Normal, viewDir), 0.0f), F0);
+	vec3 kD = 1.0 - kS;
+	kD *= 1.0 - u_Metalic;
+	vec3 Irradiance = texture(u_Irradiance, Normal).rgb;
+	
+	vec3 Ambient = kD * Albedo * Irradiance * AO;
+
 	vec3 Color = Ambient + Lo * (1.0f - 0.0f);
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction

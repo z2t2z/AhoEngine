@@ -242,7 +242,7 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity();
+			auto meshEntity = entityManager->CreateEntity("subMesh");
 			//entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
 			//TransformParam* param = new TransformParam();
 			entityManager->AddComponent<MeshComponent>(meshEntity);

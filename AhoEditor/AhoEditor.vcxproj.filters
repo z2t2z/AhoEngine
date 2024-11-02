@@ -68,5 +68,7 @@
     <None Include="ShaderSrc\HiZ.glsl" />
     <None Include="ShaderSrc\DrawLine.glsl" />
     <None Include="ShaderSrc\Postprocessing.glsl" />
+    <None Include="ShaderSrc\IrradianceConv.glsl" />
+    <None Include="ShaderSrc\GenCubeMapFromHDR.glsl" />
   </ItemGroup>
 </Project>

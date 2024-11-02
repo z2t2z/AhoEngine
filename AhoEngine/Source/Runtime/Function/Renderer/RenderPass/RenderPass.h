@@ -8,7 +8,6 @@ namespace Aho {
 	enum class RenderPassType {
 		None = 0,
 		Debug,
-		//Final,
 		Shading,
 		Depth,
 		Pick,
@@ -20,46 +19,34 @@ namespace Aho {
 		HiZ,
 		DrawLine,
 		PostProcessing,
+		PrecomputeIrradiance,
+		GenCubemap,
 		/* TODO */
 	};
 
 	class RenderPass {
 	public:
 		~RenderPass() = default;
-		virtual void Initialize() = 0;
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
-		virtual void SetRenderCommand(RenderCommandBuffer* renderCommandBuffer) { m_RenderCommandBuffer = renderCommandBuffer; }
+		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { m_RenderCommandBuffer = std::move(renderCommandBuffer); }
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
 		virtual RenderPassType GetRenderPassType() { return m_RenderPassType; }
 		virtual void SetRenderPassType(RenderPassType type) { m_RenderPassType = type; }
-		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) = 0;
-		virtual void AddGBuffer(Texture* tex) { m_TextureBuffers.push_back(tex); }
-		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
-		virtual RenderCommandBuffer* GetRenderCommandBuffer() { return m_RenderCommandBuffer; }
-		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
-	protected:
-		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
-	protected:
-		std::vector<Texture*> m_TextureBuffers; // G-buffers are stored here 
-		RenderPassType m_RenderPassType{ RenderPassType::None };
-		std::shared_ptr<Shader> m_Shader{ nullptr };   // Currently each render pass uses a single shader
-		RenderCommandBuffer* m_RenderCommandBuffer{ nullptr };
-	};
-
-	class RenderPassDefault : public RenderPass {
-	public:
-		RenderPassDefault() { Initialize(); }
-		~RenderPassDefault() = default;
-		virtual void Initialize() override {
-			AHO_CORE_INFO("Forward render pass initialized");
-		}
-		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) override {
+		
+		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) {
 			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
 		}
+		
+		virtual void AddGBuffer(Texture* tex) { m_TextureBuffers.push_back(tex); }
+		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
+		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
+
+	private:
+		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
+		std::vector<Texture*> m_TextureBuffers;					// G-buffers are stored here 
+		RenderPassType m_RenderPassType{ RenderPassType::None };
+		std::shared_ptr<Shader> m_Shader{ nullptr };			// Currently each render pass uses a single shader
+		std::unique_ptr<RenderCommandBuffer> m_RenderCommandBuffer{ nullptr };
 	};
 
-	// TODO;
-	//class RenderPassPostProcessing : public RenderPass {
-
-	//};
 };

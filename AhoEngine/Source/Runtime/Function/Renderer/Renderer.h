@@ -24,21 +24,33 @@ namespace Aho {
 				delete pipeline;
 			}
 		}
+
 		void Render() {
 			m_CurrentPipeline->Execute();
 		}
+		
 		void AddRenderPipeline(RenderPipeline* pl) { 
 			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
 				m_Pipelines.push_back(pl); 
 			}
 		}
+		
 		void SetCurrentRenderPipeline(RenderPipeline* pl) { 
 			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
 				AddRenderPipeline(pl); 
 			}
 			m_CurrentPipeline = pl; 
 		}
+		
+		RenderPipeline* GetPipeline(RenderPipelineType type) { 
+			auto it = std::find_if(m_Pipelines.begin(), m_Pipelines.end(), [type](RenderPipeline* p) {
+				return p->GetType() == type;
+			});
+			return it != m_Pipelines.end() ? *it : nullptr;
+		}
+
 		RenderPipeline* GetCurrentRenderPipeline() { return m_CurrentPipeline; }
+
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	public:
 		std::vector<RenderPipeline*>::iterator begin() { return m_Pipelines.begin(); }

@@ -94,6 +94,8 @@ namespace Aho {
 				return GL_RED;
 			case TexInterFormat::UINT:
 				return GL_R32UI;
+			case TexInterFormat::RG8:
+				return GL_RG8;
 			case TexInterFormat::RED32F:
 				return GL_R32F;
 			case TexInterFormat::RGB8:
@@ -117,6 +119,8 @@ namespace Aho {
 			switch (format) {
 			case TexDataFormat::RED:
 				return GL_RED;
+			case TexDataFormat::RG:
+				return GL_RG;
 			case TexDataFormat::UINT:
 				return GL_RED_INTEGER;
 			case TexDataFormat::RGB:

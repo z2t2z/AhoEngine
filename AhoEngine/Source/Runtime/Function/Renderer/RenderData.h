@@ -19,7 +19,6 @@ namespace Aho {
 		std::shared_ptr<VertexArray> GetVAO() { return m_VAO; }
 		void SetMaterial(const std::shared_ptr<Material>& mat) { m_Material = mat; }
 		std::shared_ptr<Material> GetMaterial() { return m_Material; }
-		void SetLine() { m_IsLine = true; }
 		TransformParam* GetTransformParam() { return m_Param; }
 		void SetTransformParam(TransformParam* param) { m_Param = param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
@@ -30,14 +29,10 @@ namespace Aho {
 		void SetRendered(bool state) { m_ShouldRender = state; }
 		bool ShouldBeRendered() { return m_ShouldRender; }
 		bool IsDebug() { return m_IsDebug; }
-		bool IsLine() { return m_IsLine; }
 		bool IsInstanced() { return m_Instanced; }
 	private:
 		bool m_IsDebug{ false };
 		bool m_Instanced{ false };
-		bool m_IsLine{ false };
-		bool m_Loaded{ true };
-		bool m_Deleted{ false };
 		bool m_ShouldRender{ true };
 	private:
 		TransformParam* m_Param{ nullptr };

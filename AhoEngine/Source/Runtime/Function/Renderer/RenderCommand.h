@@ -12,22 +12,26 @@ namespace Aho {
 	// OpenGL Dedicated
 	class RenderCommand {
 	public:
-		inline static void SetClearColor(const glm::vec4& color) {
+		static void SetClearColor(const glm::vec4& color) {
 			glClearColor(color.r, color.g, color.b, color.a);
 		}
-		inline static void Clear(ClearFlags flags) {
+		static void Clear(ClearFlags flags) {
 			glClear((uint32_t)flags);
 		}
-		inline static void SetLineWidth(float width = 2.5f) {
+		static void SetLineWidth(float width = 2.5f) {
 			glLineWidth(2.5f);
 		}
-		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, bool DrawLine = false) {
+		static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, bool DrawLine = false) {
 			glDrawElements(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
-		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount, bool DrawLine = false) {
+		static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount, bool DrawLine = false) {
 			glDrawElementsInstanced(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0, amount);
 		}
-		inline static void SetDepthTest(bool state) {
+		static void CullFace() {
+			//glEnable(GL_CULL_FACE);    
+			//glCullFace(GL_BACK);  
+		}
+		static void SetDepthTest(bool state) {
 			//s_RendererAPI->SetDepthTest(state);
 			if (state) {
 				glEnable(GL_DEPTH_TEST);
@@ -37,19 +41,19 @@ namespace Aho {
 				glDisable(GL_DEPTH_TEST);
 			}
 		}
-		inline static void SetPolygonModeLine() {
+		static void SetPolygonModeLine() {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
-		inline static void SetPolygonModeFill() {
+		static void SetPolygonModeFill() {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-		inline static void SetViewport(uint32_t width, uint32_t height) {
+		static void SetViewport(uint32_t width, uint32_t height) {
 			glViewport(0, 0, width, height);
 		}
-		inline static void BindRenderTarget(uint32_t attachmentOffset, uint32_t textureID, int mipmapLevel) {
+		static void BindRenderTarget(uint32_t attachmentOffset, uint32_t textureID, int mipmapLevel) {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentOffset, GL_TEXTURE_2D, textureID, mipmapLevel);
 		}
-		inline static void DrawBuffers(int siz, uint32_t* data) {
+		static void DrawBuffers(int siz, uint32_t* data) {
 			glDrawBuffers(siz, data);
 		}
 		static glm::vec4 s_DefaultClearColor;
@@ -60,6 +64,12 @@ namespace Aho {
 	class RenderCommandBuffer {
 	public:
 		RenderCommandBuffer() = default;
+		RenderCommandBuffer(const std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
+							const std::shared_ptr<Shader>& shader,
+							const std::vector<Texture*>& textureBuffers,
+							const std::shared_ptr<Framebuffer>& renderTarget)>& cmd) {
+			AddCommand(cmd);
+		}
 		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData,	// Meshes to render
 					 const std::shared_ptr<Shader>& shader, 						// Shader to use
 					 const std::shared_ptr<Framebuffer>& renderTarget, 				// RenderTarget 

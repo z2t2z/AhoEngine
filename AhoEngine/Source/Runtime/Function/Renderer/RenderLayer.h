@@ -19,19 +19,22 @@ namespace Aho {
 		Renderer* GetRenderer() { return m_Renderer; }
 	private:
 		// TODO: move these to Renderer
-		void SetupForwardRenderPipeline();
+		void SetupPrecomputePipeline();
+	private:
+		void SetupRenderPipeline();
+		std::unique_ptr<RenderPass> SetupPrecomputeIrradiancePass();
+		std::unique_ptr<RenderPass> SetupGenCubemapFromHDRPass();
+		std::unique_ptr<RenderPass> SetupGBufferPass();
+		std::unique_ptr<RenderPass> SetupSSAOPass();
+		std::unique_ptr<RenderPass> SetupSSAOBlurPass();
+		std::unique_ptr<RenderPass> SetupDebugPass();
+		std::unique_ptr<RenderPass> SetupShadowMapPass();
+		std::unique_ptr<RenderPass> SetupShadingPass();
+		std::unique_ptr<RenderPass> SetupPickingPass();
+		std::unique_ptr<RenderPass> SetupSSRPass();
+		std::unique_ptr<RenderPass> SetupHiZPass();
+		std::unique_ptr<RenderPass> SetupPostProcessingPass();
 		void SetupUBO();
-		RenderPass* SetupGBufferPass();
-		RenderPass* SetupSSAOPass();
-		RenderPass* SetupSSAOBlurPass();
-		RenderPass* SetupSSAOLightingPass();
-		RenderPass* SetupDebugPass();
-		RenderPass* SetupShadowMapPass();
-		RenderPass* SetupShadingPass();
-		RenderPass* SetupPickingPass();
-		RenderPass* SetupSSRPass();
-		RenderPass* SetupHiZPass();
-		RenderPass* SetupPostProcessingPass();
 	private:
 		EventManager* m_EventManager{ nullptr };
 		Renderer* m_Renderer{ nullptr };

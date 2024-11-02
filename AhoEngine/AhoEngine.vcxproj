@@ -156,6 +156,7 @@
     <ClInclude Include="Source\Runtime\Core\Layer\Layer.h" />
     <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h" />
     <ClInclude Include="Source\Runtime\Core\Log\Log.h" />
+    <ClInclude Include="Source\Runtime\Core\Math\Math.h" />
     <ClInclude Include="Source\Runtime\Core\Window\Window.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\Camera.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h" />

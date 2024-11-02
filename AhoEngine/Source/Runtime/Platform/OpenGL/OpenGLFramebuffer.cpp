@@ -74,7 +74,6 @@ namespace Aho {
 	void OpenGLFramebuffer::Bind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
-		glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
 	}
 
 	void OpenGLFramebuffer::Unbind() {
@@ -110,7 +109,7 @@ namespace Aho {
 		Bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + m_ColorAttachmentTex.size() + m_SharedAttachmentTex.size(), GL_TEXTURE_2D, attachment->GetTextureID(), 0);
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			AHO_CORE_ASSERT("Binding shared color attachment failed");
+			AHO_CORE_ASSERT(false, "Binding shared color attachment failed");
 		}
 		m_Attchments.push_back(GL_COLOR_ATTACHMENT0 + m_ColorAttachmentTex.size() + m_SharedAttachmentTex.size());
 		m_SharedAttachmentTex.push_back(attachment);
@@ -123,9 +122,16 @@ namespace Aho {
 		m_SharedDepthTex = attachment;
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, attachment->GetTextureID(), 0);
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			AHO_CORE_ASSERT("Binding shared depth attachment failed");
+			AHO_CORE_ASSERT(false, "Binding shared depth attachment failed");
 		}
 		Unbind();
+	}
+
+	void OpenGLFramebuffer::BindCubeMap(Texture* tex, int index, int attachmentID) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentID, GL_TEXTURE_CUBE_MAP_POSITIVE_X + index, tex->GetTextureID(), 0);
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			AHO_CORE_ASSERT(false, "Binding shared depth attachment failed");
+		}
 	}
 
 	Texture* OpenGLFramebuffer::GetDepthTexture() {
@@ -182,7 +188,7 @@ namespace Aho {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_SharedDepthTex->GetTextureID(), 0);
 		}
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			AHO_CORE_ASSERT("Binding shared depth attachment failed");
+			AHO_CORE_ASSERT(false, "Binding shared depth attachment failed");
 		}
 	}
 }

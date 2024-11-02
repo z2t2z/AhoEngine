@@ -38,6 +38,9 @@ namespace Aho {
 		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "translation.png").string());
 		m_RotationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "rotation.png").string());
 		m_ScaleIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "scale.png").string());
+
+
+		auto temp = Texture2D::Create((m_FolderPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string());
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -151,7 +154,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
+					//m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
 				}
 			}
 		}
@@ -176,11 +179,7 @@ namespace Aho {
 		m_ViewportWidth = width, m_ViewportHeight = height;
 		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Shading)->GetSpecification();
 		if (spec.Width != m_ViewportWidth || spec.Height != m_ViewportHeight/* - ImGui::GetFrameHeight() */) {
-			for (const auto& renderPass : *m_Renderer->GetCurrentRenderPipeline()) {
-				if (renderPass->GetRenderPassType() != RenderPassType::Depth) {
-					renderPass->GetRenderTarget()->Resize(m_ViewportWidth, m_ViewportHeight);
-				}
-			}
+			m_Renderer->GetCurrentRenderPipeline()->ResizeRenderTarget(m_ViewportWidth, m_ViewportHeight);
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 

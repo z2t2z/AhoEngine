@@ -22,7 +22,7 @@ namespace Aho {
 		if (source.empty()) {
 			return;
 		}
-		m_OpenGLSourceCode = PreProcess(source);
+		PreProcess(source);
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
 		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
@@ -79,8 +79,7 @@ namespace Aho {
 		return result;
 	}
 
-	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
-		std::unordered_map<GLenum, std::string> shaderSources;
+	void OpenGLShader::PreProcess(const std::string& source) {
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
 		size_t pos = source.find(typeToken, 0); //Start of shader type declaration line
@@ -94,9 +93,8 @@ namespace Aho {
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
 			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
-			shaderSources[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+			m_OpenGLSourceCode[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
-		return shaderSources;
 	}
 
 	void OpenGLShader::CompileFromSource() {

@@ -29,10 +29,21 @@ namespace Aho {
 
 		m_Specification.height = m_Specification.height;
 		m_Specification.width = m_Specification.width;
-		glTexImage2D(target, 0, internalFormat, m_Specification.width, m_Specification.height, 0, dataFormat, dataType, nullptr);
+		if (m_Specification.target == TexTarget::TextureCubemap) {
+			for (int i = 0; i < 6; i++) {
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, m_Specification.width, m_Specification.height, 0, dataFormat, dataType, nullptr);
+			}
+		}
+		else {
+			glTexImage2D(target, 0, internalFormat, m_Specification.width, m_Specification.height, 0, dataFormat, dataType, nullptr);
+		}
+
 		if (wrapModeS) {
 			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapModeS);
 			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapModeT);
+			if (m_Specification.target == TexTarget::TextureCubemap) {
+				glTexParameteri(target, GL_TEXTURE_WRAP_R, Utils::GetGLParam(m_Specification.wrapModeR));
+			}
 		}
 		if (filterModeMag) {
 			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filterModeMin);
@@ -50,54 +61,66 @@ namespace Aho {
 	// Big TODO
 	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool flipOnLoad, bool grayScale) : m_Path(path) {
 		stbi_set_flip_vertically_on_load(flipOnLoad);
-		stbi_uc* data = nullptr;
-		data = stbi_load(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, grayScale);
-		if (data) {
-			GLenum internalFormat = 0, dataFormat = 0;
-			if (m_Specification.channels == 4) {
-				m_Specification.internalFormat = TexInterFormat::RGBA8;
-				m_Specification.dataFormat = TexDataFormat::RGBA;
-				internalFormat = GL_RGBA8;
-				dataFormat = GL_RGBA;
-			}
-			else if (m_Specification.channels == 3) {
-				m_Specification.internalFormat = TexInterFormat::RGB8;
-				m_Specification.dataFormat = TexDataFormat::RGB;
-				internalFormat = GL_RGB8;
-				dataFormat = GL_RGB;
-			}
-			else if (m_Specification.channels == 2) {
-				//m_Specification.internalFormat = TexInterFormat::RG8;
-				//m_Specification.dataFormat = TexDataFormat::RG;
-				internalFormat = GL_RG8;
-				dataFormat = GL_RG;
-			}
-			else if (m_Specification.channels == 1) {
-				m_Specification.internalFormat = TexInterFormat::RED;
-				m_Specification.dataFormat = TexDataFormat::RED;
-				internalFormat = GL_R8; 
-				dataFormat = GL_RED;    
-			}
+		auto filename = std::filesystem::path(path).extension().string();		
 
-			AHO_CORE_ASSERT(internalFormat != 0 && dataFormat != 0, "Format not supported!");
+		const std::vector<std::string> HDRextensions = { ".hdr", ".exr" }; // TODO: .exr not supported yet
+		bool isHDR = std::ranges::any_of(HDRextensions, [&filename](const std::string& ext) {
+			return filename.find(ext) != std::string::npos;
+		});
 
-			glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-			glTextureStorage2D(m_TextureID, 1, internalFormat, m_Specification.width, m_Specification.height);
+		void* data = nullptr;
+		data = isHDR ? (void*)stbi_loadf(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, 0)	
+			: (void*)stbi_load(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, grayScale);
 
-			glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		if (!data) {
+			AHO_CORE_ERROR("Loading texture failed from path: {}", path);
+			return;
+		}
 
-			glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		auto& spec = m_Specification;
 
-			glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Specification.width, m_Specification.height, dataFormat, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			stbi_image_free(data);
+		if (isHDR) {
+			spec.internalFormat = TexInterFormat::RGB16F;
+			spec.dataFormat = TexDataFormat::RGB;
+			spec.dataType = TexDataType::Float;
 		}
 		else {
-			AHO_CORE_ERROR("Loading texture failed from path: " + path);
+			spec.dataType = TexDataType::UnsignedByte;
+			if (spec.channels == 4) {
+				spec.internalFormat = TexInterFormat::RGBA8;
+				spec.dataFormat = TexDataFormat::RGBA;
+			}
+			else if (spec.channels == 3) {
+				spec.internalFormat = TexInterFormat::RGB8;
+				spec.dataFormat = TexDataFormat::RGB;
+			}
+			else if (spec.channels == 2) {
+				spec.internalFormat = TexInterFormat::RG8;
+				spec.dataFormat = TexDataFormat::RG;
+			}
+			else if (spec.channels == 1) {
+				spec.internalFormat = TexInterFormat::RED;
+				spec.dataFormat = TexDataFormat::RED;
+			}
+			else {
+				AHO_CORE_ERROR("Texture format not supported from path: {}", path);
+				return;
+			}
 		}
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+		glTextureStorage2D(m_TextureID, 1, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height);
+
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_CLAMP_TO_EDGE);
+
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_LINEAR);
+
+		glTextureSubImage2D(m_TextureID, 0, 0, 0, spec.width, spec.height, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+
+		stbi_image_free(data);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D() {

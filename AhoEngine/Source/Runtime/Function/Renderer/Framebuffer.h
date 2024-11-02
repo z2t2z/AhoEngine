@@ -25,6 +25,7 @@ namespace Aho {
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt = 0) = 0;
 		virtual void BindSharedColorAttachment(Texture* attachment) = 0;
 		virtual void BindSharedDepthAttachment(Texture* attachment) = 0;
+		virtual void BindCubeMap(Texture* tex, int index, int attachmentID = 0) = 0;
 		virtual const std::vector<Texture*>& GetTextureAttachments() = 0;
 		virtual Texture* GetTextureAttachment(int index) = 0;
 		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, bool shared = false) = 0;

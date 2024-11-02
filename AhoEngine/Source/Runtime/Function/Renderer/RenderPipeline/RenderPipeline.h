@@ -4,70 +4,51 @@
 #include <vector>
 
 namespace Aho {
-	class RenderPipeline {
-	public:
-		~RenderPipeline();
-		virtual void Initialize() = 0;
-		virtual void Execute();
-		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
-		virtual RenderPass* GetRenderPass(RenderPassType type) { return nullptr; }
-		virtual void SetRenderData(const std::vector<std::shared_ptr<RenderData>>& renderData) { m_RenderData = renderData; }
-		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { (data->IsDebug() ? m_DebugData : m_RenderData).push_back(data); }
-		virtual void AddVirtualRenderData(const std::shared_ptr<RenderData>& data) { m_VirtualData.push_back(data); }
-		virtual void AddLineRenderData(const std::shared_ptr<RenderData>& data) { m_LineData.push_back(data); }
-		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
-		virtual void AddRenderPass(RenderPass* rp) { m_RenderPasses.push_back(rp); }
-		virtual void SortRenderPasses();
-		std::vector<RenderPass*>::iterator begin() { return m_RenderPasses.begin(); }
-		std::vector<RenderPass*>::iterator end() { return m_RenderPasses.end(); }
-		RenderPass* m_SSRvsPass{ nullptr };
-	protected:
-		RenderPass* m_ShadingPass{ nullptr };
-		RenderPass* m_DebugPass{ nullptr };
-		RenderPass* m_ShadowMapPass{ nullptr };
-		RenderPass* m_PickingPass{ nullptr };
-		RenderPass* m_GBufferPass{ nullptr };
-		RenderPass* m_SSAOPass{ nullptr };
-		RenderPass* m_SSAOLightingPass{ nullptr };
-		RenderPass* m_BlurPass{ nullptr };
-		RenderPass* m_HiZPass{ nullptr };
-		RenderPass* m_DrawLinePass{ nullptr };
-		RenderPass* m_PostProcessingPass{ nullptr };
-		std::vector<RenderPass*> m_RenderPasses;	
-		std::vector<std::shared_ptr<RenderData>> m_LineData;
-		std::vector<std::shared_ptr<RenderData>> m_DebugData;
-		std::vector<std::shared_ptr<RenderData>> m_RenderData;	// render data is a per mesh basis
-		std::vector<std::shared_ptr<RenderData>> m_VirtualData; // Such as light source, only renderred in picking pass
-		std::vector<std::shared_ptr<RenderData>> m_ScreenQuad;	// TODO: Temporary
+	enum class RenderDataType {
+		None = 0,
+		SceneData,
+		ScreenQuad,
+		DebugData,
+		UnitCube
 	};
 
-	// default forward pipeline
-	class RenderPipelineDefault : public RenderPipeline {
+	enum class RenderPipelineType {
+		None = 0,
+		Precompute,
+		Default
+	};
+
+	struct RenderTask {
+		std::unique_ptr<RenderPass> pass;
+		RenderDataType dataType;
+	};
+	
+
+	class RenderPipeline {
 	public:
-		RenderPipelineDefault() { Initialize(); }
-		~RenderPipelineDefault() {
-			delete m_ScreenQuad.back()->GetTransformParam();
+		RenderPipeline() { Initialize(); }
+		~RenderPipeline();
+		virtual void Initialize();
+		virtual void Execute();
+		virtual void ResizeRenderTarget(uint32_t width, uint32_t height);
+		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
+		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { (data->IsDebug() ? m_DebugData : m_SceneData).push_back(data); }
+		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
+		virtual void RegisterRenderPass(std::unique_ptr<RenderPass> renderPass, RenderDataType type) {
+			m_RenderTasks.emplace_back(std::move(renderPass), type);
 		}
-		virtual void Initialize() override {
-			Vertex upperLeft, lowerLeft, upperRight, lowerRight;
-			upperLeft.x = -1.0f, upperLeft.y = 1.0f, upperLeft.u = 0.0f, upperLeft.v = 1.0f;
-			lowerLeft.x = -1.0f, lowerLeft.y = -1.0f, lowerLeft.u = 0.0f, lowerLeft.v = 0.0f;
-			lowerRight.x = 1.0f, lowerRight.y = -1.0f, lowerRight.u = 1.0f, lowerRight.v = 0.0f;
-			upperRight.x = 1.0f, upperRight.y = 1.0f, upperRight.u = 1.0f, upperRight.v = 1.0f;
-			std::vector<Vertex> quadVertices = { upperLeft, lowerLeft, lowerRight, upperRight };
-			std::vector<uint32_t> quadIndices = {
-				0, 1, 2,
-				2, 3, 0
-			};
-			std::shared_ptr<MeshInfo> meshInfo = std::make_shared<MeshInfo>(quadVertices, quadIndices, false, true);
-			std::shared_ptr<VertexArray> quadVAO;
-			quadVAO.reset(VertexArray::Create());
-			quadVAO->Init(meshInfo);
-			m_ScreenQuad.push_back(std::make_shared<RenderData>(quadVAO));
-			m_ScreenQuad.back()->SetTransformParam(new TransformParam());
-			AHO_CORE_INFO("RenderPipelineDefault initialized");
-			RenderCommand::SetDepthTest(true);
-			RenderCommand::SetClearColor(RenderCommand::s_DefaultClearColor);
-		}
+		virtual void SetType(RenderPipelineType type) { m_Type = type; }
+		virtual RenderPipelineType GetType() { return m_Type; }
+	private:
+		RenderPipelineType m_Type = RenderPipelineType::Default;
+		virtual const std::vector<std::shared_ptr<RenderData>>& GetRenderData(RenderDataType type);
+	private:
+		// TODO: consider decoupling renderdata 
+		std::vector<std::shared_ptr<RenderData>> m_ScreenQuad;  
+		std::vector<std::shared_ptr<RenderData>> m_UnitCube;
+		std::vector<std::shared_ptr<RenderData>> m_SceneData;	// render data is a per mesh basis
+		std::vector<std::shared_ptr<RenderData>> m_DebugData;
+	private:
+		std::vector<RenderTask> m_RenderTasks;
 	};
 } // namespace Aho
