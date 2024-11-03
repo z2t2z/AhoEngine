@@ -48,7 +48,6 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnEvent(Event& e) {
-		/* Parameters on changed event */
 		if (e.GetEventType() == EventType::UploadRenderData) {
 			e.SetHandled();
 			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
@@ -67,55 +66,57 @@ namespace Aho {
 		UBOManager::RegisterUBO<SkeletonUBO>(4);
 	}
 
-	// TDOO: texture binding should be as easy as: pass->RegisterTextureBuffer(tex, "Normal");
+	// TDOO: Should have an easier way, like binding the name into texture so that no need to hardcode it
 	void RenderLayer::SetupRenderPipeline() {
 		RenderPipeline* pipeline = new RenderPipeline();
-		auto shadingPass = SetupShadingPass();
-		auto shadowMapPass = SetupShadowMapPass();
-		auto debugPass = SetupDebugPass();
+		auto shadingPass         = SetupShadingPass();
+		auto shadowMapPass		 = SetupShadowMapPass();
+		auto debugPass			 = SetupDebugPass();
+		auto gBufferPass		 = SetupGBufferPass();
+		auto HiZPass			 = SetupHiZPass();
+		auto ssaoPass			 = SetupSSAOPass();
+		auto ssrPass			 = SetupSSRPass();
+		auto blurRGBPass		 = SetupBlurPass();
+		auto blurPass			 = SetupSSAOBlurPass();
+		auto postProcessingPass  = SetupPostProcessingPass();
 
-		shadingPass->AddGBuffer(shadowMapPass->GetRenderTarget()->GetDepthTexture());
-
-		// Setup SSAO
-		auto gBufferPass = SetupGBufferPass();
-		auto HiZPass = SetupHiZPass();
+		shadingPass->RegisterTextureBuffer({ shadowMapPass->GetRenderTarget()->GetDepthTexture(), "u_DepthMap" });
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
 
-		/* Debug pass use the same TexO as gbufferPass */
+		/* Debug pass use the same fbo as gbufferPass */
 		debugPass->SetRenderTarget(gBufferPass->GetRenderTarget());
 
-		auto ssaoPass = SetupSSAOPass();
-		auto ssrPass = SetupSSRPass();
-		HiZPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachment(3)); // this is the color attachement that contains depth info in a Hi-Z structure
-		HiZPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back());
-		// Note that order matters!
-		for (int i = 0; i < 3; i++) {
-			if (i < 2) {
-				ssaoPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal
-				ssrPass->AddGBuffer(geoPassAttachments[i]); // gPostion, gNormal
-			}
-			shadingPass->AddGBuffer(geoPassAttachments[i]);     // gPostion, gNormal, gAlbedo
-		}
-		ssaoPass->AddGBuffer(Utils::CreateNoiseTexture(32)); // ssaoPass: gPostion, gNormal, gNoise
-		ssrPass->AddGBuffer(shadingPass->GetRenderTarget()->GetTextureAttachments().back()); // SSR based on the rendered image
-		ssrPass->AddGBuffer(HiZPass->GetRenderTarget()->GetTextureAttachments().back()); // Depthmap, from view space
+		HiZPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(3), "u_Depth" }); // this is the color attachement that contains depth info in a Hi-Z structure
+		HiZPass->RegisterTextureBuffer({ HiZPass->GetRenderTarget()->GetTextureAttachments().back(), "u_SelfDepth"});
 
-		auto blurPass = SetupSSAOBlurPass();
-		blurPass->AddGBuffer(ssaoPass->GetRenderTarget()->GetTextureAttachments().back());
+		ssaoPass->RegisterTextureBuffer({ geoPassAttachments[0], "u_gPosition" }); 
+		ssaoPass->RegisterTextureBuffer({ geoPassAttachments[1], "u_gNormal" }); 
+		ssaoPass->RegisterTextureBuffer({ Utils::CreateNoiseTexture(32), "u_Noise" }); 
+
+		ssrPass->RegisterTextureBuffer({ geoPassAttachments[0], "u_gPosition" });
+		ssrPass->RegisterTextureBuffer({ geoPassAttachments[1], "u_gNormal" });
+		ssrPass->RegisterTextureBuffer({ shadingPass->GetRenderTarget()->GetTextureAttachments().back(), "u_gAlbedo" });
+		ssrPass->RegisterTextureBuffer({ HiZPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Depth" });
+
+		shadingPass->RegisterTextureBuffer({ geoPassAttachments[0], "u_gPosition" });
+		shadingPass->RegisterTextureBuffer({ geoPassAttachments[1], "u_gNormal" });
+		shadingPass->RegisterTextureBuffer({ geoPassAttachments[2], "u_gAlbedo" });
+
+		blurRGBPass->RegisterTextureBuffer({ ssrPass->GetRenderTarget()->GetTextureAttachments().back(), "u_TexToBlur" });
+		blurPass->RegisterTextureBuffer({ ssaoPass->GetRenderTarget()->GetTextureAttachments().back(), "u_SSAO" });
 		
 		auto preComputePipeline = m_Renderer->GetPipeline(RenderPipelineType::Precompute);
-		shadingPass->AddGBuffer(blurPass->GetRenderTarget()->GetTextureAttachments().back());     // SSAO
-		shadingPass->AddGBuffer(ssrPass->GetRenderTarget()->GetTextureAttachments().back());	  // Uses last frame's reflecion result
-		shadingPass->AddGBuffer(preComputePipeline->GetRenderPassTarget(RenderPassType::PrecomputeIrradiance)->GetTextureAttachments().back()); // Irradiance map
-		shadingPass->AddGBuffer(preComputePipeline->GetRenderPassTarget(RenderPassType::Prefilter)->GetTextureAttachments().back());			// Prefilter
-		shadingPass->AddGBuffer(preComputePipeline->GetRenderPassTarget(RenderPassType::GenLUT)->GetTextureAttachments().back());				// LUT
-		shadingPass->AddGBuffer(geoPassAttachments[4]);											  // PBR info, metalic and roughness for now
+		shadingPass->RegisterTextureBuffer({ blurPass->GetRenderTarget()->GetTextureAttachments().back(), "u_SSAO" });
+		shadingPass->RegisterTextureBuffer({ blurRGBPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Specular"});
+		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPassTarget(RenderPassType::PrecomputeIrradiance)->GetTextureAttachments().back(), "u_Irradiance"}); 
+		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPassTarget(RenderPassType::Prefilter)->GetTextureAttachments().back(), "u_Prefilter" });			
+		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPassTarget(RenderPassType::GenLUT)->GetTextureAttachments().back(), "u_LUT"});				
+		shadingPass->RegisterTextureBuffer({ geoPassAttachments[4], "u_PBR" });  // PBR param, metalic and roughness in rg channels respectively
 
-		auto postProcessingPass = SetupPostProcessingPass();
-		postProcessingPass->AddGBuffer(shadingPass->GetRenderTarget()->GetTextureAttachments().back());
-		postProcessingPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachment(4));
-		postProcessingPass->AddGBuffer(debugPass->GetRenderTarget()->GetTextureAttachments().back()); // DebugAttachment!
-		postProcessingPass->AddGBuffer(gBufferPass->GetRenderTarget()->GetTextureAttachment(3));
+		postProcessingPass->RegisterTextureBuffer({ shadingPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Result" });
+		postProcessingPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(4), "u_gEntity"});
+		postProcessingPass->RegisterTextureBuffer({ debugPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Debug" }); // DebugAttachment!
+		postProcessingPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(3), "u_DepthMap" });
 
 		/* This is order dependent! */
 		pipeline->RegisterRenderPass(std::move(shadowMapPass), RenderDataType::SceneData);
@@ -125,6 +126,7 @@ namespace Aho {
 		pipeline->RegisterRenderPass(std::move(ssaoPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(blurPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(ssrPass), RenderDataType::ScreenQuad);
+		pipeline->RegisterRenderPass(std::move(blurRGBPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(shadingPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(postProcessingPass), RenderDataType::ScreenQuad);
 
@@ -139,9 +141,9 @@ namespace Aho {
 		auto prefilterPass = SetupPrefilteredPass();
 		auto genLUTPass = SetupGenLUTPass();
 
-		genCubeMapPass->AddGBuffer(m_HDR);
-		preComputePass->AddGBuffer(genCubeMapPass->GetRenderTarget()->GetTextureAttachments().back());
-		prefilterPass->AddGBuffer(genCubeMapPass->GetRenderTarget()->GetTextureAttachments().back());
+		genCubeMapPass->RegisterTextureBuffer({ m_HDR, "u_HDR"});
+		preComputePass->RegisterTextureBuffer({ genCubeMapPass->GetRenderTarget()->GetTextureAttachments().back(), "u_CubeMap" });
+		prefilterPass->RegisterTextureBuffer({ genCubeMapPass->GetRenderTarget()->GetTextureAttachments().back(), "u_CubeMap" });
 
 		pipeline->RegisterRenderPass(std::move(genCubeMapPass), RenderDataType::UnitCube);
 		pipeline->RegisterRenderPass(std::move(preComputePass), RenderDataType::UnitCube);
@@ -152,19 +154,19 @@ namespace Aho {
 		m_Renderer->AddRenderPipeline(pipeline);
 	}
 
-	void RenderLayer::SetupPrecomputeSpecularIrradiancePipeline() {
-
-
-	}
-
 	std::unique_ptr<RenderPass> RenderLayer::SetupPrefilteredPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
 			shader->Bind();
-			textureBuffers[0]->Bind(0); // This is the cubemap we generated from .hdr spherical texture
-			shader->SetInt("u_CubeMap", 0);
+
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
+			}
+
 			shader->SetMat4("u_Projection", g_Projection);
 			renderTarget->Bind();
 
@@ -212,7 +214,7 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderLayer::SetupGenLUTPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
 			shader->Bind();
 			renderTarget->Bind();
@@ -225,7 +227,7 @@ namespace Aho {
 
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "GenLUT.glsl");
@@ -244,11 +246,16 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderLayer::SetupGenCubemapFromHDRPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
 			shader->Bind();
-			textureBuffers[0]->Bind(0); // This is the original .hdr texture
-			shader->SetInt("u_HDR", 0);
+
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
+			}
+
 			shader->SetMat4("u_Projection", g_Projection);
 			renderTarget->Bind();
 			for (int i = 0; i < 6; i++) {
@@ -283,11 +290,16 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderLayer::SetupPrecomputeIrradiancePass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
 			shader->Bind();
-			textureBuffers[0]->Bind(0); // This is the cubemap we generated using the .hdr file
-			shader->SetInt("u_CubeMap", 0);
+
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
+			}
+
 			shader->SetMat4("u_Projection", g_Projection);
 			renderTarget->Bind();
 			for (int i = 0; i < 6; i++) {
@@ -322,7 +334,7 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderLayer::SetupDebugPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(5, 2);
 			RenderCommand::SetClearColor(glm::vec4(0.0f));
@@ -345,7 +357,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-		});
+			});
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto debugShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "Debug.glsl");
 		pass->SetShader(debugShader);
@@ -355,7 +367,7 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupGBufferPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->Bind();
 			RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
@@ -414,17 +426,17 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupSSAOPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++);
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
-			shader->SetInt("u_gPosition", 0);
-			shader->SetInt("u_gNormal", 1);
-			shader->SetInt("u_Noise", 2);
+
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -455,15 +467,17 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupSSAOBlurPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++); // Note that order matters!
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
-			shader->SetInt("u_SSAO", 0);
+
 			for (const auto& data : renderData) {
 				data->Bind(shader, texOffset);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -487,30 +501,57 @@ namespace Aho {
 		FBSpec fbSpec(1280u, 720u, { texSpecColor });
 		auto TexO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(TexO);
-		pass->SetRenderPassType(RenderPassType::Blur);
+		pass->SetRenderPassType(RenderPassType::BlurR);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> RenderLayer::SetupBlurPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			shader->Bind();
+			renderTarget->EnableAttachments(0);
+			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
+			}
+
+			for (const auto& data : renderData) {
+				data->Bind(shader, texOffset);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			renderTarget->Unbind();
+			shader->Unbind();
+			});
+		std::string FileName = (g_CurrentPath / "ShaderSrc" / "BlurColor.glsl").string();
+		auto shader = Shader::Create(FileName);
+		AHO_CORE_ASSERT(shader->IsCompiled());
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
+		pass->SetShader(shader);
+		pass->SetRenderCommand(std::move(cmdBuffer));
+		TexSpec texSpecColor;
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto TexO = Framebuffer::Create(fbSpec);
+		pass->SetRenderTarget(TexO);
+		pass->SetRenderPassType(RenderPassType::BlurRGB);
 		return pass;
 	}
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupShadingPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++); // TODO;
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
-			shader->SetInt("u_DepthMap", 0);
-			shader->SetInt("u_gPosition", 1);
-			shader->SetInt("u_gNormal", 2);
-			shader->SetInt("u_gAlbedo", 3);
-			shader->SetInt("u_SSAO", 4);
-			shader->SetInt("u_Specular", 5);
-			shader->SetInt("u_Irradiance", 6);
-			shader->SetInt("u_Prefilter", 7);
-			shader->SetInt("u_LUT", 8);
-			shader->SetInt("u_PBR", 9);
 
 			for (const auto& data : renderData) {
 				//data-> TODO: no needs to bind material uniforms
@@ -538,7 +579,7 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupPickingPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
@@ -561,14 +602,17 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupSSRPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			renderTarget->EnableAttachments(0);
+			renderTarget->Bind();
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++); // Note that order matters!
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
+
 			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipLevels;
 			shader->SetInt("u_Width", renderTarget->GetSpecification().Width);
 			shader->SetInt("u_Height", renderTarget->GetSpecification().Height);
@@ -602,16 +646,17 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupHiZPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
-			renderTarget->EnableAttachments(0);
+			renderTarget->Bind();
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++); // Note that order matters!
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
-			shader->SetInt("u_Depth", 0);
-			shader->SetInt("u_SelfDepth", 1);
+
 			int height = renderTarget->GetTextureAttachments().back()->GetSpecification().height;
 			int width = renderTarget->GetTextureAttachments().back()->GetSpecification().width;
 			int mipLevel = renderTarget->GetTextureAttachments().back()->GetSpecification().mipLevels;
@@ -651,21 +696,21 @@ namespace Aho {
 	// Draw object outlines, lights, skeletons, etc.
 	std::unique_ptr<RenderPass> RenderLayer::SetupPostProcessingPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
 			uint32_t texOffset = 0u;
 			for (const auto& texBuffer : textureBuffers) {
-				texBuffer->Bind(texOffset++); // Note that order matters!
+				shader->SetInt(texBuffer.name, texOffset);
+				texBuffer.tex->Bind(texOffset++);
 			}
+
 			shader->SetUint("u_SelectedEntityID", GlobalState::g_SelectedEntityID);
 			shader->SetBool("u_IsEntityIDValid", GlobalState::g_IsEntityIDValid);
 			shader->SetInt("u_DrawDebug", GlobalState::g_ShowDebug);
-			shader->SetInt("u_Result", 0);
-			shader->SetInt("u_gEntity", 1);
-			shader->SetInt("u_Debug", 2);
-			shader->SetInt("u_DepthMap", 3);
+
 			for (const auto& data : renderData) {
 				data->Bind(shader);
 				RenderCommand::DrawIndexed(data->GetVAO());
@@ -689,7 +734,7 @@ namespace Aho {
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupShadowMapPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<Texture*>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 			shader->Bind();
 			renderTarget->EnableAttachments(0);
 			RenderCommand::Clear(ClearFlags::Depth_Buffer);

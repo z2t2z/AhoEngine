@@ -61,31 +61,35 @@ namespace Aho {
 		static RendererAPI* s_RendererAPI;
 	};
 
+	class TextureBuffers;
+
 	class RenderCommandBuffer {
 	public:
 		RenderCommandBuffer() = default;
 		RenderCommandBuffer(const std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
 							const std::shared_ptr<Shader>& shader,
-							const std::vector<Texture*>& textureBuffers,
+							const std::vector<TextureBuffers>& textureBuffers,
 							const std::shared_ptr<Framebuffer>& renderTarget)>& cmd) {
 			AddCommand(cmd);
 		}
 		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData,	// Meshes to render
 					 const std::shared_ptr<Shader>& shader, 						// Shader to use
 					 const std::shared_ptr<Framebuffer>& renderTarget, 				// RenderTarget 
-					 const std::vector<Texture*>& textureBuffers) const {			// G-Buffer textures
+					 const std::vector<TextureBuffers>& textureBuffers) const {			// G-Buffer textures
 			for (const auto& command : m_Commands) {
 				command(renderData, shader, textureBuffers, renderTarget);			// TODO: actually only one command is needed for now
 			}
 		}
-		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&, 
-						const std::shared_ptr<Shader>&, 
-						const std::vector<Texture*>&, 
-						const std::shared_ptr<Framebuffer>&)>& func) { m_Commands.push_back(func); }
+		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&,
+						const std::shared_ptr<Shader>&,
+						const std::vector<TextureBuffers>&,
+						const std::shared_ptr<Framebuffer>&)>& func) {
+			m_Commands.push_back(func);
+		}
 	private:
-		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,	
-									   const std::shared_ptr<Shader>& shader,						
-									   const std::vector<Texture*>& textureBuffers,					
+		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
+									   const std::shared_ptr<Shader>& shader,
+									   const std::vector<TextureBuffers>& textureBuffers,
 									   const std::shared_ptr<Framebuffer>& renderTarget)>> m_Commands;
 	};
 }

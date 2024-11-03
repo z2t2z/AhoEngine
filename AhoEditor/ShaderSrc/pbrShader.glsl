@@ -121,6 +121,8 @@ void main() {
 	vec3 R = reflect(-V, N);
 
 	vec3 F0 = vec3(0.04f);
+	vec3 ssrSpec = texture(u_Specular, v_TexCoords).rgb;
+	F0 = ssrSpec;
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
 	
 	vec3 Lo = vec3(0.0f);

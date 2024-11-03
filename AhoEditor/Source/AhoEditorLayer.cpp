@@ -38,9 +38,7 @@ namespace Aho {
 		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "translation.png").string());
 		m_RotationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "rotation.png").string());
 		m_ScaleIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "scale.png").string());
-
-
-		auto temp = Texture2D::Create((m_FolderPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string());
+		m_BackIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "back.png").string());
 	}
 
 	void AhoEditorLayer::OnDetach() {
@@ -168,7 +166,7 @@ namespace Aho {
 			//| ImGuiWindowFlags_NoDocking			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 			//| ImGuiWindowFlags_NoTitleBar
 			//| ImGuiWindowFlags_NoResize
-			//| ImGuiWindowFlags_NoMove
+			| ImGuiWindowFlags_NoMove
 			//| ImGuiWindowFlags_NoScrollbar
 			//| ImGuiWindowFlags_NoSavedSettings
 			;
@@ -190,7 +188,7 @@ namespace Aho {
 			//GlobalState::g_ShowDebug = true;
 		}
 		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::BlurRGB)->GetLastColorAttachment();
 		}
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
@@ -250,7 +248,6 @@ namespace Aho {
 			auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
 			ImGui::Separator();
 			ImGui::Text("Material:");
-			ImGui::DragFloat("AO", &mc.material->GetUniform("u_AO"), 0.01f, 0.0f, 10.0f);
 			ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
 			for (const auto& tex : *mc.material) {
@@ -300,6 +297,7 @@ namespace Aho {
 
 	// Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
 	// Order matters! Should be called after DrawViewport immediately
+	// TODO: Remove this
 	void AhoEditorLayer::DrawToolBarOverlay() {
 		auto [ww, wh] = ImGui::GetWindowSize();
 		auto [wx, wy] = ImGui::GetWindowPos();
@@ -417,7 +415,7 @@ namespace Aho {
 	void AhoEditorLayer::DrawContentBrowserPanel() {
 		ImGui::Begin("Content Browser");
 		if (m_CurrentPath != m_AssetPath) {
-			if (ImGui::Button("<==")) {
+			if (ImGui::ImageButton("##back", ImTextureID(m_BackIcon->GetTextureID()), ImVec2{18, 18})) {
 				m_CurrentPath = m_CurrentPath.parent_path();
 			}
 		}

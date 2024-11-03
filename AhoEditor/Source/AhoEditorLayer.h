@@ -55,6 +55,7 @@ namespace Aho {
 		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_BackIcon{ nullptr };
 	private:
 		LevelLayer* m_LevelLayer{ nullptr }; 
 		ResourceLayer* m_ResourceLayer{ nullptr };

@@ -20,7 +20,6 @@ namespace Aho {
 	private:
 		// TODO: move these to Renderer
 		void SetupPrecomputeDiffuseIrradiancePipeline();
-		void SetupPrecomputeSpecularIrradiancePipeline();
 	private:
 		void SetupRenderPipeline();
 		std::unique_ptr<RenderPass> SetupGenCubemapFromHDRPass();
@@ -31,6 +30,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupGBufferPass();
 		std::unique_ptr<RenderPass> SetupSSAOPass();
 		std::unique_ptr<RenderPass> SetupSSAOBlurPass();
+		std::unique_ptr<RenderPass> SetupBlurPass();
 		std::unique_ptr<RenderPass> SetupDebugPass();
 		std::unique_ptr<RenderPass> SetupShadowMapPass();
 		std::unique_ptr<RenderPass> SetupShadingPass();

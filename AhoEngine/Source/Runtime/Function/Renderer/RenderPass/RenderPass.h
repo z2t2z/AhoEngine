@@ -14,7 +14,8 @@ namespace Aho {
 		SSAOGeo,
 		SSAO,
 		SSAOLighting,
-		Blur,
+		BlurR,
+		BlurRGB,
 		SSRvs,
 		HiZ,
 		DrawLine,
@@ -24,6 +25,11 @@ namespace Aho {
 		Prefilter,
 		GenLUT
 		/* TODO */
+	};
+
+	struct TextureBuffers {
+		Texture* tex{ nullptr };
+		std::string name;
 	};
 
 	class RenderPass {
@@ -38,14 +44,15 @@ namespace Aho {
 		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) {
 			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
 		}
-		
-		virtual void AddGBuffer(Texture* tex) { m_TextureBuffers.push_back(tex); }
+
+		virtual void RegisterTextureBuffer(const TextureBuffers& buffer) { m_TextureBuffers.push_back(buffer); }
+
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
 		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
 
 	private:
+		std::vector<TextureBuffers> m_TextureBuffers;
 		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
-		std::vector<Texture*> m_TextureBuffers;					// G-buffers are stored here 
 		RenderPassType m_RenderPassType{ RenderPassType::None };
 		std::shared_ptr<Shader> m_Shader{ nullptr };			// Currently each render pass uses a single shader
 		std::unique_ptr<RenderCommandBuffer> m_RenderCommandBuffer{ nullptr };
