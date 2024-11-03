@@ -73,6 +73,7 @@ namespace Aho {
 
 	void OpenGLFramebuffer::Bind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+		glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 	}
 
@@ -127,8 +128,8 @@ namespace Aho {
 		Unbind();
 	}
 
-	void OpenGLFramebuffer::BindCubeMap(Texture* tex, int index, int attachmentID) {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentID, GL_TEXTURE_CUBE_MAP_POSITIVE_X + index, tex->GetTextureID(), 0);
+	void OpenGLFramebuffer::BindCubeMap(Texture* tex, int faceIndex, int attachmentID, int mipLevel) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentID, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, tex->GetTextureID(), mipLevel);
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 			AHO_CORE_ASSERT(false, "Binding shared depth attachment failed");
 		}
@@ -156,14 +157,11 @@ namespace Aho {
 			AHO_CORE_ERROR("Attempting to read pixel data from an invalid position: {0}, {1}", x, y);
 			return 0u;
 		}
-		uint32_t offset = shared ? m_ColorAttachmentTex.size() : 0;
-		glReadBuffer(GL_COLOR_ATTACHMENT0 + offset + attachmentIndex);
+		glReadBuffer(GL_COLOR_ATTACHMENT0  + attachmentIndex);
 		uint32_t pixelData;
 		// TODO;;
-		//auto dataFormat = readSource[attachmentIndex]->GetSpecification().dataFormat;
-		//auto dataType = readSource.dataType;
-		//glReadPixels(x, y, 1, 1, Utils::GetGLParam(dataFormat), Utils::GetGLParam(dataType), &pixelData);
-		glReadPixels(x, y, 1, 1, Utils::GetGLParam(TexDataFormat::UINT), GL_UNSIGNED_BYTE, &pixelData);
+		glReadPixels(x, y, 1, 1, Utils::GetGLParam(TexDataFormat::UINT), GL_UNSIGNED_INT, &pixelData);
+		AHO_CORE_WARN("{}, {}, {}", x, y, pixelData);
 		return pixelData;
 	}
 

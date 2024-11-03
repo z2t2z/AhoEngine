@@ -209,8 +209,8 @@ namespace Aho {
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
 				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(4, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
-				AHO_CORE_WARN("Gbuffer pass: {}", m_PickPixelData);
-				GlobalState::g_SelectedEntityID = m_PickPixelData;
+				//AHO_CORE_WARN("Gbuffer pass: {}", m_PickPixelData);
+				//GlobalState::g_SelectedEntityID = m_PickPixelData;
 			}
 		}
 
@@ -231,7 +231,6 @@ namespace Aho {
 		}
 		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 		auto& Tagc = entityManager->GetComponent<TagComponent>(m_SelectedObject);
-
 		ImGuiIO& io = ImGui::GetIO();
 		ImFont* boldFont = io.Fonts->Fonts[0];
 		ImGui::PushFont(boldFont);
@@ -244,7 +243,7 @@ namespace Aho {
 		auto& scale = tc.GetScale();
 		auto& rotation = tc.GetRotation();
 		DrawVec3Control("Translation", translation);
-		DrawVec3Control("Scale", scale);
+		DrawVec3Control("Scale", scale, 1.0f);
 		DrawVec3Control("Rotation", rotation);
 
 		if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
@@ -380,6 +379,9 @@ namespace Aho {
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 			if (entityManager->IsEntityIDValid(m_PickPixelData)) {
+				GlobalState::g_SelectedEntityID = m_PickPixelData;
+				GlobalState::g_IsEntityIDValid = true;
+
 				m_SelectedObject = Entity(static_cast<entt::entity>(m_PickPixelData));
 				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
 					m_Selected = true;
@@ -404,6 +406,9 @@ namespace Aho {
 						glm::value_ptr(transform));
 					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
 				}
+			}
+			else {
+				GlobalState::g_IsEntityIDValid = false;
 			}
 		}
 	}

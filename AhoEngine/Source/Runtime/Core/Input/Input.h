@@ -17,6 +17,7 @@ namespace Aho {
 		static void LockCursor();
 		static void UnlockCursor();
 		static bool GetCursorState();
+		static void SetCursorPos(float x, float y);
 		static bool IsCursorLocked();
 	};
 

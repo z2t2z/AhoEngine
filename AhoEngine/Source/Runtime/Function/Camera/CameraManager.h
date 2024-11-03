@@ -16,7 +16,7 @@ namespace Aho {
         Editor,
         Runtime
     };
-
+       
     // TODO: Big temporary
     class CameraManager {
     public:
@@ -32,16 +32,21 @@ namespace Aho {
         bool Update(float deltaTime, bool isCursorValid) {
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
-            glm::vec2 delta = m_Sensitivity / 1000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
+            glm::vec2 delta = m_Sensitivity / 2000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
 
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
 
             if (!isCursorValid || !Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
+                m_CursorLocked = false;
                 Input::UnlockCursor();
                 return false;
             }
-            Input::LockCursor();
+
+            if (!m_CursorLocked) {
+                m_CursorLocked = true;
+                Input::LockCursor();
+            }
 
             auto cam = GetMainEditorCamera();
             if (delta.x != 0 || delta.y != 0) {
@@ -84,6 +89,8 @@ namespace Aho {
         float m_Sensitivity{ 2.0f };
         float m_Speed{ 5.0f };
         float m_LastMouseX = 0.0f, m_LastMouseY = 0.0f;
+        float m_LockedMouseX, m_LockedMouseY;
+        bool m_CursorLocked;
         std::vector<std::shared_ptr<Camera>> m_Cameras;
     };
 } // namespace Aho

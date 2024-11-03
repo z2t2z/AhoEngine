@@ -12,6 +12,7 @@ namespace Aho {
 	// TODO; Seems like a big bad way
 	class GlobalState {
 	public:
+		static bool g_IsEntityIDValid;
 		static uint32_t g_SelectedEntityID;
 		static bool g_ShowDebug;
 	};

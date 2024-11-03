@@ -251,9 +251,9 @@ namespace Aho {
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
-			mat->SetUniform("u_AO", 0.1f);
-			mat->SetUniform("u_Metalic", 0.2f);
-			mat->SetUniform("u_Roughness", 0.2f);
+			//mat->SetUniform("u_AO", 0.1f);
+			mat->SetUniform("u_Metalic", 0.5f);
+			mat->SetUniform("u_Roughness", 0.5f);
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
@@ -302,9 +302,9 @@ namespace Aho {
 			renderData->SetVAOs(vao);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: Should not be inside material
-			mat->SetUniform("u_AO", 0.1f);				// TODO: Should not be done this way
-			mat->SetUniform("u_Metalic", 0.2f);
-			mat->SetUniform("u_Roughness", 0.2f);
+			//mat->SetUniform("u_AO", 0.1f);				// TODO: Should not be done this way
+			mat->SetUniform("u_Metalic", 0.5f);
+			mat->SetUniform("u_Roughness", 0.5f);
 			mat->SetUniform("u_BoneOffset", skeletalComponent.offset);
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {

@@ -59,8 +59,11 @@ void main() {
 
 	mat4 finalModelMat = u_Model * skinningMatrix;
 
+	// Positions are in view space
 	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
-	mat3 v_NormalMatrix = transpose(inverse(mat3(u_View * finalModelMat)));
+
+	// Normals are in world space
+	mat3 v_NormalMatrix = transpose(inverse(mat3(finalModelMat)));
 
 	v_FragPos = PosViewSpace.xyz;
 	gl_Position = u_Projection * PosViewSpace;
@@ -75,11 +78,12 @@ void main() {
 #type fragment
 #version 460 core
 
-layout(location = 0) out vec3 g_Position;
+layout(location = 0) out vec4 g_Position;
 layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out float g_Depth;
-layout(location = 4) out uint g_Entity;
+layout(location = 4) out vec3 g_PBR;
+layout(location = 5) out uint g_Entity;
 
 in vec3 v_FragPos;
 in vec3 v_Ndc;
@@ -96,11 +100,15 @@ uniform sampler2D u_Normal;
 uniform mat4 u_Model;
 uniform uint u_EntityID;
 
+uniform float u_Metalic = 0.5;
+uniform float u_Roughness = 0.5;
+
 void main() {
 	g_Entity = u_EntityID;
-	g_Position = v_FragPos;
+	g_Position = vec4(v_FragPos, 1.0f);
 	g_Depth = v_FragPos.z;
-	g_Albedo = u_HasDiffuse ? texture(u_Diffuse, v_TexCoords).rgb : vec3(0.9f);
+	g_PBR = vec3(u_Metalic, u_Roughness, 0.0f);
+	g_Albedo = u_HasDiffuse ? texture(u_Diffuse, v_TexCoords).rgb : vec3(0.95f);
 
 	if (!u_HasNormal) {
 		g_Normal = normalize(v_Normal);

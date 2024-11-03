@@ -82,9 +82,13 @@ float dither[16] = {
 vec3 RayMarching() {
     // View space
     vec3 beginPos = texture(u_gPosition, v_TexCoords).xyz;
-    // beginPos = normalize(beginPos) 
+
 	vec3 normal = texture(u_gNormal, v_TexCoords).xyz;
+    mat3 normalMatrix4 = transpose(inverse(mat3(u_View)));
+    normal = normalMatrix4 * normal; // To view space
+
     normal = normalize(normal);   
+
     vec3 viewDir = normalize(beginPos);
     vec3 rayDir = normalize(reflect(viewDir, normal));
     vec3 endPos = beginPos + rayDir * u_MaxDisance;
@@ -185,6 +189,9 @@ vec3 HiZ() {
     vec3 beginPos = texture(u_gPosition, v_TexCoords).xyz;
     // beginPos = normalize(beginPos) 
     vec3 normal = texture(u_gNormal, v_TexCoords).xyz;
+    mat3 normalMatrix4 = transpose(inverse(mat3(u_View)));
+    normal = normalMatrix4 * normal; // To view space
+
     normal = normalize(normal);
     vec3 viewDir = normalize(beginPos);
     vec3 rayDir = normalize(reflect(viewDir, normal));

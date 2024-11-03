@@ -21,6 +21,8 @@ namespace Aho {
 		PostProcessing,
 		PrecomputeIrradiance,
 		GenCubemap,
+		Prefilter,
+		GenLUT
 		/* TODO */
 	};
 

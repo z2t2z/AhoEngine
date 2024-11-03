@@ -96,6 +96,8 @@ namespace Aho {
 				return GL_R32UI;
 			case TexInterFormat::RG8:
 				return GL_RG8;
+			case TexInterFormat::RG16F:
+				return GL_RG16F;
 			case TexInterFormat::RED32F:
 				return GL_R32F;
 			case TexInterFormat::RGB8:
@@ -150,10 +152,7 @@ namespace Aho {
 		static GLenum TextureTarget(bool multisampled) {
 			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 		}
-		/*
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			target, mipmaplevel, internalFormat, width, height, boarder, dataFormat, dataType, initialData
-		*/
+
 		static Texture* CreateNoiseTexture(int siz) {
 			std::vector<glm::vec3> ssaoNoise;
 			for (unsigned int i = 0; i < siz; i++) {

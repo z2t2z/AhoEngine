@@ -9,7 +9,7 @@ namespace Aho {
 	class RenderLayer : public Layer {
 	public:
 		RenderLayer(EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
-		~RenderLayer() { delete m_Renderer; }
+		~RenderLayer() { delete m_Renderer; delete m_HDR; }
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 		void OnUpdate(float deltaTime) override;
@@ -19,11 +19,15 @@ namespace Aho {
 		Renderer* GetRenderer() { return m_Renderer; }
 	private:
 		// TODO: move these to Renderer
-		void SetupPrecomputePipeline();
+		void SetupPrecomputeDiffuseIrradiancePipeline();
+		void SetupPrecomputeSpecularIrradiancePipeline();
 	private:
 		void SetupRenderPipeline();
-		std::unique_ptr<RenderPass> SetupPrecomputeIrradiancePass();
 		std::unique_ptr<RenderPass> SetupGenCubemapFromHDRPass();
+		std::unique_ptr<RenderPass> SetupPrecomputeIrradiancePass();	// Diffuse 
+		std::unique_ptr<RenderPass> SetupPrefilteredPass();				// Specular
+		std::unique_ptr<RenderPass> SetupGenLUTPass();
+	private:
 		std::unique_ptr<RenderPass> SetupGBufferPass();
 		std::unique_ptr<RenderPass> SetupSSAOPass();
 		std::unique_ptr<RenderPass> SetupSSAOBlurPass();
@@ -36,6 +40,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupPostProcessingPass();
 		void SetupUBO();
 	private:
+		Texture* m_HDR{ nullptr }; // TODO: needs a proper resource manager
 		EventManager* m_EventManager{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;

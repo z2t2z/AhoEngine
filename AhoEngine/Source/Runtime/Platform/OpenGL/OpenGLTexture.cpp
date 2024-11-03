@@ -50,7 +50,9 @@ namespace Aho {
 			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filterModeMag);
 		}
 		if (mipLevels) {
-			m_Specification.mipLevels = Utils::CalculateMaximumMipmapLevels(std::max(m_Specification.height, m_Specification.width));
+			if (mipLevels == 1) {
+				m_Specification.mipLevels = Utils::CalculateMaximumMipmapLevels(std::max(m_Specification.height, m_Specification.width));
+			}
 			glTexParameteri(target, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, m_Specification.mipLevels);
 			glGenerateMipmap(target);

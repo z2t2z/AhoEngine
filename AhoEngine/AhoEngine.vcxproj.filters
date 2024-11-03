@@ -1736,5 +1736,6 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Animation.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp" />
   </ItemGroup>
 </Project>
