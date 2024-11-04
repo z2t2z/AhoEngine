@@ -37,6 +37,14 @@ namespace Aho {
 		virtual void RegisterRenderPass(std::unique_ptr<RenderPass> renderPass, RenderDataType type) {
 			m_RenderTasks.emplace_back(std::move(renderPass), type);
 		}
+		virtual const std::unique_ptr<RenderPass>& GetRenderPass(RenderPassType type) {
+			for (auto& task : m_RenderTasks) {
+				if (task.pass->GetRenderPassType() == type) {
+					return task.pass;
+				}
+			}
+			return nullptr;
+		}
 		virtual void SetType(RenderPipelineType type) { m_Type = type; }
 		virtual RenderPipelineType GetType() { return m_Type; }
 	private:

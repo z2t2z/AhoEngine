@@ -92,18 +92,99 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-float Shadow(vec3 fragPos) {
-	if (u_Info[0].x == 0) {
+// Shadow
+vec2 poissonDisk[16] = {
+	vec2( -0.94201624, -0.39906216 ),
+	vec2( 0.94558609, -0.76890725 ),
+	vec2( -0.094184101, -0.92938870 ),
+	vec2( 0.34495938, 0.29387760 ),
+	vec2( -0.91588581, 0.45771432 ),
+	vec2( -0.81544232, -0.87912464 ),
+	vec2( -0.38277543, 0.27676845 ),
+	vec2( 0.97484398, 0.75648379 ),
+	vec2( 0.44323325, -0.97511554 ),
+	vec2( 0.53742981, -0.47373420 ),
+	vec2( -0.26496911, -0.41893023 ),
+	vec2( 0.79197514, 0.19090188 ),
+	vec2( -0.24188840, 0.99706507 ),
+	vec2( -0.81409955, 0.91437590 ),
+	vec2( 0.19984126, 0.78641367 ),
+	vec2( 0.14383161, -0.14100790 )
+}; 
+
+const float nearPlane = 0.1f; 
+const float frustumWidth = 40.0f;
+const float Wlight = 1.0f / frustumWidth; 	// light width
+const int SAMPLE_CNT = 16;
+float BIAS = 0.001f;
+vec2 depthMapDt;
+
+float FindBlocker(vec2 uv, float zReceiver) {
+	float searchWidth = Wlight * (zReceiver - nearPlane) / zReceiver;
+
+	float blockerSum = 0.0f;
+	int sampleCnt = 0;
+
+	for (int i = 0; i < SAMPLE_CNT; ++i) {
+		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * searchWidth).r;
+		if (zReceiver > sampleDepth + BIAS) {
+			blockerSum += sampleDepth;
+			sampleCnt += 1;
+		}
+	}
+
+	if (sampleCnt == 0) {
+		return -1.0f;
+	}
+
+	return blockerSum / float(sampleCnt);
+}
+
+float PCF(vec2 uv, float zReceiver, float radius, float bias) {
+	float shadowSum = 0.0f;
+
+	for (int i = 0; i < SAMPLE_CNT; ++i) {
+		vec2 offset = poissonDisk[i] * radius;
+		float sampleDepth = texture(u_DepthMap, uv + offset).r;
+		shadowSum += zReceiver > sampleDepth + bias ? 0.0f : 1.0f;
+	}
+
+	return shadowSum / float(SAMPLE_CNT);
+}
+
+float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
+	if (lightIdx != 0) {
 		return 0.0f;
 	}
-	vec3 worldPos = (u_ViewInv * vec4(fragPos, 1.0f)).xyz;
-	vec4 lsPos = u_LightPV[0] * vec4(worldPos, 1.0f);
-	vec3 NDC = lsPos.xyz;// / lsPos.w; // [-1, 1]
-	vec3 SS = NDC * 0.5f + 0.5f; // [0, 1], ScreenSpace
-	float minDepth = texture(u_DepthMap, SS.xy).r;
-	float currDepth = SS.z;
-	return currDepth < minDepth + 0.0001f ? 0.0f : 1.0f;
+
+	fragPos.w = 1.0f;
+	fragPos = u_LightPV[0] * fragPos; 	// To light space 
+	// fragPos /= fragPos.w;			
+	fragPos = fragPos * 0.5f + 0.5f;
+ 
+	vec2 uv = fragPos.xy;
+	float zReceiver = fragPos.z;
+
+	float bias = max(0.05 * (1.0 - NdotL), 0.005);
+	BIAS = bias;
+
+	float avgBlockerDepth = FindBlocker(uv, zReceiver);
+	if (avgBlockerDepth == -1.0f) {
+		return 1.0f;
+	}
+
+	float Wpenumbra = (zReceiver - avgBlockerDepth) * Wlight / avgBlockerDepth;
+
+	float pcfRadius = Wpenumbra * nearPlane / fragPos.z;
+
+	if (fragPos.z > 1.0f) {
+		return 1.0f;
+	}
+	// return 0.0f;
+	return PCF(uv, zReceiver, pcfRadius, bias);
+	return PCF(uv, zReceiver, 0.0002, bias);
 }
+
 
 void main() {
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb;
@@ -122,11 +203,11 @@ void main() {
 
 	vec3 F0 = vec3(0.04f);
 	vec3 ssrSpec = texture(u_Specular, v_TexCoords).rgb;
-	F0 = ssrSpec;
+	// F0 = ssrSpec;
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
 	
 	vec3 Lo = vec3(0.0f);
-	for (int i = 0; i < MAX_LIGHT_CNT; i++) {
+	for (int i = 0; i < MAX_LIGHT_CNT; ++i) {
 		if (u_Info[i].x == 0) {
 			break;
 		}
@@ -157,7 +238,10 @@ void main() {
 		kD *= 1.0f - metalic;
 
 		vec3 specular = Numerator / Denominator;
-		Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+		Lo += (kD * albedo / PI + specular) 
+				* radiance 
+				* NdotL 
+				* PCSS(vec4(fragPos, 1.0f), NdotL, i);
 	}
 
 	// Ambient lighting

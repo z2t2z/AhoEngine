@@ -70,7 +70,7 @@ namespace Aho {
 		int boneOffset;
 		float currentTime;
 		std::vector<glm::mat4> globalMatrices;
-		AnimatorComponent(size_t boneCnt) : currentTime{ 0.0f }, name{ "IAmAnimator" } {
+		AnimatorComponent(size_t boneCnt) : currentTime{ 0.0f }, name{ "AnimatorComponent" } {
 			globalMatrices.resize(boneCnt);
 			std::fill(globalMatrices.begin(), globalMatrices.end(), glm::mat4(1.0f));
 		}

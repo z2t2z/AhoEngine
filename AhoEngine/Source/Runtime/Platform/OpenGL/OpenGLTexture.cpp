@@ -111,6 +111,10 @@ namespace Aho {
 		}
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+		//glBindTexture(GL_TEXTURE_2D, m_TextureID);
+		//glTexImage2D(GL_TEXTURE_2D, 0, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height, 0, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+
 		glTextureStorage2D(m_TextureID, 1, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height);
 
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);

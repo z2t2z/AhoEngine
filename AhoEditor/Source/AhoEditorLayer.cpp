@@ -31,7 +31,7 @@ namespace Aho {
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "SSR.glsl");			// TODO: resource layer
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_PlusIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "hand-cursor.png").string());
@@ -152,7 +152,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					//m_Renderer->GetCurrentRenderPipeline()->m_SSRvsPass->SetShader(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::Shading)->SetShader(newShader);
 				}
 			}
 		}
@@ -442,23 +442,27 @@ namespace Aho {
 	static bool s_IsSelected;
 	template<typename T>
 	void AhoEditorLayer::DrawNode(const T& node) {
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-		std::string showName = node->bone.name;
-		if (showName.empty()) {
-			showName = "empty";
-		}
-		if (ImGui::TreeNodeEx(showName.c_str(), flags)) {
-			if (ImGui::IsItemClicked()) {
-				//s_SelectedEntity = node;
-			}
+		//ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+		//std::string showName = node->bone.name;
+		//if (showName.empty()) {
+		//	showName = "empty";
+		//}
+		//if (ImGui::TreeNodeEx(showName.c_str(), flags)) {
+		//	if (ImGui::IsItemClicked()) {
+		//		s_SelectedEntity = entity;
+		//		m_PickPixelData = static_cast<uint32_t>(entity);
+		//		GlobalState::g_SelectedEntityID = m_PickPixelData;
 
-			for (const auto& child : node->children) {
-				DrawNode(child);
-			}
+		//		for (const auto& child : node->children) {
+		//			DrawNode(child);
+		//		}
+		//	}
 
-			ImGui::TreePop();
-		}
+		//	ImGui::TreePop();
+		//}
 	}
+
+
 
 	void AhoEditorLayer::DrawSceneHierarchyPanel() {
 		ImGui::Begin("Scene Hierarchy");
@@ -470,17 +474,45 @@ namespace Aho {
 		auto entityManager = scene->GetEntityManager();
 		auto view = scene->GetEntityManager()->GetView<TagComponent, TransformComponent>();
 		view.each([&](auto entity, TagComponent& tag, TransformComponent& tc) {
-			s_IsSelected = entity == s_SelectedEntity;
-			ImGui::Selectable(tag.Tag.c_str(), &s_IsSelected);
-			if (ImGui::IsItemClicked()) {
-				s_SelectedEntity = entity;
-				m_PickPixelData = static_cast<uint32_t>(entity);
-				GlobalState::g_SelectedEntityID = m_PickPixelData;
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+			if (entityManager->HasComponent<PointLightComponent>(entity) || entityManager->HasComponent<EntityComponent>(entity)) {
+				if (ImGui::TreeNodeEx(tag.Tag.c_str(), flags)) {
+					if (ImGui::IsItemClicked()) {
+						s_SelectedEntity = entity;
+						m_PickPixelData = static_cast<uint32_t>(entity);
+						GlobalState::g_SelectedEntityID = m_PickPixelData;
+					}
+
+					if (entityManager->HasComponent<EntityComponent>(entity)) {
+						for (const auto& subEntity : entityManager->GetComponent<EntityComponent>(entity).entities) {
+							auto tagComp = entityManager->GetComponent<TagComponent>(Entity(subEntity));
+							if (ImGui::TreeNodeEx(tagComp.Tag.c_str(), flags)) {
+								if (ImGui::IsItemClicked()) {
+									s_SelectedEntity = subEntity;
+									m_PickPixelData = static_cast<uint32_t>(subEntity);
+									GlobalState::g_SelectedEntityID = m_PickPixelData;
+								}
+
+								// If has skeleton
+								if (entityManager->HasComponent<SkeletalComponent>(s_SelectedEntity)) {
+									const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);
+									DrawNode(skeletalComponent.root);
+								}
+								ImGui::TreePop();
+							}
+						}
+					}
+					
+					// If has skeleton
+					if (entityManager->HasComponent<SkeletalComponent>(s_SelectedEntity)) {
+						const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);
+						DrawNode(skeletalComponent.root);
+					}
+
+					ImGui::TreePop();
+				}
 			}
-			if (entityManager->HasComponent<SkeletalComponent>(s_SelectedEntity)) {
-				const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(s_SelectedEntity);
-				DrawNode(skeletalComponent.root);
-			}
+
 		});
 		ImGui::End();
 	}

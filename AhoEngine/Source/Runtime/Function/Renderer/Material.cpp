@@ -2,8 +2,9 @@
 #include "Material.h"
 
 namespace Aho {
+    // TODO: Try to come up with a better way
     void Material::ClearState(const std::shared_ptr<Shader>& shader) {
-        for (const auto& name : { "u_HasDiffuse", "u_HasNormal", "u_HasAO" }) {
+        for (const auto& name : { "u_HasDiffuse", "u_HasNormal", "u_HasAO", "u_HasMetalic", "u_HasRoughness" }) {
             shader->SetBool(name, false);
         }
     }
@@ -18,20 +19,22 @@ namespace Aho {
             switch (type) {
                 case TexType::Albedo:
                     shader->SetBool("u_HasDiffuse", true);
-                    shader->SetInt("u_Diffuse", i + texOffset);
+                    shader->SetInt("u_DiffuseMap", i + texOffset);
                     break;
                 case TexType::Normal:
                     shader->SetBool("u_HasNormal", true);
-                    shader->SetInt("u_Normal", i + texOffset);
+                    shader->SetInt("u_NormalMap", i + texOffset);
                     break;
                 case TexType::Specular:
                     shader->SetInt("u_Specular", i + texOffset);
                     break;
                 case TexType::Roughness:
-                    shader->SetInt("u_Roughness", i + texOffset);
+                    shader->SetBool("u_HasRoughness", true);
+                    shader->SetInt("u_RoughnessMap", i + texOffset);
                     break;
-                case TexType::Depth:
-                    shader->SetInt("u_DepthMap", i + texOffset);
+                case TexType::Metalic:
+                    shader->SetBool("u_HasMetalic", true);
+                    shader->SetInt("u_MetalicMap", i + texOffset);
                     break;
                 default:
                     AHO_CORE_ERROR("Wrong texture type");
@@ -45,9 +48,6 @@ namespace Aho {
             shader->SetMat4(name, val);
         }
         for (const auto& [name, val] : m_UniformFloat) {
-            if (name == "u_AO") {
-                shader->SetBool("u_HasAO", true); // TODO
-            }
             shader->SetFloat(name, val);
         }
         for (const auto& [name, val] : m_UniformInt) {

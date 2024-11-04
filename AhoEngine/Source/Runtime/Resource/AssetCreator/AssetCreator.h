@@ -27,6 +27,10 @@ namespace Aho {
 				return TexType::Metalic;
 			case(aiTextureType_AMBIENT_OCCLUSION):
 				return TexType::AO;
+			case (aiTextureType_DIFFUSE_ROUGHNESS):
+				return TexType::Roughness;
+			case (aiTextureType_SHININESS):
+				return TexType::Roughness;
 			}
 			AHO_CORE_ERROR("Texture type not supported");
 		}

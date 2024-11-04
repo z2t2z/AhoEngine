@@ -27,7 +27,7 @@ namespace Aho {
 
 	void RenderLayer::OnAttach() {
 		AHO_CORE_INFO("RenderLayer on attach");
-		m_HDR = new OpenGLTexture2D((g_CurrentPath / "Asset" / "HDR" / "meadow_4k.hdr").string()/*, true*/);
+		m_HDR = new OpenGLTexture2D((g_CurrentPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string()/*, true*/);
 		g_CurrentPath = std::filesystem::current_path();
 
 		SetupPrecomputeDiffuseIrradiancePipeline();
@@ -415,7 +415,8 @@ namespace Aho {
 		entityAttachment.dataType = TexDataType::UnsignedInt;
 
 		auto pbrAttachment = positionAttachment;
-		pbrAttachment.internalFormat = TexInterFormat::RGB8; pbrAttachment.dataFormat = TexDataFormat::RGB;
+		pbrAttachment.internalFormat = TexInterFormat::RGBA16F; pbrAttachment.dataFormat = TexDataFormat::RGBA;
+		pbrAttachment.dataType = TexDataType::UnsignedInt;
 		FBSpec fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, pbrAttachment, entityAttachment, debugAttachment, depthComponent });
 
 		auto TexO = Framebuffer::Create(fbSpec);
@@ -769,9 +770,9 @@ namespace Aho {
 		texSpecDepth.wrapModeT = TexWrapMode::Repeat;
 		texSpecDepth.filterModeMin = TexFilterMode::Nearest;
 		texSpecDepth.filterModeMag = TexFilterMode::Nearest;
-		FBSpec fbSpec(2048, 2048, { texSpecDepth });  // Hardcode fow now
-		auto depthTexO = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(depthTexO);
+		FBSpec fbSpec(4096, 4096, { texSpecDepth });  // Hardcode fow now
+		auto FBO = Framebuffer::Create(fbSpec);
+		pass->SetRenderTarget(FBO);
 		pass->SetRenderPassType(RenderPassType::Depth);
 		return pass;
 	}

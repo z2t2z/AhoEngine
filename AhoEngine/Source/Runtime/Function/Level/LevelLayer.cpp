@@ -178,7 +178,7 @@ namespace Aho {
 				int index = pc.index;
 				if (pc.castShadow) {
 					float nearPlane = 0.1f, farPlane = 20.0f;
-					glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+					glm::mat4 proj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
 					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
 					lightUBO.u_LightPV[index] = lightMat;
 				}
@@ -228,7 +228,6 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		entityManager->AddComponent<MultiMeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
@@ -242,18 +241,15 @@ namespace Aho {
 			vao->Init(meshInfo);
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity("subMesh");
-			//entityManager->AddComponent<MeshComponent>(meshEntity, vao, static_cast<uint32_t>(meshEntity.GetEntityHandle()));
-			//TransformParam* param = new TransformParam();
+			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
 			entityManager->AddComponent<MeshComponent>(meshEntity);
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: should not be inside material
-			//mat->SetUniform("u_AO", 0.1f);
-			mat->SetUniform("u_Metalic", 0.5f);
-			mat->SetUniform("u_Roughness", 0.5f);
+			mat->SetUniform("u_Metalic", 0.05f);
+			mat->SetUniform("u_Roughness", 0.8f);
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
@@ -280,6 +276,8 @@ namespace Aho {
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MeshComponent>(gameObject);
+		entityManager->AddComponent<EntityComponent>(gameObject);
+
 		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
 		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
@@ -302,9 +300,8 @@ namespace Aho {
 			renderData->SetVAOs(vao);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			mat->SetUniform("u_EntityID", entityID);	// TODO: Should not be inside material
-			//mat->SetUniform("u_AO", 0.1f);				// TODO: Should not be done this way
-			mat->SetUniform("u_Metalic", 0.5f);
-			mat->SetUniform("u_Roughness", 0.5f);
+			mat->SetUniform("u_Metalic", 0.05f);
+			mat->SetUniform("u_Roughness", 0.8f);
 			mat->SetUniform("u_BoneOffset", skeletalComponent.offset);
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {

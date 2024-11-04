@@ -39,9 +39,10 @@ namespace Aho {
 		auto RetrieveMaterial = [&](aiMesh* mesh, const aiScene* scene) -> MaterialInfo {
 			MaterialInfo info;
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-			for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_HEIGHT, aiTextureType_SPECULAR, aiTextureType_METALNESS, aiTextureType_AMBIENT_OCCLUSION }) {
+			for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_SHININESS, aiTextureType_HEIGHT, aiTextureType_SPECULAR, aiTextureType_METALNESS, aiTextureType_DIFFUSE_ROUGHNESS, aiTextureType_AMBIENT_OCCLUSION }) {
 				for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 					aiString str;
+					AHO_CORE_WARN(std::string(str.data));
 					material->GetTexture(type, i, &str);
 					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), prefix + std::string(str.data));
 				}

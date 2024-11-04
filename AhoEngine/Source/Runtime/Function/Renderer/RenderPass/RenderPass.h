@@ -51,9 +51,9 @@ namespace Aho {
 		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
 
 	private:
+		RenderPassType m_RenderPassType{ RenderPassType::None };
 		std::vector<TextureBuffers> m_TextureBuffers;
 		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
-		RenderPassType m_RenderPassType{ RenderPassType::None };
 		std::shared_ptr<Shader> m_Shader{ nullptr };			// Currently each render pass uses a single shader
 		std::unique_ptr<RenderCommandBuffer> m_RenderCommandBuffer{ nullptr };
 	};
