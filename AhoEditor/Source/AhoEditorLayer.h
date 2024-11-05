@@ -15,6 +15,7 @@ namespace Aho {
 		virtual void OnEvent(Event& e) override;
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
+	private:
 		void DrawContentBrowserPanel();
 		void DrawPropertiesPanel();
 		void DrawSceneHierarchyPanel();
@@ -22,6 +23,8 @@ namespace Aho {
 		void DrawViewport();
 		void DrawLightIcons();
 		void DrawToolBarOverlay();
+		void DrawToolBar();
+		void DrawManipulationToolBar();
 		void DrawGizmo();
 		template<typename T>
 		void DrawNode(const T& node);
@@ -51,7 +54,7 @@ namespace Aho {
 		//std::unique_ptr<Texture2D> m_LightIcon; ??
 		std::shared_ptr<Texture2D> m_CursorIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_PlusIcon{ nullptr };
+		std::shared_ptr<Texture2D> m_AddIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };

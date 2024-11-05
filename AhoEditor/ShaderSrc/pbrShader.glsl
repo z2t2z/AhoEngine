@@ -112,22 +112,23 @@ vec2 poissonDisk[16] = {
 	vec2( 0.14383161, -0.14100790 )
 }; 
 
-const float nearPlane = 0.1f; 
-const float frustumWidth = 40.0f;
-const float Wlight = 1.0f / frustumWidth; 	// light width
+const float nearPlane = 1.0f; 
+const float frustumWidth = 15.0f;
+const float lightSize = 0.1f; 	// light width
+const float lightUV = lightSize / frustumWidth;
 const int SAMPLE_CNT = 16;
 float BIAS = 0.001f;
 vec2 depthMapDt;
 
 float FindBlocker(vec2 uv, float zReceiver) {
-	float searchWidth = Wlight * (zReceiver - nearPlane) / zReceiver;
+	float searchWidth = lightUV * (zReceiver - nearPlane) / zReceiver;
 
 	float blockerSum = 0.0f;
 	int sampleCnt = 0;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
 		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * searchWidth).r;
-		if (zReceiver > sampleDepth + BIAS) {
+		if (zReceiver > sampleDepth/* + BIAS*/) {
 			blockerSum += sampleDepth;
 			sampleCnt += 1;
 		}
@@ -144,8 +145,7 @@ float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 	float shadowSum = 0.0f;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
-		vec2 offset = poissonDisk[i] * radius;
-		float sampleDepth = texture(u_DepthMap, uv + offset).r;
+		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * radius).r;
 		shadowSum += zReceiver > sampleDepth + bias ? 0.0f : 1.0f;
 	}
 
@@ -154,11 +154,11 @@ float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 
 float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 	if (lightIdx != 0) {
-		return 0.0f;
+		return 1.0f;
 	}
 
 	fragPos.w = 1.0f;
-	fragPos = u_LightPV[0] * fragPos; 	// To light space 
+	fragPos = u_LightPV[lightIdx] * fragPos; 	// To light space 
 	// fragPos /= fragPos.w;			
 	fragPos = fragPos * 0.5f + 0.5f;
  
@@ -173,9 +173,9 @@ float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 		return 1.0f;
 	}
 
-	float Wpenumbra = (zReceiver - avgBlockerDepth) * Wlight / avgBlockerDepth;
+	float Wpenumbra = (zReceiver - avgBlockerDepth) / avgBlockerDepth  * lightUV;
 
-	float pcfRadius = Wpenumbra * nearPlane / fragPos.z;
+	float pcfRadius = Wpenumbra * nearPlane / zReceiver;
 
 	if (fragPos.z > 1.0f) {
 		return 1.0f;
@@ -194,7 +194,9 @@ void main() {
 
 	float AO = texture(u_SSAO, v_TexCoords).r;
 	float metalic = texture(u_PBR, v_TexCoords).r;
+	// metalic = 0.95f;
 	float roughness = texture(u_PBR, v_TexCoords).g;
+	// roughness = 0.01f;
 
 	vec3 viewPos = u_ViewPosition.xyz;
 	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb);
@@ -255,9 +257,9 @@ void main() {
 
 	vec3 preFilter = textureLod(u_Prefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
 	vec2 brdf = texture(u_LUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-	vec3 specular = preFilter * (F * brdf.x + brdf.y);
-
-	vec3 ambient = (kD * diffuse + specular) * AO;
+	vec3 specular =  preFilter * (F * brdf.x + brdf.y);
+	// specular = ssrSpec;
+	vec3 ambient = (kD * diffuse + specular * ssrSpec) * AO;
 
 	vec3 Color = ambient + Lo;
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping

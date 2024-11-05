@@ -1604,6 +1604,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
     <ClInclude Include="Source\Runtime\Function\Gameplay\IK.h" />
     <ClInclude Include="Source\Runtime\Core\Math\Math.h" />
+    <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

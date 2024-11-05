@@ -6,6 +6,8 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "ImGuizmo.h"
+#include "IconsFontAwesome6.h"
+
 // TODO: To support other libraries and graphics api, these are just temporary includes!
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -34,10 +36,29 @@ namespace Aho {
 		}
 		auto path = std::filesystem::current_path().parent_path();
 		AHO_CORE_TRACE(path.string());
+
 		// TODO: Font manager
 		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Bold.ttf").string().c_str(), 16.0f);
+		float baseFontSize = 20.0f; // 13.0f is the size of the default font. Change to the font size you use.
+		float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
+		
+		static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+		ImFontConfig icons_config;
+		icons_config.MergeMode = true;
+		icons_config.PixelSnapH = true;
+		icons_config.GlyphMinAdvanceX = iconFontSize;
+
+		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "fa-solid-900.ttf").string().c_str(), iconFontSize, &icons_config, icons_ranges);
+
 		auto font = io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "NanumGothic-Regular.ttf").string().c_str(), 16.0f);
+
+		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "fa-solid-900.ttf").string().c_str(), iconFontSize, &icons_config, icons_ranges);
+
 		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "Roboto-Regular.ttf").string().c_str(), 19.0f);
+
+		iconFontSize *= 1.2f;
+		io.Fonts->AddFontFromFileTTF((path / "AhoEngine" / "Asset" / "fa-solid-900.ttf").string().c_str(), iconFontSize, &icons_config, icons_ranges);
+
 		io.FontDefault = font;
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());

@@ -1,6 +1,9 @@
 #include "IamAho.h"
 #include "AhoEditorLayer.h"
-#include "entt.hpp"
+
+#include "Runtime/Core/Gui/IconsFontAwesome6.h"
+#include <iomanip>
+#include <entt.hpp>
 #include <filesystem>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -8,10 +11,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
-	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::TRANSLATE;
+	namespace fs = std::filesystem;
+
+	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
 
 	enum class ButtonType {
 		None = 0,
+		Selection,
 		Scale,
 		Translation,
 		Rotation
@@ -19,7 +25,7 @@ namespace Aho {
 
 	static ButtonType g_SelectedButton = ButtonType::None;
 
-	static const float g_ToolBarIconSize = 20.0f;
+	static const float g_ToolBarIconSize = 22.0f;
 
 	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, ResourceLayer* resourceLayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
 		: Layer("EditorLayer"), m_ResourceLayer(resourceLayer), m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
@@ -27,17 +33,17 @@ namespace Aho {
 
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("EditorLayer on attach");
-		m_FolderPath = std::filesystem::current_path();
+		m_FolderPath = fs::current_path();
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
 		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
-		m_PlusIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
-		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "hand-cursor.png").string());
-		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "translation.png").string());
-		m_RotationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "rotation.png").string());
-		m_ScaleIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "svgtopng" / "scale.png").string());
+		m_AddIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
+		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "cursor.png").string());
+		m_TranslationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "translation.png").string());
+		m_RotationIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "rotate.png").string());
+		m_ScaleIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "scale.png").string());
 		m_BackIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "back.png").string());
 	}
 
@@ -113,7 +119,7 @@ namespace Aho {
 
 					ImGui::Separator();
 
-					if (ImGui::MenuItem("Exit"))
+					if (ImGui::MenuItem(ICON_FA_POWER_OFF " Exit"))
 						Application::Get().ShutDown();
 
 					ImGui::EndMenu();
@@ -170,7 +176,11 @@ namespace Aho {
 			//| ImGuiWindowFlags_NoScrollbar
 			//| ImGuiWindowFlags_NoSavedSettings
 			;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 		ImGui::Begin("Viewport", nullptr, window_flags);
+		ImGui::PopStyleVar();
+
 		DrawToolBarOverlay();
 
 		auto [width, height] = ImGui::GetWindowSize();
@@ -193,7 +203,7 @@ namespace Aho {
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
 		}
-		ImGui::Image((ImTextureID)RenderResult, ImGui::GetContentRegionAvail(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((ImTextureID)RenderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
@@ -221,8 +231,7 @@ namespace Aho {
 	static ImVec2 s_ImageSize(100.0f, 100.0f);
 	static ImVec2 s_Padding(10.0f, 10.0f);
 	void AhoEditorLayer::DrawPropertiesPanel() {
-		std::string title = "Properties Panel";
-		ImGui::Begin(title.c_str());
+		ImGui::Begin(ICON_FA_GEAR " Properties Panel");
 		if (!m_Selected) {
 			ImGui::End();
 			return;
@@ -299,17 +308,23 @@ namespace Aho {
 	// Order matters! Should be called after DrawViewport immediately
 	// TODO: Remove this
 	void AhoEditorLayer::DrawToolBarOverlay() {
-		auto [ww, wh] = ImGui::GetWindowSize();
-		auto [wx, wy] = ImGui::GetWindowPos();
-		ImVec2 buttonPos = ImGui::GetCursorScreenPos();
-		ImVec2 pos = { wx + 20.0f, wy + ImGui::GetFrameHeight() };
-		ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
-		ImVec2 OverLaySize{ ww, 60.0f };
-		ImGui::SetNextWindowSize(OverLaySize, ImGuiCond_Always);
+		DrawToolBar();
+		DrawManipulationToolBar();
+	}
 
-		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.85f); // alpha value
-		if (ImGui::ImageButton("add", (ImTextureID)m_PlusIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize })) {
+	void AhoEditorLayer::DrawToolBar() {
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
+		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
+		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGui::PopStyleVar();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		if (ImGui::ImageButton("add", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
 			ImGui::OpenPopup("popup_menu");
 		}
 		ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
@@ -339,14 +354,36 @@ namespace Aho {
 			}
 			ImGui::EndPopup();
 		}
+		//ImGui::PopStyleVar(4);
+		ImGui::End();
+	}
+
+	void AhoEditorLayer::DrawManipulationToolBar() {
+		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
+		// Draws a translucent tool bar
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f); 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
+
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); 
+		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse/* | ImGuiWindowFlags_NoMove*/);
 		ImGui::PopStyleVar();
 
-		ImVec2 IconPos = { wx + ww - g_ToolBarIconSize * 6, wy + ImGui::GetFrameHeight() + 5.0f };
-		ImGui::SetCursorScreenPos(IconPos);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6f); // alpha value
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+		if (ImGui::ImageButton("selectionMode", (ImTextureID)m_CursorIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
+			ImVec2(0, 0), ImVec2(1, 1),
+			g_SelectedButton == ButtonType::Selection ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton = ButtonType::Selection;
+			g_Operation = ImGuizmo::OPERATION::NONE;
+			m_ShouldPickObject = false;
+			m_IsClickingEventBlocked = true;
+		}
+		ImGui::SameLine();
 		if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
 			ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.0f, 0.45f, 0.85f, 0.85f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Translation;
 			g_Operation = ImGuizmo::OPERATION::TRANSLATE;
 			m_ShouldPickObject = false;
@@ -354,7 +391,7 @@ namespace Aho {
 		}
 		ImGui::SameLine();
 		if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.0f, 0.45f, 0.85f, 0.85f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Rotation;
 			g_Operation = ImGuizmo::OPERATION::ROTATE;
 			m_ShouldPickObject = false;
@@ -362,13 +399,14 @@ namespace Aho {
 		}
 		ImGui::SameLine();
 		if (ImGui::ImageButton("scaleMode", (ImTextureID)m_ScaleIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Scale ? ImVec4{ 0.0f, 0.45f, 0.85f, 0.85f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Scale ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Scale;
 			g_Operation = ImGuizmo::OPERATION::SCALE;
 			m_ShouldPickObject = false;
 			m_IsClickingEventBlocked = true;
 		}
-		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar(4);
 		ImGui::End();
 	}
 
@@ -396,13 +434,14 @@ namespace Aho {
 					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, m_ViewportWidth, m_ViewportHeight - ImGui::GetFrameHeight());
 
 					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
-					//TODO: use delta matrix here to avoid jittering
-					m_IsClickingEventBlocked = ImGuizmo::IsOver();
-					ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
-						g_Operation,
-						ImGuizmo::MODE::WORLD,
-						glm::value_ptr(transform));
-					ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+					if (g_Operation != ImGuizmo::OPERATION::NONE) {
+						m_IsClickingEventBlocked = ImGuizmo::IsOver();
+						ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
+							g_Operation,
+							ImGuizmo::MODE::WORLD,
+							glm::value_ptr(transform));
+						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+					}
 				}
 			}
 			else {
@@ -411,9 +450,8 @@ namespace Aho {
 		}
 	}
 
-	namespace fs = std::filesystem;
 	void AhoEditorLayer::DrawContentBrowserPanel() {
-		ImGui::Begin("Content Browser");
+		ImGui::Begin(ICON_FA_FOLDER " Content Browser");
 		if (m_CurrentPath != m_AssetPath) {
 			if (ImGui::ImageButton("##back", ImTextureID(m_BackIcon->GetTextureID()), ImVec2{18, 18})) {
 				m_CurrentPath = m_CurrentPath.parent_path();
@@ -465,7 +503,7 @@ namespace Aho {
 
 
 	void AhoEditorLayer::DrawSceneHierarchyPanel() {
-		ImGui::Begin("Scene Hierarchy");
+		ImGui::Begin(ICON_FA_TREE " Hierarchy");
 		auto scene = m_LevelLayer->GetCurrentLevel();
 		if (!scene) {
 			ImGui::End();

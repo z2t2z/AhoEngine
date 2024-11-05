@@ -124,7 +124,7 @@ namespace Aho {
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_LINEAR);
 
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, spec.width, spec.height, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
-		//glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		stbi_image_free(data);
 	}

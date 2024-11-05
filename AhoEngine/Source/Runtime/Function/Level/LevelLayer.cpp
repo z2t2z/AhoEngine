@@ -177,8 +177,8 @@ namespace Aho {
 			view.each([&](auto entity, auto& pc, auto& tc) {
 				int index = pc.index;
 				if (pc.castShadow) {
-					float nearPlane = 0.1f, farPlane = 20.0f;
-					glm::mat4 proj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
+					float nearPlane = 1.0f, farPlane = 15.0f;
+					glm::mat4 proj = glm::ortho(-7.5f, 7.5f, -7.5f, 7.5f, nearPlane, farPlane);
 					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
 					lightUBO.u_LightPV[index] = lightMat;
 				}

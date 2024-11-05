@@ -184,7 +184,7 @@ vec3 RayMarching() {
     return result;
 }
 
-vec3 HiZ() {
+vec4 HiZ() {
     // View space
     vec3 beginPos = texture(u_gPosition, v_TexCoords).xyz;
     // beginPos = normalize(beginPos) 
@@ -267,10 +267,11 @@ vec3 HiZ() {
         hitPixel /= pow(2, mipLevel);
         float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
 
-        if (rayDepth + 0.01f < sampleDepth) {
-            if (rayDepth + thickNess > sampleDepth + 0.01f) {
+        if (rayDepth + 0.001f < sampleDepth) {
+            if (rayDepth + thickNess > sampleDepth + 0.001f) {
                 if (mipLevel == 0) {
                     result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
+                    return vec4(result, 1.0f);
                     break;
                 }
             }
@@ -283,9 +284,10 @@ vec3 HiZ() {
             mipLevel = min(mipLevelCount, mipLevel + 1);
         }
     }
-    return result;
+    return vec4(1.0f);
 }
   
 void main() { 
-    out_color = vec4(HiZ(), 1.0f);
+    // out_color = vec4(HiZ(), 1.0f);
+    out_color = HiZ();
 }

@@ -87,7 +87,7 @@ namespace Aho {
         float& GetSpeed() { return m_Speed; }
     private:
         float m_Sensitivity{ 2.0f };
-        float m_Speed{ 5.0f };
+        float m_Speed{ 2.5f };
         float m_LastMouseX = 0.0f, m_LastMouseY = 0.0f;
         float m_LockedMouseX, m_LockedMouseY;
         bool m_CursorLocked;

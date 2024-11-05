@@ -149,6 +149,7 @@
     <ClInclude Include="Source\Runtime\Core\Events\Event.h" />
     <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h" />
     <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h" />
+    <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h" />
     <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h" />
     <ClInclude Include="Source\Runtime\Core\Input\Input.h" />
     <ClInclude Include="Source\Runtime\Core\Input\KeyCodes.h" />
