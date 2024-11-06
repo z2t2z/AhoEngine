@@ -10,7 +10,7 @@ namespace Aho {
 		Debug,
 		Shading,
 		Depth,
-		Pick,
+		DrawSelected,
 		SSAOGeo,
 		SSAO,
 		SSAOLighting,

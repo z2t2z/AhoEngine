@@ -8,7 +8,7 @@
 namespace Aho {
 	// Texture parameters
 	enum class TexInterFormat {
-		None, RED, UINT, RED32F, RG8, RG16F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32F,
+		None, RED, UINT, RED32F, RG8, RG16F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32,
 	};
 	enum class TexDataFormat {
 		None, RED, UINT, RG, RGB, RGBA, DepthComponent,

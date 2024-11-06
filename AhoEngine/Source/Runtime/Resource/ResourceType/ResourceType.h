@@ -48,10 +48,7 @@ namespace Aho {
 			glm::vec3 Skew;
 			glm::vec4 Perspective;
 			glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
-			Rotation = QuaternionToEuler(Orientation);
-			Rotation.x = glm::degrees(Rotation.x);
-			Rotation.y = glm::degrees(Rotation.y);
-			Rotation.z = glm::degrees(Rotation.z);
+			Rotation = glm::degrees(QuaternionToEuler(Orientation));
 		}
 		TransformParam() : Translation(0.0f), Scale(1.0f), Rotation(0.0f) {}
 		glm::mat4 GetTransform() {

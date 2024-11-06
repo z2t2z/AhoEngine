@@ -25,15 +25,20 @@ namespace Aho {
 		void SetInstanced() { m_Instanced = true; };
 		void SetDebug(bool state = true) { m_IsDebug = state; }
 		void Unbind();
+		void SetEntityID(uint32_t id) { m_EntityID = id; }
+		int& GetBoneOffset() { return m_BoneOffset; }
+		uint32_t GetEntityID() { return m_EntityID; }
 	public:
 		void SetRendered(bool state) { m_ShouldRender = state; }
 		bool ShouldBeRendered() { return m_ShouldRender; }
 		bool IsDebug() { return m_IsDebug; }
 		bool IsInstanced() { return m_Instanced; }
 	private:
+		uint32_t m_EntityID{ 0u };
 		bool m_IsDebug{ false };
 		bool m_Instanced{ false };
 		bool m_ShouldRender{ true };
+		int m_BoneOffset{ -1 };
 	private:
 		TransformParam* m_Param{ nullptr };
 		std::shared_ptr<VertexArray> m_VAO{ nullptr };

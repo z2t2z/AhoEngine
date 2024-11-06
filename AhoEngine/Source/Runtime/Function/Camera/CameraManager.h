@@ -30,21 +30,20 @@ namespace Aho {
         size_t AddCamera(std::shared_ptr<Camera> cam) { m_Cameras.push_back(cam); return m_Cameras.size(); }
         
         bool Update(float deltaTime, bool isCursorValid) {
-            // Handle rotation
-            auto [mouseX, mouseY] = Input::GetMousePosition();
-            glm::vec2 delta = m_Sensitivity / 2000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
-
-            std::swap(mouseX, m_LastMouseX);
-            std::swap(mouseY, m_LastMouseY);
-
             if (!isCursorValid || !Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
                 m_CursorLocked = false;
                 Input::UnlockCursor();
                 return false;
             }
 
+            // Handle rotation
+            auto [mouseX, mouseY] = Input::GetMousePosition();
+            glm::vec2 delta = m_Sensitivity / 2000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
             if (!m_CursorLocked) {
                 m_CursorLocked = true;
+                std::swap(mouseX, m_LastMouseX);
+                std::swap(mouseY, m_LastMouseY);
+                delta.x = delta.y = 0.0f;
                 Input::LockCursor();
             }
 
@@ -54,8 +53,8 @@ namespace Aho {
                 float yawDelta = delta.x * cam->GetRotationSpeed();
 
                 //glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, cam->GetRight()), glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
-                glm::quat q = glm::normalize(glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f)) *
-                    glm::angleAxis(-pitchDelta, cam->GetRight()));
+                glm::quat q = glm::normalize(glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f)) 
+                                              * glm::angleAxis(-pitchDelta, cam->GetRight()));
 
                 cam->SetForwardRotation(q);
             }
@@ -78,7 +77,9 @@ namespace Aho {
                 cam->MoveRight(deltaTime * m_Speed * 10.0f);
                 //movement.x += 1.0f;
             }
-            //GetMainEditorCamera()->Update(deltaTime, movement);
+
+            Input::SetCursorPos(m_LastMouseX, m_LastMouseY);
+
             return true;
         }
 

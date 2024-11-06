@@ -117,8 +117,8 @@ namespace Aho {
 
 		glTextureStorage2D(m_TextureID, 1, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height);
 
-		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_LINEAR);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_LINEAR);

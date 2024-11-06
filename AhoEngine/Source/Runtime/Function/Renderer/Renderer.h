@@ -15,6 +15,7 @@ namespace Aho {
 		static bool g_IsEntityIDValid;
 		static uint32_t g_SelectedEntityID;
 		static bool g_ShowDebug;
+		static std::shared_ptr<RenderData> g_SelectedData;
 	};
 
 	class Renderer {

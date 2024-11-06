@@ -5,9 +5,6 @@
 #include <iomanip>
 #include <entt.hpp>
 #include <filesystem>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <ImGuizmo.h>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Aho {
@@ -91,7 +88,9 @@ namespace Aho {
 			ImGuiIO& io = ImGui::GetIO();
 			ImFont* titleFont = io.Fonts->Fonts[2];
 			ImGui::PushFont(titleFont);
-
+			ImGui::GetStyle().TabRounding = 15.0f;
+			float padding = ImGui::GetStyle().FramePadding.x;
+			ImGui::GetStyle().FramePadding.x = 10.0f;
 			ImGui::Begin("DockSpace Demo", p_open, window_flags);
 			if (!opt_padding)
 				ImGui::PopStyleVar();
@@ -105,6 +104,7 @@ namespace Aho {
 			}
 			static bool camSpeed = false;
 			static bool sens = false;
+			ImGui::GetStyle().FramePadding.x = padding;
 
 			ImGui::PushFont(io.Fonts->Fonts[0]);
 			if (ImGui::BeginMenuBar()) {
@@ -129,6 +129,7 @@ namespace Aho {
 			ImGui::PopFont();
 			ImGui::PopFont();
 			ImGui::End();
+			ImGui::GetStyle().TabRounding = 0.0f;
 		}
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
@@ -159,10 +160,11 @@ namespace Aho {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
 					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::Shading)->SetShader(newShader);
+					return true;
 				}
 			}
 		}
-		return true;
+		return false;
 	}
 
 	void AhoEditorLayer::DrawViewport() {
@@ -174,7 +176,6 @@ namespace Aho {
 			//| ImGuiWindowFlags_NoResize
 			| ImGuiWindowFlags_NoMove
 			//| ImGuiWindowFlags_NoScrollbar
-			//| ImGuiWindowFlags_NoSavedSettings
 			;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
@@ -194,8 +195,7 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Debug)->GetLastColorAttachment();
-			//GlobalState::g_ShowDebug = true;
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->GetTextureAttachment(5)->GetTextureID();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::BlurRGB)->GetLastColorAttachment();
@@ -203,6 +203,7 @@ namespace Aho {
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
 		}
+
 		ImGui::Image((ImTextureID)RenderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
@@ -210,15 +211,13 @@ namespace Aho {
 		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
 		MouseY = spec.Height - MouseY;
 		m_IsViewportFocused = ImGui::IsWindowFocused();
-		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight - g_ToolBarIconSize - ImGui::GetFrameHeight());
+		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight);
 		if (m_ShouldPickObject) {
 			m_ShouldPickObject = false;
-			if (m_IsCursorInViewport) { // If user is clicking the toolbar then ignore it
+			if (m_IsCursorInViewport) { 
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
-				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(4, MouseX, MouseY);
+				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(5, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
-				//AHO_CORE_WARN("Gbuffer pass: {}", m_PickPixelData);
-				//GlobalState::g_SelectedEntityID = m_PickPixelData;
 			}
 		}
 
@@ -254,23 +253,23 @@ namespace Aho {
 		DrawVec3Control("Rotation", rotation);
 
 		if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
-			auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
-			ImGui::Separator();
-			ImGui::Text("Material:");
-			ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
-			for (const auto& tex : *mc.material) {
-				//ImGui::Text(tex->GetTextureType());
-				ImGui::Dummy(ImVec2(0, s_Padding.y));
-				ImGui::BeginGroup();
-				ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
-				ImGui::SameLine();
-				ImGui::Image((ImTextureID)tex->GetTextureID(), s_ImageSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-				ImGui::SameLine();
-				ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
-				ImGui::EndGroup();
-				ImGui::Dummy(ImVec2(0, s_Padding.y));
-			}
+			//auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
+			//ImGui::Separator();
+			//ImGui::Text("Material:");
+			//ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
+			//ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
+			//for (const auto& tex : *mc.material) {
+			//	//ImGui::Text(tex->GetTextureType());
+			//	ImGui::Dummy(ImVec2(0, s_Padding.y));
+			//	ImGui::BeginGroup();
+			//	ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
+			//	ImGui::SameLine();
+			//	ImGui::Image((ImTextureID)tex->GetTextureID(), s_ImageSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+			//	ImGui::SameLine();
+			//	ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
+			//	ImGui::EndGroup();
+			//	ImGui::Dummy(ImVec2(0, s_Padding.y));
+			//}
 		}
 		if (entityManager->HasComponent<PointLightComponent>(m_SelectedObject)) {
 			auto& pc = entityManager->GetComponent<PointLightComponent>(m_SelectedObject);
@@ -299,24 +298,18 @@ namespace Aho {
 					ImGui::SetCursorScreenPos(pos);
 					ImVec2 iconSize{ s_LightVisSize, s_LightVisSize };
 					ImGui::Image((ImTextureID)m_LightIcon->GetTextureID(), iconSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+					//DrawCircle(pos, s_LightVisSize);
 				}
 			}
 		});
 	}
 
-	// Add button, Play button, Manipulate buttons, etc. Hardcode everything!!!
-	// Order matters! Should be called after DrawViewport immediately
-	// TODO: Remove this
 	void AhoEditorLayer::DrawToolBarOverlay() {
 		DrawToolBar();
 		DrawManipulationToolBar();
 	}
 
 	void AhoEditorLayer::DrawToolBar() {
-		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
-		//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		//ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f);
-		//ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
 		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
 		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -354,27 +347,24 @@ namespace Aho {
 			}
 			ImGui::EndPopup();
 		}
-		//ImGui::PopStyleVar(4);
 		ImGui::End();
 	}
 
+	// TODO: Consider use icon font to avoid aliasing, or implement anti-aliasing first
 	void AhoEditorLayer::DrawManipulationToolBar() {
-		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
 		// Draws a translucent tool bar
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f); 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
-
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); 
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f, 0.5f, 0.5f, 0.2f));
 		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse/* | ImGuiWindowFlags_NoMove*/);
-		ImGui::PopStyleVar();
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		if (ImGui::ImageButton("selectionMode", (ImTextureID)m_CursorIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
 			ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Selection ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Selection ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Selection;
 			g_Operation = ImGuizmo::OPERATION::NONE;
 			m_ShouldPickObject = false;
@@ -383,7 +373,7 @@ namespace Aho {
 		ImGui::SameLine();
 		if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
 			ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Translation;
 			g_Operation = ImGuizmo::OPERATION::TRANSLATE;
 			m_ShouldPickObject = false;
@@ -391,7 +381,7 @@ namespace Aho {
 		}
 		ImGui::SameLine();
 		if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Rotation;
 			g_Operation = ImGuizmo::OPERATION::ROTATE;
 			m_ShouldPickObject = false;
@@ -399,13 +389,13 @@ namespace Aho {
 		}
 		ImGui::SameLine();
 		if (ImGui::ImageButton("scaleMode", (ImTextureID)m_ScaleIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Scale ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.5f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+			g_SelectedButton == ButtonType::Scale ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
 			g_SelectedButton = ButtonType::Scale;
 			g_Operation = ImGuizmo::OPERATION::SCALE;
 			m_ShouldPickObject = false;
 			m_IsClickingEventBlocked = true;
 		}
-		ImGui::PopStyleColor();
+		ImGui::PopStyleColor(2);
 		ImGui::PopStyleVar(4);
 		ImGui::End();
 	}
@@ -414,7 +404,7 @@ namespace Aho {
 		m_Selected = false;
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-			if (entityManager->IsEntityIDValid(m_PickPixelData)) {
+			if (m_PickPixelData && entityManager->IsEntityIDValid(m_PickPixelData)) {
 				GlobalState::g_SelectedEntityID = m_PickPixelData;
 				GlobalState::g_IsEntityIDValid = true;
 
@@ -435,10 +425,10 @@ namespace Aho {
 
 					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
 					if (g_Operation != ImGuizmo::OPERATION::NONE) {
-						m_IsClickingEventBlocked = ImGuizmo::IsOver();
+						m_IsClickingEventBlocked |= ImGuizmo::IsOver();
 						ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
 							g_Operation,
-							ImGuizmo::MODE::WORLD,
+							ImGuizmo::MODE::LOCAL,
 							glm::value_ptr(transform));
 						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
 					}
@@ -447,6 +437,37 @@ namespace Aho {
 			else {
 				GlobalState::g_IsEntityIDValid = false;
 			}
+		}
+	}
+
+	void AhoEditorLayer::DrawCircle(const ImVec2& center, float radius) {
+		int segments = 32;
+		auto draw_list = ImGui::GetWindowDrawList();
+		ImU32 color = IM_COL32(255, 255, 0, 255);
+		for (int i = 1; i < segments / 2; ++i) {
+			float theta = IM_PI * i / (segments / 2);  // 纬线角度
+			float r = radius * sin(theta);             // 环的半径
+			float y = radius * cos(theta);             // 环的偏移量
+
+			draw_list->AddCircle(ImVec2(center.x, center.y + y), r, color, segments);
+		}
+
+		for (int i = 0; i < segments; ++i) {
+			float theta = 2 * IM_PI * i / segments;    // 经线角度6
+			float x = radius * cos(theta);             // 环的 x 偏移量
+			float z = radius * sin(theta);             // 环的 z 偏移量（投影为 y 轴偏移）
+
+			for (int j = 0; j <= segments / 2; ++j) {
+				float phi = IM_PI * j / (segments / 2);
+				float y = radius * cos(phi);           // 计算垂直方向上的高度
+				float r = radius * sin(phi);           // 计算垂直方向上的半径
+
+				ImVec2 point(center.x + x * r / radius, center.y + y);
+				if (j > 0) {
+					draw_list->PathLineTo(point);
+				}
+			}
+			draw_list->PathStroke(color, ImDrawFlags_None, 1.0f);
 		}
 	}
 
@@ -523,8 +544,10 @@ namespace Aho {
 
 					if (entityManager->HasComponent<EntityComponent>(entity)) {
 						for (const auto& subEntity : entityManager->GetComponent<EntityComponent>(entity).entities) {
-							auto tagComp = entityManager->GetComponent<TagComponent>(Entity(subEntity));
-							if (ImGui::TreeNodeEx(tagComp.Tag.c_str(), flags)) {
+							std::string tag = (entityManager->HasComponent<TagComponent>(Entity(subEntity)) ?
+												entityManager->GetComponent<TagComponent>(Entity(subEntity)).Tag : "Untitled");
+
+							if (ImGui::TreeNodeEx(tag.c_str(), flags)) {
 								if (ImGui::IsItemClicked()) {
 									s_SelectedEntity = subEntity;
 									m_PickPixelData = static_cast<uint32_t>(subEntity);

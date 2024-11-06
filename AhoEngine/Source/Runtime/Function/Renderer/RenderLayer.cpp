@@ -71,7 +71,6 @@ namespace Aho {
 		RenderPipeline* pipeline = new RenderPipeline();
 		auto shadingPass         = SetupShadingPass();
 		auto shadowMapPass		 = SetupShadowMapPass();
-		auto debugPass			 = SetupDebugPass();
 		auto gBufferPass		 = SetupGBufferPass();
 		auto HiZPass			 = SetupHiZPass();
 		auto ssaoPass			 = SetupSSAOPass();
@@ -79,12 +78,10 @@ namespace Aho {
 		auto blurRGBPass		 = SetupBlurPass();
 		auto blurPass			 = SetupSSAOBlurPass();
 		auto postProcessingPass  = SetupPostProcessingPass();
+		auto drawSelectedPass    = SetupDrawSelectedPass();
 
 		shadingPass->RegisterTextureBuffer({ shadowMapPass->GetRenderTarget()->GetDepthTexture(), "u_DepthMap" });
 		auto geoPassAttachments = gBufferPass->GetRenderTarget()->GetTextureAttachments();
-
-		/* Debug pass use the same fbo as gbufferPass */
-		debugPass->SetRenderTarget(gBufferPass->GetRenderTarget());
 
 		HiZPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(3), "u_Depth" }); // this is the color attachement that contains depth info in a Hi-Z structure
 		HiZPass->RegisterTextureBuffer({ HiZPass->GetRenderTarget()->GetTextureAttachments().back(), "u_SelfDepth"});
@@ -114,20 +111,18 @@ namespace Aho {
 		shadingPass->RegisterTextureBuffer({ geoPassAttachments[4], "u_PBR" });  // PBR param, metalic and roughness in rg channels respectively
 
 		postProcessingPass->RegisterTextureBuffer({ shadingPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Result" });
-		postProcessingPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(4), "u_gEntity"});
-		postProcessingPass->RegisterTextureBuffer({ debugPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Debug" }); // DebugAttachment!
-		postProcessingPass->RegisterTextureBuffer({ gBufferPass->GetRenderTarget()->GetTextureAttachment(3), "u_DepthMap" });
+		postProcessingPass->RegisterTextureBuffer({ drawSelectedPass->GetRenderTarget()->GetTextureAttachment(0), "u_gEntity"});
 
 		/* This is order dependent! */
 		pipeline->RegisterRenderPass(std::move(shadowMapPass), RenderDataType::SceneData);
 		pipeline->RegisterRenderPass(std::move(gBufferPass), RenderDataType::SceneData);
-		pipeline->RegisterRenderPass(std::move(debugPass), RenderDataType::DebugData);
 		pipeline->RegisterRenderPass(std::move(HiZPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(ssaoPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(blurPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(ssrPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(blurRGBPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(shadingPass), RenderDataType::ScreenQuad);
+		pipeline->RegisterRenderPass(std::move(drawSelectedPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(postProcessingPass), RenderDataType::ScreenQuad);
 
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
@@ -198,7 +193,8 @@ namespace Aho {
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "Prefilter.glsl");
 		pass->SetShader(shader);
-		TexSpec spec; TexSpec depth; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec spec;
 		spec.target = TexTarget::TextureCubemap;
 		spec.width = spec.height = 128;
 		spec.internalFormat = TexInterFormat::RGB16F; spec.dataFormat = TexDataFormat::RGB; spec.dataType = TexDataType::Float;
@@ -232,7 +228,8 @@ namespace Aho {
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "GenLUT.glsl");
 		pass->SetShader(shader);
-		TexSpec spec; TexSpec depth; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec spec; 
 		spec.width = spec.height = 512;
 		spec.internalFormat = TexInterFormat::RG16F; spec.dataFormat = TexDataFormat::RG; spec.dataType = TexDataType::Float;
 		FBSpec fbSpec(512, 512, { spec, depth });
@@ -275,10 +272,9 @@ namespace Aho {
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "GenCubeMapFromHDR.glsl");
 		pass->SetShader(shader);
-		TexSpec depth; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent;
 		TexSpec spec;
 		spec.target = TexTarget::TextureCubemap;
-		spec.width = spec.height = 512;
 		spec.internalFormat = TexInterFormat::RGB16F; spec.dataFormat = TexDataFormat::RGB; spec.dataType = TexDataType::Float;
 		FBSpec fbSpec(512, 512, { spec, depth });
 		auto FBO = Framebuffer::Create(fbSpec);
@@ -319,49 +315,14 @@ namespace Aho {
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "IrradianceConv.glsl");
 		pass->SetShader(shader);
 
-		TexSpec depth; depth.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent;
 		TexSpec spec;
 		spec.target = TexTarget::TextureCubemap;
-		spec.width = spec.height = 32;
 		spec.internalFormat = TexInterFormat::RGB16F; spec.dataFormat = TexDataFormat::RGB; spec.dataType = TexDataType::Float;
 		FBSpec fbSpec(32, 32, { spec, depth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
 		pass->SetRenderPassType(RenderPassType::PrecomputeIrradiance);
-		return pass;
-	}
-
-	std::unique_ptr<RenderPass> RenderLayer::SetupDebugPass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
-		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-			shader->Bind();
-			renderTarget->EnableAttachments(5, 2);
-			RenderCommand::SetClearColor(glm::vec4(0.0f));
-			RenderCommand::Clear(ClearFlags::Depth_Buffer);
-			RenderCommand::SetClearColor(RenderCommand::s_DefaultClearColor);
-			for (const auto& data : renderData) {
-				if (!data->ShouldBeRendered()) {
-					continue;
-				}
-				data->Bind(shader);
-				if (data->IsInstanced()) {
-					shader->SetBool("u_IsInstanced", true);
-					RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()); // Draw skeleton using lines
-					shader->SetBool("u_IsInstanced", false);
-				}
-				else {
-					RenderCommand::DrawIndexed(data->GetVAO());
-				}
-				data->Unbind();
-			}
-			renderTarget->Unbind();
-			shader->Unbind();
-			});
-		pass->SetRenderCommand(std::move(cmdBuffer));
-		const auto debugShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "Debug.glsl");
-		pass->SetShader(debugShader);
-		pass->SetRenderPassType(RenderPassType::Debug);
 		return pass;
 	}
 
@@ -376,6 +337,12 @@ namespace Aho {
 					continue;
 				}
 				data->Bind(shader);
+				
+				shader->SetUint("u_EntityID", data->GetEntityID());
+				if (GlobalState::g_SelectedEntityID == data->GetEntityID()) {
+					GlobalState::g_SelectedData = data;
+				}
+
 				if (data->IsInstanced()) {
 					shader->SetBool("u_IsInstanced", true);
 					RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
@@ -394,8 +361,9 @@ namespace Aho {
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		pass->SetShader(shader);
 		pass->SetRenderCommand(std::move(cmdBuffer));
-		TexSpec positionAttachment, depthAttachment, depthComponent;
-		depthComponent.dataFormat = TexDataFormat::DepthComponent;
+		TexSpec positionAttachment, depthAttachment;
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent;
+
 		positionAttachment.internalFormat = TexInterFormat::RGBA16F;
 		positionAttachment.dataFormat = TexDataFormat::RGBA;
 		positionAttachment.dataType = TexDataType::Float;
@@ -417,7 +385,7 @@ namespace Aho {
 		auto pbrAttachment = positionAttachment;
 		pbrAttachment.internalFormat = TexInterFormat::RGBA16F; pbrAttachment.dataFormat = TexDataFormat::RGBA;
 		pbrAttachment.dataType = TexDataType::UnsignedInt;
-		FBSpec fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, pbrAttachment, entityAttachment, debugAttachment, depthComponent });
+		FBSpec fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, depthAttachment, pbrAttachment, entityAttachment, debugAttachment, depth });
 
 		auto TexO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(TexO);
@@ -578,26 +546,35 @@ namespace Aho {
 		return pass;
 	}
 
-	std::unique_ptr<RenderPass> RenderLayer::SetupPickingPass() {
+	std::unique_ptr<RenderPass> RenderLayer::SetupDrawSelectedPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffers>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-			for (const auto& data : renderData) {
+			if (GlobalState::g_IsEntityIDValid && GlobalState::g_SelectedData) {
+				shader->Bind();
+				renderTarget->EnableAttachments(0);
+				RenderCommand::Clear(ClearFlags::Color_Buffer);
+				const auto& data = GlobalState::g_SelectedData;
+				shader->SetUint("u_EntityID", data->GetEntityID());
 				data->Bind(shader);
 				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
 				data->Unbind();
+				renderTarget->Unbind();
+				shader->Unbind();
 			}
-			});
+		});
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
 		pass->SetRenderCommand(std::move(cmdBuffer));
 
-		auto pickingShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "MousePicking.glsl");
+		auto pickingShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "DrawSelected.glsl");
 		pass->SetShader(pickingShader);
 		TexSpec texSpecColor;
-		TexSpec texSpecDepth; texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
-		FBSpec fbSpec(1280u, 720u, { texSpecDepth, texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		texSpecColor.internalFormat = TexInterFormat::UINT;
+		texSpecColor.dataFormat = TexDataFormat::UINT;
+		texSpecColor.dataType = TexDataType::UnsignedInt;
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
 		auto fbo = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::Pick);
+		pass->SetRenderPassType(RenderPassType::DrawSelected);
 		return pass;
 	}
 
@@ -710,7 +687,6 @@ namespace Aho {
 
 			shader->SetUint("u_SelectedEntityID", GlobalState::g_SelectedEntityID);
 			shader->SetBool("u_IsEntityIDValid", GlobalState::g_IsEntityIDValid);
-			shader->SetInt("u_DrawDebug", GlobalState::g_ShowDebug);
 
 			for (const auto& data : renderData) {
 				data->Bind(shader);
@@ -762,15 +738,9 @@ namespace Aho {
 		
 		auto depthShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "ShadowMap.glsl");
 		pass->SetShader(depthShader);
-		TexSpec texSpecDepth;
-		texSpecDepth.dataFormat = TexDataFormat::DepthComponent;
-		texSpecDepth.internalFormat = TexInterFormat::Depth24;	// ......
-		texSpecDepth.dataType = TexDataType::Float;
-		texSpecDepth.wrapModeS = TexWrapMode::Repeat;
-		texSpecDepth.wrapModeT = TexWrapMode::Repeat;
-		texSpecDepth.filterModeMin = TexFilterMode::Nearest;
-		texSpecDepth.filterModeMag = TexFilterMode::Nearest;
-		FBSpec fbSpec(4096, 4096, { texSpecDepth });  // Hardcode fow now
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth32; depth.dataFormat = TexDataFormat::DepthComponent;
+
+		FBSpec fbSpec(4096, 4096, { depth });  // Hardcode fow now
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
 		pass->SetRenderPassType(RenderPassType::Depth);

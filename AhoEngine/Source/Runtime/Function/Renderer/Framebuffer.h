@@ -23,8 +23,6 @@ namespace Aho {
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual Texture* GetDepthTexture() = 0;
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt = 0) = 0;
-		virtual void BindSharedColorAttachment(Texture* attachment) = 0;
-		virtual void BindSharedDepthAttachment(Texture* attachment) = 0;
 		virtual void BindCubeMap(Texture* tex, int faceIndex, int attachmentID = 0, int mipLevel = 0) = 0;
 		virtual const std::vector<Texture*>& GetTextureAttachments() = 0;
 		virtual Texture* GetTextureAttachment(int index) = 0;

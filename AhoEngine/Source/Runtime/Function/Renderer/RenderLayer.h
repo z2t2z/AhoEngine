@@ -31,10 +31,9 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupSSAOPass();
 		std::unique_ptr<RenderPass> SetupSSAOBlurPass();
 		std::unique_ptr<RenderPass> SetupBlurPass();
-		std::unique_ptr<RenderPass> SetupDebugPass();
 		std::unique_ptr<RenderPass> SetupShadowMapPass();
 		std::unique_ptr<RenderPass> SetupShadingPass();
-		std::unique_ptr<RenderPass> SetupPickingPass();
+		std::unique_ptr<RenderPass> SetupDrawSelectedPass();
 		std::unique_ptr<RenderPass> SetupSSRPass();
 		std::unique_ptr<RenderPass> SetupHiZPass();
 		std::unique_ptr<RenderPass> SetupPostProcessingPass();

@@ -19,3 +19,6 @@
 [submodule "AhoEngine/Vendor/ImGuizmo"]
 	path = AhoEngine/Vendor/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "AhoEngine/Vendor/JoltPhysics"]
+	path = AhoEngine/Vendor/JoltPhysics
+	url = https://github.com/z2t2z/JoltPhysics.git

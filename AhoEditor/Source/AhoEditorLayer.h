@@ -3,6 +3,10 @@
 #include "IamAho.h"
 #include "EditorUI/LevelHierarchyPanel/LevelHierarchyPanel.h"
 
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <ImGuizmo.h>
+
 namespace Aho {
 	class AhoEditorLayer : public Layer {
 	public:
@@ -28,6 +32,7 @@ namespace Aho {
 		void DrawGizmo();
 		template<typename T>
 		void DrawNode(const T& node);
+		void DrawCircle(const ImVec2& center, float radius);
 	private:
 		uint32_t m_ViewportWidth;
 		uint32_t m_ViewportHeight;

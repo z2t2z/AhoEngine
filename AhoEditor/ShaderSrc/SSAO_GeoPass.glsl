@@ -92,21 +92,23 @@ in vec3 v_Normal;
 in vec3 v_Tangent;
 in vec2 v_TexCoords;
 
-uniform bool u_HasDiffuse;
+uniform bool u_HasAlbedo;
 uniform bool u_HasNormal;
 uniform bool u_HasMetalic;
 uniform bool u_HasRoughness;
+uniform bool u_HasAO;
 
-uniform sampler2D u_DiffuseMap;
+uniform sampler2D u_AlbedoMap;
 uniform sampler2D u_Normal;
 uniform sampler2D u_MetalicMap;
 uniform sampler2D u_RoughnessMap;
+uniform sampler2D u_AOMap;
 
-uniform float u_Metalic;
-uniform float u_Roughness;
+uniform vec3 u_RawAlbedo = vec3(0.98f);
+uniform float u_Metalic = 0.05f;
+uniform float u_Roughness = 0.9f;
 
 uniform uint u_EntityID;
-uniform bool u_IsDebug;
 
 float GammaCorrect(float value) {
 	return value;
@@ -123,9 +125,10 @@ void main() {
 	g_Depth = v_FragPos.z;
 
 	// PBR
-	g_Albedo = u_HasDiffuse ? texture(u_DiffuseMap, v_TexCoords).rgb : vec3(0.95f);
+	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_RawAlbedo;
 	g_PBR.r = u_HasMetalic ? 1.0f - texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
+	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : -1.0f;
 
 	if (!u_HasNormal) {
 		g_Normal = normalize(v_Normal);

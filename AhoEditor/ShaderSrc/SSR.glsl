@@ -284,7 +284,7 @@ vec4 HiZ() {
             mipLevel = min(mipLevelCount, mipLevel + 1);
         }
     }
-    return vec4(1.0f);
+    return vec4(0.0f);
 }
   
 void main() { 

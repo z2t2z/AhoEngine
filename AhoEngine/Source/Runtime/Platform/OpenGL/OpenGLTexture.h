@@ -110,7 +110,7 @@ namespace Aho {
 				return GL_RGBA16F;
 			case TexInterFormat::Depth24:
 				return GL_DEPTH_COMPONENT24;
-			case TexInterFormat::Depth32F:
+			case TexInterFormat::Depth32:
 				return GL_DEPTH_COMPONENT32F;
 			default:
 				return GL_RGB8;

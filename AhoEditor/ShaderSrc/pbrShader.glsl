@@ -112,23 +112,24 @@ vec2 poissonDisk[16] = {
 	vec2( 0.14383161, -0.14100790 )
 }; 
 
-const float nearPlane = 1.0f; 
-const float frustumWidth = 15.0f;
-const float lightSize = 0.1f; 	// light width
+const float nearPlane = 0.01f; 
+const float frustumWidth = 300.0f;
+const float lightSize = 20.0f; 	// light width
 const float lightUV = lightSize / frustumWidth;
 const int SAMPLE_CNT = 16;
-float BIAS = 0.001f;
+float BIAS = 0.0001f;
 vec2 depthMapDt;
+float zPosFromLight;
 
 float FindBlocker(vec2 uv, float zReceiver) {
-	float searchWidth = lightUV * (zReceiver - nearPlane) / zReceiver;
+	float searchWidth = lightUV * (zPosFromLight - nearPlane) / zPosFromLight;
 
 	float blockerSum = 0.0f;
 	int sampleCnt = 0;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
 		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * searchWidth).r;
-		if (zReceiver > sampleDepth/* + BIAS*/) {
+		if (zReceiver > sampleDepth) {
 			blockerSum += sampleDepth;
 			sampleCnt += 1;
 		}
@@ -146,7 +147,7 @@ float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
 		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * radius).r;
-		shadowSum += zReceiver > sampleDepth + bias ? 0.0f : 1.0f;
+		shadowSum += zReceiver > sampleDepth + 0.001f? 0.0f : 1.0f;
 	}
 
 	return shadowSum / float(SAMPLE_CNT);
@@ -159,30 +160,30 @@ float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 
 	fragPos.w = 1.0f;
 	fragPos = u_LightPV[lightIdx] * fragPos; 	// To light space 
-	// fragPos /= fragPos.w;			
+	zPosFromLight = fragPos.z;
+
+	fragPos /= fragPos.w;			
 	fragPos = fragPos * 0.5f + 0.5f;
  
 	vec2 uv = fragPos.xy;
 	float zReceiver = fragPos.z;
 
 	float bias = max(0.05 * (1.0 - NdotL), 0.005);
-	BIAS = bias;
+	// BIAS = bias;
 
 	float avgBlockerDepth = FindBlocker(uv, zReceiver);
 	if (avgBlockerDepth == -1.0f) {
 		return 1.0f;
 	}
 
-	float Wpenumbra = (zReceiver - avgBlockerDepth) / avgBlockerDepth  * lightUV;
+	float Wpenumbra = (zReceiver - avgBlockerDepth) * lightUV / avgBlockerDepth;
 
 	float pcfRadius = Wpenumbra * nearPlane / zReceiver;
 
 	if (fragPos.z > 1.0f) {
 		return 1.0f;
 	}
-	// return 0.0f;
 	return PCF(uv, zReceiver, pcfRadius, bias);
-	return PCF(uv, zReceiver, 0.0002, bias);
 }
 
 
@@ -192,7 +193,10 @@ void main() {
 
 	vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
 
-	float AO = texture(u_SSAO, v_TexCoords).r;
+	float AO = texture(u_PBR, v_TexCoords).b;
+	if (AO == -1.0f) {
+		AO = texture(u_SSAO, v_TexCoords).r;
+	}
 	float metalic = texture(u_PBR, v_TexCoords).r;
 	// metalic = 0.95f;
 	float roughness = texture(u_PBR, v_TexCoords).g;
@@ -204,8 +208,6 @@ void main() {
 	vec3 R = reflect(-V, N);
 
 	vec3 F0 = vec3(0.04f);
-	vec3 ssrSpec = texture(u_Specular, v_TexCoords).rgb;
-	// F0 = ssrSpec;
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
 	
 	vec3 Lo = vec3(0.0f);
@@ -241,9 +243,9 @@ void main() {
 
 		vec3 specular = Numerator / Denominator;
 		Lo += (kD * albedo / PI + specular) 
-				* radiance 
-				* NdotL 
-				* PCSS(vec4(fragPos, 1.0f), NdotL, i);
+					* radiance 
+					* NdotL 
+					* PCSS(vec4(fragPos, 1.0f), NdotL, i);
 	}
 
 	// Ambient lighting
@@ -257,9 +259,13 @@ void main() {
 
 	vec3 preFilter = textureLod(u_Prefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
 	vec2 brdf = texture(u_LUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-	vec3 specular =  preFilter * (F * brdf.x + brdf.y);
-	// specular = ssrSpec;
-	vec3 ambient = (kD * diffuse + specular * ssrSpec) * AO;
+	vec3 specular = preFilter * (F * brdf.x + brdf.y);
+	vec3 ssrSpec = texture(u_Specular, v_TexCoords).rgb;
+
+	float mixFactor = clamp(1.0f - roughness, 0.0, 1.0);
+	// specular = mix(specular, ssrSpec, mixFactor);
+	
+	vec3 ambient = (kD * diffuse + specular) * AO;
 
 	vec3 Color = ambient + Lo;
 	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping

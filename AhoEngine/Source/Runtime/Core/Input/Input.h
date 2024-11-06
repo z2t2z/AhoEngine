@@ -15,6 +15,7 @@ namespace Aho {
 		static float GetMouseX();
 		static float GetMouseY();
 		static void LockCursor();
+		static void HideCursor();
 		static void UnlockCursor();
 		static bool GetCursorState();
 		static void SetCursorPos(float x, float y);
