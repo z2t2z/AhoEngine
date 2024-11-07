@@ -1,8 +1,6 @@
 #pragma once
 
 #include "IamAho.h"
-#include "EditorUI/LevelHierarchyPanel/LevelHierarchyPanel.h"
-
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
@@ -20,6 +18,7 @@ namespace Aho {
 	private:
 		bool OnFileChanged(FileChangedEvent& event);
 	private:
+		void DrawMaterialPanel();
 		void DrawContentBrowserPanel();
 		void DrawPropertiesPanel();
 		void DrawSceneHierarchyPanel();
@@ -34,11 +33,12 @@ namespace Aho {
 		void DrawNode(const T& node);
 		void DrawCircle(const ImVec2& center, float radius);
 	private:
+		void TryGetDragDropTarget();
+		std::shared_ptr<Texture2D> TryGetDragDropTargetTexture();
+	private:
 		uint32_t m_ViewportWidth;
 		uint32_t m_ViewportHeight;
-		void TryGetDragDropTarget();
 		std::string m_DroppedString;
-		bool m_ShowPopup{ false };
 		bool m_StaticMesh{ true };
 	private:
 		std::filesystem::path m_FolderPath;

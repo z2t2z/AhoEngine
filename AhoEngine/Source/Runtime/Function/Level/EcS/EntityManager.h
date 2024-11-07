@@ -37,6 +37,9 @@ namespace Aho {
 
 		Entity CreateEntity(const std::string& name = std::string()) {
 			Entity entity{ m_Registry.create() };
+			if (static_cast<uint32_t>(entity.GetEntityHandle()) == 0u) {
+				entity = m_Registry.create();
+			}
 			if (!name.empty()) {
 				auto& tag = AddComponent<TagComponent>(entity, name);
 			}

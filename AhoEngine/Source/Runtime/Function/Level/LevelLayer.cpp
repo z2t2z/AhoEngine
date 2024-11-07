@@ -137,7 +137,7 @@ namespace Aho {
 		}
 
 		TransformParam* param = new TransformParam();
-		param->Translation = glm::vec3(0.0f, 10.0f, 10.0f);
+		param->Translation = glm::vec3(0.0f, 1.0f, 0.0f);
 		g_Param = param;
 		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
@@ -149,7 +149,7 @@ namespace Aho {
 			renderData->SetVAOs(vao);
 			uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 			renderData->SetTransformParam(param);
-			renderData->SetDebug();
+			renderData->SetDebug(true);
 			renderData->SetEntityID(entityID);
 			renderDataAll.push_back(renderData);
 		}
@@ -175,7 +175,7 @@ namespace Aho {
 			view.each([&](auto entity, auto& pc, auto& tc) {
 				int index = pc.index;
 				if (pc.castShadow) {
-					float nearPlane = 0.01f, farPlane = 200.0f;
+					float nearPlane = 0.1f, farPlane = 200.0f;
 					glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
 					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
 					lightUBO.u_LightPV[index] = lightMat;
@@ -246,9 +246,6 @@ namespace Aho {
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			renderData->SetEntityID(entityID);
-			//mat->GetRawMetalness() = 0.05f;
-			//mat->GetRawRoughness() = 0.85f;
-			//mat->GetRawAlbedo() = glm::vec3(0.985f);
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 			if (meshInfo->materialInfo.HasMaterial()) {
@@ -261,11 +258,13 @@ namespace Aho {
 					mat->AddMaterialProperties({ textureCached.at(path), type });
 				}
 			}
+			if (!mat->HasProperty(TexType::Albedo)) {
+				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
+			}
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 		asset.reset(); // Free it??
-		/* TODO: Maybe check if success */
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
@@ -280,15 +279,12 @@ namespace Aho {
 		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
 		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
-		//param->Scale = glm::vec3(0.01f, 0.01f, 0.01f);
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
 		uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
-		if (asset->size() > 1) {
-			// WARN
-		}
+		int index = 0;
 		for (const auto& skMeshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -297,9 +293,6 @@ namespace Aho {
 			renderData->SetVAOs(vao);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			renderData->SetEntityID(entityID);
-			//mat->GetRawMetalness() = 0.05f;
-			//mat->GetRawRoughness() = 0.85f;
-			//mat->GetRawAlbedo() = glm::vec3(0.985f);
 			renderData->GetBoneOffset() = skeletalComponent.offset;
 			renderData->SetMaterial(mat);
 			if (skMeshInfo->materialInfo.HasMaterial()) {
@@ -312,10 +305,12 @@ namespace Aho {
 					mat->AddMaterialProperties({ textureCached.at(path), type });
 				}
 			}
+			if (!mat->HasProperty(TexType::Albedo)) {
+				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
+			}
 			renderData->SetTransformParam(param);
 			renderDataAll.push_back(renderData);
 		}
-		AHO_CORE_ASSERT(param, "Something wrong when initializing skeletal mesh's transform parameter!");
 		asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}

@@ -2,7 +2,7 @@
 #include "Material.h"
 
 namespace Aho {
-    // TODO: Try to come up with a better way
+	// TODO: Try to come up with a better way
     void Material::ClearState(const std::shared_ptr<Shader>& shader) {
         for (const auto& name : { "u_HasAlbedo", "u_HasNormal", "u_HasAO", "u_HasMetalic", "u_HasRoughness" }) {
             shader->SetBool(name, false);
@@ -23,7 +23,7 @@ namespace Aho {
 						shader->SetInt("u_AlbedoMap", texOffset++);
 					}
 					else if constexpr (std::is_same_v<T, glm::vec3>) {
-						shader->SetVec3("u_Albedo", value);
+						shader->SetVec3("u_RawAlbedo", value);
 					}
 				}, property.m_Value);
 				break;
@@ -50,7 +50,7 @@ namespace Aho {
 					}
 				}, property.m_Value);
 				break;
-			case TexType::Metalic:
+			case TexType::Metallic:
 				std::visit([&](const auto& value) {
 					using T = std::decay_t<decltype(value)>;
 					if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
@@ -79,6 +79,13 @@ namespace Aho {
 			}
 		}
     }
+
+	bool Material::HasProperty(TexType type) {
+		auto it = std::find_if(m_Properties.begin(), m_Properties.end(), [&](const auto& prop) {
+			return prop.m_Type == type;
+		});
+		return it != m_Properties.end();
+	}
 
 	const MaterialProperty& Material::GetProperty(TexType type) {
 		auto it = std::find_if(m_Properties.begin(), m_Properties.end(), [&](const auto& prop) {

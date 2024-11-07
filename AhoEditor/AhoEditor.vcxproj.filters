@@ -39,9 +39,7 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorUI\LevelHierarchyPanel\LevelHierarchyPanel.h">
-      <Filter>Source\EditorUI\LevelHierarchyPanel</Filter>
-    </ClInclude>
+    <ClInclude Include="Source\EditorUI\PropertiesPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -58,9 +56,6 @@
     </ClCompile>
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
       <Filter>Source\CPURayTracing</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\EditorUI\LevelHierarchyPanel\LevelHierarchyPanel.cpp">
-      <Filter>Source\EditorUI\LevelHierarchyPanel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

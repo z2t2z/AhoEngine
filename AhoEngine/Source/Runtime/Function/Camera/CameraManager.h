@@ -38,6 +38,7 @@ namespace Aho {
 
             // Handle rotation
             auto [mouseX, mouseY] = Input::GetMousePosition();
+
             glm::vec2 delta = m_Sensitivity / 2000.0f * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
             if (!m_CursorLocked) {
                 m_CursorLocked = true;
@@ -46,13 +47,17 @@ namespace Aho {
                 delta.x = delta.y = 0.0f;
                 Input::LockCursor();
             }
+            Input::SetCursorPos(m_LastMouseX, m_LastMouseY);
 
             auto cam = GetMainEditorCamera();
             if (delta.x != 0 || delta.y != 0) {
                 float pitchDelta = delta.y * cam->GetRotationSpeed();
                 float yawDelta = delta.x * cam->GetRotationSpeed();
 
-                //glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, cam->GetRight()), glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
+                if (std::max(abs(pitchDelta), abs(yawDelta)) > 0.22f) {
+                    return false;
+                }
+
                 glm::quat q = glm::normalize(glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f)) 
                                               * glm::angleAxis(-pitchDelta, cam->GetRight()));
 
@@ -77,8 +82,6 @@ namespace Aho {
                 cam->MoveRight(deltaTime * m_Speed * 10.0f);
                 //movement.x += 1.0f;
             }
-
-            Input::SetCursorPos(m_LastMouseX, m_LastMouseY);
 
             return true;
         }

@@ -188,7 +188,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-			});
+		});
 
 		pass->SetRenderCommand(std::move(cmdBuffer));
 		const auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "Prefilter.glsl");
@@ -355,7 +355,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-			});
+		});
 		auto shader = Shader::Create((g_CurrentPath / "ShaderSrc" / "SSAO_GeoPass.glsl").string());
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
 		AHO_CORE_ASSERT(shader->IsCompiled());
@@ -695,7 +695,7 @@ namespace Aho {
 			}
 			renderTarget->Unbind();
 			shader->Unbind();
-			});
+		});
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
 		pass->SetRenderCommand(std::move(cmdBuffer));
 

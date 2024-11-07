@@ -27,6 +27,9 @@ namespace Aho {
 		const MaterialProperty& GetProperty(TexType type);
 		std::vector<MaterialProperty>::iterator begin() { return m_Properties.begin(); }
 		std::vector<MaterialProperty>::iterator end() { return m_Properties.end(); }
+		size_t GetPropCount() { return m_Properties.size(); }
+		MaterialProperty& GetProperty(size_t index) { return m_Properties[index]; }
+		bool HasProperty(TexType type);
 	private:
 		void ClearState(const std::shared_ptr<Shader>& shader);
 		std::vector<MaterialProperty> m_Properties;

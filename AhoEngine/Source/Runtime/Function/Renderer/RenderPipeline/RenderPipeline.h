@@ -32,7 +32,7 @@ namespace Aho {
 		virtual void Execute();
 		virtual void ResizeRenderTarget(uint32_t width, uint32_t height);
 		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
-		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { (data->IsDebug() ? m_DebugData : m_SceneData).push_back(data); }
+		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { m_SceneData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
 		virtual void RegisterRenderPass(std::unique_ptr<RenderPass> renderPass, RenderDataType type) {
 			m_RenderTasks.emplace_back(std::move(renderPass), type);

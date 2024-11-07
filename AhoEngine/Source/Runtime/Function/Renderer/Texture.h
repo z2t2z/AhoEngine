@@ -49,7 +49,7 @@ namespace Aho {
 		Specular,
 		Height,
 		Roughness,
-		Metalic,
+		Metallic,
 		AO,
 		Depth
 	};

@@ -1,6 +1,5 @@
 #include "IamAho.h"
 #include "AhoEditorLayer.h"
-
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include <iomanip>
 #include <entt.hpp>
@@ -198,7 +197,7 @@ namespace Aho {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->GetTextureAttachment(5)->GetTextureID();
 		}
 		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::BlurRGB)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
@@ -235,42 +234,172 @@ namespace Aho {
 			ImGui::End();
 			return;
 		}
+		
+		ImGuiIO& io = ImGui::GetIO();
 		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 		auto& Tagc = entityManager->GetComponent<TagComponent>(m_SelectedObject);
-		ImGuiIO& io = ImGui::GetIO();
+
 		ImFont* boldFont = io.Fonts->Fonts[0];
 		ImGui::PushFont(boldFont);
 		ImGui::Text(Tagc.Tag.c_str());
 		ImGui::PopFont();
 
 		ImGui::Separator();
-		auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
-		auto& translation = tc.GetTranslation();
-		auto& scale = tc.GetScale();
-		auto& rotation = tc.GetRotation();
-		DrawVec3Control("Translation", translation);
-		DrawVec3Control("Scale", scale, 1.0f);
-		DrawVec3Control("Rotation", rotation);
-
-		if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
-			//auto& mc = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
-			//ImGui::Separator();
-			//ImGui::Text("Material:");
-			//ImGui::DragFloat("Roughness", &mc.material->GetUniform("u_Roughness"), 0.01f, 0.0f, 1.0f);
-			//ImGui::DragFloat("Metalic", &mc.material->GetUniform("u_Metalic"), 0.01f, 0.0f, 1.0f);
-			//for (const auto& tex : *mc.material) {
-			//	//ImGui::Text(tex->GetTextureType());
-			//	ImGui::Dummy(ImVec2(0, s_Padding.y));
-			//	ImGui::BeginGroup();
-			//	ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
-			//	ImGui::SameLine();
-			//	ImGui::Image((ImTextureID)tex->GetTextureID(), s_ImageSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-			//	ImGui::SameLine();
-			//	ImGui::Dummy(ImVec2(s_Padding.x, s_ImageSize.y));
-			//	ImGui::EndGroup();
-			//	ImGui::Dummy(ImVec2(0, s_Padding.y));
-			//}
+		ImGui::PushFont(io.Fonts->Fonts[1]);
+		bool opened = ImGui::CollapsingHeader("Transform");
+		ImGui::PopFont();
+		if (opened) {
+			ImGui::Separator();
+			auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
+			auto& translation = tc.GetTranslation();
+			auto& scale = tc.GetScale();
+			auto& rotation = tc.GetRotation();
+			DrawVec3Control("Translation", translation);
+			DrawVec3Control("Scale", scale, 1.0f);
+			DrawVec3Control("Rotation", rotation);
 		}
+
+		ImGui::Separator();
+		ImGui::PushFont(io.Fonts->Fonts[1]);
+		opened = ImGui::CollapsingHeader("Material");
+		ImGui::PopFont();
+
+		if (opened) {
+			if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
+				auto& materialComp = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
+				if (ImGui::BeginTable("TwoColumnTable", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV)) {
+					for (auto& prop : *materialComp.material) {
+						switch (prop.m_Type) {
+						case TexType::Albedo:
+							ImGui::TableNextColumn();
+							ImGui::Text("Aledo");
+							ImGui::TableNextColumn();
+							std::visit([&](auto& value) {
+								using T = std::decay_t<decltype(value)>;
+								if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+									ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+								}
+								else if constexpr (std::is_same_v<T, glm::vec3>) {
+									ImGui::ColorPicker3("Color Picker", glm::value_ptr(value));
+								}
+								auto texture = TryGetDragDropTargetTexture();
+								if (texture) {
+									prop = { texture, TexType::Albedo };
+								}
+							}, prop.m_Value);
+							break;
+						case TexType::Normal:
+							ImGui::TableNextColumn();
+							ImGui::Text("Normal");
+							ImGui::TableNextColumn();
+							std::visit([&](auto& value) {
+								using T = std::decay_t<decltype(value)>;
+								if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+									ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+								}
+								else if constexpr (std::is_same_v<T, float>) {
+									ImGui::Text("Empty");
+								}
+								auto texture = TryGetDragDropTargetTexture();
+								if (texture) {
+									prop = { texture, TexType::Normal };
+								}
+
+							}, prop.m_Value);
+							break;
+						case TexType::Roughness:
+							ImGui::TableNextColumn();
+							ImGui::Text("Roughness");
+							ImGui::TableNextColumn();
+							std::visit([&](auto& value) {
+								using T = std::decay_t<decltype(value)>;
+								if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+									ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+								}
+								else if constexpr (std::is_same_v<T, float>) {
+									ImGui::DragFloat("##Roughness", &value, 0.01f, 0.0f, 1.0f);
+								}
+								auto texture = TryGetDragDropTargetTexture();
+								if (texture) {
+									prop = { texture, TexType::Roughness };
+								}
+							}, prop.m_Value);
+							break;
+						case TexType::Metallic:
+							ImGui::TableNextColumn();
+							ImGui::Text("Metallic");
+							ImGui::TableNextColumn();
+							std::visit([&](auto& value) {
+								using T = std::decay_t<decltype(value)>;
+								if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+									ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+								}
+								else if constexpr (std::is_same_v<T, float>) {
+									ImGui::DragFloat("##Metallic", &value, 0.01f, 0.0f, 1.0f);
+								}
+								auto texture = TryGetDragDropTargetTexture();
+								if (texture) {
+									prop = { texture, TexType::Metallic };
+								}
+							}, prop.m_Value);
+							break;
+						case TexType::AO:
+							ImGui::TableNextColumn();
+							ImGui::Text("AO");
+							ImGui::TableNextColumn();
+							std::visit([&](auto& value) {
+								using T = std::decay_t<decltype(value)>;
+								if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+									ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+								}
+								else if constexpr (std::is_same_v<T, float>) {
+									ImGui::DragFloat("##AO", &value, 0.01f, 0.0f, 1.0f);
+								}
+								auto texture = TryGetDragDropTargetTexture();
+								if (texture) {
+									prop = { texture, TexType::AO };
+								}
+							}, prop.m_Value);
+							break;
+						default:
+							continue;
+						}
+					}
+					ImGui::EndTable();
+				}
+				if (ImGui::Button(ICON_FA_FILE_CIRCLE_PLUS " New Slot")) {
+					ImGui::OpenPopup("popup_menu_material");
+				}
+				ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
+				ImVec2 buttonMax = ImGui::GetItemRectMax(); // lower right
+				ImVec2 nxtPos = ImVec2(buttonMin.x, buttonMax.y);
+				ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
+				if (ImGui::BeginPopup("popup_menu_material")) {
+					if (!materialComp.material->HasProperty(TexType::Normal)) {
+						if (ImGui::MenuItem("Normal")) {
+							materialComp.material->AddMaterialProperties({ 0.0f, TexType::Normal });
+						}
+					}
+					if (!materialComp.material->HasProperty(TexType::Metallic)) {
+						if (ImGui::MenuItem("Metallic")) {
+							materialComp.material->AddMaterialProperties({ 0.0f, TexType::Metallic });
+						}
+					}
+					if (!materialComp.material->HasProperty(TexType::Roughness)) {
+						if (ImGui::MenuItem("Roughness")) {
+							materialComp.material->AddMaterialProperties({ 1.0f, TexType::Roughness });
+						}
+					}
+					if (!materialComp.material->HasProperty(TexType::AO)) {
+						if (ImGui::MenuItem("AO")) {
+							materialComp.material->AddMaterialProperties({ 0.2f, TexType::AO });
+						}
+					}
+					ImGui::EndPopup();
+				}
+			}
+		}
+
 		if (entityManager->HasComponent<PointLightComponent>(m_SelectedObject)) {
 			auto& pc = entityManager->GetComponent<PointLightComponent>(m_SelectedObject);
 			ImGui::Separator();
@@ -312,7 +441,7 @@ namespace Aho {
 	void AhoEditorLayer::DrawToolBar() {
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
 		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
-		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
 		ImGui::PopStyleVar();
 
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -354,12 +483,12 @@ namespace Aho {
 	void AhoEditorLayer::DrawManipulationToolBar() {
 		// Draws a translucent tool bar
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.5f);
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f); 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f, 0.5f, 0.5f, 0.2f));
-		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse/* | ImGuiWindowFlags_NoMove*/);
-
+		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		if (ImGui::ImageButton("selectionMode", (ImTextureID)m_CursorIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
@@ -395,7 +524,7 @@ namespace Aho {
 			m_ShouldPickObject = false;
 			m_IsClickingEventBlocked = true;
 		}
-		ImGui::PopStyleColor(2);
+		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(4);
 		ImGui::End();
 	}
@@ -471,6 +600,11 @@ namespace Aho {
 		}
 	}
 
+	void AhoEditorLayer::DrawMaterialPanel() {
+		//if (!)
+
+	}
+
 	void AhoEditorLayer::DrawContentBrowserPanel() {
 		ImGui::Begin(ICON_FA_FOLDER " Content Browser");
 		if (m_CurrentPath != m_AssetPath) {
@@ -487,8 +621,12 @@ namespace Aho {
 			}
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 				auto relativePath = entry.path().string();
+				std::string identifier = "CONTENT_BROWSER_MESH";
+				if (entry.path().extension() != ".obj" && entry.path().extension() != ".fbx") {
+					identifier = "CONTENT_BROWSER_TEXTURE";
+				}
 				const char* itemPayload = relativePath.c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPayload, relativePath.length());
+				ImGui::SetDragDropPayload(identifier.c_str(), itemPayload, relativePath.length());
 				ImGui::Text("File");
 				ImGui::EndDragDropSource();
 			}
@@ -644,17 +782,18 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::TryGetDragDropTarget() {
+		bool showPopup = false;
 		if (ImGui::BeginDragDropTarget()) {
-			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_MESH");
 			if (payload) {
 				const char* droppedData = static_cast<const char*>(payload->Data);
 				m_DroppedString = std::string(droppedData, payload->DataSize);
-				m_ShowPopup = true;
+				showPopup = true;
 				AHO_TRACE("Payload accepted! {}", m_DroppedString);
 			}
 			ImGui::EndDragDropTarget();
 		}
-		if (m_ShowPopup) {
+		if (showPopup) {
 			ImGui::OpenPopup("Load Settings");
 		}
 		if (ImGui::BeginPopup("Load Settings")) {
@@ -667,17 +806,31 @@ namespace Aho {
 				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(m_DroppedString, !m_StaticMesh);
 				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
 				m_EventManager->PushBack(event);
-				m_ShowPopup = false;
 				m_DroppedString.clear();
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Cancel")) {
-				m_ShowPopup = false;
 				m_DroppedString.clear();
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndPopup();
 		}
+	}
+
+	std::shared_ptr<Texture2D> AhoEditorLayer::TryGetDragDropTargetTexture() {
+		if (ImGui::BeginDragDropTarget()) {
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_TEXTURE");
+			if (payload) {
+				const char* droppedData = static_cast<const char*>(payload->Data);
+				m_DroppedString = std::string(droppedData, payload->DataSize);
+				AHO_TRACE("Payload accepted! {}", m_DroppedString);
+
+				auto texture = Texture2D::Create(m_DroppedString);
+				return texture;
+			}
+			ImGui::EndDragDropTarget();
+		}
+		return nullptr;
 	}
 }

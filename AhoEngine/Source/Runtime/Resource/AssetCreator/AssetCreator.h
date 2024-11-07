@@ -24,7 +24,7 @@ namespace Aho {
 			case(aiTextureType_SPECULAR):
 				return TexType::Specular;
 			case(aiTextureType_METALNESS):
-				return TexType::Metalic;
+				return TexType::Metallic;
 			case(aiTextureType_AMBIENT_OCCLUSION):
 				return TexType::AO;
 			case (aiTextureType_DIFFUSE_ROUGHNESS):

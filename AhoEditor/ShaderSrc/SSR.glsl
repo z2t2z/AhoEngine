@@ -38,7 +38,7 @@ uniform float u_MaxDisance = 100.0f;
 
 const int MAX_ITERATIONS = 100;
 const float stepSiz = 0.04f;
-const float thickNess = 0.08f;
+const float thickNess = 0.1f;
    
 float LinearEyeDepth(float z) {
     // z = z * 2.0f - 1.0f;
@@ -212,9 +212,10 @@ vec4 HiZ() {
     vec2 P1 = H1.xy * k1;
 
     // Screen space
-    vec2 screenSize = vec2(u_Width, u_Height);
-    P0 = (P0 * 0.5 + 0.5) * screenSize;
-    P1 = (P1 * 0.5 + 0.5) * screenSize;
+    // vec2 screenSize = vec2(u_Width, u_Height);
+    ivec2 screenSize = textureSize(u_Depth, 0);
+    P0 = (P0 * 0.5f + 0.5f) * screenSize;
+    P1 = (P1 * 0.5f + 0.5f) * screenSize;
 
     // To avoid line degeneration
     P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 1.0 : 0.0);
@@ -267,8 +268,8 @@ vec4 HiZ() {
         hitPixel /= pow(2, mipLevel);
         float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
 
-        if (rayDepth + 0.001f < sampleDepth) {
-            if (rayDepth + thickNess > sampleDepth + 0.001f) {
+        if (rayDepth < sampleDepth) {
+            if (rayDepth + thickNess > sampleDepth) {
                 if (mipLevel == 0) {
                     result = texelFetch(u_gAlbedo, ivec2(bhitPixel), 0).rgb;
                     return vec4(result, 1.0f);
