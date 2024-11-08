@@ -26,9 +26,33 @@ namespace Aho {
 		None, Nearest, Linear, NearestMipmapNearest, LinearMipmapLinear, NearestMipmapLinear, LinearMipmapNearest
 	};
 
+	enum class TexType {
+		None = 0,
+		Albedo,
+		Normal,
+		Height,
+		Roughness,
+		Metallic,
+		AO,
+
+		// Framebuffer texture type
+		Noise,
+		HDR,
+		CubeMap,
+		Position,
+		Depth,
+		Entity,
+		PBR,	// RGB: Metalness, Roughness, AO
+		Irradiance,
+		Prefilter,
+		LUT,
+		Result	// The final result texture of a render pass
+	};
+
 	// Texture specification
 	struct TexSpec {
 		TexSpec() = default;
+		TexType type{ TexType::None };
 		TexTarget target{ TexTarget::Texture2D };
 		TexInterFormat internalFormat{ TexInterFormat::RGBA8 };
 		TexDataFormat dataFormat{ TexDataFormat::RGBA };
@@ -38,20 +62,8 @@ namespace Aho {
 		TexWrapMode wrapModeR{ TexWrapMode::Clamp };
 		TexFilterMode filterModeMin{ TexFilterMode::Linear };
 		TexFilterMode filterModeMag{ TexFilterMode::Linear };
-		int mipLevels{ 0 };  // 0: No mipmaps; 1: max(logWidth, logHeight); 
+		int mipLevels{ 0 };  // 0: No mipmaps; 1: auto calculate: max(logWidth, logHeight); 
 		int width{ 1280 }, height{ 720 }, channels{ 4 };
-	};
-
-	enum class TexType {
-		None = 0,
-		Albedo,
-		Normal,
-		Specular,
-		Height,
-		Roughness,
-		Metallic,
-		AO,
-		Depth
 	};
  
 	class Texture {
@@ -60,14 +72,15 @@ namespace Aho {
 		Texture(TexSpec spec) : m_Specification(spec) {}
 		virtual ~Texture() = default;
 		virtual void Invalidate() = 0;
+		virtual const TexSpec GetTextureSpec() { return m_Specification; }
 		virtual void SetTextureSpecification(TexSpec& spec) { m_Specification = spec; }
 		virtual TexSpec& GetSpecification() = 0;
 		virtual void Reload(const std::string& path) = 0;
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetTextureID() const = 0;
-		virtual TexType GetTexType() const { return m_TexType; }
-		virtual void SetTexType(const TexType type) { m_TexType = type; }
+		virtual TexType GetTexType() const { return m_Specification.type; }
+		virtual void SetTexType(const TexType type) { m_Specification.type = type; }
 		virtual void SetTextureID(uint32_t id) = 0;
 		virtual const std::string& GetPath() const = 0;
 		virtual void SetData(void* data, uint32_t size) = 0;
@@ -75,7 +88,6 @@ namespace Aho {
 		virtual bool operator==(const Texture& other) const = 0;
 	protected:
 		TexSpec m_Specification;
-		TexType m_TexType{ TexType::None };
 	};
 
 	class Texture2D : public Texture {

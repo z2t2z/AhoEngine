@@ -14,7 +14,6 @@ namespace Aho {
 		virtual ~OpenGLTexture2D();
 		virtual void Reload(const std::string& path) {}
 		virtual void Invalidate() override;
-		// This is also a setter
 		virtual TexSpec& GetSpecification() override { return m_Specification; }
 		virtual uint32_t GetWidth() const override { return m_Specification.width; }
 		virtual uint32_t GetHeight() const override { return m_Specification.height; }
@@ -174,10 +173,7 @@ namespace Aho {
 		}
 
 		static bool IsDepthFormat(TexDataFormat format) {
-			switch (format) {
-			case TexDataFormat::DepthComponent:  return true;
-			}
-			return false;
+			return format == TexDataFormat::DepthComponent;
 		}
 	} // namespace Utils
 } // namespace Aho

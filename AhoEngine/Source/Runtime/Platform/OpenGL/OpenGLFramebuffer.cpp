@@ -114,16 +114,24 @@ namespace Aho {
 		return m_ColorAttachmentTex[index];
 	}
 
-	uint32_t OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, bool shared) {
-		if (attachmentIndex >= m_ColorAttachmentTex.size()) {
-			AHO_CORE_ERROR("Attachment index out of bound: {}", attachmentIndex);
-			return 0u;
-		}
+	Texture* OpenGLFramebuffer::GetTexture(TexType type) {
+		auto it = std::find_if(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), [&](Texture* tex) {
+			return tex->GetTexType() == type;
+		});
+		AHO_CORE_ASSERT(it != m_ColorAttachmentTex.end());
+		return *it;
+	}
+
+	uint32_t OpenGLFramebuffer::ReadPixel(TexType type, uint32_t x, uint32_t y, bool shared) {
+		auto it = std::find_if(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), [&](Texture* tex) {
+			return tex->GetTexType() == type;
+		});
+		AHO_CORE_ASSERT(it != m_ColorAttachmentTex.end(), "Did not find this attachment");
 		if (x >= m_Specification.Width || y >= m_Specification.Height) {
 			AHO_CORE_ERROR("Attempting to read pixel data from an invalid position: {0}, {1}", x, y);
 			return 0u;
 		}
-		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + it - m_ColorAttachmentTex.begin());
 		uint32_t pixelData;
 		// TODO: how to read float value?
 		glReadPixels(x, y, 1, 1, Utils::GetGLParam(TexDataFormat::UINT), GL_UNSIGNED_INT, &pixelData);

@@ -22,7 +22,7 @@ namespace Aho {
 			case(aiTextureType_HEIGHT):
 				return TexType::Normal;
 			case(aiTextureType_SPECULAR):
-				return TexType::Specular;
+				return TexType::Metallic;
 			case(aiTextureType_METALNESS):
 				return TexType::Metallic;
 			case(aiTextureType_AMBIENT_OCCLUSION):

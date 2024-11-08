@@ -81,9 +81,8 @@ void main() {
 layout(location = 0) out vec4 g_Position;
 layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
-layout(location = 3) out float g_Depth;
-layout(location = 4) out vec4 g_PBR;
-layout(location = 5) out uint g_Entity;
+layout(location = 3) out vec4 g_PBR;
+layout(location = 4) out uint g_Entity;
 
 in vec3 v_FragPos;
 in vec3 v_Ndc;
@@ -94,12 +93,12 @@ in vec2 v_TexCoords;
 
 uniform bool u_HasAlbedo;
 uniform bool u_HasNormal;
-uniform bool u_HasMetalic;
+uniform bool u_HasMetallic;
 uniform bool u_HasRoughness;
 uniform bool u_HasAO;
 
 uniform sampler2D u_AlbedoMap;
-uniform sampler2D u_Normal;
+uniform sampler2D u_NormalMap;
 uniform sampler2D u_MetalicMap;
 uniform sampler2D u_RoughnessMap;
 uniform sampler2D u_AOMap;
@@ -110,23 +109,13 @@ uniform float u_Roughness = 0.9f;
 
 uniform uint u_EntityID;
 
-float GammaCorrect(float value) {
-	return value;
-    // if (value <= 0.04045) {
-    //     return value / 12.92;
-    // } else {
-    //     return pow((value + 0.055) / 1.055, 2.4);
-    // }
-}
-
 void main() {
 	g_Entity = u_EntityID;
 	g_Position = vec4(v_FragPos, 1.0f);
-	g_Depth = v_FragPos.z;
 
 	// PBR
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_RawAlbedo;
-	g_PBR.r = u_HasMetalic ? 1.0f - texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
+	g_PBR.r = u_HasMetallic ? 1.0f - texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
 	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : -1.0f;
 
@@ -139,7 +128,7 @@ void main() {
 		T = normalize(T - dot(T, N) * N);
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
-		vec3 normalMap = texture(u_Normal, v_TexCoords).rgb;
+		vec3 normalMap = texture(u_NormalMap, v_TexCoords).rgb;
 		normalMap = normalMap * 2.0f - 1.0f;
 		g_Normal = normalize(TBN * normalMap);
 	}

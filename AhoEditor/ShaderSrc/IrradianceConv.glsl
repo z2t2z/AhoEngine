@@ -12,14 +12,13 @@ void main() {
     gl_Position = u_Projection * u_View * vec4(a_Position, 1.0);
 }
 
-
 #type fragment
 #version 460 core
 out vec4 out_Color;
 
 in vec3 v_Position;
 
-uniform samplerCube u_CubeMap;
+uniform samplerCube u_gCubeMap;
 uniform float u_SampleDelta = 0.025f;
 
 const float PI = 3.14159265359f;
@@ -37,7 +36,7 @@ void main() {
 			vec3 xyzT = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(phi));
 			vec3 xyz = xyzT.x * R + xyzT.y * Up + xyzT.z * N;
 
-			irradiance += texture(u_CubeMap, xyz).rgb * cos(theta) * sin(theta);
+			irradiance += texture(u_gCubeMap, xyz).rgb * cos(theta) * sin(theta);
 			sampleCnt += 1;
 		}
 	}

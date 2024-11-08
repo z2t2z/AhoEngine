@@ -33,7 +33,7 @@ layout(std140, binding = 2) uniform RandomKernelUBO {
 
 uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
-uniform sampler2D u_Noise;
+uniform sampler2D u_gNoise;
 
 uniform int u_KernelSize = 64;
 const int MAX_SAMPLES = 64;
@@ -47,7 +47,7 @@ void main() {
 	const vec2 noiseScale = vec2(width / 4.0, height / 4.0);
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;
 	vec3 N = normalize(texture(u_gNormal, v_TexCoords).xyz);
-	vec3 rnd = normalize(texture(u_Noise, v_TexCoords * noiseScale).xyz);
+	vec3 rnd = normalize(texture(u_gNoise, v_TexCoords * noiseScale).xyz);
 	vec3 T = normalize(rnd - N * dot(rnd, N));
 	vec3 B = cross(N, T);
 	mat3 TBN = mat3(T, B, N); // Note: no transpose here since we are not transforming everything to tangent space but the other way around

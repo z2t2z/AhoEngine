@@ -4,7 +4,7 @@
 namespace Aho {
 	// TODO: Try to come up with a better way
     void Material::ClearState(const std::shared_ptr<Shader>& shader) {
-        for (const auto& name : { "u_HasAlbedo", "u_HasNormal", "u_HasAO", "u_HasMetalic", "u_HasRoughness" }) {
+        for (const auto& name : { "u_HasAlbedo", "u_HasNormal", "u_HasAO", "u_HasMetallic", "u_HasRoughness" }) {
             shader->SetBool(name, false);
         }
     }

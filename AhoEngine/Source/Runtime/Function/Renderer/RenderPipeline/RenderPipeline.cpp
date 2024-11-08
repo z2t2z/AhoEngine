@@ -3,12 +3,6 @@
 
 namespace Aho {
 	RenderPipeline::~RenderPipeline() {
-		for (auto data : m_ScreenQuad) {
-			delete data->GetTransformParam();
-		}
-		for (auto data : m_UnitCube) {
-			delete data->GetTransformParam();
-		}
 	}
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
@@ -58,7 +52,6 @@ namespace Aho {
 			quadVAO.reset(VertexArray::Create());
 			quadVAO->Init(meshInfo);
 			m_ScreenQuad.push_back(std::make_shared<RenderData>(quadVAO));
-			m_ScreenQuad.back()->SetTransformParam(new TransformParam());
 		}
 
 		// Unit cube
@@ -102,7 +95,6 @@ namespace Aho {
 			cubeVAO.reset(VertexArray::Create());
 			cubeVAO->Init(meshInfo);
 			m_UnitCube.push_back(std::make_shared<RenderData>(cubeVAO));
-			m_UnitCube.back()->SetTransformParam(new TransformParam());
 		}
 	}
 

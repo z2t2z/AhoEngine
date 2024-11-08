@@ -1738,5 +1738,6 @@
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp" />
   </ItemGroup>
 </Project>

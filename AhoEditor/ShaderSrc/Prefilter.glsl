@@ -19,7 +19,7 @@ out vec4 out_Color;
 
 in vec3 v_Position;
 
-uniform samplerCube u_CubeMap;
+uniform samplerCube u_gCubeMap;
 uniform float u_Roughness;
 
 const float PI = 3.14159265359f;
@@ -106,7 +106,7 @@ void main() {
 
             float mipLevel = u_Roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel); 
             
-            prefilteredColor += textureLod(u_CubeMap, L, mipLevel).rgb * NdotL;
+            prefilteredColor += textureLod(u_gCubeMap, L, mipLevel).rgb * NdotL;
             totalWeight      += NdotL;
         }
     }

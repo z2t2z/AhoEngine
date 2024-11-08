@@ -193,14 +193,14 @@ namespace Aho {
 
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
-		if (m_DrawDepthMap) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->GetTextureAttachment(5)->GetTextureID();
+		if (GlobalState::g_ShowDebug) {
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::FXAA)->GetTextureAttachments().back()->GetTextureID();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
 		}
 		else {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::PostProcessing)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::FXAA)->GetLastColorAttachment();
 		}
 
 		ImGui::Image((ImTextureID)RenderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
@@ -215,7 +215,7 @@ namespace Aho {
 			m_ShouldPickObject = false;
 			if (m_IsCursorInViewport) { 
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
-				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(5, MouseX, MouseY);
+				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
 			}
 		}

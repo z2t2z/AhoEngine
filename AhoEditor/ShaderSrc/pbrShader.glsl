@@ -33,21 +33,17 @@ layout(std140, binding = 1) uniform LightUBO {
 
 in vec2 v_TexCoords;
 
-uniform sampler2D u_DepthMap; // light's perspective
+uniform sampler2D u_gDepth; // light's perspective
 uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
 uniform sampler2D u_gAlbedo;
-uniform sampler2D u_PBR; 
-uniform sampler2D u_SSAO;
-uniform sampler2D u_Specular;
+uniform sampler2D u_gAO;
+uniform sampler2D u_gPBR; 
 
 // IBL
-uniform samplerCube u_Irradiance;
-uniform samplerCube u_Prefilter;
-uniform sampler2D u_LUT;
-
-uniform float u_AO;
-uniform bool u_HasAO = false;
+uniform samplerCube u_gIrradiance;
+uniform samplerCube u_gPrefilter;
+uniform sampler2D u_gLUT;
 
 const float PI = 3.14159265359f;
 const float MAX_REFLECTION_LOD = 4.0;
@@ -113,8 +109,8 @@ vec2 poissonDisk[16] = {
 }; 
 
 const float nearPlane = 0.1f; 
-const float frustumWidth = 200.0f;
-const float lightSize = 10.0f; 	// light width
+const float frustumWidth = 100.0f;
+const float lightSize = 2.0f; 	// light width
 const float lightUV = lightSize / frustumWidth;
 const int SAMPLE_CNT = 16;
 float BIAS = 0.0001f;
@@ -128,7 +124,7 @@ float FindBlocker(vec2 uv, float zReceiver) {
 	int sampleCnt = 0;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
-		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * searchWidth).r;
+		float sampleDepth = texture(u_gDepth, uv + poissonDisk[i] * searchWidth).r;
 		if (zReceiver > sampleDepth) {
 			blockerSum += sampleDepth;
 			sampleCnt += 1;
@@ -146,8 +142,8 @@ float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 	float shadowSum = 0.0f;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
-		float sampleDepth = texture(u_DepthMap, uv + poissonDisk[i] * radius).r;
-		shadowSum += zReceiver > sampleDepth ? 0.0f : 1.0f;
+		float sampleDepth = texture(u_gDepth, uv + poissonDisk[i] * radius).r;
+		shadowSum += zReceiver > sampleDepth + 0.0025f? 0.0f : 1.0f;
 	}
 
 	return shadowSum / float(SAMPLE_CNT);
@@ -157,13 +153,12 @@ float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 	if (lightIdx != 0) {
 		return 1.0f;
 	}
-
 	fragPos.w = 1.0f;
 	fragPos = u_LightPV[lightIdx] * fragPos; 	// To light space 
-	zPosFromLight = fragPos.z;
 
 	fragPos /= fragPos.w;			
 	fragPos = fragPos * 0.5f + 0.5f;
+	zPosFromLight = fragPos.z;
  
 	vec2 uv = fragPos.xy;
 	float zReceiver = fragPos.z;
@@ -191,19 +186,17 @@ void main() {
 	fragPos = (u_ViewInv * vec4(fragPos, 1.0f)).xyz; // To world space
 
 	vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
-	// albedo = texture(u_gAlbedo, v_TexCoords).rgb;
-	float AO = texture(u_PBR, v_TexCoords).b;
+	float AO = texture(u_gPBR, v_TexCoords).b;
 	if (AO == -1.0f) {
-		AO = texture(u_SSAO, v_TexCoords).r;
+		AO = texture(u_gAO, v_TexCoords).r;
 	}
-	float metalic = texture(u_PBR, v_TexCoords).r;
-	float roughness = texture(u_PBR, v_TexCoords).g;
+	float metalic = texture(u_gPBR, v_TexCoords).r;
+	float roughness = texture(u_gPBR, v_TexCoords).g;
 
 	vec3 viewPos = u_ViewPosition.xyz;
 	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb);
 	vec3 V = normalize(viewPos - fragPos); 		// View direction
 	vec3 R = reflect(-V, N);
-	// vec3 ssrSpec = texture(u_Specular, v_TexCoords).rgb;
 
 	vec3 F0 = vec3(0.04f);
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
@@ -252,14 +245,12 @@ void main() {
 	vec3 kD = 1.0 - kS;
 	kD *= 1.0 - metalic;
 
-	vec3 irradiance = texture(u_Irradiance, N).rgb;
+	vec3 irradiance = texture(u_gIrradiance, N).rgb;
 	vec3 diffuse = irradiance * albedo;
 
-	vec3 preFilter = textureLod(u_Prefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
-	vec2 brdf = texture(u_LUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+	vec3 preFilter = textureLod(u_gPrefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
+	vec2 brdf = texture(u_gLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
 	vec3 specular = preFilter * (F * brdf.x + brdf.y);
-
-	float mixFactor = clamp(1.0f - roughness, 0.0, 1.0);
 	
 	vec3 ambient = (kD * diffuse + specular) * AO;
 

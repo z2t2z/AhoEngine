@@ -19,7 +19,7 @@ out vec4 out_Color;
 
 in vec3 v_Position;
 
-uniform sampler2D u_HDR;
+uniform sampler2D u_gHDR;
 
 const vec2 invAtan = vec2(0.1591f, 0.3183f);
 
@@ -31,5 +31,5 @@ vec2 GetSphericalMapUVFromWorldDir(vec3 dir) {
 
 void main() {
 	vec2 uv = GetSphericalMapUVFromWorldDir(normalize(v_Position));
-	out_Color = vec4(texture(u_HDR, uv).rgb, 1.0f);
+	out_Color = vec4(texture(u_gHDR, uv).rgb, 1.0f);
 }

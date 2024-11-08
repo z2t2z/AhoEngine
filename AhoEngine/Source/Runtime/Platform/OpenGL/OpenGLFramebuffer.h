@@ -13,10 +13,11 @@ namespace Aho {
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt) override;
 		virtual void BindCubeMap(Texture* tex, int faceIndex, int attachmentID, int mipLevel) override;
-		virtual Texture* GetDepthTexture() override;
 		virtual const std::vector<Texture*>& GetTextureAttachments() override;
+		virtual Texture* GetDepthTexture() override;
 		virtual Texture* GetTextureAttachment(int index) override;
-		virtual uint32_t ReadPixel(uint32_t attachmentIndex, uint32_t x, uint32_t y, bool shared = false) override;
+		virtual Texture* GetTexture(TexType type) override;
+		virtual uint32_t ReadPixel(TexType type, uint32_t x, uint32_t y, bool shared = false) override;
 		virtual uint32_t GetDepthAttachment() override { AHO_CORE_ASSERT(m_DepthTex); return m_DepthTex->GetTextureID(); }
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const override { 
 			AHO_CORE_ASSERT(index < m_ColorAttachmentTex.size(), "Out of bound while accessing color attachments");

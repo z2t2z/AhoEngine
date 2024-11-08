@@ -15,7 +15,7 @@ void main() {
 out vec4 out_Color;
 in vec2 v_TexCoords;
 
-uniform sampler2D u_Result;
+uniform sampler2D u_gImage;
 uniform usampler2D u_gEntity;
 
 uniform uint u_SelectedEntityID;
@@ -25,7 +25,7 @@ void main() {
 	ivec2 texelPos = ivec2(gl_FragCoord.xy);
 	uint texelValue = texelFetch(u_gEntity, texelPos, 0).r;
 	if (!u_IsEntityIDValid || texelValue == u_SelectedEntityID) {
-		out_Color = vec4(texelFetch(u_Result, texelPos, 0).rgb, 1.0f);
+		out_Color = vec4(texelFetch(u_gImage, texelPos, 0).rgb, 1.0f);
 		return;
 	}
 
@@ -44,5 +44,5 @@ void main() {
 		}
 	}
 
-	out_Color = isEdge ? vec4(1.0f, 1.0f, 0.0f, 1.0f) : vec4(texelFetch(u_Result, texelPos, 0).rgb, 1.0f);
+	out_Color = isEdge ? vec4(1.0f, 1.0f, 0.0f, 1.0f) : vec4(texelFetch(u_gImage, texelPos, 0).rgb, 1.0f);
 }

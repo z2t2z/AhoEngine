@@ -175,10 +175,11 @@ namespace Aho {
 			view.each([&](auto entity, auto& pc, auto& tc) {
 				int index = pc.index;
 				if (pc.castShadow) {
-					float nearPlane = 0.1f, farPlane = 200.0f;
-					glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, nearPlane, farPlane);
+					float nearPlane = 0.1f, farPlane = 100.0f;
+					glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
 					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
 					lightUBO.u_LightPV[index] = lightMat;
+					tc.GetTranslation().y = 20.0f;
 				}
 				lightUBO.u_Info[index].x = 1; // Flag: enabled or not
 				lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
@@ -229,6 +230,7 @@ namespace Aho {
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
+
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
@@ -261,6 +263,15 @@ namespace Aho {
 			if (!mat->HasProperty(TexType::Albedo)) {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
 			}
+			if (!mat->HasProperty(TexType::Metallic)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+			}
+			if (!mat->HasProperty(TexType::Roughness)) {
+				mat->AddMaterialProperties({ 0.95f, TexType::Roughness });
+			}
+			if (!mat->HasProperty(TexType::AO)) {
+				mat->AddMaterialProperties({ 0.2f, TexType::AO });
+			}
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
@@ -275,11 +286,11 @@ namespace Aho {
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
 		entityManager->AddComponent<MeshComponent>(gameObject);
 		entityManager->AddComponent<EntityComponent>(gameObject);
-
-		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
-		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
+		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
+
+		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
 		uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;

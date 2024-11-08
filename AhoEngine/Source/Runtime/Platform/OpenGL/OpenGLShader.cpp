@@ -196,82 +196,90 @@ namespace Aho {
 		m_ShaderID = program;
 	}
 
-	//void OpenGLShader::SetUBO(size_t size, uint32_t bindingPoint, DrawType type) {
-	//	if (!s_UBO.contains(bindingPoint)) {
-	//		if (s_UBO.size() == MAX_UBO) {
-	//			return;
-	//		}
-	//		uint32_t uboID;
-	//		glGenBuffers(1, &uboID);
-	//		glBindBuffer(GL_UNIFORM_BUFFER, uboID);
-	//		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-	//		glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, uboID);
-	//		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	//		s_UBO.emplace(bindingPoint, uboID);
-	//	}
-	//}
-
-	//void OpenGLShader::BindUBO(const void* ubo, uint32_t bindingPoint, size_t size) {
-	//	AHO_CORE_ASSERT(s_UBO.contains(bindingPoint));
-	//	glBindBuffer(GL_UNIFORM_BUFFER, s_UBO.at(bindingPoint));
-	//	glBufferSubData(GL_UNIFORM_BUFFER, 0, size, ubo);
-	//	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	//}
-
-	/* Hard Code for now */
-
 	void OpenGLShader::SetBool(const std::string& name, bool value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::SetUint(const std::string& name, uint32_t value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		AHO_CORE_ASSERT(location != -1);
 		glUniform1ui(location, value);
 	}
 
 	void OpenGLShader::SetInt(const std::string& name, int value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		//AHO_CORE_ASSERT(location != -1);
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform1iv(location, count, values);
 	}
 
 	void OpenGLShader::SetFloat(const std::string& name, float value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform1f(location, value);
 	}
 
 	void OpenGLShader::SetVec2(const std::string& name, const glm::vec2& value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform2f(location, value.x, value.y);
 	}
 
 	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform3f(location, value.x, value.y, value.z);
 	}
 
 	void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
 
 	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+		}
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 

@@ -28,7 +28,8 @@ in vec2 v_TexCoords;
 uniform sampler2D u_gPosition; 
 uniform sampler2D u_gNormal;
 uniform sampler2D u_gAlbedo;
-uniform sampler2D u_Depth;
+uniform sampler2D u_gDepth;
+
 uniform int u_Width;
 uniform int u_Height;
 uniform int u_MipLevelMax;
@@ -161,7 +162,7 @@ vec3 RayMarching() {
 
         float rayDepth = Q.z / k;
         vec2 hitPixel = permute ? P.yx : P;
-        float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), 0).r;
+        float sampleDepth = texelFetch(u_gDepth, ivec2(hitPixel), 0).r;
         if (rayDepth < sampleDepth && rayDepth + thickNess > sampleDepth) {
             result = texelFetch(u_gAlbedo, ivec2(hitPixel), 0).rgb;
             break;
@@ -172,7 +173,7 @@ vec3 RayMarching() {
         // if (hitPixel.x < 0 || hitPixel.x > u_Width || hitPixel.y < 0 || hitPixel.y > u_Height) {
         //     break;
         // }
-        // float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), 0).r;
+        // float sampleDepth = texelFetch(u_gDepth, ivec2(hitPixel), 0).r;
         // sampleDepth = sampleDepth;
         
         // bool isBehind = (rayZMin + 0.1f <= sampleDepth);
@@ -187,7 +188,6 @@ vec3 RayMarching() {
 vec4 HiZ() {
     // View space
     vec3 beginPos = texture(u_gPosition, v_TexCoords).xyz;
-    // beginPos = normalize(beginPos) 
     vec3 normal = texture(u_gNormal, v_TexCoords).xyz;
     mat3 normalMatrix = transpose(inverse(mat3(u_View)));
     normal = normalMatrix * normal; // To view space
@@ -212,8 +212,7 @@ vec4 HiZ() {
     vec2 P1 = H1.xy * k1;
 
     // Screen space
-    // vec2 screenSize = vec2(u_Width, u_Height);
-    ivec2 screenSize = textureSize(u_Depth, 0);
+    ivec2 screenSize = textureSize(u_gDepth, 0);
     P0 = (P0 * 0.5f + 0.5f) * screenSize;
     P1 = (P1 * 0.5f + 0.5f) * screenSize;
 
@@ -266,7 +265,7 @@ vec4 HiZ() {
         vec2 hitPixel = permute ? P.yx : P;
         vec2 bhitPixel = hitPixel;
         hitPixel /= pow(2, mipLevel);
-        float sampleDepth = texelFetch(u_Depth, ivec2(hitPixel), mipLevel).r;
+        float sampleDepth = texelFetch(u_gDepth, ivec2(hitPixel), mipLevel).r;
 
         if (rayDepth < sampleDepth) {
             if (rayDepth + thickNess > sampleDepth) {

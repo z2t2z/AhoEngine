@@ -13,18 +13,18 @@ void main() {
 
 #type fragment
 #version 460 core
-out vec3 out_Color;
+out float out_Color;
 in vec2 v_TexCoords;
 
-uniform sampler2D u_TexToBlur;
+uniform sampler2D u_gImage;
 
 void main() {
-    vec2 texelSize = 1.0f / vec2(textureSize(u_TexToBlur, 0));
-    vec3 result = vec3(0.0f);
+    vec2 texelSize = 1.0f / vec2(textureSize(u_gImage, 0));
+    float result = 0.0f;
     for (int x = -2; x < 2; x++) {
         for (int y = -2; y < 2; y++) {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(u_TexToBlur, v_TexCoords + offset).rgb;
+            result += texture(u_gImage, v_TexCoords + offset).r;
         }
     }
     out_Color = result / (4.0 * 4.0);
