@@ -49,6 +49,7 @@ project "Assimp"
 		staticruntime "On" --staticly linking the runtime libraries
 		-- Importers
 		defines {
+			'ASSIMP_BUILD_NO_USD_IMPORTER',
 			'ASSIMP_BUILD_NO_3D_IMPORTER',
 			'ASSIMP_BUILD_NO_3DS_IMPORTER',
 			'ASSIMP_BUILD_NO_3MF_IMPORTER',
@@ -119,9 +120,11 @@ project "Assimp"
 		}
 
 	filter "configurations:Debug"
-		runtime "Debug"
+        runtime "Debug"
+        staticruntime "Off"		
 		symbols "on"
 
 	filter "configurations:Release"
-		runtime "Release"
+        runtime "Release"
+        staticruntime "off"
 		optimize "on"

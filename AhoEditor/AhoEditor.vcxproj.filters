@@ -19,9 +19,6 @@
     <Filter Include="Source\EditorUI">
       <UniqueIdentifier>{0A7AB197-7605-1F5C-7F16-A250EB207B5C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\EditorUI\LevelHierarchyPanel">
-      <UniqueIdentifier>{20EE5F08-8CA7-CAB2-1507-E58C81BF8022}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.h">
@@ -39,7 +36,9 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorUI\PropertiesPanel.h" />
+    <ClInclude Include="Source\EditorUI\PropertiesPanel.h">
+      <Filter>Source\EditorUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -57,13 +56,5 @@
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
       <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ShaderSrc\Blur.glsl" />
-    <None Include="ShaderSrc\HiZ.glsl" />
-    <None Include="ShaderSrc\DrawLine.glsl" />
-    <None Include="ShaderSrc\Postprocessing.glsl" />
-    <None Include="ShaderSrc\IrradianceConv.glsl" />
-    <None Include="ShaderSrc\GenCubeMapFromHDR.glsl" />
   </ItemGroup>
 </Project>

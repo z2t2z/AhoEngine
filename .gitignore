@@ -16,6 +16,7 @@ Asset/
 *.sln
 *.vcxproj
 *.exe
+!premake5.exe
 *.dll
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

@@ -1,12 +1,6 @@
 [submodule "AhoEngine/Vendor/spdlog"]
 	path = AhoEngine/Vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "AhoEngine/Vendor/GLFW"]
-	path = AhoEngine/Vendor/GLFW
-	url = https://github.com/z2t2z/glfw.git
-[submodule "AhoEngine/Vendor/ImGui"]
-	path = AhoEngine/Vendor/ImGui
-	url = https://github.com/ocornut/imgui.git
 [submodule "AhoEngine/Vendor/glm"]
 	path = AhoEngine/Vendor/glm
 	url = https://github.com/g-truc/glm.git
@@ -16,9 +10,18 @@
 [submodule "AhoEngine/Vendor/assimp/assimp"]
 	path = AhoEngine/Vendor/assimp/assimp
 	url = https://github.com/assimp/assimp.git
-[submodule "AhoEngine/Vendor/ImGuizmo"]
-	path = AhoEngine/Vendor/ImGuizmo
-	url = https://github.com/CedricGuillemet/ImGuizmo.git
 [submodule "AhoEngine/Vendor/JoltPhysics"]
 	path = AhoEngine/Vendor/JoltPhysics
 	url = https://github.com/z2t2z/JoltPhysics.git
+[submodule "AhoEngine/Vendor/imgui"]
+	path = AhoEngine/Vendor/imgui
+	url = https://github.com/z2t2z/imgui.git
+[submodule "AhoEngine/Vendor/assimp"]
+	path = AhoEngine/Vendor/assimp
+	url = https://github.com/z2t2z/assimp.git
+[submodule "AhoEngine/Vendor/glfw"]
+	path = AhoEngine/Vendor/glfw
+	url = https://github.com/z2t2z/glfw.git
+[submodule "AhoEngine/Vendor/ImGuizmo"]
+	path = AhoEngine/Vendor/ImGuizmo
+	url = https://github.com/z2t2z/ImGuizmo.git

@@ -28,6 +28,9 @@
     <Filter Include="Source\Runtime\Core\Log">
       <UniqueIdentifier>{D2008224-3E38-CABB-4742-2EDFB3F8F0B4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Core\Math">
+      <UniqueIdentifier>{FA6DC2B4-E692-1135-0FDE-F6C4FB611053}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Core\Window">
       <UniqueIdentifier>{48E2F606-34F2-A2D7-9DAB-07F689DA9170}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,9 @@
     </Filter>
     <Filter Include="Source\Runtime\Function\Camera">
       <UniqueIdentifier>{B61487DC-A23A-5143-8B80-D60E7745760F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Gameplay">
+      <UniqueIdentifier>{BD90A5CB-A9E1-900D-D245-7FCFBEF52377}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Function\Level">
       <UniqueIdentifier>{0592C0B9-71AA-A7E3-3A57-377DA62E3C7D}</UniqueIdentifier>
@@ -72,6 +78,9 @@
     </Filter>
     <Filter Include="Source\Runtime\Resource\Asset">
       <UniqueIdentifier>{4FFFB413-BB17-9C3D-84C4-2BD7F09B30D7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Resource\Asset\Animation">
+      <UniqueIdentifier>{FE66B032-6AF6-711D-73F2-5235DF00AD29}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\Asset\Importer">
       <UniqueIdentifier>{30DE8BD9-1C30-63C9-054F-A0D9F13F7CB2}</UniqueIdentifier>
@@ -159,6 +168,9 @@
     <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h">
       <Filter>Source\Runtime\Core\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h">
+      <Filter>Source\Runtime\Core\Gui</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h">
       <Filter>Source\Runtime\Core\Gui</Filter>
     </ClInclude>
@@ -180,6 +192,9 @@
     <ClInclude Include="Source\Runtime\Core\Log\Log.h">
       <Filter>Source\Runtime\Core\Log</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Math\Math.h">
+      <Filter>Source\Runtime\Core\Math</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Window\Window.h">
       <Filter>Source\Runtime\Core\Window</Filter>
     </ClInclude>
@@ -194,6 +209,9 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Camera\RuntimeCamera.h">
       <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Gameplay\IK.h">
+      <Filter>Source\Runtime\Function\Gameplay</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Level\EcS\Components.h">
       <Filter>Source\Runtime\Function\Level\EcS</Filter>
@@ -252,8 +270,17 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h">
+      <Filter>Source\Runtime\Function</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h">
       <Filter>Source\Runtime\Platform\OpenGL</Filter>
@@ -278,6 +305,15 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.h">
       <Filter>Source\Runtime\Platform\Windows\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h">
+      <Filter>Source\Runtime\Resource\Asset\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h">
+      <Filter>Source\Runtime\Resource\Asset\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Bone.h">
+      <Filter>Source\Runtime\Resource\Asset\Animation</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
@@ -1596,15 +1632,6 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Bone.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animation.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\Animation\Animator.h" />
-    <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
-    <ClInclude Include="Source\Runtime\Function\Gameplay\IK.h" />
-    <ClInclude Include="Source\Runtime\Core\Math\Math.h" />
-    <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1631,8 +1658,14 @@
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp">
       <Filter>Source\Runtime\Core\Log</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp">
+      <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp">
       <Filter>Source\Runtime\Function\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp">
       <Filter>Source\Runtime\Function\Level\EcS</Filter>
@@ -1661,6 +1694,9 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
@@ -1674,6 +1710,9 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp">
@@ -1706,6 +1745,12 @@
     <ClCompile Include="Source\Runtime\Platform\Windows\Window\WindowsWindow.cpp">
       <Filter>Source\Runtime\Platform\Windows\Window</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Animation.cpp">
+      <Filter>Source\Runtime\Resource\Asset\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Bone.cpp">
+      <Filter>Source\Runtime\Resource\Asset\Animation</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClCompile>
@@ -1733,11 +1778,5 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Bone.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\Animation\Animation.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp" />
   </ItemGroup>
 </Project>
