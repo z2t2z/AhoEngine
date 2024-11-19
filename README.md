@@ -37,4 +37,7 @@ More images to upload;
 
 ### How to build:
 
-- **...**
+- Use ``git clone --recurse-submodules https://github.com/z2t2z/AhoEngine`` to recursively clone the whole project.
+- Enter AhoEngine/Vendor/assimp folder, use cmake to build assimp, the commands are:  ``cmake CMakeLists.txt`` and ``cmake --build``.
+- Click Generate.bat file in the root folder.
+- Open .sln file and generate the project.
