@@ -21,12 +21,14 @@ IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/include"
 IncludeDir["stb_image"] = "AhoEngine/Vendor/stb_image"
 IncludeDir["json"] = "AhoEngine/Vendor/json"
 IncludeDir["ImGuizmo"] = "AhoEngine/Vendor/ImGuizmo"
+IncludeDir["Jolt"] = "AhoEngine/Vendor/JoltPhysics"
 
 group "Dependencies"
     include "AhoEngine/Vendor/GLFW"
     include "AhoEngine/Vendor/Glad"
     include "AhoEngine/Vendor/ImGui"
     include "AhoEngine/Vendor/assimp"
+    include "AhoEngine/Vendor/JoltPhysics"
 group ""
 
 project "AhoEngine"
@@ -69,7 +71,8 @@ project "AhoEngine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.stb_image}",
         "%{IncludeDir.json}",
-        "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.Jolt}"
     }
 
     links {
@@ -77,6 +80,7 @@ project "AhoEngine"
         "Glad",
         "ImGui",
         "assimp",
+        "Jolt",
         "opengl32.lib"
     }
 

@@ -10,6 +10,19 @@
 #include <unordered_map>
 
 
+#include <Jolt/Jolt.h>
+// Jolt includes
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+
 namespace Aho {
 	static BoneNode* g_Node;
 	static BoneNode* g_Endeffector;
@@ -21,6 +34,12 @@ namespace Aho {
 	void LevelLayer::OnAttach() {
 		m_CurrentLevel = std::make_shared<Level>();
 		m_Levels.push_back(m_CurrentLevel);
+
+		//JPH::RegisterTypes();
+		//JPH::Factory::sInstance = new JPH::Factory();
+		//JPH::RegisterDefaultAllocator();
+
+
 	}
 
 	void LevelLayer::OnDetach() {
@@ -163,6 +182,7 @@ namespace Aho {
 			CameraUBO camUBO;
 			camUBO.u_View = cam->GetView();
 			camUBO.u_Projection = cam->GetProjection();
+			camUBO.u_ProjectionInv = cam->GetProjectionInv();
 			camUBO.u_ViewInv = cam->GetViewInv();
 			camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
 			UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);

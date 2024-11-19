@@ -82,6 +82,7 @@ namespace Aho {
 		auto postProcessingPass  = SetupPostProcessingPass();
 		auto drawSelectedPass	 = SetupDrawSelectedPass();
 		auto FXAAPass			 = SetupFXAAPass();
+		auto AtmosPass			 = SetupAtmosphericPass();
 
 		shadingPass->RegisterTextureBuffer({ shadowMapPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
 		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
@@ -126,6 +127,8 @@ namespace Aho {
 		pipeline->RegisterRenderPass(std::move(drawSelectedPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(postProcessingPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(FXAAPass), RenderDataType::ScreenQuad);
+		pipeline->RegisterRenderPass(std::move(AtmosPass), RenderDataType::ScreenQuad);
+
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
 		RenderCommand::SetDepthTest(true);
 	}
@@ -737,6 +740,34 @@ namespace Aho {
 		auto fbo = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(fbo);
 		pass->SetRenderPassType(RenderPassType::PostProcessing);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> RenderLayer::SetupAtmosphericPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			shader->Bind();
+			renderTarget->EnableAttachments(0);
+			RenderCommand::Clear(ClearFlags::Color_Buffer);
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			renderTarget->Unbind();
+			shader->Unbind();
+		});
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
+		pass->SetRenderCommand(std::move(cmdBuffer));
+
+		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "AtmosphericalSatteriingTest.glsl");
+		pass->SetShader(pp);
+		TexSpec texSpecColor;
+		texSpecColor.type = TexType::Result;
+		FBSpec fbSpec(256u, 128u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		auto fbo = Framebuffer::Create(fbSpec);
+		pass->SetRenderTarget(fbo);
+		pass->SetRenderPassType(RenderPassType::Atmospheric);
 		return pass;
 	}
 

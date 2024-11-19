@@ -33,7 +33,7 @@ namespace Aho {
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "pbrShader.glsl");			// TODO: resource layer
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "AtmosphericalSatteriingTest.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_AddIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "cursor.png").string());
@@ -158,7 +158,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::Shading)->SetShader(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::Atmospheric)->SetShader(newShader);
 					return true;
 				}
 			}
@@ -194,10 +194,10 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (GlobalState::g_ShowDebug) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::FXAA)->GetTextureAttachments().back()->GetTextureID();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->GetTexture(TexType::Position)->GetTextureID();
 		}
 		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSRvs)->GetLastColorAttachment();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Atmospheric)->GetLastColorAttachment();
 		}
 		else {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::FXAA)->GetLastColorAttachment();
@@ -500,14 +500,23 @@ namespace Aho {
 			m_IsClickingEventBlocked = true;
 		}
 		ImGui::SameLine();
-		if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
-			ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
-			g_SelectedButton = ButtonType::Translation;
-			g_Operation = ImGuizmo::OPERATION::TRANSLATE;
-			m_ShouldPickObject = false;
-			m_IsClickingEventBlocked = true;
+		auto& io = ImGui::GetIO();
+		ImGui::PushFont(io.Fonts->Fonts[2]);
+		if (ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ImVec2 { g_ToolBarIconSize, g_ToolBarIconSize })) {
+				g_SelectedButton = ButtonType::Translation;
+				g_Operation = ImGuizmo::OPERATION::TRANSLATE;
+				m_ShouldPickObject = false;
+				m_IsClickingEventBlocked = true;
 		}
+		ImGui::PopFont();
+		//if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
+		//	ImVec2(0, 0), ImVec2(1, 1),
+		//	g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
+		//	g_SelectedButton = ButtonType::Translation;
+		//	g_Operation = ImGuizmo::OPERATION::TRANSLATE;
+		//	m_ShouldPickObject = false;
+		//	m_IsClickingEventBlocked = true;
+		//}
 		ImGui::SameLine();
 		if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
 			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {

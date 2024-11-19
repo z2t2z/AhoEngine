@@ -27,7 +27,8 @@ namespace Aho {
 		GenCubemap,
 		Prefilter,
 		GenLUT,
-		FXAA
+		FXAA,
+		Atmospheric,
 		/* TODO */
 	};
 

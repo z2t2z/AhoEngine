@@ -39,6 +39,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupSSRPass();
 		std::unique_ptr<RenderPass> SetupHiZPass();
 		std::unique_ptr<RenderPass> SetupPostProcessingPass();
+		std::unique_ptr<RenderPass> SetupAtmosphericPass();
 		void SetupUBO();
 	private:
 		Texture* m_HDR{ nullptr }; // TODO: needs a proper resource manager

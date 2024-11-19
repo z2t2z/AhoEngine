@@ -45,6 +45,9 @@ uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gLUT;
 
+// SSR sample counts
+uniform uint u_SSRSampleCnt = 32;
+
 const float PI = 3.14159265359f;
 const float MAX_REFLECTION_LOD = 4.0;
 
@@ -86,6 +89,18 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0) {
 
 vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// SSR screen space ray tracing
+bool IsHit(out vec2 hitUV, vec3 startPos, vec3 endPos) {
+	// Clip space
+    // vec4 H0 = ViewSpaceToClipSpace(beginPos);
+    // vec4 H1 = ViewSpaceToClipSpace(endPos);
+    // float k0 = 1.0f / H0.w;
+    // float k1 = 1.0f / H1.w;
+
+	return false;
+
 }
 
 // Shadow
@@ -182,8 +197,8 @@ float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 
 
 void main() {
-	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb;
-	fragPos = (u_ViewInv * vec4(fragPos, 1.0f)).xyz; // To world space
+	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
+	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
 
 	vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
 	float AO = texture(u_gPBR, v_TexCoords).b;
@@ -202,6 +217,7 @@ void main() {
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
 	
 	vec3 Lo = vec3(0.0f);
+	// Direct lighting
 	for (int i = 0; i < MAX_LIGHT_CNT; ++i) {
 		if (u_Info[i].x == 0) {
 			break;
@@ -237,6 +253,11 @@ void main() {
 					* radiance 
 					* NdotL 
 					* PCSS(vec4(fragPos, 1.0f), NdotL, i);
+	}
+
+	// Indirect lighting
+	for (int i = 0; i < u_SSRSampleCnt; ++i) {
+
 	}
 
 	// Ambient lighting
