@@ -29,9 +29,12 @@ namespace Aho {
 		GenLUT,
 		FXAA,
 		Atmospheric,
+		TransmittanceLUT,
+		MutiScattLUT,
+		SkyViewLUT,
 		/* TODO */
 	};
-
+	
 
 	// TODO, think of a better way
 	class TextureBuffer {
@@ -56,6 +59,11 @@ namespace Aho {
 			s_TexBufferMap[TexType::Result]		= "u_gImage";
 			s_TexBufferMap[TexType::HDR]		= "u_gHDR";
 			s_TexBufferMap[TexType::CubeMap]	= "u_gCubeMap";
+
+			// Atmosphere rendering
+			s_TexBufferMap[TexType::TransmittanceLUT] = "u_TransmittanceLUT";
+			s_TexBufferMap[TexType::SkyViewLUT]		  = "u_SkyviewLUT";
+			s_TexBufferMap[TexType::MultiScattLUT]	  = "u_MultiScattLUT";
 		}
 		static const std::string GetTexBufferUniformName(TexType type) { return s_TexBufferMap.at(type); }
 	private:

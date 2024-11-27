@@ -33,7 +33,7 @@ namespace Aho {
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
 		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "AtmosphericalSatteriingTest.glsl");			// TODO: resource layer
+		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "AtmosphericScattering" / "SkyLUT.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_AddIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "cursor.png").string());
@@ -158,7 +158,7 @@ namespace Aho {
 			if (!FileName.empty()) {
 				auto newShader = Shader::Create(FileName);
 				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::Atmospheric)->SetShader(newShader);
+					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::SkyViewLUT)->SetShader(newShader);
 					return true;
 				}
 			}
@@ -194,7 +194,7 @@ namespace Aho {
 		// TODO: Should be able to select any render result of any passes
 		uint32_t RenderResult;
 		if (GlobalState::g_ShowDebug) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->GetTexture(TexType::Position)->GetTextureID();
+			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SkyViewLUT)->GetLastColorAttachment();
 		}
 		else if (m_PickingPass) {
 			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Atmospheric)->GetLastColorAttachment();

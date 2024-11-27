@@ -71,34 +71,45 @@ namespace Aho {
 	void RenderLayer::SetupRenderPipeline() {
 		RenderPipeline* pipeline = new RenderPipeline();
 
-		auto shadingPass         = SetupShadingPass();
-		auto shadowMapPass		 = SetupShadowMapPass();
-		auto gBufferPass		 = SetupGBufferPass();
-		//auto HiZPass			 = SetupHiZPass();
-		auto ssaoPass			 = SetupSSAOPass();
-		//auto ssrPass			 = SetupSSRPass();
-		//auto blurRGBPass		 = SetupBlurRGBPass();
-		auto blurPass			 = SetupBlurRPass();
-		auto postProcessingPass  = SetupPostProcessingPass();
-		auto drawSelectedPass	 = SetupDrawSelectedPass();
-		auto FXAAPass			 = SetupFXAAPass();
-		auto AtmosPass			 = SetupAtmosphericPass();
+		auto shadingPass		  = SetupShadingPass();
+		auto shadowMapPass		  = SetupShadowMapPass();
+		auto gBufferPass		  = SetupGBufferPass();
+		//auto HiZPass			  = SetupHiZPass();
+		auto ssaoPass			  = SetupSSAOPass();
+		//auto ssrPass			  = SetupSSRPass();
+		//auto blurRGBPass		  = SetupBlurRGBPass();
+		auto blurPass			  = SetupBlurRPass();
+		auto postProcessingPass	  = SetupPostProcessingPass();
+		auto drawSelectedPass	  = SetupDrawSelectedPass();
+		auto FXAAPass			  = SetupFXAAPass();
+		auto AtmosPass			  = SetupAtmosphericPass();
+		auto transmittanceLUTPass = SetupTransmittanceLUTPass();
+		auto mutiScattPass		  = SetupMutiScattLutPass();
+		auto skyViewLUTPass		  = SetupSkyViewLutPass();
 
 		shadingPass->RegisterTextureBuffer({ shadowMapPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
 		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
 		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
 		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Albedo), TexType::Albedo });
 		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::PBR), TexType::PBR });  // PBR param, metalic and roughness in rg channels respectively
+		
 		auto preComputePipeline = m_Renderer->GetPipeline(RenderPipelineType::Precompute);
 		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
 		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::LUT), TexType::LUT });
 		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefilter), TexType::Prefilter });
 		shadingPass->RegisterTextureBuffer({ blurPass->GetTextureBuffer(TexType::Result), TexType::AO });
 
+		// Atmospheric Scattering
+		mutiScattPass->RegisterTextureBuffer( { transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
+		skyViewLUTPass->RegisterTextureBuffer({ transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
+		skyViewLUTPass->RegisterTextureBuffer({ mutiScattPass->GetTextureBuffer(TexType::Result), TexType::MultiScattLUT });
+		//skyViewLUTPass->RegisterTextureBuffer({ aerialPerspectieLUT->GetTextureBuffer(TexType::Result), TexType::AreialPerspectiveLUT });
+
+		shadingPass->RegisterTextureBuffer({ skyViewLUTPass->GetTextureBuffer(TexType::Result), TexType::SkyViewLUT });
+		
 		//HiZPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
 
 		FXAAPass->RegisterTextureBuffer({ postProcessingPass->GetTextureBuffer(TexType::Result), TexType::Result });
-
 
 		ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
 		ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
@@ -129,6 +140,10 @@ namespace Aho {
 		pipeline->RegisterRenderPass(std::move(FXAAPass), RenderDataType::ScreenQuad);
 		pipeline->RegisterRenderPass(std::move(AtmosPass), RenderDataType::ScreenQuad);
 
+		pipeline->RegisterRenderPass(std::move(transmittanceLUTPass), RenderDataType::ScreenQuad);
+		pipeline->RegisterRenderPass(std::move(mutiScattPass), RenderDataType::ScreenQuad);
+		pipeline->RegisterRenderPass(std::move(skyViewLUTPass), RenderDataType::ScreenQuad);
+
 		m_Renderer->SetCurrentRenderPipeline(pipeline);
 		RenderCommand::SetDepthTest(true);
 	}
@@ -136,16 +151,16 @@ namespace Aho {
 	void RenderLayer::SetupPrecomputeDiffuseIrradiancePipeline() {
 		RenderPipeline* pipeline = new RenderPipeline();
 		auto genCubeMapPass = SetupGenCubemapFromHDRPass();
-		auto preComputePass = SetupPrecomputeIrradiancePass();
+		auto precomputeIBLIrrPass = SetupPrecomputeIrradiancePass();
 		auto prefilterPass = SetupPrefilteredPass();
 		auto genLUTPass = SetupGenLUTPass();
 
 		genCubeMapPass->RegisterTextureBuffer({ m_HDR, TexType::HDR });
-		preComputePass->RegisterTextureBuffer({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
+		precomputeIBLIrrPass->RegisterTextureBuffer({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
 		prefilterPass->RegisterTextureBuffer ({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
 
 		pipeline->RegisterRenderPass(std::move(genCubeMapPass), RenderDataType::UnitCube);
-		pipeline->RegisterRenderPass(std::move(preComputePass), RenderDataType::UnitCube);
+		pipeline->RegisterRenderPass(std::move(precomputeIBLIrrPass), RenderDataType::UnitCube);
 		pipeline->RegisterRenderPass(std::move(prefilterPass),  RenderDataType::UnitCube);
 		pipeline->RegisterRenderPass(std::move(genLUTPass),		RenderDataType::UnitCube);
 
@@ -274,6 +289,112 @@ namespace Aho {
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
 		pass->SetRenderPassType(RenderPassType::GenLUT);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> RenderLayer::SetupTransmittanceLUTPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			shader->Bind();
+			renderTarget->EnableAttachments(0);
+			RenderCommand::Clear(ClearFlags::Color_Buffer);
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			renderTarget->Unbind();
+			shader->Unbind();
+			});
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
+		pass->SetRenderCommand(std::move(cmdBuffer));
+
+		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "PrecomputeAtmospheric.glsl");
+		pass->SetShader(pp);
+		TexSpec texSpecColor;
+		texSpecColor.type = TexType::Result;
+		texSpecColor.internalFormat = TexInterFormat::RGBA16F;
+		FBSpec fbSpec(256u, 64u, { texSpecColor });
+		auto fbo = Framebuffer::Create(fbSpec);
+		fbo->SetShouldResizeWithViewport(false);	  // do not resize with viewport
+		pass->SetRenderTarget(fbo);
+		pass->SetRenderPassType(RenderPassType::TransmittanceLUT);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> RenderLayer::SetupMutiScattLutPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			shader->Bind();
+			renderTarget->EnableAttachments(0);
+			RenderCommand::Clear(ClearFlags::Color_Buffer);
+			
+			// Sampler uniforms
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(TextureBuffer::GetTexBufferUniformName(texBuffer.m_Type), texOffset);
+				texBuffer.m_Texture->Bind(texOffset++);
+			}
+
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			renderTarget->Unbind();
+			shader->Unbind();
+			});
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
+		pass->SetRenderCommand(std::move(cmdBuffer));
+
+		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "AtmosphericScattering" / "MutiScattLUT.glsl");
+		pass->SetShader(pp);
+		TexSpec texSpecColor;
+		texSpecColor.type = TexType::Result;
+		texSpecColor.internalFormat = TexInterFormat::RGBA16F;
+		FBSpec fbSpec(32u, 32u, { texSpecColor });
+		auto fbo = Framebuffer::Create(fbSpec);
+		fbo->SetShouldResizeWithViewport(false);	  // do not resize with viewport
+		pass->SetRenderTarget(fbo);
+		pass->SetRenderPassType(RenderPassType::MutiScattLUT);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> RenderLayer::SetupSkyViewLutPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			shader->Bind();
+			renderTarget->EnableAttachments(0);
+			RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+			// Sampler uniforms
+			uint32_t texOffset = 0u;
+			for (const auto& texBuffer : textureBuffers) {
+				shader->SetInt(TextureBuffer::GetTexBufferUniformName(texBuffer.m_Type), texOffset);
+				texBuffer.m_Texture->Bind(texOffset++);
+			}
+
+			for (const auto& data : renderData) {
+				data->Bind(shader);
+				RenderCommand::DrawIndexed(data->GetVAO());
+				data->Unbind();
+			}
+			renderTarget->Unbind();
+			shader->Unbind();
+			});
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>();
+		pass->SetRenderCommand(std::move(cmdBuffer));
+
+		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "AtmosphericScattering" / "SkyLUT.glsl");
+		pass->SetShader(pp);
+		TexSpec texSpecColor;
+		texSpecColor.type = TexType::Result;
+		texSpecColor.internalFormat = TexInterFormat::RGBA16F;
+		FBSpec fbSpec(192u, 108u, { texSpecColor });
+		auto fbo = Framebuffer::Create(fbSpec);
+		fbo->SetShouldResizeWithViewport(false);	  // do not resize with viewport
+		pass->SetRenderTarget(fbo);
+		pass->SetRenderPassType(RenderPassType::SkyViewLUT);
 		return pass;
 	}
 
@@ -764,8 +885,9 @@ namespace Aho {
 		pass->SetShader(pp);
 		TexSpec texSpecColor;
 		texSpecColor.type = TexType::Result;
-		FBSpec fbSpec(256u, 128u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
+		FBSpec fbSpec(256u, 256u, { texSpecColor });    
 		auto fbo = Framebuffer::Create(fbSpec);
+		fbo->SetShouldResizeWithViewport(false);	  // do not resize with viewport
 		pass->SetRenderTarget(fbo);
 		pass->SetRenderPassType(RenderPassType::Atmospheric);
 		return pass;

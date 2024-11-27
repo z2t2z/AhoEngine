@@ -15,6 +15,15 @@ namespace Aho {
 	};
 
 	struct Vertex {
+		glm::vec3 position;
+		glm::vec3 normal;
+		glm::vec3 tangent;
+		glm::vec2 uv;
+
+		Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
+			: position(pos), normal(normal), tangent(tangent), uv(uv) { }
+
+
 		float x, y, z;			// position
 		float nx, ny, nz;		// normal
 		float tx, ty, tz;		// tangent
@@ -25,6 +34,15 @@ namespace Aho {
 
 	constexpr int MAX_BONES = 4;
 	struct VertexSkeletal {
+		glm::vec3 position;
+		glm::vec3 normal;
+		glm::vec3 tangent;
+		glm::vec2 uv;
+
+		VertexSkeletal(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
+			: position(pos), normal(normal), tangent(tangent), uv(uv) { }
+
+
 		float x, y, z;			// position
 		float nx, ny, nz;		// normal
 		float tx, ty, tz;		// tangent

@@ -48,6 +48,7 @@ namespace Aho {
 		std::vector<std::shared_ptr<MeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<MeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
+		const std::vector<std::shared_ptr<MeshInfo>>& GetMeshInfo() { return m_SubMesh; }
 	private:
 		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
 	};

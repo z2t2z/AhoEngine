@@ -46,6 +46,10 @@ namespace Aho {
 		Irradiance,
 		Prefilter,
 		LUT,
+		TransmittanceLUT,
+		MultiScattLUT,
+		SkyViewLUT,
+		AreialPerspectiveLUT,
 		Result	// The final result texture of a render pass
 	};
 

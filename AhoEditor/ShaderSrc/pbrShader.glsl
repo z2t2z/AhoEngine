@@ -45,6 +45,9 @@ uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gLUT;
 
+// Atmospheric 
+uniform sampler2D u_SkyviewLUT;
+
 // SSR sample counts
 uniform uint u_SSRSampleCnt = 32;
 

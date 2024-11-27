@@ -32,7 +32,11 @@ namespace Aho {
 		virtual const uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
 		virtual const uint32_t GetLastColorAttachment() const = 0;
 		virtual const FBSpec& GetSpecification() const = 0;
+	public:
 		static std::shared_ptr<Framebuffer> Create(const FBSpec& spec);
+		virtual void SetShouldResizeWithViewport(bool state) { m_ResizeWithViewport = state; }
+	protected:
+		bool m_ResizeWithViewport{ true };
 	};
 }
 

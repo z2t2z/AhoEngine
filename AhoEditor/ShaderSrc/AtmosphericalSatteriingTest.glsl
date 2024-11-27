@@ -31,6 +31,14 @@ const float Rtop = 6460.0;
 
 uniform vec3 u_SunDir = normalize(vec3(1.0, 0.1, -0.1));
 
+// https://www.shadertoy.com/view/tdSXzD
+vec3 jodieReinhardTonemap(vec3 c){
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    vec3 tc = c / (c + 1.0);
+    return mix(c / (l + 1.0), tc, tc);
+}
+
+
 void assert(bool condition) {
 	if (!condition) {
 		discard;
@@ -151,7 +159,7 @@ vec3 TransmittanceToSun(vec3 worldPos) {
 
 	float dt = tMax / SAMPLE_CNT;
 	float SAMPLE_CNT_FLOAT = float(SAMPLE_CNT);
-	float SampleSegmentT = 0.5;
+	float SampleSegmentT = 0.3;
 	vec3 L = vec3(0.0);
 	for (float s = 0.0f; s < SAMPLE_CNT_FLOAT; s += 1.0) {
 		float t0 = s / SAMPLE_CNT_FLOAT;
@@ -188,22 +196,33 @@ vec3 TransmittanceToSun(vec3 worldPos) {
 	return exp(-L);
 }
 
+vec3 ScatteringUniformPhase(float h) {
+	vec3 RayleighCoe = vec3(5.802, 13.558, 33.1) * 1E-3;
+	float RayleighScaleHeight = 8.5;
+
+	vec3 MieCoe = vec3(3.996) * 1E-3;
+	float MieScaleHeight = 1.2;
+	
+	const float uniformPhase = 1.0 / (4.0 * PI);
+
+	return RayleighCoe * exp(-h / RayleighScaleHeight) * uniformPhase;
+		+ MieCoe * exp(-h / MieScaleHeight) * uniformPhase;
+}
+
 bool Valid(vec3 P) {
 	bvec3 nanCheck = isnan(P);
 	return !nanCheck.x && !nanCheck.y && !nanCheck.z;
 }
 
-vec3 BruteForceRaymarching() {
+vec3 RayMarching() {
 	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
 	vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
 	
 	if (viewPos.w != 0) {
-		viewPos /= viewPos.w;
+		// viewPos /= viewPos.w;
 	}
 	vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
 	worldDir = normalize(worldDir);
-
-	// worldDir = normalize(vec3(u_ViewInv * (viewPos / viewPos.w)));
 
 	vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
 	worldPos.y += Rground;
@@ -236,11 +255,12 @@ vec3 BruteForceRaymarching() {
 	float cosTheta = dot(normalize(wi), normalize(wo));
 
 	// Ray march the atmosphere to integrate optical depth
-	vec3 Lsun = vec3(1.0, 1.0, 1.0);
+	vec3 Lsun = vec3(50.0, 50.0, 50.0);
 	vec3 L = vec3(0.0, 0.0, 0.0);
 	const float SAMPLE_CNT_FLOAT = float(SAMPLE_CNT);
-	const float SampleSegmentT = 0.5;
+	const float SampleSegmentT = 0.3;
 	vec3 opticalDepth = vec3(0.0, 0.0, 0.0);
+	vec3 transmittance = vec3(1.0);
 	for (float s = 0.0f; s < SAMPLE_CNT_FLOAT; s += 1.0) {
 		float t0 = s / SAMPLE_CNT_FLOAT;
 		float t1 = (s + 1.0) / SAMPLE_CNT_FLOAT;
@@ -254,13 +274,13 @@ vec3 BruteForceRaymarching() {
 
 		dt = abs(t1 - t0);
 		float t = t0 + abs(t1 - t0) * SampleSegmentT;
-		
+		 
 		vec3 P = worldPos + t * worldDir; // Actual world position
-		
+		 
 		vec3 transmittanceToSun = TransmittanceToSun(P);
 		float h = length(P);
 		h -= Rground;
-		assert(h > 0);
+
 		vec3 scattering = OutScattering(h);
 		
 		vec3 absorption = Absorption(h);
@@ -268,20 +288,23 @@ vec3 BruteForceRaymarching() {
 		vec3 extinction = scattering + absorption;
 
 		opticalDepth += dt * extinction;
+		vec3 sampleTransmittance = exp(-dt * extinction); 
+		transmittance *= sampleTransmittance;
 
-		vec3 inscattering = vec3(25.0)
-							* ScatteringDirected(h, cosTheta) 
-							* exp(-opticalDepth) 
-							* dt 
-							* transmittanceToSun 
-							* Lsun;
-		L += inscattering;
+		vec3 S = Lsun
+				* ScatteringDirected(h, cosTheta) 
+				* transmittanceToSun 
+				;
+
+		vec3 Sint = (S - S * sampleTransmittance) / extinction;
+		L += Sint * transmittance;
 	}
 	return L;
 }
 
 void main() {
-    vec3 L = BruteForceRaymarching();
+    vec3 L = RayMarching();
+	L = L / (L + vec3(1.0f));
 	out_color = vec4(L, 1.0f);
 }
 

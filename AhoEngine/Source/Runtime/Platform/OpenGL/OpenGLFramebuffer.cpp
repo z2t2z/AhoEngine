@@ -71,6 +71,10 @@ namespace Aho {
 	}
 
 	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height) {
+		if (!m_ResizeWithViewport) {
+			return;
+		}
+
 		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize) {
 			AHO_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;

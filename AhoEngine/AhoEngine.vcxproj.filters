@@ -1632,6 +1632,8 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\AABB.h" />
+    <ClInclude Include="Source\Runtime\Core\BVH.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1778,5 +1780,6 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Math\Math.cpp" />
   </ItemGroup>
 </Project>

@@ -28,6 +28,9 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupPrecomputeIrradiancePass();	// Diffuse 
 		std::unique_ptr<RenderPass> SetupPrefilteredPass();				// Specular
 		std::unique_ptr<RenderPass> SetupGenLUTPass();
+		std::unique_ptr<RenderPass> SetupTransmittanceLUTPass();
+		std::unique_ptr<RenderPass> SetupMutiScattLutPass();
+		std::unique_ptr<RenderPass> SetupSkyViewLutPass();
 	private:
 		std::unique_ptr<RenderPass> SetupGBufferPass();
 		std::unique_ptr<RenderPass> SetupSSAOPass();

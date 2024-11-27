@@ -141,8 +141,10 @@
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\IamAho.h" />
+    <ClInclude Include="Source\Runtime\Core\AABB.h" />
     <ClInclude Include="Source\Runtime\Core\App\Application.h" />
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
+    <ClInclude Include="Source\Runtime\Core\BVH.h" />
     <ClInclude Include="Source\Runtime\Core\Core.h" />
     <ClInclude Include="Source\Runtime\Core\Debugger.h" />
     <ClInclude Include="Source\Runtime\Core\Events\ApplicationEvent.h" />
@@ -649,6 +651,7 @@
     <ClCompile Include="Source\Runtime\Core\Layer\Layer.cpp" />
     <ClCompile Include="Source\Runtime\Core\Layer\LayerStack.cpp" />
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp" />
+    <ClCompile Include="Source\Runtime\Core\Math\Math.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />

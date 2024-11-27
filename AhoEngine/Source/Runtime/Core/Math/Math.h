@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #define GLM_FORCE_CTOR_INIT
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -52,5 +54,12 @@ namespace Aho {
 		return q;
 	}
 
+	struct Ray;
+	class AABB;
+	struct Primitive;
+	struct IntersectResult;
 
+	static bool Intersect(const Ray& ray, const AABB& aabb);
+
+	static std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive& primitive);
 }
