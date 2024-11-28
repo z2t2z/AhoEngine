@@ -11,6 +11,11 @@
 #include <glm/gtx/quaternion.hpp>
 
 namespace Aho {
+	struct Ray;
+	class AABB;
+	struct Primitive;
+	struct IntersectResult;
+
 	static glm::vec3 QuaternionToEuler(const glm::quat& q) {
 		glm::vec3 euler;
 
@@ -54,12 +59,10 @@ namespace Aho {
 		return q;
 	}
 
-	struct Ray;
-	class AABB;
-	struct Primitive;
-	struct IntersectResult;
 
-	static bool Intersect(const Ray& ray, const AABB& aabb);
+	bool Intersect(const Ray& ray, const AABB& aabb);
 
-	static std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive& primitive);
+	std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive* primitive);
+	
+	Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv);
 }

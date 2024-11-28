@@ -396,12 +396,13 @@ void UvToSkyViewLutParams(AtmosphereParameters Atmosphere, out float viewZenithC
 uniform vec3 u_SunDir = normalize(vec3(1.0, 0.1, -0.1));
 
 void main() {
-	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
+	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), 1.0);
 	vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
 	
-	if (viewPos.w != 0) {
-		// viewPos /= viewPos.w;
+	if (viewPos.w != 0.0) {
+		viewPos /= viewPos.w;
 	}
+	assert(viewPos.w == 1.0);
 	vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
 	worldDir = normalize(worldDir);
 

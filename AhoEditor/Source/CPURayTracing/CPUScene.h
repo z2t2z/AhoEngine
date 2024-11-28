@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Runtime/Core/BVH.h"
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -15,10 +16,10 @@ namespace Aho {
 			glm::vec3 GetEmission() const { return EmissionColor * EmissionPower; }
 		};
 	}
-	struct Ray {
-		glm::vec3 Origin;
-		glm::vec3 Direction;
-	};
+	//struct Ray {
+	//	glm::vec3 Origin;
+	//	glm::vec3 Direction;
+	//};
 
 	struct Sphere {
 		glm::vec3 Position{ 0.0f };

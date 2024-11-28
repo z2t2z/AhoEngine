@@ -23,13 +23,7 @@ namespace Aho {
 		Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
 			: position(pos), normal(normal), tangent(tangent), uv(uv) { }
 
-
-		float x, y, z;			// position
-		float nx, ny, nz;		// normal
-		float tx, ty, tz;		// tangent
-		float btx, bty, btz;	// bitangent
-		float u, v;				// texture coordinates
-		Vertex() { x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f; }
+		Vertex() = default;
 	};
 
 	constexpr int MAX_BONES = 4;
@@ -40,18 +34,15 @@ namespace Aho {
 		glm::vec2 uv;
 
 		VertexSkeletal(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-			: position(pos), normal(normal), tangent(tangent), uv(uv) { }
+			: position(pos), normal(normal), tangent(tangent), uv(uv) { 
+			memset(bonesID, -1, sizeof(bonesID));
+			memset(weights, 0, sizeof(weights));
+		}
 
 
-		float x, y, z;			// position
-		float nx, ny, nz;		// normal
-		float tx, ty, tz;		// tangent
-		float btx, bty, btz;	// bitangent
-		float u, v;				// texture coordinates
 		float weights[MAX_BONES];
 		int bonesID[MAX_BONES];
 		VertexSkeletal() {
-			x = y = z = nx = ny = nz = tx = ty = tz = btx = bty = btz = u = v = 0.0f;
 			memset(bonesID, -1, sizeof(bonesID));
 			memset(weights, 0, sizeof(weights));
 		}

@@ -6,6 +6,7 @@
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
 #include "Runtime/Function/SkeletonViewer.h"
+#include "Runtime/Core/BVH.h"
 #include <string>
 
 namespace Aho {
@@ -23,6 +24,15 @@ namespace Aho {
 		EntityComponent(const EntityComponent&) = default;
 		EntityComponent(const std::vector<entt::entity>& _entities)
 			: entities(_entities) {
+		}
+	};
+
+	struct BVHComponent {
+		BVH bvh;
+		BVHComponent() = default;
+		BVHComponent(const BVHComponent&) = default;
+		BVHComponent(const BVH& bvh)
+			: bvh(bvh) {
 		}
 	};
 

@@ -139,7 +139,7 @@ namespace Aho {
 		uint32_t pixelData;
 		// TODO: how to read float value?
 		glReadPixels(x, y, 1, 1, Utils::GetGLParam(TexDataFormat::UINT), GL_UNSIGNED_INT, &pixelData);
-		AHO_CORE_WARN("Reading pixel data: {}, {}, {}", x, y, pixelData);
+		//AHO_CORE_WARN("Reading pixel data: {}, {}, {}", x, y, pixelData);
 		return pixelData;
 	}
 

@@ -11,6 +11,8 @@ namespace Aho {
 
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
 
+	glm::vec3 g_testPosition;
+
 	enum class ButtonType {
 		None = 0,
 		Selection,
@@ -217,6 +219,33 @@ namespace Aho {
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
 				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
 				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
+			}
+
+			//m_LevelLayer->
+			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+
+			auto view = entityManager->GetView<BVHComponent>();
+			BVHNode* root = nullptr;
+			view.each([&](auto entity, BVHComponent& bvh) {
+				root = bvh.bvh.GetRoot();
+			});
+
+			if (root) {
+				auto cam = m_CameraManager->GetMainEditorCamera();
+				Ray ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
+												glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
+												cam->GetPosition(), 
+												cam->GetProjectionInv(), 
+												cam->GetViewInv());
+
+				AHO_CORE_TRACE("Dir: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z);
+				AHO_CORE_TRACE("Ori: {}, {}, {}", ray.origin.x, ray.origin.y, ray.origin.z);
+
+				auto intersectionResult = BVH::GetIntersection(ray, root);
+				if (intersectionResult) {
+					g_testPosition = intersectionResult->position;
+					AHO_CORE_TRACE("Intersected!: {}, {}, {}", intersectionResult->position.x, intersectionResult->position.y, intersectionResult->position.z);
+				}
 			}
 		}
 

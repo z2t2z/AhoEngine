@@ -4,15 +4,39 @@
 
 namespace Aho {
 	bool Intersect(const Ray& ray, const AABB& aabb) {
-        return false;
+        float tEnter = -FLT_MAX;
+        float tExit = FLT_MAX;
+
+        for (int i = 0; i < 3; ++i) {
+            if (ray.direction[i] != 0.0f) {
+                float tMin = (aabb.GetMin()[i] - ray.origin[i]) / ray.direction[i];
+                float tMax = (aabb.GetMax()[i] - ray.origin[i]) / ray.direction[i];
+
+                if (tMin > tMax) {
+                    std::swap(tMin, tMax);
+                }
+
+                tEnter = std::max(tEnter, tMin);
+                tExit = std::min(tExit, tMax);
+
+                if (tEnter > tExit || tExit < 0.0f) {
+                    return false;
+                }
+            }
+            else if (ray.origin[i] < aabb.GetMin()[i] || ray.origin[i] > aabb.GetMax()[i]) {
+                return false; // Ray is parallel and outside the slab
+            }
+        }
+
+        return true; 
 	}
 
 	// Möller–Trumbore algo to test if a ray intersects a triangle
-	std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive& primitive) {
+	std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive* primitive) {
         // 三角形的顶点
-        const glm::vec3& v0 = primitive.p0;
-        const glm::vec3& v1 = primitive.p1;
-        const glm::vec3& v2 = primitive.p2;
+        const glm::vec3& v0 = primitive->GetVertex(0).position;
+        const glm::vec3& v1 = primitive->GetVertex(1).position;
+        const glm::vec3& v2 = primitive->GetVertex(2).position;
 
         // 计算边
         glm::vec3 edge1 = v1 - v0;
@@ -58,12 +82,24 @@ namespace Aho {
         glm::vec3 barycentric(u, v, 1 - u - v);              // 重心坐标
 
         // 根据三角形的顶点 UV 进行插值
-        glm::vec2 interpolatedUV = primitive.uv0 * barycentric.z
-            + primitive.uv1 * barycentric.x
-            + primitive.uv2 * barycentric.y;
+        glm::vec2 interpolatedUV = primitive->GetVertex(0).uv * barycentric.z
+                                    + primitive->GetVertex(1).uv * barycentric.x
+                                    + primitive->GetVertex(2).uv * barycentric.y;
 
         // 返回相交信息
         return IntersectResult{ t, intersectionPoint, normal, barycentric, interpolatedUV };
 	}
+
+    Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv) {
+        glm::vec4 worldPos = glm::vec4(coords / resolution * glm::vec2(2.0f) - glm::vec2(1.0f), -1.0, 1.0);
+        worldPos = projInv * worldPos;
+        //AHO_CORE_ASSERT(worldPos.w == 1.0f);
+        if (worldPos.w != 0) {
+            worldPos /= worldPos.w;
+        }
+        worldPos = viewInv * worldPos;
+
+        return Ray(camPos, glm::normalize(glm::vec3(worldPos) - camPos));
+    }
 
 }

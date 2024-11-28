@@ -53,24 +53,21 @@ namespace Aho {
 		std::vector<float> vertices;
 		vertices.reserve(meshInfo->vertexBuffer.size() * 14u);
 		for (const auto& vertex : meshInfo->vertexBuffer) {
-			vertices.push_back(vertex.x);
-			vertices.push_back(vertex.y);
-			vertices.push_back(vertex.z);
+			vertices.push_back(vertex.position.x);
+			vertices.push_back(vertex.position.y);
+			vertices.push_back(vertex.position.z);
 			if (meshInfo->hasNormal) {
-				vertices.push_back(vertex.nx);
-				vertices.push_back(vertex.ny);
-				vertices.push_back(vertex.nz);
+				vertices.push_back(vertex.normal.x);
+				vertices.push_back(vertex.normal.y);
+				vertices.push_back(vertex.normal.z);
 			}
 			if (meshInfo->hasUVs) {
-				vertices.push_back(vertex.u);
-				vertices.push_back(vertex.v);
+				vertices.push_back(vertex.uv.x);
+				vertices.push_back(vertex.uv.y);
 				// TODO;
-				vertices.push_back(vertex.tx);
-				vertices.push_back(vertex.ty);
-				vertices.push_back(vertex.tz);
-				vertices.push_back(vertex.btx);
-				vertices.push_back(vertex.bty);
-				vertices.push_back(vertex.btz);
+				vertices.push_back(vertex.tangent.x);
+				vertices.push_back(vertex.tangent.y);
+				vertices.push_back(vertex.tangent.z);
 			}
 		}
 		std::shared_ptr<VertexBuffer> vertexBuffer;
@@ -85,7 +82,6 @@ namespace Aho {
 			layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
 			// TODO;
 			layout.Push({ ShaderDataType::Float3, "a_Tangent" });
-			layout.Push({ ShaderDataType::Float3, "a_Bitangent" });
 		}
 		vertexBuffer->SetLayout(layout);
 		AddVertexBuffer(vertexBuffer);
@@ -100,24 +96,21 @@ namespace Aho {
 		std::vector<int> verticesI;
 		//vertices.reserve();
 		for (const auto& vertex : meshInfo->vertexBuffer) {
-			vertices.push_back(vertex.x);
-			vertices.push_back(vertex.y);
-			vertices.push_back(vertex.z);
+			vertices.push_back(vertex.position.x);
+			vertices.push_back(vertex.position.y);
+			vertices.push_back(vertex.position.z);
 			if (meshInfo->hasNormal) {
-				vertices.push_back(vertex.nx);
-				vertices.push_back(vertex.ny);
-				vertices.push_back(vertex.nz);
+				vertices.push_back(vertex.normal.x);
+				vertices.push_back(vertex.normal.y);
+				vertices.push_back(vertex.normal.z);
 			}
 			if (meshInfo->hasUVs) {
-				vertices.push_back(vertex.u);
-				vertices.push_back(vertex.v);
+				vertices.push_back(vertex.uv.x);
+				vertices.push_back(vertex.uv.y);
 				// TODO;
-				vertices.push_back(vertex.tx);
-				vertices.push_back(vertex.ty);
-				vertices.push_back(vertex.tz);
-				vertices.push_back(vertex.btx);
-				vertices.push_back(vertex.bty);
-				vertices.push_back(vertex.btz);
+				vertices.push_back(vertex.tangent.x);
+				vertices.push_back(vertex.tangent.y);
+				vertices.push_back(vertex.tangent.z);
 			}
 			for (int i = 0; i < MAX_BONES; i++) {
 				vertices.push_back(vertex.weights[i]);
@@ -138,7 +131,6 @@ namespace Aho {
 			layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
 			// TODO;
 			layout.Push({ ShaderDataType::Float3, "a_Tangent" });
-			layout.Push({ ShaderDataType::Float3, "a_Bitangent" });
 		}
 		layout.Push({ ShaderDataType::Float4, "a_BoneWeights" });
 		vertexBuffer->SetLayout(layout);

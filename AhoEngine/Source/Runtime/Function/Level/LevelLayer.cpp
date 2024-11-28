@@ -7,6 +7,7 @@
 #include "Runtime/Function/Renderer/RenderData.h"
 #include "Runtime/Function/Renderer/Texture.h"
 #include "Runtime/Function/Gameplay/IK.h"
+#include "Runtime/Core/BVH.h"
 #include <unordered_map>
 
 
@@ -250,6 +251,9 @@ namespace Aho {
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
+
+		//BVH bvh();
+		auto bvhComponent = entityManager->AddComponent<BVHComponent>(gameObject, asset);
 
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;

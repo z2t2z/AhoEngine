@@ -196,9 +196,9 @@ namespace Aho {
 			sphereColor *= lightIntensity;
 			color += sphereColor * multiplier;
 
-			ray.Origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
+			ray.origin = hitInfo.WorldPosition + hitInfo.WorldNormal * 0.0001f;
 			//ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * Utils::GenerateRandomVec3());
-			ray.Direction = glm::reflect(ray.Direction, hitInfo.WorldNormal + material.Roughness * m_Random[y * m_TexSpec.width + x]);
+			ray.direction = glm::reflect(ray.direction, hitInfo.WorldNormal + material.Roughness * m_Random[y * m_TexSpec.width + x]);
 		}
 
 		return glm::vec4(color, 1.0f);
@@ -207,7 +207,7 @@ namespace Aho {
 	// TODO: Caching the rays for every screen pixel
 	Ray CPURenderer::RayCasting(const std::shared_ptr<Camera>& cam, uint32_t x, uint32_t y) {
 		Ray ray;
-		ray.Origin = cam->GetPosition();
+		ray.origin = cam->GetPosition();
 		
 		// Image space to screen space
 		uint32_t width = m_FinalImage->GetWidth();
@@ -224,7 +224,7 @@ namespace Aho {
 
 		// View space to world space
 		glm::vec3 ws = cam->GetViewInv() * vs;
-		ray.Direction = glm::normalize(ws);
+		ray.direction = glm::normalize(ws);
 
 		return ray;
 	}
@@ -234,10 +234,10 @@ namespace Aho {
 		float hitDistance = std::numeric_limits<float>::max();
 		for (size_t i = 0; i < scene.Spheres.size(); i++) {
 			const Sphere& sphere = scene.Spheres[i];
-			glm::vec3 origin = ray.Origin - sphere.Position;
+			glm::vec3 origin = ray.origin - sphere.Position;
 
-			float a = glm::dot(ray.Direction, ray.Direction);
-			float b = 2.0f * glm::dot(origin, ray.Direction);
+			float a = glm::dot(ray.direction, ray.direction);
+			float b = 2.0f * glm::dot(origin, ray.direction);
 			float c = glm::dot(origin, origin) - sphere.Radius * sphere.Radius;
 
 			// Quadratic forumula discriminant:
@@ -271,8 +271,8 @@ namespace Aho {
 
 		const Sphere& closestSphere = scene.Spheres[objectIndex];
 
-		glm::vec3 origin = ray.Origin - closestSphere.Position;
-		hitInfo.WorldPosition = origin + ray.Direction * hitDistance;
+		glm::vec3 origin = ray.origin - closestSphere.Position;
+		hitInfo.WorldPosition = origin + ray.direction * hitDistance;
 		hitInfo.WorldNormal = glm::normalize(hitInfo.WorldPosition);
 
 		hitInfo.WorldPosition += closestSphere.Position;
