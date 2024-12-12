@@ -1,27 +1,14 @@
 #type vertex
 #version 460 core
 
+#include "UniformBufferObjects.glsl"
+
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec3 a_Normal;
 layout(location = 2) in vec2 a_TexCoords;
 layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec4 a_BoneWeights;
 layout(location = 5) in ivec4 a_BoneID;
-
-layout(std140, binding = 0) uniform CameraUBO {
-	mat4 u_View;
-	mat4 u_ViewInv;
-	mat4 u_Projection;
-	mat4 u_ProjectionInv;
-	vec4 u_ViewPosition;
-};
-
-// For animation, read by vertices
-const int MAX_BONE_INFLUENCE = 4;
-const int MAX_BONES_CNT = 200;
-layout(std140, binding = 3) uniform AnimationUBO {
-	mat4 u_BoneMatrices[MAX_BONES_CNT];
-};
 
 uniform mat4 u_Model;
 uniform bool u_IsInstanced;
@@ -120,8 +107,7 @@ void main() {
 
 	if (!u_HasNormal) {
 		g_Normal = normalize(v_Normal);
-	}
-	else {
+	} else {
 		vec3 T = normalize(v_Tangent);
 		vec3 N = normalize(v_Normal);
 		T = normalize(T - dot(T, N) * N);

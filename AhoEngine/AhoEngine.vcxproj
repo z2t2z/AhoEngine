@@ -160,6 +160,11 @@
     <ClInclude Include="Source\Runtime\Core\Layer\LayerStack.h" />
     <ClInclude Include="Source\Runtime\Core\Log\Log.h" />
     <ClInclude Include="Source\Runtime\Core\Math\Math.h" />
+    <ClInclude Include="Source\Runtime\Core\MortonEncoder.h" />
+    <ClInclude Include="Source\Runtime\Core\Primitive.h" />
+    <ClInclude Include="Source\Runtime\Core\Ray.h" />
+    <ClInclude Include="Source\Runtime\Core\SingletonBase.h" />
+    <ClInclude Include="Source\Runtime\Core\Timer.h" />
     <ClInclude Include="Source\Runtime\Core\Window\Window.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\Camera.h" />
     <ClInclude Include="Source\Runtime\Function\Camera\CameraManager.h" />
@@ -180,7 +185,12 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderLayer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
@@ -645,6 +655,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp" />
+    <ClCompile Include="Source\Runtime\Core\BVH.cpp" />
     <ClCompile Include="Source\Runtime\Core\Core.cpp" />
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiBuild.cpp" />
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiLayer.cpp" />
@@ -652,6 +663,8 @@
     <ClCompile Include="Source\Runtime\Core\Layer\LayerStack.cpp" />
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp" />
     <ClCompile Include="Source\Runtime\Core\Math\Math.cpp" />
+    <ClCompile Include="Source\Runtime\Core\Primitive.cpp" />
+    <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
@@ -665,7 +678,12 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
@@ -687,6 +705,7 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetManagerEditor.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\Importer\AssetImporter.cpp" />
     <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp" />
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp" />

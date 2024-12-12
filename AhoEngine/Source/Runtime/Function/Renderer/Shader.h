@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
-
 #include <glm/glm.hpp>
 
 namespace Aho {
@@ -47,6 +46,8 @@ namespace Aho {
 		inline uint32_t GerRendererID() { return m_ShaderID; }
 
         virtual const std::string& GetName() const = 0;
+		virtual bool Reload(const std::filesystem::path& filepath) = 0;
+
         static std::shared_ptr<Shader> Create(const std::filesystem::path& filepath);
 		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
 	protected:

@@ -13,6 +13,9 @@ void main() {
 
 #type fragment
 #version 460 core
+
+#include "Common.glsl"
+
 out vec4 out_color;
 in vec2 v_TexCoords;
 
@@ -34,94 +37,6 @@ const float SKY_LUT_HEIGHT = 108.0;
 
 uniform sampler2D u_TransmittanceLUT;
 uniform sampler2D u_MultiScattLUT;
-
-// https://www.shadertoy.com/view/tdSXzD
-vec3 jodieReinhardTonemap(vec3 c){
-    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    vec3 tc = c / (c + 1.0);
-    return mix(c / (l + 1.0), tc, tc);
-}
-
-void assert(bool condition) {
-	if (!condition) {
-		discard;
-	}
-}
-
-// - r0: ray origin
-// - rd: normalized ray direction
-// - s0: sphere center
-// - sR: sphere radius
-// - Returns the distance(solution) of the first intersecion from r0 to sphere,
-//   or -1.0 if no intersection.
-float RaySphereIntersectNearest(vec3 r0, vec3 rd, vec3 s0, float sR) {
-	float a = dot(rd, rd);
-	vec3 s0_r0 = r0 - s0;
-	float b = 2.0 * dot(rd, s0_r0);
-	float c = dot(s0_r0, s0_r0) - (sR * sR);
-	float delta = b * b - 4.0 * a * c;
-	if (delta < 0.0 || a == 0.0) {
-		return -1.0;
-	}
-	float sol0 = (-b - sqrt(delta)) / (2.0 * a);
-	float sol1 = (-b + sqrt(delta)) / (2.0 * a);
-	if (sol0 < 0.0 && sol1 < 0.0) {
-		// assert(false);
-		return -1.0;
-	}
-	if (sol0 < 0.0) {
-		return max(0.0, sol1);
-	} else if (sol1 < 0.0) {
-		return max(0.0, sol0);
-	}
-	return max(0.0, min(sol0, sol1));
-}
-
-
-struct AtmosphereParameters {
-	// Radius of the planet (center to ground)
-	float BottomRadius;
-	// Maximum considered atmosphere height (center to atmosphere top)
-	float TopRadius;
-
-	// Rayleigh scattering exponential distribution scale in the atmosphere
-	float RayleighDensityExpScale;
-	// Rayleigh scattering coefficients
-	vec3 RayleighScattering;
-
-	// Mie scattering exponential distribution scale in the atmosphere
-	float MieDensityExpScale;
-	// Mie scattering coefficients
-	vec3 MieScattering;
-	// Mie extinction coefficients
-	vec3 MieExtinction;
-	// Mie absorption coefficients
-	vec3 MieAbsorption;
-	// Mie phase function excentricity
-	float MiePhaseG;
-
-	// An atmosphere layer of width 'width', and whose density is defined as
-	// 'ExpTerm' * exp('ExpScale' * h) + 'LinearTerm' * h + 'ConstantTerm',
-	// clamped to [0,1], and where h is the altitude.	
-	// Refer to Bruneton's implementation of definitions.glsl for more details
-	// https://github.com/sebh/UnrealEngineSkyAtmosphere/blob/183ead5bdacc701b3b626347a680a2f3cd3d4fbd/Resources/Bruneton17/definitions.glsl
-	vec3 AbsorptionExtinction;
-	float Width0;
-	float ExpTerm0;
-	float ExpScale0;
-	float LinearTerm0;
-	float ConstantTerm0;
-
-	float Width1;
-	float ExpTerm1;
-	float ExpScale1;
-	float LinearTerm1;
-	float ConstantTerm1;
-
-	// The albedo of the ground.
-	vec3 GroundAlbedo;
-};
-
 
 float RayleighPhaseFunc(float cosTheta) {
 	return (3.0f / (16.0f * PI)) * (1.0f + cosTheta * cosTheta);
@@ -256,14 +171,6 @@ bool Valid(vec3 P) {
 	return !nanCheck.x && !nanCheck.y && !nanCheck.z;
 }
 
-float fromUnitToSubUvs(float u, float resolution) { 
-    return (u + 0.5f / resolution) * (resolution / (resolution + 1.0f)); 
-}
-
-float fromSubUvsToUnit(float u, float resolution) { 
-    return (u - 0.5f / resolution) * (resolution / (resolution - 1.0f)); 
-}
-
 const float MUTIL_SCATT_RES = 32.0;
 
 vec3 GetMultipleScattering(AtmosphereParameters Atmosphere, float viewHeight, float viewZenithCosAngle) {
@@ -312,7 +219,7 @@ vec3 IntegrateScatteredLuminance(vec3 worldPos, vec3 worldDir, vec3 sunDir) {
 	atmosparam.BottomRadius = Rground;
 	
 	// Ray march the atmosphere to integrate optical depth
-	vec3 Lsun = vec3(25.0, 25.0, 25.0);
+	vec3 Lsun = vec3(10.0, 10.0, 10.0);
 	// Lsun = vec3(1.0, 1.0, 1.0);
 	vec3 L = vec3(0.0, 0.0, 0.0);
 	const float SAMPLE_CNT_FLOAT = float(SAMPLE_CNT);
@@ -367,36 +274,10 @@ vec3 IntegrateScatteredLuminance(vec3 worldPos, vec3 worldDir, vec3 sunDir) {
 	return L;
 }
 
-void UvToSkyViewLutParams(AtmosphereParameters Atmosphere, out float viewZenithCosAngle, out float lightViewCosAngle, in float viewHeight, in vec2 uv) {
-	// Constrain uvs to valid sub texel range (avoid zenith derivative issue making LUT usage visible)
-	uv = vec2(fromSubUvsToUnit(uv.x, 192.0f), fromSubUvsToUnit(uv.y, 108.0f));
-
-	float Vhorizon = sqrt(viewHeight * viewHeight - Rground * Rground);
-	float CosBeta = Vhorizon / viewHeight;				// GroundToHorizonCos
-	float Beta = acos(CosBeta);
-	float ZenithHorizonAngle = PI - Beta;
-
-	if (uv.y < 0.5f) {
-		float coord = 2.0 * uv.y;
-		coord = 1.0 - coord;
-		coord *= coord;
-		coord = 1.0 - coord;
-		viewZenithCosAngle = cos(ZenithHorizonAngle * coord);
-	} else {
-		float coord = uv.y * 2.0 - 1.0;
-		coord *= coord;
-		viewZenithCosAngle = cos(ZenithHorizonAngle + Beta * coord);
-	}
-
-	float coord = uv.x;
-	coord *= coord;
-	lightViewCosAngle = -(coord * 2.0 - 1.0);
-}
-
 uniform vec3 u_SunDir = normalize(vec3(1.0, 0.1, -0.1));
 
 void main() {
-	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), 1.0);
+	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
 	vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
 	
 	if (viewPos.w != 0.0) {

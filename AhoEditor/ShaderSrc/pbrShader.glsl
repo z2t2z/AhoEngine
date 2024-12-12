@@ -13,27 +13,16 @@ void main() {
 
 #type fragment
 #version 460 core
+
+#include "AtmosphericScattering/Common.glsl"
+#include "UniformBufferObjects.glsl"
+
 layout(location = 0) out vec4 out_Color;
-
-layout(std140, binding = 0) uniform CameraUBO {
-	mat4 u_View;
-	mat4 u_ViewInv;
-	mat4 u_Projection;
-	mat4 u_ProjectionInv;
-	vec4 u_ViewPosition;
-};
-
-const int MAX_LIGHT_CNT = 10;
-layout(std140, binding = 1) uniform LightUBO {
-	mat4 u_LightPV[MAX_LIGHT_CNT];
-	vec4 u_LightPosition[MAX_LIGHT_CNT];
-	vec4 u_LightColor[MAX_LIGHT_CNT];
-	ivec4 u_Info[MAX_LIGHT_CNT]; // Enabled status; Light type; ...
-};
 
 in vec2 v_TexCoords;
 
-uniform sampler2D u_gDepth; // light's perspective
+uniform sampler2D u_gLightDepth; // light's perspective
+uniform sampler2D u_gDepth; 
 uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
 uniform sampler2D u_gAlbedo;
@@ -142,7 +131,7 @@ float FindBlocker(vec2 uv, float zReceiver) {
 	int sampleCnt = 0;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
-		float sampleDepth = texture(u_gDepth, uv + poissonDisk[i] * searchWidth).r;
+		float sampleDepth = texture(u_gLightDepth, uv + poissonDisk[i] * searchWidth).r;
 		if (zReceiver > sampleDepth) {
 			blockerSum += sampleDepth;
 			sampleCnt += 1;
@@ -160,7 +149,7 @@ float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 	float shadowSum = 0.0f;
 
 	for (int i = 0; i < SAMPLE_CNT; ++i) {
-		float sampleDepth = texture(u_gDepth, uv + poissonDisk[i] * radius).r;
+		float sampleDepth = texture(u_gLightDepth, uv + poissonDisk[i] * radius).r;
 		shadowSum += zReceiver > sampleDepth + 0.0025f? 0.0f : 1.0f;
 	}
 
@@ -203,6 +192,28 @@ void main() {
 	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
 	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
 
+	float d = texture(u_gDepth, v_TexCoords).r;
+	if (d == 1.0f) { 
+		vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
+		vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
+		
+		if (viewPos.w != 0) {
+			viewPos /= viewPos.w;
+		}
+		vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
+		worldDir = normalize(worldDir);
+
+		const float Rground = 6360.0; 
+		vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
+		worldPos.y += Rground;
+
+		vec3 sunDir = normalize(vec3(0.5, 0.0, 0.5));
+		vec2 sampleUV;
+		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
+		out_Color = vec4(texture(u_SkyviewLUT, sampleUV).rgb, 1.0);
+		return;
+	}
+
 	vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
 	float AO = texture(u_gPBR, v_TexCoords).b;
 	if (AO == -1.0f) {
@@ -239,7 +250,6 @@ void main() {
 		float attenuation = 1.0f / (distance * distance); 	// Inverse-square law, more physically correct
 		vec3 radiance = u_LightColor[i].rgb * (1.0f - attenuation);
 		
-		// Cook-Torrance BRDF:
 		float NDF = DistributionGGX(N, H, roughness);
 		float G = GeometrySmith(N, V, L, roughness);
 		vec3 F = FresnelSchlick(max(dot(H, V), 0.0f), F0);
@@ -259,9 +269,9 @@ void main() {
 	}
 
 	// Indirect lighting
-	for (int i = 0; i < u_SSRSampleCnt; ++i) {
+	// for (int i = 0; i < u_SSRSampleCnt; ++i) {
 
-	}
+	// }
 
 	// Ambient lighting
 	vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);

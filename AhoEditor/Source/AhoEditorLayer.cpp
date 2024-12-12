@@ -34,8 +34,6 @@ namespace Aho {
 		m_FolderPath = fs::current_path();
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
-		m_FileWatcher.SetCallback(std::bind(&AhoEditorLayer::OnFileChanged, this, std::placeholders::_1));
-		m_FileWatcher.AddFileToWatch(m_FolderPath / "ShaderSrc" / "AtmosphericScattering" / "SkyLUT.glsl");			// TODO: resource layer
 		m_LightIcon = Texture2D::Create((m_FolderPath / "Asset" / "light-bulb.png").string());	// TODO: resource layer
 		m_AddIcon = Texture2D::Create((m_FolderPath / "Asset" / "plusicon.png").string());
 		m_CursorIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "cursor.png").string());
@@ -44,14 +42,29 @@ namespace Aho {
 		m_ScaleIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "scale.png").string());
 		m_BackIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "back.png").string());
 	}
-
+	
 	void AhoEditorLayer::OnDetach() {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
-		m_CameraManager->Update(deltaTime, m_IsCursorInViewport);
+		// editor camera
+		if (m_IsCursorInViewport && Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
+			bool firstClick = false;
+			if (!m_CursorLocked) {
+				firstClick = true;
+				m_CursorLocked = true;
+				Input::LockCursor();
+			}
+			m_CameraManager->Update(deltaTime, firstClick);
+		}
+		else if (m_CursorLocked) {
+			m_CursorLocked = false;
+			Input::UnlockCursor();
+		}
+
 		m_DeltaTime = deltaTime;
-		m_FileWatcher.PollFiles();
+		auto& watcher = FileWatcher::getInstance();
+		watcher.PollFiles(deltaTime);
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
@@ -110,7 +123,7 @@ namespace Aho {
 			ImGui::PushFont(io.Fonts->Fonts[0]);
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
-					ImGui::MenuItem("DebugView", NULL, &GlobalState::g_ShowDebug);
+					ImGui::MenuItem("DebugView", NULL, &RendererGlobalState::g_ShowDebug);
 					ImGui::MenuItem("PickingPass", NULL, &m_PickingPass);
 					if (ImGui::BeginMenu("Camera Options")) {
 						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
@@ -154,17 +167,18 @@ namespace Aho {
 	}
 
 	// TODO: Don't use a polling approach
+	// TODO: Shader hot-reloading
 	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
-		if (e.GetEventType() == EventType::FileChanged) {
-			const auto& FileName = e.GetFilePath();
-			if (!FileName.empty()) {
-				auto newShader = Shader::Create(FileName);
-				if (newShader->IsCompiled()) {
-					m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::SkyViewLUT)->SetShader(newShader);
-					return true;
-				}
-			}
-		}
+		//if (e.GetEventType() == EventType::FileChanged) {
+		//	const auto& FileName = e.GetFilePath();
+		//	if (!FileName.empty()) {
+		//		auto newShader = Shader::Create(FileName);
+		//		if (newShader->IsCompiled()) {
+		//			m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::SkyViewLUT)->SetShader(newShader);
+		//			return true;
+		//		}
+		//	}
+		//}
 		return false;
 	}
 
@@ -187,66 +201,55 @@ namespace Aho {
 
 		auto [width, height] = ImGui::GetWindowSize();
 		m_ViewportWidth = width, m_ViewportHeight = height;
-		auto spec = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Shading)->GetSpecification();
-		if (spec.Width != m_ViewportWidth || spec.Height != m_ViewportHeight/* - ImGui::GetFrameHeight() */) {
-			m_Renderer->GetCurrentRenderPipeline()->ResizeRenderTarget(m_ViewportWidth, m_ViewportHeight);
+		if (m_Renderer->OnViewportResize(width, height)) {
 			m_CameraManager->GetMainEditorCamera()->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 
 		// TODO: Should be able to select any render result of any passes
-		uint32_t RenderResult;
-		if (GlobalState::g_ShowDebug) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SkyViewLUT)->GetLastColorAttachment();
-		}
-		else if (m_PickingPass) {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::Atmospheric)->GetLastColorAttachment();
-		}
-		else {
-			RenderResult = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::FXAA)->GetLastColorAttachment();
-		}
+		uint32_t RenderResult = m_Renderer->GetRenderResultTextureID();
 
 		ImGui::Image((ImTextureID)RenderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
 		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
-		MouseY = spec.Height - MouseY;
+		MouseY = height - MouseY;
 		m_IsViewportFocused = ImGui::IsWindowFocused();
 		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight);
 		if (m_ShouldPickObject) {
 			m_ShouldPickObject = false;
 			if (m_IsCursorInViewport) { 
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
-				m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
-				m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
+				//m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading)->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
+				//m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
+				//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
 			}
 
 			//m_LevelLayer->
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 
-			auto view = entityManager->GetView<BVHComponent>();
-			BVHNode* root = nullptr;
-			view.each([&](auto entity, BVHComponent& bvh) {
-				root = bvh.bvh.GetRoot();
-			});
+			//auto view = entityManager->GetView<BVHComponent>();
+			//BVHNode* root = nullptr;
+			//view.each([&](auto entity, BVHComponent& bvhComponent) {
+			//	root = bvhComponent.bvh.GetRoot();
+			//});
 
-			if (root) {
-				auto cam = m_CameraManager->GetMainEditorCamera();
-				Ray ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
-												glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
-												cam->GetPosition(), 
-												cam->GetProjectionInv(), 
-												cam->GetViewInv());
+			//if (root) {
+			//	auto cam = m_CameraManager->GetMainEditorCamera();
+			//	Ray ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
+			//									glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
+			//									cam->GetPosition(), 
+			//									cam->GetProjectionInv(), 
+			//									cam->GetViewInv());
 
-				AHO_CORE_TRACE("Dir: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z);
-				AHO_CORE_TRACE("Ori: {}, {}, {}", ray.origin.x, ray.origin.y, ray.origin.z);
+			//	AHO_CORE_TRACE("Dir: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z);
+			//	AHO_CORE_TRACE("Ori: {}, {}, {}", ray.origin.x, ray.origin.y, ray.origin.z);
 
-				auto intersectionResult = BVH::GetIntersection(ray, root);
-				if (intersectionResult) {
-					g_testPosition = intersectionResult->position;
-					AHO_CORE_TRACE("Intersected!: {}, {}, {}", intersectionResult->position.x, intersectionResult->position.y, intersectionResult->position.z);
-				}
-			}
+			//	auto intersectionResult = BVH::GetIntersection(ray, root);
+			//	if (intersectionResult) {
+			//		g_testPosition = intersectionResult->position;
+			//		AHO_CORE_TRACE("Intersected!: {}, {}, {}", intersectionResult->position.x, intersectionResult->position.y, intersectionResult->position.z);
+			//	}
+			//}
 		}
 
 		DrawGizmo();
@@ -463,11 +466,12 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::DrawToolBarOverlay() {
-		DrawToolBar();
+		DrawToolBarAddObjectBtn();
+		DrawToolBarRenderModeSelectionBtn();
 		DrawManipulationToolBar();
 	}
 
-	void AhoEditorLayer::DrawToolBar() {
+	void AhoEditorLayer::DrawToolBarAddObjectBtn() {
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
 		ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
 		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
@@ -508,6 +512,53 @@ namespace Aho {
 		ImGui::End();
 	}
 
+	static int s_CurrentMode = RenderMode::DefaultLit;
+	void AhoEditorLayer::DrawToolBarRenderModeSelectionBtn() {
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
+		ImGui::SetNextWindowSize(ImVec2{ 0.0f, 0.0f });
+		ImGui::Begin("SelectRenderMode", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGui::PopStyleVar();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		if (ImGui::ImageButton("SelectRenderMode", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
+			ImGui::OpenPopup("RenderModePopup");
+		}
+		ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
+		ImVec2 buttonMax = ImGui::GetItemRectMax(); // lower right
+		ImVec2 nxtPos = ImVec2(buttonMin.x, buttonMax.y);
+		ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
+
+		if (ImGui::BeginPopup("RenderModePopup")) {
+			for (int i = 0; i < (int)RenderMode::ModeCount; ++i) {
+				const char* modeName = nullptr;
+				switch (i) {
+					case Unlit: 
+						modeName = "Unlit"; 
+						break;
+					case DefaultLit: 
+						modeName = "Default Lit"; 
+						break;
+					case PathTracing: 
+						modeName = "Path Tracing"; 
+						break;
+				}
+
+				if (ImGui::Selectable(modeName, s_CurrentMode == i, ImGuiSelectableFlags_DontClosePopups)) {
+					s_CurrentMode = i;
+				}
+
+				if (s_CurrentMode == i) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+
+			m_Renderer->SetRenderMode(RenderMode(s_CurrentMode));
+			ImGui::EndPopup();
+		}
+		ImGui::End();
+	}
+
 	// TODO: Consider use icon font to avoid aliasing, or implement anti-aliasing first
 	void AhoEditorLayer::DrawManipulationToolBar() {
 		// Draws a translucent tool bar
@@ -517,7 +568,7 @@ namespace Aho {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f); 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f, 0.5f, 0.5f, 0.2f));
-		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
+		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse/* | ImGuiWindowFlags_NoMove*/);
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
 		if (ImGui::ImageButton("selectionMode", (ImTextureID)m_CursorIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
@@ -572,8 +623,8 @@ namespace Aho {
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 			if (m_PickPixelData && entityManager->IsEntityIDValid(m_PickPixelData)) {
-				GlobalState::g_SelectedEntityID = m_PickPixelData;
-				GlobalState::g_IsEntityIDValid = true;
+				RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
+				RendererGlobalState::g_IsEntityIDValid = true;
 
 				m_SelectedObject = Entity(static_cast<entt::entity>(m_PickPixelData));
 				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
@@ -602,7 +653,7 @@ namespace Aho {
 				}
 			}
 			else {
-				GlobalState::g_IsEntityIDValid = false;
+				RendererGlobalState::g_IsEntityIDValid = false;
 			}
 		}
 	}
@@ -686,7 +737,7 @@ namespace Aho {
 		//	if (ImGui::IsItemClicked()) {
 		//		s_SelectedEntity = entity;
 		//		m_PickPixelData = static_cast<uint32_t>(entity);
-		//		GlobalState::g_SelectedEntityID = m_PickPixelData;
+		//		RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
 
 		//		for (const auto& child : node->children) {
 		//			DrawNode(child);
@@ -715,7 +766,7 @@ namespace Aho {
 					if (ImGui::IsItemClicked()) {
 						s_SelectedEntity = entity;
 						m_PickPixelData = static_cast<uint32_t>(entity);
-						GlobalState::g_SelectedEntityID = m_PickPixelData;
+						RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
 					}
 
 					if (entityManager->HasComponent<EntityComponent>(entity)) {
@@ -727,7 +778,7 @@ namespace Aho {
 								if (ImGui::IsItemClicked()) {
 									s_SelectedEntity = subEntity;
 									m_PickPixelData = static_cast<uint32_t>(subEntity);
-									GlobalState::g_SelectedEntityID = m_PickPixelData;
+									RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
 								}
 
 								// If has skeleton

@@ -18,6 +18,7 @@ namespace Aho {
 		virtual uint32_t GetWidth() const override { return m_Specification.width; }
 		virtual uint32_t GetHeight() const override { return m_Specification.height; }
 		virtual uint32_t GetTextureID() const override { return m_TextureID; }
+		virtual uint32_t ReadPixel(float u, float v) const override;
 		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual void SetTextureID(uint32_t id) { m_TextureID = id; }
 		virtual void SetData(void* data, uint32_t size) override;

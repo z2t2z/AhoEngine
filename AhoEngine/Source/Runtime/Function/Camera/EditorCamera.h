@@ -14,10 +14,41 @@ namespace Aho {
         ~EditorCamera() override = default;
 
         glm::vec3 GetPosition()       const override { return m_Position; }
-        const glm::mat4& GetProjection()     const override { return m_ProjectionMatrix; }
-        const glm::mat4& GetProjectionInv() override { m_ProjectionMatrixInv = glm::inverse(m_ProjectionMatrix); return m_ProjectionMatrixInv; }
-        const glm::mat4& GetView()           const override { return m_ViewMatrix; }
-        const glm::mat4& GetViewInv() override { m_ViewMatrixInv = glm::inverse(m_ViewMatrix); return m_ViewMatrixInv; }
+        const glm::mat4& GetProjection() override { 
+            if (m_Dirty) {
+                m_Dirty = false;
+                RecalculateViewMatrix();
+                RecalculateProjectionMatrix();
+            }
+            return m_ProjectionMatrix; 
+        }
+        const glm::mat4& GetProjectionInv() { 
+            if (m_Dirty) {
+                m_Dirty = false;
+                RecalculateViewMatrix();
+                RecalculateProjectionMatrix();
+            }
+            m_ProjectionMatrixInv = glm::inverse(m_ProjectionMatrix); 
+            return m_ProjectionMatrixInv; 
+        }
+        const glm::mat4& GetView() override { 
+            if (m_Dirty) {
+                m_Dirty = false;
+                RecalculateViewMatrix();
+                RecalculateProjectionMatrix();
+            }
+            return m_ViewMatrix; 
+        }
+        const glm::mat4& GetViewInv() override { 
+            if (m_Dirty) {
+                m_Dirty = false;
+                RecalculateViewMatrix();
+                RecalculateProjectionMatrix();
+            }
+            m_ViewMatrixInv = glm::inverse(m_ViewMatrix); 
+            return m_ViewMatrixInv; 
+        }
+        
         glm::vec3 GetFront()          const override { return m_Front; }
         glm::vec3 GetRight()          const override { return m_Right; }
         virtual float GetFOV() const override { return m_Fov; }
@@ -27,15 +58,14 @@ namespace Aho {
         const float GetRotationSpeed()              const override { return m_RotateSpeed; }
 
         void SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) override;
-        void SetProjection(const glm::mat4& projection) override { m_ProjectionMatrix = projection; }
-        void SetForwardRotation(const glm::quat& q) override { m_Front = glm::rotate(q, m_Front); RecalculateViewMatrix(); }
+        void SetProjection(const glm::mat4& projection) override { m_Dirty = true; m_ProjectionMatrix = projection; }
 
+        void SetForwardRotation(const glm::quat& q) override { m_Dirty = true; m_Front = glm::rotate(q, m_Front); }
         void Update(float deltaTime, glm::vec3& movement) override;
-
-        void MoveForward(float speed)   override { m_Position += speed * m_Front; RecalculateViewMatrix(); }
-        void MoveBackward(float speed)  override { m_Position -= speed * m_Front; RecalculateViewMatrix(); }
-        void MoveLeft(float speed)      override { m_Position -= speed * m_Right; RecalculateViewMatrix(); }
-        void MoveRight(float speed)     override { m_Position += speed * m_Right; RecalculateViewMatrix(); }
+        void MoveForward(float speed)   override { m_Dirty = true; m_Position += speed * m_Front; }
+        void MoveBackward(float speed)  override { m_Dirty = true; m_Position -= speed * m_Front; }
+        void MoveLeft(float speed)      override { m_Dirty = true; m_Position -= speed * m_Right; }
+        void MoveRight(float speed)     override { m_Dirty = true; m_Position += speed * m_Right; }
 
     private:
         void RecalculateViewMatrix();

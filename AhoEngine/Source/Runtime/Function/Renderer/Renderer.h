@@ -4,64 +4,85 @@
 #include "Shader.h"
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/PathTracingPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/RenderSkyPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/DeferredShadingPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/IBLPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/PostprocessPipeline.h"
+
 #include <memory>
 #include <typeindex>
 #include <glm/glm.hpp>
 
 namespace Aho {
+
+	enum RenderMode {
+		DefaultLit,
+		Unlit,
+		PathTracing,
+		ModeCount
+	};
+
 	// TODO; Seems like a big bad way
-	class GlobalState {
-	public:
+	struct RendererGlobalState {
 		static bool g_IsEntityIDValid;
-		static uint32_t g_SelectedEntityID;
+		static int g_SelectedEntityID;
 		static bool g_ShowDebug;
 		static std::shared_ptr<RenderData> g_SelectedData;
 	};
 
+	
 	class Renderer {
 	public:
 		Renderer();
 		~Renderer() {
-			for (auto& pipeline : m_Pipelines) {
-				delete pipeline;
-			}
+			delete m_RP_IBL;
+			delete m_RP_Sky;
+			delete m_RP_DeferredShading;
+			delete m_RP_Postprocess;
+			delete m_PathTraciingPipeline;
 		}
 
-		void Render() {
-			m_CurrentPipeline->Execute();
-		}
-		
-		void AddRenderPipeline(RenderPipeline* pl) { 
-			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
-				m_Pipelines.push_back(pl); 
-			}
-		}
-		
-		void SetCurrentRenderPipeline(RenderPipeline* pl) { 
-			if (std::find(m_Pipelines.begin(), m_Pipelines.end(), pl) == m_Pipelines.end()) {
-				AddRenderPipeline(pl); 
-			}
-			m_CurrentPipeline = pl; 
-		}
+		void SetRenderMode(RenderMode mode) { m_CurrentRenderMode = mode; }
+		RenderMode GetRenderMode() { return m_CurrentRenderMode; }
+
+		void Render();
 		
 		RenderPipeline* GetPipeline(RenderPipelineType type) { 
-			auto it = std::find_if(m_Pipelines.begin(), m_Pipelines.end(), [type](RenderPipeline* p) {
-				return p->GetType() == type;
-			});
-			return it != m_Pipelines.end() ? *it : nullptr;
+			switch (type) {
+				case RenderPipelineType::RPL_DeferredShading:
+					return m_RP_DeferredShading;
+				case RenderPipelineType::RPL_RenderSky:
+					return m_RP_Sky;
+				case RenderPipelineType::RPL_PostProcess:
+					return m_RP_Postprocess;
+			}
+			AHO_CORE_ASSERT(false);
 		}
 
-		RenderPipeline* GetCurrentRenderPipeline() { return m_CurrentPipeline; }
+		bool OnViewportResize(uint32_t width, uint32_t height);
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-	public:
-		std::vector<RenderPipeline*>::iterator begin() { return m_Pipelines.begin(); }
-		std::vector<RenderPipeline*>::iterator end() { return m_Pipelines.end(); }
-		std::vector<RenderPipeline*>::const_iterator begin() const { return m_Pipelines.begin(); }
-		std::vector<RenderPipeline*>::const_iterator end() const { return m_Pipelines.end(); }
+
+		uint32_t GetRenderResultTextureID() {
+			return m_RP_Postprocess->GetRenderResult()->GetTextureID();
+		}
+
+		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { RenderTask::m_SceneData.push_back(data); }
+		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
 	private:
-		RenderPipeline* m_CurrentPipeline{ nullptr };
-		std::vector<RenderPipeline*> m_Pipelines;
+		// uniform buffer objects
+		void SetupUBOs();
+
+	private:
+		IBLPipeline* m_RP_IBL; // precompute pipeline, its Excute() will be called whenever an IBL source is added
+		RenderSkyPipeline* m_RP_Sky;
+		DeferredShadingPipeline* m_RP_DeferredShading;
+		PostprocessPipeline* m_RP_Postprocess;
+		PathTracerPipeline* m_PathTraciingPipeline{ nullptr };
+
+	private:
+		RenderMode m_CurrentRenderMode{ RenderMode::DefaultLit };
 	};
 }
 

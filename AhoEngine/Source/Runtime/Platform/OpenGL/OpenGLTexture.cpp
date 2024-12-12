@@ -26,6 +26,7 @@ namespace Aho {
 
 		glCreateTextures(target, 1, &m_TextureID);
 		glBindTexture(target, m_TextureID);
+		glObjectLabel(GL_TEXTURE, m_TextureID, -1, m_Specification.debugName.c_str());
 
 		m_Specification.height = m_Specification.height;
 		m_Specification.width = m_Specification.width;
@@ -133,9 +134,14 @@ namespace Aho {
 		glDeleteTextures(1, &m_TextureID);
 	}
 
+	// BIG TODO
+	uint32_t OpenGLTexture2D::ReadPixel(float u, float v) const {
+		return 0;
+	}
+
 	void OpenGLTexture2D::SetData(void* data, uint32_t size) {
-		uint32_t bpp = m_Specification.internalFormat == TexInterFormat::RGB8 ? 4 : 3;
-		AHO_CORE_ASSERT(size == m_Specification.width * m_Specification.height * bpp, "Inconsistent data format");
+		//uint32_t bpp = m_Specification.internalFormat == TexInterFormat::RGBA8 ? 4 : 3;
+		//AHO_CORE_ASSERT(size == m_Specification.width * m_Specification.height * bpp, "Inconsistent data format");
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Specification.width, m_Specification.height, Utils::GetGLParam(m_Specification.dataFormat), GL_UNSIGNED_BYTE, data);
 	}
 

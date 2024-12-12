@@ -28,7 +28,10 @@ namespace Aho {
 		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
 		auto lastDot = filepath.rfind('.');
 		auto count = (lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash);
+
 		m_Name = filepath.substr(lastSlash, count);
+
+		ReplaceIncludes();
 		CompileFromSource();
 	}
 
@@ -41,6 +44,36 @@ namespace Aho {
 
 	OpenGLShader::~OpenGLShader() {
 		glDeleteProgram(m_ShaderID);
+	}
+
+	bool OpenGLShader::Reload(const std::filesystem::path& fsfilepath) {
+		std::string filepath = fsfilepath.string();
+		std::string source = ReadFile(filepath);
+		if (source.empty()) {
+			return false;
+		}
+
+		std::unordered_map<GLenum, std::string> openGLSourceCode = m_OpenGLSourceCode;
+		m_OpenGLSourceCode.clear();
+
+		PreProcess(source);
+		// Extract name from filepath
+		auto lastSlash = filepath.find_last_of("/\\");
+		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
+		auto lastDot = filepath.rfind('.');
+		auto count = (lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash);
+
+		m_Name = filepath.substr(lastSlash, count);
+
+		ReplaceIncludes();
+		CompileFromSource();
+
+		if (m_Compiled) {
+			std::swap(openGLSourceCode, m_OpenGLSourceCode);
+			return true;
+		}
+
+		return false;
 	}
 
 	void OpenGLShader::Delete() const {
@@ -79,6 +112,7 @@ namespace Aho {
 		return result;
 	}
 
+	// TODO;
 	void OpenGLShader::PreProcess(const std::string& source) {
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
@@ -94,6 +128,53 @@ namespace Aho {
 			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
 			m_OpenGLSourceCode[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+		}
+	}
+
+	void OpenGLShader::ReplaceIncludes() {
+		//std::string basePath = std::filesystem::current_path().string();
+		std::string basePath = std::filesystem::path(m_FilePath).parent_path().string() + '/';
+
+		auto processIncludesRecursion = [&](auto&& self, const std::string& source, std::unordered_set<std::string>& includedFiles) -> std::string {
+			std::stringstream processed;
+			std::istringstream sourceStream(source);
+			std::string line;
+			
+			while (std::getline(sourceStream, line)) {
+				if (line.find("#include") != std::string::npos) {
+					size_t start = line.find("\"");
+					size_t end = line.rfind("\"");
+					if (start != std::string::npos && end != std::string::npos && start < end) {
+						std::string includeFilePath = line.substr(start + 1, end - start - 1);
+						std::string fullPath = basePath + includeFilePath;
+
+						if (includedFiles.find(fullPath) != includedFiles.end()) {
+							AHO_CORE_WARN("Warning: Circular include detected for file: {}", fullPath);
+							continue;
+						}
+
+						includedFiles.insert(fullPath);
+
+						try {
+							std::string includeContent = ReadFile(fullPath);
+							processed << self(self, includeContent, includedFiles);
+						}
+						catch (const std::runtime_error& e) {
+							AHO_CORE_ERROR(e.what());
+						}
+
+						continue;
+					}
+				}
+				processed << line << '\n';
+			}
+
+			return processed.str();
+		};
+
+		for (auto& [shaderType, source] : m_OpenGLSourceCode) {
+			std::unordered_set<std::string> includedFiles;
+			source = processIncludesRecursion(processIncludesRecursion, source, includedFiles);
 		}
 	}
 
@@ -127,8 +208,10 @@ namespace Aho {
 
 		AHO_CORE_ASSERT(!(ComputeFlag && NormalFlag), "Can not have normal shader and compute shader at the same time.");
 
-		m_ShaderID = glCreateProgram();
-		GLuint program = m_ShaderID;
+		//m_ShaderID = glCreateProgram();
+		//GLuint program = m_ShaderID;
+
+		GLuint program = glCreateProgram();
 		for (const auto& handle : shaderHandles) {
 			glAttachShader(program, handle);
 		}
@@ -158,6 +241,12 @@ namespace Aho {
 		for (const auto& handle : shaderHandles) {
 			glDeleteShader(handle);
 		}
+
+		if (m_ShaderID) {
+			glDeleteProgram(m_ShaderID);
+		}
+
+		m_ShaderID = program;
 		m_Compiled = true;
 	}
 
@@ -288,4 +377,5 @@ namespace Aho {
 		// TODO: customizable flags
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
 	}
+
 }

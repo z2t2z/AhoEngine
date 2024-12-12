@@ -45,20 +45,21 @@ namespace Aho {
 
 	public:
 		static void Init() {
-			s_TexBufferMap[TexType::Albedo]		= "u_gAlbedo";
-			s_TexBufferMap[TexType::Position]	= "u_gPosition";
-			s_TexBufferMap[TexType::Normal]		= "u_gNormal";
-			s_TexBufferMap[TexType::PBR]		= "u_gPBR";
-			s_TexBufferMap[TexType::AO]			= "u_gAO";
-			s_TexBufferMap[TexType::Noise]		= "u_gNoise";
-			s_TexBufferMap[TexType::Depth]		= "u_gDepth";
-			s_TexBufferMap[TexType::Irradiance] = "u_gIrradiance";
-			s_TexBufferMap[TexType::Prefilter]	= "u_gPrefilter";
-			s_TexBufferMap[TexType::LUT]		= "u_gLUT";
-			s_TexBufferMap[TexType::Entity]		= "u_gEntity";
-			s_TexBufferMap[TexType::Result]		= "u_gImage";
-			s_TexBufferMap[TexType::HDR]		= "u_gHDR";
-			s_TexBufferMap[TexType::CubeMap]	= "u_gCubeMap";
+			s_TexBufferMap[TexType::Albedo]			= "u_gAlbedo";
+			s_TexBufferMap[TexType::Position]		= "u_gPosition";
+			s_TexBufferMap[TexType::Normal]			= "u_gNormal";
+			s_TexBufferMap[TexType::PBR]			= "u_gPBR";
+			s_TexBufferMap[TexType::AO]				= "u_gAO";
+			s_TexBufferMap[TexType::Noise]			= "u_gNoise";
+			s_TexBufferMap[TexType::Depth]			= "u_gDepth";
+			s_TexBufferMap[TexType::LightDepth]		= "u_gLightDepth";
+			s_TexBufferMap[TexType::Irradiance]		= "u_gIrradiance";
+			s_TexBufferMap[TexType::Prefiltering]	= "u_gPrefilter";
+			s_TexBufferMap[TexType::BRDFLUT]		= "u_gLUT";
+			s_TexBufferMap[TexType::Entity]			= "u_gEntity";
+			s_TexBufferMap[TexType::Result]			= "u_gImage";
+			s_TexBufferMap[TexType::HDR]			= "u_gHDR";
+			s_TexBufferMap[TexType::CubeMap]		= "u_gCubeMap";
 
 			// Atmosphere rendering
 			s_TexBufferMap[TexType::TransmittanceLUT] = "u_TransmittanceLUT";
@@ -72,6 +73,8 @@ namespace Aho {
 
 	class RenderPass {
 	public:
+		RenderPass() { AHO_CORE_ASSERT(false); }
+		RenderPass(const std::string& name) : m_Name(name) {}
 		~RenderPass() = default;
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
 		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { m_RenderCommandBuffer = std::move(renderCommandBuffer); }
@@ -87,20 +90,35 @@ namespace Aho {
 			if (type == TexType::Depth) {
 				return m_Framebuffer->GetDepthTexture();
 			}
+
 			const auto& textureBuffer = m_Framebuffer->GetTextureAttachments();
-			auto it = std::find_if(textureBuffer.begin(), textureBuffer.end(), [&](const Texture* texBuffer) {
-				return texBuffer->GetTexType() == type;
+			auto it = std::find_if(textureBuffer.begin(), textureBuffer.end(), 
+				[&](const Texture* texBuffer) {
+					return texBuffer->GetTexType() == type;
 				});
 			AHO_CORE_ASSERT(it != textureBuffer.end(), "Did not have this texture buffer: {}");
 			return *it;
 		}
 
-		virtual void RegisterTextureBuffer(const TextureBuffer& buffer) { m_TextureBuffers.push_back(buffer); }
+		virtual void RegisterTextureBuffer(const TextureBuffer& buffer) { 
+			auto it = std::find_if(m_TextureBuffers.begin(), m_TextureBuffers.end(), 
+				[&](const TextureBuffer& texBuffer) {
+					return texBuffer.m_Type == buffer.m_Type;
+				});
+
+			if (it != m_TextureBuffers.end()) {
+				AHO_CORE_INFO("Erasing texture buffer: `{}` at render pass: `{}`", it->m_Texture->GetDebugName(), GetPassDebugName());
+				m_TextureBuffers.erase(it);
+			}
+			m_TextureBuffers.push_back(buffer); 
+		}
 
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
 		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
+		std::string GetPassDebugName() { return m_Name; }
 
 	private:
+		std::string m_Name;
 		std::vector<TextureBuffer> m_TextureBuffers;
 		RenderPassType m_RenderPassType{ RenderPassType::None };
 		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass

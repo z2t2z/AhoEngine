@@ -41,15 +41,17 @@ namespace Aho {
 		CubeMap,
 		Position,
 		Depth,
+		LightDepth,
 		Entity,
 		PBR,	// RGB: Metalness, Roughness, AO
 		Irradiance,
-		Prefilter,
-		LUT,
+		Prefiltering,
+		BRDFLUT,
 		TransmittanceLUT,
 		MultiScattLUT,
 		SkyViewLUT,
 		AreialPerspectiveLUT,
+		PathTracerAccumulate,
 		Result	// The final result texture of a render pass
 	};
 
@@ -68,6 +70,7 @@ namespace Aho {
 		TexFilterMode filterModeMag{ TexFilterMode::Linear };
 		int mipLevels{ 0 };  // 0: No mipmaps; 1: auto calculate: max(logWidth, logHeight); 
 		int width{ 1280 }, height{ 720 }, channels{ 4 };
+		std::string debugName{ "unnamed" };
 	};
  
 	class Texture {
@@ -83,6 +86,7 @@ namespace Aho {
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetTextureID() const = 0;
+		virtual uint32_t ReadPixel(float u, float v) const = 0;
 		virtual TexType GetTexType() const { return m_Specification.type; }
 		virtual void SetTexType(const TexType type) { m_Specification.type = type; }
 		virtual void SetTextureID(uint32_t id) = 0;
@@ -90,6 +94,7 @@ namespace Aho {
 		virtual void SetData(void* data, uint32_t size) = 0;
 		virtual void Bind(uint32_t slot = 0) const = 0;
 		virtual bool operator==(const Texture& other) const = 0;
+		virtual std::string GetDebugName() { return m_Specification.debugName; }
 	protected:
 		TexSpec m_Specification;
 	};

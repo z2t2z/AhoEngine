@@ -10,7 +10,7 @@ namespace Aho {
 		virtual ~OpenGLFramebuffer();
 		virtual void Bind() override;
 		virtual void Unbind() override;
-		virtual void Resize(uint32_t width, uint32_t height) override;
+		virtual bool Resize(uint32_t width, uint32_t height) override;
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt) override;
 		virtual void BindCubeMap(Texture* tex, int faceIndex, int attachmentID, int mipLevel) override;
 		virtual const std::vector<Texture*>& GetTextureAttachments() override;

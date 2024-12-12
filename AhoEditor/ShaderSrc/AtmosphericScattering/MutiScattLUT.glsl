@@ -13,6 +13,8 @@ void main() {
 
 #type fragment
 #version 460 core
+#include "Common.glsl"
+
 out vec4 out_color;
 in vec2 v_TexCoords;
 
@@ -30,93 +32,6 @@ const float Rground = 6360.0;
 const float Rtop = 6460.0;
 
 uniform sampler2D u_TransmittanceLUT;
-
-// https://www.shadertoy.com/view/tdSXzD
-vec3 jodieReinhardTonemap(vec3 c){
-    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    vec3 tc = c / (c + 1.0);
-    return mix(c / (l + 1.0), tc, tc);
-}
-
-struct AtmosphereParameters {
-	// Radius of the planet (center to ground)
-	float BottomRadius;
-	// Maximum considered atmosphere height (center to atmosphere top)
-	float TopRadius;
-
-	// Rayleigh scattering exponential distribution scale in the atmosphere
-	float RayleighDensityExpScale;
-	// Rayleigh scattering coefficients
-	vec3 RayleighScattering;
-
-	// Mie scattering exponential distribution scale in the atmosphere
-	float MieDensityExpScale;
-	// Mie scattering coefficients
-	vec3 MieScattering;
-	// Mie extinction coefficients
-	vec3 MieExtinction;
-	// Mie absorption coefficients
-	vec3 MieAbsorption;
-	// Mie phase function excentricity
-	float MiePhaseG;
-
-	// An atmosphere layer of width 'width', and whose density is defined as
-	// 'ExpTerm' * exp('ExpScale' * h) + 'LinearTerm' * h + 'ConstantTerm',
-	// clamped to [0,1], and where h is the altitude.	
-	// Refer to Bruneton's implementation of definitions.glsl for more details
-	// https://github.com/sebh/UnrealEngineSkyAtmosphere/blob/183ead5bdacc701b3b626347a680a2f3cd3d4fbd/Resources/Bruneton17/definitions.glsl
-	vec3 AbsorptionExtinction;
-	float Width0;
-	float ExpTerm0;
-	float ExpScale0;
-	float LinearTerm0;
-	float ConstantTerm0;
-
-	float Width1;
-	float ExpTerm1;
-	float ExpScale1;
-	float LinearTerm1;
-	float ConstantTerm1;
-
-	// The albedo of the ground.
-	vec3 GroundAlbedo;
-};
-
-
-void assert(bool condition) {
-	if (!condition) {
-		discard;
-	}
-}
-
-// - r0: ray origin
-// - rd: normalized ray direction
-// - s0: sphere center
-// - sR: sphere radius
-// - Returns the distance(solution) of the first intersecion from r0 to sphere,
-//   or -1.0 if no intersection.
-float RaySphereIntersectNearest(vec3 r0, vec3 rd, vec3 s0, float sR) {
-	float a = dot(rd, rd);
-	vec3 s0_r0 = r0 - s0;
-	float b = 2.0 * dot(rd, s0_r0);
-	float c = dot(s0_r0, s0_r0) - (sR * sR);
-	float delta = b * b - 4.0 * a * c;
-	if (delta < 0.0 || a == 0.0) {
-		return -1.0;
-	}
-	float sol0 = (-b - sqrt(delta)) / (2.0 * a);
-	float sol1 = (-b + sqrt(delta)) / (2.0 * a);
-	if (sol0 < 0.0 && sol1 < 0.0) {
-		// assert(false);
-		return -1.0;
-	}
-	if (sol0 < 0.0) {
-		return max(0.0, sol1);
-	} else if (sol1 < 0.0) {
-		return max(0.0, sol0);
-	}
-	return max(0.0, min(sol0, sol1));
-}
 
 // n : sample count
 vec3 GetSphericSampleDirection(int i, int j, int n) {
@@ -292,73 +207,6 @@ vec3 GetWorldDir(int x, int y) {
 	return worldDir;
 }
 
-vec3 RandomSphereSamples[64] = {
-	vec3(-0.7838,-0.620933,0.00996137),
-	vec3(0.106751,0.965982,0.235549),
-	vec3(-0.215177,-0.687115,-0.693954),
-	vec3(0.318002,0.0640084,-0.945927),
-	vec3(0.357396,0.555673,0.750664),
-	vec3(0.866397,-0.19756,0.458613),
-	vec3(0.130216,0.232736,-0.963783),
-	vec3(-0.00174431,0.376657,0.926351),
-	vec3(0.663478,0.704806,-0.251089),
-	vec3(0.0327851,0.110534,-0.993331),
-	vec3(0.0561973,0.0234288,0.998145),
-	vec3(0.0905264,-0.169771,0.981317),
-	vec3(0.26694,0.95222,-0.148393),
-	vec3(-0.812874,-0.559051,-0.163393),
-	vec3(-0.323378,-0.25855,-0.910263),
-	vec3(-0.1333,0.591356,-0.795317),
-	vec3(0.480876,0.408711,0.775702),
-	vec3(-0.332263,-0.533895,-0.777533),
-	vec3(-0.0392473,-0.704457,-0.708661),
-	vec3(0.427015,0.239811,0.871865),
-	vec3(-0.416624,-0.563856,0.713085),
-	vec3(0.12793,0.334479,-0.933679),
-	vec3(-0.0343373,-0.160593,-0.986423),
-	vec3(0.580614,0.0692947,0.811225),
-	vec3(-0.459187,0.43944,0.772036),
-	vec3(0.215474,-0.539436,-0.81399),
-	vec3(-0.378969,-0.31988,-0.868366),
-	vec3(-0.279978,-0.0109692,0.959944),
-	vec3(0.692547,0.690058,0.210234),
-	vec3(0.53227,-0.123044,-0.837585),
-	vec3(-0.772313,-0.283334,-0.568555),
-	vec3(-0.0311218,0.995988,-0.0838977),
-	vec3(-0.366931,-0.276531,-0.888196),
-	vec3(0.488778,0.367878,-0.791051),
-	vec3(-0.885561,-0.453445,0.100842),
-	vec3(0.71656,0.443635,0.538265),
-	vec3(0.645383,-0.152576,-0.748466),
-	vec3(-0.171259,0.91907,0.354939),
-	vec3(-0.0031122,0.9457,0.325026),
-	vec3(0.731503,0.623089,-0.276881),
-	vec3(-0.91466,0.186904,0.358419),
-	vec3(0.15595,0.828193,-0.538309),
-	vec3(0.175396,0.584732,0.792038),
-	vec3(-0.0838381,-0.943461,0.320707),
-	vec3(0.305876,0.727604,0.614029),
-	vec3(0.754642,-0.197903,-0.62558),
-	vec3(0.217255,-0.0177771,-0.975953),
-	vec3(0.140412,-0.844826,0.516287),
-	vec3(-0.549042,0.574859,-0.606705),
-	vec3(0.570057,0.17459,0.802841),
-	vec3(-0.0330304,0.775077,0.631003),
-	vec3(-0.938091,0.138937,0.317304),
-	vec3(0.483197,-0.726405,-0.48873),
-	vec3(0.485263,0.52926,0.695991),
-	vec3(0.224189,0.742282,-0.631472),
-	vec3(-0.322429,0.662214,-0.676396),
-	vec3(0.625577,-0.12711,0.769738),
-	vec3(-0.714032,-0.584461,-0.385439),
-	vec3(-0.0652053,-0.892579,-0.446151),
-	vec3(0.408421,-0.912487,0.0236566),
-	vec3(0.0900381,0.319983,0.943135),
-	vec3(-0.708553,0.483646,0.513847),
-	vec3(0.803855,-0.0902273,0.587942),
-	vec3(-0.0555802,-0.374602,-0.925519),
-};
-
 void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_order, out vec3 f_ms) {
     vec3 earthO = vec3(0.0);
     float invSamples = 4.0 * PI / float(MS_SAMPLE_CNT * MS_SAMPLE_CNT); 
@@ -373,7 +221,6 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
         for (int j = 0; j < MS_SAMPLE_CNT; ++j) {
             vec3 rayDir = GetSphericSampleDirection(i, j, MS_SAMPLE_CNT);
 			rayDir = GetWorldDir(i, j);
-			// rayDir = RandomSphereSamples[i * 8 + j];
 
 			rayDir = normalize(rayDir);
 
@@ -391,7 +238,7 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
             const float SAMPLE_CNT_FLOAT = float(SAMPLE_CNT);
             const float SampleSegmentT = 0.3;
             vec3 transmittance = vec3(1.0);
-			vec3 Lglobal = vec3(1.0);
+			vec3 Lglobal = vec3(1.0);	// hardcode
             for (float s = 0.0f; s < SAMPLE_CNT_FLOAT; s += 1.0) {
                 float t0 = s / SAMPLE_CNT_FLOAT;
                 float t1 = (s + 1.0) / SAMPLE_CNT_FLOAT;
@@ -448,14 +295,6 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
             L2nd_order += uniformPhase * L * invSamples;
         }
     }
-}
-
-float fromUnitToSubUvs(float u, float resolution) { 
-    return (u + 0.5f / resolution) * (resolution / (resolution + 1.0f)); 
-}
-
-float fromSubUvsToUnit(float u, float resolution) { 
-    return (u - 0.5f / resolution) * (resolution / (resolution - 1.0f)); 
 }
 
 #define PLANET_RADIUS_OFFSET 0.01

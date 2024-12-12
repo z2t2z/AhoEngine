@@ -1,40 +1,23 @@
 #include "Ahopch.h"
 #include "RenderPipeline.h"
+#include "Runtime/Core/Timer.h"
 
 namespace Aho {
-	RenderPipeline::~RenderPipeline() {
-	}
+
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_ScreenQuad;
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_UnitCube;
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_SceneData;	// render data is a per mesh basis
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_DebugData;
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
-		auto it = std::find_if(m_RenderTasks.begin(), m_RenderTasks.end(), [type](const RenderTask& task) {
-			return task.pass->GetRenderPassType() == type;
-		});		
+		auto it = std::find_if(m_RenderTasks.begin(), m_RenderTasks.end(), 
+			[type](const RenderTask& task) {
+				return task.pass->GetRenderPassType() == type;
+			});		
 		return it != m_RenderTasks.end() ? it->pass->GetRenderTarget() : nullptr;
 	}
 
-	const std::vector<std::shared_ptr<RenderData>>& RenderPipeline::GetRenderData(RenderDataType type) {
-		switch (type) {
-			case RenderDataType::SceneData:
-				return m_SceneData;
-			case RenderDataType::ScreenQuad:
-				return m_ScreenQuad;
-			case RenderDataType::DebugData:
-				return m_DebugData;
-			case RenderDataType::UnitCube:
-				return m_UnitCube;
-		}
-		AHO_CORE_ERROR("wrong render data type");
-	}
-
-	void RenderPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
-		for (auto& task : m_RenderTasks) {
-			if (task.pass->GetRenderPassType() != RenderPassType::Depth) {
-				task.pass->GetRenderTarget()->Resize(width, height);
-			}
-		}
-	}
-
-	void RenderPipeline::Initialize() {
+	void RenderTask::Init() {
 		// Screen Quad
 		Vertex upperLeft, lowerLeft, upperRight, lowerRight;
 		upperLeft.position = glm::vec3(-1.0, 1.0, 0.0);
@@ -45,7 +28,7 @@ namespace Aho {
 
 		lowerRight.position = glm::vec3(1.0, -1.0, 0.0);
 		lowerRight.uv = glm::vec2(1.0, 0.0);
-		
+
 		upperRight.position = glm::vec3(1.0, 1.0, 0.0);
 		upperRight.uv = glm::vec2(1.0, 1.0);
 
@@ -72,7 +55,7 @@ namespace Aho {
 
 		frontLowerLeft.position = glm::vec3(-1.0, -1.0, 1.0);
 		frontLowerLeft.uv = glm::vec2(0.0, 0.0);
-		
+
 		frontUpperRight.position = glm::vec3(1.0, 1.0, 1.0);
 		frontUpperRight.uv = glm::vec2(1.0, 1.0);
 
@@ -120,9 +103,18 @@ namespace Aho {
 		}
 	}
 
-	void RenderPipeline::Execute() {
-		for (const auto& task : m_RenderTasks) {
-			task.pass->Execute(GetRenderData(task.dataType));
+	const std::vector<std::shared_ptr<RenderData>>& RenderTask::GetRenderData(RenderDataType type) {
+		switch (type) {
+			case RenderDataType::SceneData:
+				return m_SceneData;
+			case RenderDataType::ScreenQuad:
+				return m_ScreenQuad;
+			case RenderDataType::DebugData:
+				return m_DebugData;
+			case RenderDataType::UnitCube:
+				return m_UnitCube;
 		}
+		AHO_CORE_ERROR("wrong render data type");
 	}
+
 } // namespace Aho

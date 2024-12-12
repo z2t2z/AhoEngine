@@ -51,11 +51,14 @@ namespace Aho {
 		};
 
 		std::vector<std::shared_ptr<MeshInfo>> subMesh;
+		uint32_t vertexCnt = 0u;
 		auto ProcessSubMesh = [&](aiMesh* mesh, const aiScene* scene) -> bool {
 			std::vector<Vertex> vertices;
 			vertices.reserve(mesh->mNumVertices);
 			bool hasNormal = mesh->HasNormals();
 			bool hasUVs = mesh->HasTextureCoords(0);
+			vertexCnt += mesh->mNumVertices;
+
 			for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 				Vertex vertex;
 				vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
@@ -101,7 +104,7 @@ namespace Aho {
 		};
 		ProcessNode(scene->mRootNode, scene);
 
-		return std::make_shared<StaticMesh>(subMesh, fileName);
+		return std::make_shared<StaticMesh>(subMesh, fileName, vertexCnt);
 	}
 
 	std::shared_ptr<SkeletalMesh> AssetCreator::SkeletalMeshAssetCreator(const std::string& filePath) {

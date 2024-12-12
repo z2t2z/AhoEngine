@@ -15,28 +15,23 @@ namespace Aho {
 			m_Position{ 0.0f, 0.0f, 0.0f },
 			m_Up{ 0.0f, 1.0f, 0.0f },
 			m_Front{ 0.0f, 0.0f, -1.0f },
-			m_Right{ 1.0f, 0.0f, 0.0f } {
-		RecalculateViewMatrix();
-		RecalculateProjectionMatrix();
-	}
+			m_Right{ 1.0f, 0.0f, 0.0f } { }
 
 	void EditorCamera::SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) {
+		m_Dirty = true;
 		m_Fov = fov;
 		m_AspectRatio = aspectRatio;
 		m_NearPlane = nearPlane;
 		m_FarPlane = farPlane;
-		RecalculateProjectionMatrix();
 	}
 	
 	void EditorCamera::Update(float deltaTime, glm::vec3& movement) {
 		if (glm::length(movement) == 0) {
 			return;
 		}
-
-		//m_Position += glm::normalize(movement * m_Front) * m_Speed * deltaTime;
+		m_Dirty = true;
 		m_Position.z += movement.z * m_Speed * deltaTime;
 		m_Position.x += movement.x * m_Speed * deltaTime;
-		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::RecalculateViewMatrix() {

@@ -13,23 +13,11 @@ void main() {
 
 #type fragment
 #version 460 core
+
+#include "UniformBufferObjects.glsl"
+
 out float out_color;
 in vec2 v_TexCoords;
-
-layout(std140, binding = 0) uniform CameraUBO {
-	mat4 u_View;
-	mat4 u_ViewInv;
-	mat4 u_Projection;
-	mat4 u_ProjectionInv;
-	vec4 u_ViewPosition;
-};
-
-const int SAMPLES_CNT = 64;
-// For ssao pass
-layout(std140, binding = 2) uniform RandomKernelUBO {
-	vec4 u_Samples[SAMPLES_CNT];
-	vec4 u_Info; // width, height, radius, bias
-};
 
 uniform sampler2D u_gPosition;
 uniform sampler2D u_gNormal;
@@ -41,8 +29,8 @@ const int MAX_SAMPLES = 64;
 void main() {
 	float width = textureSize(u_gPosition, 0).x;
 	float height = textureSize(u_gPosition, 0).y;
-	float radius = u_Info.z;
-	float bias = u_Info.w;
+	float radius = u_RdInfo.z;
+	float bias = u_RdInfo.w;
 
 	const vec2 noiseScale = vec2(width / 4.0, height / 4.0);
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).xyz;

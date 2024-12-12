@@ -94,7 +94,7 @@ namespace Aho {
         glm::vec4 worldPos = glm::vec4(coords / resolution * glm::vec2(2.0f) - glm::vec2(1.0f), -1.0, 1.0);
         worldPos = projInv * worldPos;
         //AHO_CORE_ASSERT(worldPos.w == 1.0f);
-        if (worldPos.w != 0) {
+        if (worldPos.w != 0.0f) {
             worldPos /= worldPos.w;
         }
         worldPos = viewInv * worldPos;

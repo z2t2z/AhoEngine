@@ -1,0 +1,262 @@
+# Blender 4.1.1 MTL File: 'None'
+# www.blender.org
+
+newmtl 16___Default.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/gi_flag.tga
+
+newmtl Material__25.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/lion.tga
+
+newmtl Material__298.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/background.tga
+
+newmtl Material__47.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/white.tga
+
+newmtl Material__57.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/vase_plant.tga
+
+newmtl arch.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_arch.tga
+
+newmtl bricks.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/spnza_bricks_a.tga
+
+newmtl ceiling.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_ceiling_a.tga
+
+newmtl chain.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/chain_texture.tga
+
+newmtl column_a.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_column_a.tga
+
+newmtl column_b.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_column_b.tga
+
+newmtl column_c.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_column_c.tga
+
+newmtl details.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_details.tga
+
+newmtl fabric_a.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_fabric.tga
+
+newmtl fabric_c.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_curtain.tga
+
+newmtl fabric_d.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_fabric_blue.tga
+
+newmtl fabric_e.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_fabric_green.tga
+
+newmtl fabric_f.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_curtain_green.tga
+
+newmtl fabric_g.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_curtain_blue.tga
+
+newmtl flagpole.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_flagpole.tga
+
+newmtl floor.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_floor_a.tga
+
+newmtl leaf.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_thorn.tga
+
+newmtl roof.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/sponza_roof.tga
+
+newmtl vase.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/vase.tga
+
+newmtl vase_hanging.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/vase_hanging.tga
+
+newmtl vase_round.001
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd ../../../../DirectXGraphicsSamples/DirectX-Graphics-Samples/MiniEngine/ModelViewer/Sponza/vase_round.tga

@@ -141,7 +141,7 @@ vec4 FXAAQuality() {
     return Result;
 }
 
-
+ 
 void main() {
     out_color = FXAAQuality();
 }

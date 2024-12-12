@@ -10,8 +10,8 @@ namespace Aho {
 	public:
 		virtual ~Camera() = default;
 		virtual glm::vec3 GetPosition() const = 0;
-		virtual const glm::mat4& GetProjection() const = 0;
-		virtual const glm::mat4& GetView() const = 0;
+		virtual const glm::mat4& GetProjection() = 0;
+		virtual const glm::mat4& GetView() = 0;
 		virtual const glm::mat4& GetProjectionInv() = 0;
 		virtual const glm::mat4& GetViewInv() = 0;
 		virtual glm::vec3 GetFront() const = 0;
@@ -32,5 +32,11 @@ namespace Aho {
 		virtual void MoveBackward(float deltaTime)	= 0;
 		virtual void MoveLeft(float deltaTime)		= 0;
 		virtual void MoveRight(float deltaTime)		= 0;
+
+		virtual bool GetUseMomentum() { return m_UseMomentum; }
+		virtual void SetUseMomentum(bool state) { m_UseMomentum = state; }
+	protected:
+		bool m_Dirty{ true };
+		bool m_UseMomentum{ true };
 	};
 }

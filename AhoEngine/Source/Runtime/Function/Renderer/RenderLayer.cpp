@@ -27,15 +27,18 @@ namespace Aho {
 
 	void RenderLayer::OnAttach() {
 		AHO_CORE_INFO("RenderLayer on attach");
+		//SetupUBO();
 
-		m_HDR = new OpenGLTexture2D((g_CurrentPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string()/*, true*/);
-		m_HDR->SetTexType(TexType::HDR);
-		g_CurrentPath = std::filesystem::current_path();
-		TextureBuffer::Init();
-		SetupUBO();
-		SetupPrecomputeDiffuseIrradiancePipeline();
-		m_Renderer->GetPipeline(RenderPipelineType::Precompute)->Execute();
-		SetupRenderPipeline();
+		//g_CurrentPath = std::filesystem::current_path();
+		//Texture* m_HDR = new OpenGLTexture2D((g_CurrentPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string()/*, true*/);
+		//m_HDR->SetTexType(TexType::HDR);
+
+		//DeferredShadingPipeline* dpl = new DeferredShadingPipeline();
+		//m_Renderer->AddRenderPipeline();
+
+		//SetupPrecomputeDiffuseIrradiancePipeline();
+		//m_Renderer->GetPipeline(RenderPipelineType::RPL_Precompute)->Execute();
+		//SetupRenderPipeline();
 	}
 
 	void RenderLayer::OnDetach() {
@@ -52,120 +55,99 @@ namespace Aho {
 		if (e.GetEventType() == EventType::UploadRenderData) {
 			e.SetHandled();
 			AHO_CORE_WARN("Recieving a UploadRenderDataEvent!");
-			const auto& pipeLine = m_Renderer->GetPipeline(RenderPipelineType::Default);
 			for (const auto& data : ((UploadRenderDataEvent*)&e)->GetRawData()) {
-				pipeLine->AddRenderData(data);
+				m_Renderer->AddRenderData(data);
 			}
 		}
 	}
 
-	void RenderLayer::SetupUBO() {
-		UBOManager::RegisterUBO<CameraUBO>(0);
-		UBOManager::RegisterUBO<LightUBO>(1);
-		UBOManager::RegisterUBO<RandomKernelUBO>(2); RandomKernelUBO rndUBO; UBOManager::UpdateUBOData(2, rndUBO);
-		UBOManager::RegisterUBO<AnimationUBO>(3);
-		UBOManager::RegisterUBO<SkeletonUBO>(4);
-	}
-
 	// TDOO: Should have an easier way, like binding the name into texture so that no need to hardcode it
 	void RenderLayer::SetupRenderPipeline() {
-		RenderPipeline* pipeline = new RenderPipeline();
+		//RenderPipeline* pipeline = new RenderPipeline();
 
-		auto shadingPass		  = SetupShadingPass();
-		auto shadowMapPass		  = SetupShadowMapPass();
-		auto gBufferPass		  = SetupGBufferPass();
-		//auto HiZPass			  = SetupHiZPass();
-		auto ssaoPass			  = SetupSSAOPass();
-		//auto ssrPass			  = SetupSSRPass();
-		//auto blurRGBPass		  = SetupBlurRGBPass();
-		auto blurPass			  = SetupBlurRPass();
-		auto postProcessingPass	  = SetupPostProcessingPass();
-		auto drawSelectedPass	  = SetupDrawSelectedPass();
-		auto FXAAPass			  = SetupFXAAPass();
-		auto AtmosPass			  = SetupAtmosphericPass();
-		auto transmittanceLUTPass = SetupTransmittanceLUTPass();
-		auto mutiScattPass		  = SetupMutiScattLutPass();
-		auto skyViewLUTPass		  = SetupSkyViewLutPass();
+		//auto shadingPass		  = SetupShadingPass();
+		//auto shadowMapPass		  = SetupShadowMapPass();
+		//auto gBufferPass		  = SetupGBufferPass();
+		//auto ssaoPass			  = SetupSSAOPass();
+		//auto blurPass			  = SetupBlurRPass();
+		//auto postProcessingPass	  = SetupPostProcessingPass();
+		//auto drawSelectedPass	  = SetupDrawSelectedPass();
+		//auto FXAAPass			  = SetupFXAAPass();
 
-		shadingPass->RegisterTextureBuffer({ shadowMapPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
-		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
-		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
-		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Albedo), TexType::Albedo });
-		shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::PBR), TexType::PBR });  // PBR param, metalic and roughness in rg channels respectively
-		
-		auto preComputePipeline = m_Renderer->GetPipeline(RenderPipelineType::Precompute);
-		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
-		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::LUT), TexType::LUT });
-		shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefilter), TexType::Prefilter });
-		shadingPass->RegisterTextureBuffer({ blurPass->GetTextureBuffer(TexType::Result), TexType::AO });
+		//auto AtmosPass			  = SetupAtmosphericPass();
+
+		//shadingPass->RegisterTextureBuffer({ shadowMapPass->GetTextureBuffer(TexType::Depth), TexType::LightDepth });
+		//shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
+		//shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
+		//shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
+		//shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Albedo), TexType::Albedo });
+		//shadingPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::PBR), TexType::PBR });  // PBR param, metalic and roughness in rg channels respectively
+		//
+		//auto preComputePipeline = m_Renderer->GetPipeline(RenderPipelineType::RPL_Precompute);
+		//shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
+		//shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::LUT), TexType::LUT });
+		//shadingPass->RegisterTextureBuffer({ preComputePipeline->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefilter), TexType::Prefilter });
+		//shadingPass->RegisterTextureBuffer({ blurPass->GetTextureBuffer(TexType::Result), TexType::AO });
 
 		// Atmospheric Scattering
-		mutiScattPass->RegisterTextureBuffer( { transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
-		skyViewLUTPass->RegisterTextureBuffer({ transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
-		skyViewLUTPass->RegisterTextureBuffer({ mutiScattPass->GetTextureBuffer(TexType::Result), TexType::MultiScattLUT });
-		//skyViewLUTPass->RegisterTextureBuffer({ aerialPerspectieLUT->GetTextureBuffer(TexType::Result), TexType::AreialPerspectiveLUT });
+		//mutiScattPass->RegisterTextureBuffer( { transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
+		//skyViewLUTPass->RegisterTextureBuffer({ transmittanceLUTPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
+		//skyViewLUTPass->RegisterTextureBuffer({ mutiScattPass->GetTextureBuffer(TexType::Result), TexType::MultiScattLUT });
 
-		shadingPass->RegisterTextureBuffer({ skyViewLUTPass->GetTextureBuffer(TexType::Result), TexType::SkyViewLUT });
-		
-		//HiZPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
+		//auto renderSkyPL = new RenderSkyPipeline();
+		//shadingPass->RegisterTextureBuffer({ renderSkyPL->GetSkyViewLut(), TexType::SkyViewLUT});
+		//
+		//FXAAPass->RegisterTextureBuffer({ postProcessingPass->GetTextureBuffer(TexType::Result), TexType::Result });
 
-		FXAAPass->RegisterTextureBuffer({ postProcessingPass->GetTextureBuffer(TexType::Result), TexType::Result });
+		//ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
+		//ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
+		//ssaoPass->RegisterTextureBuffer({ Utils::CreateNoiseTexture(32), TexType::Noise });
+		//blurPass->RegisterTextureBuffer({ ssaoPass->GetTextureBuffer(TexType::AO), TexType::Result });
 
-		ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
-		ssaoPass->RegisterTextureBuffer({ gBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
-		ssaoPass->RegisterTextureBuffer({ Utils::CreateNoiseTexture(32), TexType::Noise });
-		blurPass->RegisterTextureBuffer({ ssaoPass->GetTextureBuffer(TexType::AO), TexType::Result });
-
-		//ssrPass->RegisterTextureBuffer({ geoPassAttachments[0], "u_gPosition" });
-		//ssrPass->RegisterTextureBuffer({ geoPassAttachments[1], "u_gNormal" });
-		//ssrPass->RegisterTextureBuffer({ shadingPass->GetRenderTarget()->GetTextureAttachments().back(), "u_gAlbedo" });
-		//ssrPass->RegisterTextureBuffer({ HiZPass->GetRenderTarget()->GetTextureAttachments().back(), "u_Depth" });
-
-		//blurRGBPass->RegisterTextureBuffer({ ssrPass->GetRenderTarget()->GetTextureAttachments().back(), "u_TexToBlur" });
-
-		postProcessingPass->RegisterTextureBuffer({ shadingPass->GetTextureBuffer(TexType::Result), TexType::Result });
-		postProcessingPass->RegisterTextureBuffer({ drawSelectedPass->GetTextureBuffer(TexType::Result), TexType::Entity });
+		//postProcessingPass->RegisterTextureBuffer({ shadingPass->GetTextureBuffer(TexType::Result), TexType::Result });
+		//postProcessingPass->RegisterTextureBuffer({ drawSelectedPass->GetTextureBuffer(TexType::Result), TexType::Entity });
 
 		/* This is order dependent! */
-		pipeline->RegisterRenderPass(std::move(shadowMapPass), RenderDataType::SceneData);
-		pipeline->RegisterRenderPass(std::move(gBufferPass), RenderDataType::SceneData);
+		//pipeline->RegisterRenderPass(std::move(shadowMapPass), RenderDataType::SceneData);
+		//pipeline->RegisterRenderPass(std::move(gBufferPass), RenderDataType::SceneData);
+		//pipeline->RegisterRenderPass(std::move(ssaoPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(blurPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(shadingPass), RenderDataType::ScreenQuad);
 		//pipeline->RegisterRenderPass(std::move(HiZPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(ssaoPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(blurPass), RenderDataType::ScreenQuad);
 		//pipeline->RegisterRenderPass(std::move(ssrPass), RenderDataType::ScreenQuad);
 		//pipeline->RegisterRenderPass(std::move(blurRGBPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(shadingPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(drawSelectedPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(postProcessingPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(FXAAPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(AtmosPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(drawSelectedPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(postProcessingPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(FXAAPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(AtmosPass), RenderDataType::ScreenQuad);
 
-		pipeline->RegisterRenderPass(std::move(transmittanceLUTPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(mutiScattPass), RenderDataType::ScreenQuad);
-		pipeline->RegisterRenderPass(std::move(skyViewLUTPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(transmittanceLUTPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(mutiScattPass), RenderDataType::ScreenQuad);
+		//pipeline->RegisterRenderPass(std::move(skyViewLUTPass), RenderDataType::ScreenQuad);
 
-		m_Renderer->SetCurrentRenderPipeline(pipeline);
-		RenderCommand::SetDepthTest(true);
+		//m_Renderer->SetCurrentRenderPipeline(pipeline);
+		//m_Renderer->AddRenderPipeline(renderSkyPL);
+		//RenderCommand::SetDepthTest(true);
 	}
 
 	void RenderLayer::SetupPrecomputeDiffuseIrradiancePipeline() {
-		RenderPipeline* pipeline = new RenderPipeline();
-		auto genCubeMapPass = SetupGenCubemapFromHDRPass();
-		auto precomputeIBLIrrPass = SetupPrecomputeIrradiancePass();
-		auto prefilterPass = SetupPrefilteredPass();
-		auto genLUTPass = SetupGenLUTPass();
+		//RenderPipeline* pipeline = new RenderPipeline();
+		//auto genCubeMapPass = SetupGenCubemapFromHDRPass();
+		//auto precomputeIBLIrrPass = SetupPrecomputeIrradiancePass();
+		//auto prefilterPass = SetupPrefilteredPass();
+		//auto genLUTPass = SetupGenLUTPass();
 
-		genCubeMapPass->RegisterTextureBuffer({ m_HDR, TexType::HDR });
-		precomputeIBLIrrPass->RegisterTextureBuffer({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
-		prefilterPass->RegisterTextureBuffer ({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
+		//genCubeMapPass->RegisterTextureBuffer({ m_HDR, TexType::HDR });
+		//precomputeIBLIrrPass->RegisterTextureBuffer({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
+		//prefilterPass->RegisterTextureBuffer ({ genCubeMapPass->GetTextureBuffer(TexType::CubeMap), TexType::CubeMap });
 
-		pipeline->RegisterRenderPass(std::move(genCubeMapPass), RenderDataType::UnitCube);
-		pipeline->RegisterRenderPass(std::move(precomputeIBLIrrPass), RenderDataType::UnitCube);
-		pipeline->RegisterRenderPass(std::move(prefilterPass),  RenderDataType::UnitCube);
-		pipeline->RegisterRenderPass(std::move(genLUTPass),		RenderDataType::UnitCube);
+		//pipeline->RegisterRenderPass(std::move(genCubeMapPass), RenderDataType::UnitCube);
+		//pipeline->RegisterRenderPass(std::move(precomputeIBLIrrPass), RenderDataType::UnitCube);
+		//pipeline->RegisterRenderPass(std::move(prefilterPass),  RenderDataType::UnitCube);
+		//pipeline->RegisterRenderPass(std::move(genLUTPass),		RenderDataType::UnitCube);
 
-		pipeline->SetType(RenderPipelineType::Precompute);
-		m_Renderer->AddRenderPipeline(pipeline);
+		//pipeline->SetType(RenderPipelineType::RPL_Precompute);
+		//m_Renderer->AddRenderPipeline(pipeline);
 	}
 
 	std::unique_ptr<RenderPass> RenderLayer::SetupFXAAPass() {
@@ -252,7 +234,7 @@ namespace Aho {
 		spec.internalFormat = TexInterFormat::RGB16F; spec.dataFormat = TexDataFormat::RGB; spec.dataType = TexDataType::Float;
 		spec.filterModeMin = TexFilterMode::LinearMipmapLinear;
 		spec.mipLevels = 5;
-		spec.type = TexType::Prefilter;
+		spec.type = TexType::Prefiltering;
 		FBSpec fbSpec(128, 128, { spec, depth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
@@ -284,7 +266,7 @@ namespace Aho {
 		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent; depth.type = TexType::Depth;
 		TexSpec spec;
 		spec.width = spec.height = 512;
-		spec.internalFormat = TexInterFormat::RG16F; spec.dataFormat = TexDataFormat::RG; spec.dataType = TexDataType::Float; spec.type = TexType::LUT;
+		spec.internalFormat = TexInterFormat::RG16F; spec.dataFormat = TexDataFormat::RG; spec.dataType = TexDataType::Float; spec.type = TexType::BRDFLUT;
 		FBSpec fbSpec(512, 512, { spec, depth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
@@ -498,8 +480,8 @@ namespace Aho {
 				data->Bind(shader);
 
 				shader->SetUint("u_EntityID", data->GetEntityID());
-				if (GlobalState::g_SelectedEntityID == data->GetEntityID()) {
-					GlobalState::g_SelectedData = data;
+				if (RendererGlobalState::g_SelectedEntityID == data->GetEntityID()) {
+					RendererGlobalState::g_SelectedData = data;
 				}
 
 				if (data->IsInstanced()) {
@@ -713,11 +695,11 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderLayer::SetupDrawSelectedPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand([](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-			if (GlobalState::g_IsEntityIDValid && GlobalState::g_SelectedData) {
+			if (RendererGlobalState::g_IsEntityIDValid && RendererGlobalState::g_SelectedData) {
 				shader->Bind();
 				renderTarget->EnableAttachments(0);
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
-				const auto& data = GlobalState::g_SelectedData;
+				const auto& data = RendererGlobalState::g_SelectedData;
 				shader->SetUint("u_EntityID", data->GetEntityID());
 				data->Bind(shader);
 				data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
@@ -839,8 +821,8 @@ namespace Aho {
 				texBuffer.m_Texture->Bind(texOffset++);
 			}
 
-			shader->SetUint("u_SelectedEntityID", GlobalState::g_SelectedEntityID);
-			shader->SetBool("u_IsEntityIDValid", GlobalState::g_IsEntityIDValid);
+			shader->SetUint("u_SelectedEntityID", RendererGlobalState::g_SelectedEntityID);
+			shader->SetBool("u_IsEntityIDValid", RendererGlobalState::g_IsEntityIDValid);
 
 			for (const auto& data : renderData) {
 				data->Bind(shader);

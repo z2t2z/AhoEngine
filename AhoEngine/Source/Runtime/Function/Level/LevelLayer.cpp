@@ -1,6 +1,6 @@
 #include "Ahopch.h"
 #include "LevelLayer.h"
-#include "Runtime/Core/Log/Log.h"
+#include "Runtime/Core/Timer.h"
 #include "Runtime/Resource/Asset/Animation/Animator.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Function/Level/EcS/Components.h"
@@ -252,9 +252,6 @@ namespace Aho {
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
 
-		//BVH bvh();
-		auto bvhComponent = entityManager->AddComponent<BVHComponent>(gameObject, asset);
-
 		std::vector<std::shared_ptr<RenderData>> renderDataAll;
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
@@ -288,17 +285,27 @@ namespace Aho {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
 			}
 			if (!mat->HasProperty(TexType::Metallic)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+				mat->AddMaterialProperties({ 0.2f, TexType::Metallic });
 			}
 			if (!mat->HasProperty(TexType::Roughness)) {
-				mat->AddMaterialProperties({ 0.95f, TexType::Roughness });
+				mat->AddMaterialProperties({ 0.90f, TexType::Roughness });
 			}
 			if (!mat->HasProperty(TexType::AO)) {
 				mat->AddMaterialProperties({ 0.2f, TexType::AO });
 			}
+
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
+
+		// Update scene BVH
+		{
+			ScopedTimer timer("Update BVH");
+			const auto& bvhStructure = m_Levels[0]->GetSceneBVH();
+			auto primitives = BVH::GeneratePrimitives(asset, textureCached);
+			bvhStructure->AddPrimitives(primitives);
+		}
+
 		asset.reset(); // Free it??
 		UploadRenderDataEventTrigger(renderDataAll);
 	}

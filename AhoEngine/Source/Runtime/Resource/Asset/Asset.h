@@ -44,12 +44,15 @@ namespace Aho {
 	class StaticMesh : public Asset {
 	public:
 		StaticMesh() = default;
-		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh, const std::string& name) : m_SubMesh(SubMesh), Asset(name) {}
+		StaticMesh(const std::vector<std::shared_ptr<MeshInfo>>& SubMesh, const std::string& name, uint32_t cnt) 
+			: m_SubMesh(SubMesh), Asset(name), m_Count(cnt) {}
 		std::vector<std::shared_ptr<MeshInfo>>::iterator begin() { return m_SubMesh.begin(); }
 		std::vector<std::shared_ptr<MeshInfo>>::iterator end() { return m_SubMesh.end(); }
 		uint32_t size() { return (uint32_t)m_SubMesh.size(); }
+		uint32_t GetVerticesCount() { return m_Count; }
 		const std::vector<std::shared_ptr<MeshInfo>>& GetMeshInfo() { return m_SubMesh; }
 	private:
+		uint32_t m_Count;
 		std::vector<std::shared_ptr<MeshInfo>> m_SubMesh;
 	};
 

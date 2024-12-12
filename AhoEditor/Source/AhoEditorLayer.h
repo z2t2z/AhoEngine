@@ -26,7 +26,8 @@ namespace Aho {
 		void DrawViewport();
 		void DrawLightIcons();
 		void DrawToolBarOverlay();
-		void DrawToolBar();
+		void DrawToolBarAddObjectBtn();
+		void DrawToolBarRenderModeSelectionBtn();
 		void DrawManipulationToolBar();
 		void DrawGizmo();
 		template<typename T>
@@ -49,6 +50,7 @@ namespace Aho {
 		bool m_DrawDepthMap{ false };
 		bool m_PickingPass{ false };
 		bool m_IsViewportFocused{ false };
+		bool m_CursorLocked{ false };
 		bool m_IsCursorInViewport{ false };
 		bool m_ShouldPickObject{ false };
 		bool m_IsClickingEventBlocked{ false };
@@ -69,7 +71,6 @@ namespace Aho {
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
-		FileWatcher m_FileWatcher;
 		std::shared_ptr<CameraManager> m_CameraManager;
 	};
 }

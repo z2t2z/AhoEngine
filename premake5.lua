@@ -124,6 +124,10 @@ project "AhoEditor"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
+    postbuildcommands {
+        "{COPY} %{cfg.buildtarget.abspath} ../%{prj.name}/"
+    }
+
     files {
         "%{prj.name}/Source/**.h",
         "%{prj.name}/Source/**.cpp",

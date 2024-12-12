@@ -27,14 +27,15 @@ namespace Aho {
 		}
 	};
 
-	struct BVHComponent {
-		BVH bvh;
-		BVHComponent() = default;
-		BVHComponent(const BVHComponent&) = default;
-		BVHComponent(const BVH& bvh)
-			: bvh(bvh) {
-		}
-	};
+	// Do we need this?
+	//struct BVHComponent {
+	//	BVH bvh;
+	//	BVHComponent() = default;
+	//	BVHComponent(const BVHComponent&) = default;
+	//	BVHComponent(const BVH& bvh)
+	//		: bvh(bvh) {
+	//	}
+	//};
 
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };

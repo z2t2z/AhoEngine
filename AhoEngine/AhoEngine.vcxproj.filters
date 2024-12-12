@@ -144,11 +144,17 @@
     <ClInclude Include="Source\IamAho.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\AABB.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\App\Application.h">
       <Filter>Source\Runtime\Core\App</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h">
       <Filter>Source\Runtime\Core\App</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\BVH.h">
+      <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Core.h">
       <Filter>Source\Runtime\Core</Filter>
@@ -194,6 +200,18 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Math\Math.h">
       <Filter>Source\Runtime\Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\MortonEncoder.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Primitive.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Ray.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Timer.h">
+      <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Window\Window.h">
       <Filter>Source\Runtime\Core\Window</Filter>
@@ -255,7 +273,22 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
@@ -1632,8 +1665,7 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\AABB.h" />
-    <ClInclude Include="Source\Runtime\Core\BVH.h" />
+    <ClInclude Include="Source\Runtime\Core\SingletonBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1641,6 +1673,9 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp">
       <Filter>Source\Runtime\Core\App</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\BVH.cpp">
+      <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Core.cpp">
       <Filter>Source\Runtime\Core</Filter>
@@ -1659,6 +1694,12 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Log\Log.cpp">
       <Filter>Source\Runtime\Core\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Math\Math.cpp">
+      <Filter>Source\Runtime\Core\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Primitive.cpp">
+      <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp">
       <Filter>Source\Runtime\Function\Camera</Filter>
@@ -1699,7 +1740,22 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
@@ -1780,6 +1836,7 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\Math\Math.cpp" />
+    <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
   </ItemGroup>
 </Project>

@@ -1,16 +1,22 @@
 #include "Ahopch.h"
 #include "Shader.h"
 #include "Renderer.h"
-
 #include "Runtime/Platform/OpenGL/OpenGLShader.h"
+#include "Runtime/Resource/FileWatcher/FileWatcher.h"
 
 namespace Aho {
 
 	/* ==================================== class : Shader ===================================== */
 	std::shared_ptr<Shader> Shader::Create(const std::filesystem::path& filepath) {
 		switch (Renderer::GetAPI()) {
-			case RendererAPI::API::None:    AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
-			case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLShader>(filepath.string());
+			case RendererAPI::API::None:    
+				AHO_CORE_ASSERT(false, "RendererAPI::None is currently not supported!");
+				return nullptr;
+			case RendererAPI::API::OpenGL:
+				auto shader = std::make_shared<OpenGLShader>(filepath.string());
+				auto& watcher = FileWatcher::getInstance();
+				watcher.AddFileToWatch(filepath.string(), shader);
+				return shader;
 		}
 
 		AHO_CORE_ASSERT(false, "Unknown RendererAPI!");
@@ -27,7 +33,9 @@ namespace Aho {
 		return nullptr;
 	}
 
-	/* ==================================== class : ShaderLibrary ===================================== */
+	/* 
+		==================================== class : ShaderLibrary, no use for now =====================================
+	*/
 	void ShaderLibrary::Add(const std::string& name, const std::shared_ptr<Shader>& shader) {
 		AHO_CORE_ASSERT(!Exists(name), "Shader already exists!");
 		m_Shaders[name] = shader;
