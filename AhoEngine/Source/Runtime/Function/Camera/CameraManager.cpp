@@ -1,15 +1,16 @@
 #include "Ahopch.h"
 #include "CameraManager.h"
+#include "Runtime/Core/Math/Math.h"
 
 namespace Aho {
 	bool CameraManager::Update(float deltaTime, bool firstClick) {
         // Handle rotation
         auto [mouseX, mouseY] = Input::GetMousePosition();
         if (firstClick) {
-            m_YawLerpT = 0.0f;
-            m_CurrSpeed = 0.0f;
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
+            m_LastForward = 0.0f;
+            m_LastRight = 0.0f;
             return false;
         }
         Input::SetCursorPos(m_LastMouseX, m_LastMouseY);
@@ -31,24 +32,33 @@ namespace Aho {
 
             cam->SetForwardRotation(q);
         }
-        m_CurrSpeed += deltaTime * m_Acceleration;
-        if (m_CurrSpeed > m_Speed) {
-            m_CurrSpeed = m_Speed;
-        }
 
-        if (Input::IsKeyPressed(AHO_KEY_W)) {
-            cam->MoveForward(deltaTime * m_CurrSpeed);
-        }
-        if (Input::IsKeyPressed(AHO_KEY_S)) {
-            cam->MoveBackward(deltaTime * m_CurrSpeed);
-        }
-        if (Input::IsKeyPressed(AHO_KEY_A)) {
-            cam->MoveLeft(deltaTime * m_CurrSpeed);
-        }
-        if (Input::IsKeyPressed(AHO_KEY_D)) {
-            cam->MoveRight(deltaTime * m_CurrSpeed);
-        }
+        float forward = m_Speed *
+            ((Input::IsKeyPressed(AHO_KEY_W) ? deltaTime : 0.0f) +
+                (Input::IsKeyPressed(AHO_KEY_S) ? -deltaTime : 0.0f));
+
+        float right = m_Speed *
+            ((Input::IsKeyPressed(AHO_KEY_D) ? deltaTime : 0.0f) +
+                (Input::IsKeyPressed(AHO_KEY_A) ? -deltaTime : 0.0f));
+
+        ApplyMomentum(m_LastRight, right, deltaTime);
+        ApplyMomentum(m_LastForward, forward, deltaTime);
+
+        cam->MoveForward(forward);
+        cam->MoveRight(right);
 
         return true;
 	}
+
+    void CameraManager::ApplyMomentum(float& oldValue, float& newValue, float deltaTime) {
+        float blendedValue;
+        if (std::abs(newValue) > std::abs(oldValue)) {
+            blendedValue = SimpleLerp(newValue, oldValue, std::pow(0.6f, deltaTime * 60.0f));
+        } 
+        else {
+            blendedValue = SimpleLerp(newValue, oldValue, std::pow(0.8f, deltaTime * 60.0f));
+        }
+        oldValue = blendedValue;
+        newValue = blendedValue;
+    }
 }

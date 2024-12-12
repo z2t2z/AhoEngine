@@ -59,6 +59,16 @@ namespace Aho {
 		return q;
 	}
 
+	inline static float SimpleLerp(float a, float b, float t) { return a + (b - a) * t; }
+
+	inline static void Clamp(float& v, float lb, float ub) {
+		if (v < lb) {
+			v = lb;
+		}
+		if (v > ub) {
+			v = ub;
+		}
+	}
 
 	bool Intersect(const Ray& ray, const AABB& aabb);
 

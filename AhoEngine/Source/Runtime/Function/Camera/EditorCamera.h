@@ -62,10 +62,10 @@ namespace Aho {
 
         void SetForwardRotation(const glm::quat& q) override { m_Dirty = true; m_Front = glm::rotate(q, m_Front); }
         void Update(float deltaTime, glm::vec3& movement) override;
-        void MoveForward(float speed)   override { m_Dirty = true; m_Position += speed * m_Front; }
-        void MoveBackward(float speed)  override { m_Dirty = true; m_Position -= speed * m_Front; }
-        void MoveLeft(float speed)      override { m_Dirty = true; m_Position -= speed * m_Right; }
-        void MoveRight(float speed)     override { m_Dirty = true; m_Position += speed * m_Right; }
+        void MoveForward(float unit)   override { m_Dirty = true; m_Position += unit * m_Front; }
+        void MoveBackward(float unit)  override { m_Dirty = true; m_Position -= unit * m_Front; }
+        void MoveLeft(float unit)      override { m_Dirty = true; m_Position -= unit * m_Right; }
+        void MoveRight(float unit)     override { m_Dirty = true; m_Position += unit * m_Right; }
 
     private:
         void RecalculateViewMatrix();

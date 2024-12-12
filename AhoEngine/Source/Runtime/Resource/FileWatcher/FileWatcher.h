@@ -71,7 +71,9 @@ namespace Aho {
                 for (auto& [filePath, fileRecord] : m_Files) {
                     auto newModifiedTime = std::filesystem::last_write_time(filePath);
                     if (fileRecord->lastWriteTime != newModifiedTime) {
-                        fileRecord->Reload(filePath);
+                        bool success = fileRecord->Reload(filePath);
+                        const char* result = success ? "successful" : "failed";
+                        AHO_CORE_INFO("Reload `{}` {}", filePath.string(), result);
                         fileRecord->lastWriteTime = newModifiedTime;
                     }
                 }
@@ -91,7 +93,7 @@ namespace Aho {
         struct IFileRecord {
             IFileRecord(const std::filesystem::file_time_type& time) : lastWriteTime(time) {}
             virtual ~IFileRecord() = default;
-            virtual void Reload(const std::filesystem::path& path) = 0;
+            virtual bool Reload(const std::filesystem::path& path) = 0;
             std::filesystem::file_time_type lastWriteTime;
         };
 
@@ -101,8 +103,8 @@ namespace Aho {
                 : IFileRecord(time), file(f) {}
             std::shared_ptr<T> file;
 
-            virtual void Reload(const std::filesystem::path& path) override {
-                file->Reload(path);
+            virtual bool Reload(const std::filesystem::path& path) override {
+                return file->Reload(path);
             }
         };
 

@@ -204,13 +204,21 @@ void main() {
 		worldDir = normalize(worldDir);
 
 		const float Rground = 6360.0; 
-		vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
+		vec3 worldPos = vec3(u_ViewPosition);
+		worldPos /= 1000.0f;
 		worldPos.y += Rground;
 
-		vec3 sunDir = normalize(vec3(0.5, 0.0, 0.5));
+		vec3 sunDir = normalize(vec3(0.0, 0.001, 0.5));
 		vec2 sampleUV;
 		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
-		out_Color = vec4(texture(u_SkyviewLUT, sampleUV).rgb, 1.0);
+		vec3 lum = texture(u_SkyviewLUT, sampleUV).rgb;
+		lum = pow(lum, vec3(1.3));
+		lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
+		
+		lum = jodieReinhardTonemap(lum);
+		
+		lum = pow(lum, vec3(1.0 / 2.2));
+		out_Color = vec4(lum, 1.0);
 		return;
 	}
 

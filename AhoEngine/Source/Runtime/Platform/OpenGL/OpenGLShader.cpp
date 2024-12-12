@@ -181,6 +181,7 @@ namespace Aho {
 	void OpenGLShader::CompileFromSource() {
 		bool ComputeFlag = false;
 		bool NormalFlag = false;
+		m_Compiled = false;
 		std::vector<GLuint> shaderHandles;
 		for (const auto& [shaderType, Source] : m_OpenGLSourceCode) {
 			(shaderType == GL_COMPUTE_SHADER ? ComputeFlag : NormalFlag) = true;

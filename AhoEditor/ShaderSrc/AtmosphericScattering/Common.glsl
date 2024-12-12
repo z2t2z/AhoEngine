@@ -161,6 +161,8 @@ void SkyViewLutParamsToUv(AtmosphereParameters Atmosphere, in bool IntersectGrou
 }
 
 void SampleSkyViewLut(vec3 worldPos, vec3 worldDir, vec3 sunDir, out vec2 uv) {
+	AtmosphereParameters Atmosphere;
+	Atmosphere.BottomRadius = 6360.0f;
 	vec3 upVector = normalize(worldPos);
 	float viewHeight = length(worldPos);
 	float viewZenithCosAngle = dot(worldDir, upVector);
@@ -171,10 +173,6 @@ void SampleSkyViewLut(vec3 worldPos, vec3 worldDir, vec3 sunDir, out vec2 uv) {
 	lightOnPlane = normalize(lightOnPlane);
 	float lightViewCosAngle = lightOnPlane.x;
 
-	AtmosphereParameters Atmosphere;
-	Atmosphere.BottomRadius = 6360.0f;
 	bool intersectGround = RaySphereIntersectNearest(worldPos, worldDir, vec3(0.0, 0.0, 0.0), Atmosphere.BottomRadius) >= 0.0f;
 	SkyViewLutParamsToUv(Atmosphere, false, viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
-	// uv.y = 1.0 - uv.y;
-	// return texture(skyViewLut, uv).rgb;
 }

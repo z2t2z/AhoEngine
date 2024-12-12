@@ -34,9 +34,13 @@ namespace Aho {
         float& GetSensitivity() { return m_Sensitivity; }
         float& GetSpeed() { return m_Speed; }
     private:
-        float m_YawLerpT{ 0.0f };
-        float m_PosLerpT{ 0.0f };
-        float m_Speed{ 50.0f };
+        void ApplyMomentum(float& oldValue, float& newValue, float deltaTime);
+    
+    private:
+        float m_LastYaw{ 0.0f };
+        float m_LastForward{ 0.0f };
+        float m_LastRight{ 0.0f };
+        float m_Speed{ 25.0f };
         float m_CurrSpeed{ 0.0f };
         float m_Acceleration{ 20.0f };
     private:
