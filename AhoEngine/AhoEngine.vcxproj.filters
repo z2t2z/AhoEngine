@@ -279,7 +279,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h">
@@ -1666,6 +1666,7 @@
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\SingletonBase.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1746,7 +1747,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.cpp">
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp">
@@ -1838,5 +1839,6 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp" />
     <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
+    <ClCompile Include="Source\Runtime\Core\AABB.cpp" />
   </ItemGroup>
 </Project>

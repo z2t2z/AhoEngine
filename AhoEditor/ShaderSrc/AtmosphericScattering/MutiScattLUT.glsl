@@ -18,14 +18,6 @@ void main() {
 out vec4 out_color;
 in vec2 v_TexCoords;
 
-layout(std140, binding = 0) uniform CameraUBO {
-	mat4 u_View;
-	mat4 u_ViewInv;
-	mat4 u_Projection;
-	mat4 u_ProjectionInv;
-	vec4 u_ViewPosition;
-};
-
 const float PI = 3.14159265358979323846;
 const int SAMPLE_CNT = 24;
 const float Rground = 6360.0; 
@@ -219,8 +211,8 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
 
     for (int i = 0; i < MS_SAMPLE_CNT; ++i) {
         for (int j = 0; j < MS_SAMPLE_CNT; ++j) {
-            vec3 rayDir = GetSphericSampleDirection(i, j, MS_SAMPLE_CNT);
-			rayDir = GetWorldDir(i, j);
+            // vec3 rayDir = GetSphericSampleDirection(i, j, MS_SAMPLE_CNT);
+			vec3 rayDir = GetWorldDir(i, j);
 
 			rayDir = normalize(rayDir);
 
@@ -264,7 +256,6 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
 				vec2 uv;
 				LutTransmittanceParamsToUv(atmosparam, h, sunZenithCosAngle, uv);
 				vec3 transmittanceToSun = texture(u_TransmittanceLUT, uv).rgb;
-				// transmittanceToSun = TransmittanceToSun(P, sunDir);
 
                 h -= Rground;
 

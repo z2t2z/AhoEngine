@@ -36,7 +36,8 @@ namespace Aho {
 		virtual bool GetUseMomentum() { return m_UseMomentum; }
 		virtual void SetUseMomentum(bool state) { m_UseMomentum = state; }
 	protected:
-		bool m_Dirty{ true };
+		bool m_ViewDirty{ true };
+		bool m_ProjDirty{ true };
 		bool m_UseMomentum{ true };
 	};
 }

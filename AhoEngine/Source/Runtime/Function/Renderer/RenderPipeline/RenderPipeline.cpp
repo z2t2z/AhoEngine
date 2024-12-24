@@ -8,6 +8,8 @@ namespace Aho {
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_UnitCube;
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_SceneData;	// render data is a per mesh basis
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_DebugData;
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_EmptyVao;
+
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
 		auto it = std::find_if(m_RenderTasks.begin(), m_RenderTasks.end(), 
@@ -18,6 +20,13 @@ namespace Aho {
 	}
 
 	void RenderTask::Init() {
+		// Empty vao
+		{
+			std::shared_ptr<VertexArray> quadVAO;
+			quadVAO.reset(VertexArray::Create());
+			m_EmptyVao.push_back(std::make_shared<RenderData>(quadVAO));
+		}
+
 		// Screen Quad
 		Vertex upperLeft, lowerLeft, upperRight, lowerRight;
 		upperLeft.position = glm::vec3(-1.0, 1.0, 0.0);
@@ -105,6 +114,8 @@ namespace Aho {
 
 	const std::vector<std::shared_ptr<RenderData>>& RenderTask::GetRenderData(RenderDataType type) {
 		switch (type) {
+			case RenderDataType::Empty:
+				return m_EmptyVao;
 			case RenderDataType::SceneData:
 				return m_SceneData;
 			case RenderDataType::ScreenQuad:

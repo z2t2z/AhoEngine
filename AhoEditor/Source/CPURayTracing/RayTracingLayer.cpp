@@ -135,7 +135,7 @@ namespace Aho {
 		}
 
 		ImGui::Begin("Settings");
-		ImGui::Text("Last frame render time: %.3fms", m_Timer.GetElapsedTime());
+		ImGui::Text("Last frame render time: %.3fms", m_Timer.ElapsedMilliseconds());
 
 		ImGui::Checkbox("Accumulate", &m_Renderer.GetSettings().Accumulate);
 
@@ -193,7 +193,7 @@ namespace Aho {
 	}
 
 	void RayTracingLayer::Render() {
-		m_Timer.reset();
+		m_Timer.Reset();
 		m_Renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
 		if (m_Scene.m_CameraManager->GetMainEditorCamera()->GetAspectRatio() != (float)m_ViewportWidth / m_ViewportHeight) {
 			m_Scene.m_CameraManager->GetMainEditorCamera()->SetProjection(45, (float)m_ViewportWidth / m_ViewportHeight, 0.1f, 100.0f);

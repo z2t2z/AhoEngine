@@ -32,6 +32,7 @@ namespace Aho {
 		TransmittanceLUT,
 		MutiScattLUT,
 		SkyViewLUT,
+		Test,
 		/* TODO */
 	};
 	
@@ -75,7 +76,9 @@ namespace Aho {
 	public:
 		RenderPass() { AHO_CORE_ASSERT(false); }
 		RenderPass(const std::string& name) : m_Name(name) {}
-		~RenderPass() = default;
+		~RenderPass() {
+			m_RenderCommandBuffer.reset();
+		}
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
 		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { m_RenderCommandBuffer = std::move(renderCommandBuffer); }
 		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }

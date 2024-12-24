@@ -72,7 +72,7 @@ namespace Aho {
 		pass->SetShader(depthShader);
 		TexSpec depth; depth.internalFormat = TexInterFormat::Depth32; depth.dataFormat = TexDataFormat::DepthComponent;
 		depth.type = TexType::Depth;
-		FBSpec fbSpec(2048, 2048, { depth });  // Hardcode fow now
+		FBSpec fbSpec(4096, 4096, { depth });  // Hardcode fow now
 		auto FBO = Framebuffer::Create(fbSpec);
 		FBO->SetShouldResizeWithViewport(false);
 		pass->SetRenderTarget(FBO);
@@ -87,6 +87,7 @@ namespace Aho {
 				shader->Bind();
 				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
+
 				for (const auto& data : renderData) {
 					if (!data->ShouldBeRendered()) {
 						continue;
@@ -98,6 +99,7 @@ namespace Aho {
 						RendererGlobalState::g_SelectedData = data;
 					}
 
+					//RenderCommand::SetPolygonModeLine();
 					if (data->IsInstanced()) {
 						shader->SetBool("u_IsInstanced", true);
 						RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
@@ -107,7 +109,10 @@ namespace Aho {
 						RenderCommand::DrawIndexed(data->GetVAO());
 					}
 					data->Unbind();
+					//RenderCommand::SetPolygonModeFill();
+
 				}
+
 				renderTarget->Unbind();
 				shader->Unbind();
 			});
@@ -161,10 +166,12 @@ namespace Aho {
 	std::unique_ptr<RenderPass> DeferredShadingPipeline::SetupShadingPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			[this](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
 				renderTarget->EnableAttachments(0);
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+				shader->SetVec3("u_SunDir", m_SunDir);
 
 				uint32_t texOffset = 0u;
 				for (const auto& texBuffer : textureBuffers) {
@@ -178,6 +185,7 @@ namespace Aho {
 					RenderCommand::DrawIndexed(data->GetVAO());
 					data->Unbind();
 				}
+
 				renderTarget->Unbind();
 				shader->Unbind();
 			});

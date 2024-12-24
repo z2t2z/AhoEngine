@@ -11,6 +11,7 @@
 #include "Runtime/Core/Log/Log.h"
 #include "Runtime/Core/Gui/ImGuiLayer.h"
 #include "Runtime/Core/Math/Math.h"
+#include "Runtime/Core/Timer.h"
 
 #include "Runtime/Resource/Asset/AssetManagerEditor.h"
 #include "Runtime/Resource/Asset/AssetManager.h"

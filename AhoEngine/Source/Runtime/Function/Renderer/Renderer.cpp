@@ -25,7 +25,7 @@ namespace Aho {
 
 		m_RP_Sky				= new RenderSkyPipeline();
 		m_RP_DeferredShading	= new DeferredShadingPipeline();
-		m_PathTraciingPipeline	= new PathTracerPipeline();
+		m_RP_PathTraciing		= new PathTracingPipeline();
 		m_RP_Postprocess		= new PostprocessPipeline();
 		
 		// Register buffers from ibl
@@ -52,6 +52,12 @@ namespace Aho {
 			return true;
 		}
 		return false;
+	}
+
+	// TODO: Fix fxaa: it is appiled to all pixels
+	uint32_t Renderer::GetRenderResultTextureID() {
+		return m_RP_DeferredShading->GetRenderResult()->GetTextureID();
+		return m_RP_Postprocess->GetRenderResult()->GetTextureID();
 	}
 
 	void Renderer::SetupUBOs() {

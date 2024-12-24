@@ -18,7 +18,7 @@ namespace Aho {
 			m_Right{ 1.0f, 0.0f, 0.0f } { }
 
 	void EditorCamera::SetProjection(float fov, float aspectRatio, float nearPlane, float farPlane) {
-		m_Dirty = true;
+		m_ProjDirty = true;
 		m_Fov = fov;
 		m_AspectRatio = aspectRatio;
 		m_NearPlane = nearPlane;
@@ -29,7 +29,7 @@ namespace Aho {
 		if (glm::length(movement) == 0) {
 			return;
 		}
-		m_Dirty = true;
+		m_ViewDirty = true;
 		m_Position.z += movement.z * m_Speed * deltaTime;
 		m_Position.x += movement.x * m_Speed * deltaTime;
 	}

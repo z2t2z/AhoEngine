@@ -125,9 +125,10 @@ namespace Aho {
 	}
 
 	Texture* OpenGLFramebuffer::GetTexture(TexType type) {
-		auto it = std::find_if(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), [&](Texture* tex) {
-			return tex->GetTexType() == type;
-		});
+		auto it = std::find_if(m_ColorAttachmentTex.begin(), m_ColorAttachmentTex.end(), 
+			[&](Texture* tex) {
+				return tex->GetTexType() == type;
+			});
 		AHO_CORE_ASSERT(it != m_ColorAttachmentTex.end());
 		return *it;
 	}

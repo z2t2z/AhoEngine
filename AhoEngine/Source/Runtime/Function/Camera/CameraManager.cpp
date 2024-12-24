@@ -4,22 +4,21 @@
 
 namespace Aho {
 	bool CameraManager::Update(float deltaTime, bool firstClick) {
-        // Handle rotation
         auto [mouseX, mouseY] = Input::GetMousePosition();
+        // Do nothing if first click because last mouse position is trash data
         if (firstClick) {
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
-            m_LastForward = 0.0f;
-            m_LastRight = 0.0f;
             return false;
         }
         Input::SetCursorPos(m_LastMouseX, m_LastMouseY);
 
         float sensScale = 1.0f / 2000.0f;
+        
+        // Handle rotation
         glm::vec2 delta = m_Sensitivity * sensScale * glm::vec2(mouseX - m_LastMouseX, mouseY - m_LastMouseY);
-
         auto cam = GetMainEditorCamera();
-        if (delta.x != 0 || delta.y != 0) {
+        if (delta.x != 0.0 || delta.y != 0.0) {
             float pitchDelta = delta.y * cam->GetRotationSpeed();
             float yawDelta = delta.x * cam->GetRotationSpeed();
 

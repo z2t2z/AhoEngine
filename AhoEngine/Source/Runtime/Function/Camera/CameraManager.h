@@ -41,12 +41,9 @@ namespace Aho {
         float m_LastForward{ 0.0f };
         float m_LastRight{ 0.0f };
         float m_Speed{ 25.0f };
-        float m_CurrSpeed{ 0.0f };
-        float m_Acceleration{ 20.0f };
     private:
         float m_Sensitivity{ 2.0f };
         float m_LastMouseX = 0.0f, m_LastMouseY = 0.0f;
-        float m_LockedMouseX, m_LockedMouseY;
         std::vector<std::shared_ptr<Camera>> m_Cameras;
     };
 } // namespace Aho

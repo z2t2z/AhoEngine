@@ -3,6 +3,7 @@
 
 
 namespace Aho {
+	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 0.0f, 0.45f };
 
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
@@ -104,11 +105,12 @@ namespace Aho {
 	std::unique_ptr<RenderPass> RenderSkyPipeline::SetupSkyViewLutPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+			[this](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
 				renderTarget->EnableAttachments(0);
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
+				shader->SetVec3("u_SunDir", m_SunDir);
 				// Sampler uniforms
 				uint32_t texOffset = 0u;
 				for (const auto& texBuffer : textureBuffers) {

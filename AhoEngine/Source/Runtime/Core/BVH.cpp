@@ -39,34 +39,7 @@ namespace Aho {
 				const Vertex& v0 = vertices[indices[i]];
 				const Vertex& v1 = vertices[indices[i + 1]];
 				const Vertex& v2 = vertices[indices[i + 2]];
-				PrimitiveMaterial mat0, mat1, mat2;
-
-				auto FillMaterial = [&](const Vertex& vertex, PrimitiveMaterial& mat) -> void {
-					if (info->materialInfo.HasMaterial()) {
-						for (const auto& [type, path] : info->materialInfo.materials) {
-							const auto& tex = textureCached.at(path);
-							switch (type) {
-								case TexType::Albedo:
-									mat.m_Albedo = Utils::DecodeUint32ToVec4(tex->ReadPixel(vertex.uv.x, vertex.uv.y));
-									break;
-								case TexType::Normal:
-									mat.m_Normal = Utils::DecodeUint32ToVec4(tex->ReadPixel(vertex.uv.x, vertex.uv.y));
-									break;
-								case TexType::Metallic:
-									mat.m_PBR.x = Utils::DecodeUint32ToVec4(tex->ReadPixel(vertex.uv.x, vertex.uv.y)).x;
-									break;
-								case TexType::Roughness:
-									mat.m_PBR.y = Utils::DecodeUint32ToVec4(tex->ReadPixel(vertex.uv.x, vertex.uv.y)).x;
-									break;
-							}
-						}
-					}
-				};
-				//FillMaterial(v0, mat0);
-				//FillMaterial(v1, mat1);
-				//FillMaterial(v2, mat2);
-
-				primitives.emplace_back(std::make_unique<Primitive>(v0, v1, v2, mat0, mat1, mat2));
+				primitives.emplace_back(std::make_unique<Primitive>(v0, v1, v2));
 			}
 		}
 		return primitives;
@@ -76,7 +49,7 @@ namespace Aho {
 		//for (auto& p : m_Primitives) {
 		//	p->Update();
 		//}
-		BuildTreeRecursion(0, m_Primitives.size());
+		m_Root = BuildTreeRecursion(0, m_Primitives.size());
 	}
 
 	std::optional<IntersectResult> BVH::GetIntersectionRecursion(const Ray& ray, BVHNode* node) {
@@ -106,7 +79,7 @@ namespace Aho {
 		for (int i = indexL; i < indexR; i++) {
 			const auto& p = m_Primitives[i];
 			AHO_CORE_ASSERT(p);
-			aabb.Expand(p->GetAABB());
+			aabb.Merge(p->GetAABB());
 		}
 		node->aabb = aabb;
 

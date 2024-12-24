@@ -274,20 +274,22 @@ vec3 IntegrateScatteredLuminance(vec3 worldPos, vec3 worldDir, vec3 sunDir) {
 	return L;
 }
 
-uniform vec3 u_SunDir = normalize(vec3(1.0, 0.1, -0.1));
 
 void main() {
-	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
+	vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), 1.0);
 	vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
 	
 	if (viewPos.w != 0.0) {
 		viewPos /= viewPos.w;
 	}
-	assert(viewPos.w == 1.0);
+	// assert(viewPos.w == 1.0);
 	vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
 	worldDir = normalize(worldDir);
 
 	vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
+	if (worldPos.y < 0.001) {
+		worldPos.y = 0.001f; // don't go under surface
+	}
 	worldPos.y += Rground;
 
 	float viewHeight = length(worldPos);

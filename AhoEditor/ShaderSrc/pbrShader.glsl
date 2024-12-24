@@ -194,26 +194,26 @@ void main() {
 
 	float d = texture(u_gDepth, v_TexCoords).r;
 	if (d == 1.0f) { 
-		vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), -1.0);
+		vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), 1.0);
 		vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
 		
-		if (viewPos.w != 0) {
+		if (viewPos.w != 0.0) {
 			viewPos /= viewPos.w;
 		}
 		vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
 		worldDir = normalize(worldDir);
-
 		const float Rground = 6360.0; 
-		vec3 worldPos = vec3(u_ViewPosition);
-		worldPos /= 1000.0f;
+		vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
+		if (worldPos.y < 0.001) {
+			worldPos.y = 0.001f; // don't go under surface
+		}
 		worldPos.y += Rground;
 
-		vec3 sunDir = normalize(vec3(0.0, 0.001, 0.5));
 		vec2 sampleUV;
-		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
+		SampleSkyViewLut(worldPos, worldDir, u_SunDir, sampleUV);
 		vec3 lum = texture(u_SkyviewLUT, sampleUV).rgb;
 		lum = pow(lum, vec3(1.3));
-		lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
+		lum /= (smoothstep(0.0, 0.2, clamp(u_SunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
 		
 		lum = jodieReinhardTonemap(lum);
 		

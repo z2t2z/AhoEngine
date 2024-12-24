@@ -91,13 +91,13 @@ namespace Aho {
 	}
 
     Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv) {
-        glm::vec4 worldPos = glm::vec4(coords / resolution * glm::vec2(2.0f) - glm::vec2(1.0f), -1.0, 1.0);
+        glm::vec4 worldPos = glm::vec4(coords / resolution * glm::vec2(2.0f) - glm::vec2(1.0f), 1.0, 1.0);
         worldPos = projInv * worldPos;
-        //AHO_CORE_ASSERT(worldPos.w == 1.0f);
+
+        worldPos = viewInv * worldPos;
         if (worldPos.w != 0.0f) {
             worldPos /= worldPos.w;
         }
-        worldPos = viewInv * worldPos;
 
         return Ray(camPos, glm::normalize(glm::vec3(worldPos) - camPos));
     }

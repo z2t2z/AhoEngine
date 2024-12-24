@@ -180,6 +180,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h" />
@@ -187,7 +188,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.h" />
@@ -654,6 +655,7 @@
     <ClCompile Include="Source\Ahopch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\AABB.cpp" />
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp" />
     <ClCompile Include="Source\Runtime\Core\BVH.cpp" />
     <ClCompile Include="Source\Runtime\Core\Core.cpp" />
@@ -680,7 +682,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracingPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.cpp" />

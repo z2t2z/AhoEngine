@@ -27,9 +27,19 @@ namespace Aho {
 		inline static void DrawIndexedInstanced(const std::shared_ptr<VertexArray>& vertexArray, uint32_t amount, bool DrawLine = false) {
 			glDrawElementsInstanced(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0, amount);
 		}
+		inline static void DrawArray() {
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 		inline static void CullFace() {
 			//glEnable(GL_CULL_FACE);    
 			//glCullFace(GL_BACK);  
+		}
+		inline static void CheckError() {
+			GLenum error = glGetError();
+			if (error != GL_NO_ERROR) {
+				//std::cout << "OpenGL Error: " << error << std::endl;
+				AHO_CORE_ERROR("OPENGL ERROR:{}", error);
+			}
 		}
 		inline static void SetDepthTest(bool state) {
 			//s_RendererAPI->SetDepthTest(state);
@@ -72,6 +82,8 @@ namespace Aho {
 	class RenderCommandBuffer {
 	public:
 		RenderCommandBuffer() = default;
+		~RenderCommandBuffer() = default;
+
 		RenderCommandBuffer(const std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
 							const std::shared_ptr<Shader>& shader,
 							const std::vector<TextureBuffer>& textureBuffers,

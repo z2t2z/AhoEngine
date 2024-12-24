@@ -4,7 +4,11 @@
 #include <iomanip>
 #include <entt.hpp>
 #include <filesystem>
+
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Aho {
 	namespace fs = std::filesystem;
@@ -150,6 +154,10 @@ namespace Aho {
 		DrawPropertiesPanel();
 		DrawViewport();
 		//ImGui::ShowDemoWindow();
+
+		// Temporary testing functions
+		TempSunDirControl();
+		TempBVHControl();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
@@ -206,50 +214,31 @@ namespace Aho {
 		}
 
 		// TODO: Should be able to select any render result of any passes
-		uint32_t RenderResult = m_Renderer->GetRenderResultTextureID();
-
-		ImGui::Image((ImTextureID)RenderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		uint32_t renderResult = m_Renderer->GetRenderResultTextureID();
+		//renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_PostProcess)->GetRenderResult()->GetTextureID();
+		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
 		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
 		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
 		MouseY = height - MouseY;
+		std::swap(m_MouseX, MouseX);
+		std::swap(m_MouseY, MouseY);
 		m_IsViewportFocused = ImGui::IsWindowFocused();
-		m_IsCursorInViewport = (MouseX >= 0 && MouseY >= 0 && MouseX < m_ViewportWidth && MouseY < m_ViewportHeight);
+		m_IsCursorInViewport = (m_MouseX >= 0 && m_MouseY >= 0 && m_MouseX < m_ViewportWidth && m_MouseY < m_ViewportHeight);
 		if (m_ShouldPickObject) {
-			m_ShouldPickObject = false;
+			//m_ShouldPickObject = false;
 			if (m_IsCursorInViewport) { 
+				auto cam = m_CameraManager->GetMainEditorCamera();
+				m_Ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
+												glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
+												cam->GetPosition(), 
+												cam->GetProjectionInv(), 
+												cam->GetViewInv());
 				//m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading)->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
 				//m_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
 				//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
 			}
-
-			//m_LevelLayer->
-			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-
-			//auto view = entityManager->GetView<BVHComponent>();
-			//BVHNode* root = nullptr;
-			//view.each([&](auto entity, BVHComponent& bvhComponent) {
-			//	root = bvhComponent.bvh.GetRoot();
-			//});
-
-			//if (root) {
-			//	auto cam = m_CameraManager->GetMainEditorCamera();
-			//	Ray ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
-			//									glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
-			//									cam->GetPosition(), 
-			//									cam->GetProjectionInv(), 
-			//									cam->GetViewInv());
-
-			//	AHO_CORE_TRACE("Dir: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z);
-			//	AHO_CORE_TRACE("Ori: {}, {}, {}", ray.origin.x, ray.origin.y, ray.origin.z);
-
-			//	auto intersectionResult = BVH::GetIntersection(ray, root);
-			//	if (intersectionResult) {
-			//		g_testPosition = intersectionResult->position;
-			//		AHO_CORE_TRACE("Intersected!: {}, {}, {}", intersectionResult->position.x, intersectionResult->position.y, intersectionResult->position.z);
-			//	}
-			//}
 		}
 
 		DrawGizmo();
@@ -921,5 +910,76 @@ namespace Aho {
 			ImGui::EndDragDropTarget();
 		}
 		return nullptr;
+	}
+
+	void AhoEditorLayer::TempSunDirControl() {
+		auto skyPipeline = static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
+		auto shadingPipeline = static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
+
+		//static float yaw = 0.0f;
+		//static float pitch = 0.0f;
+		// super strange bug
+		auto& [yaw, pitch] = skyPipeline->GetSunYawPitch();
+		ImGui::Begin("Temp Sky Control");
+		ImGui::DragFloat("Yaw", &yaw, 0.01f, -3.14f, 3.14f);
+		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f, 3.14f);
+		//skyPipeline->Set
+		glm::mat4 sunMatrix = glm::yawPitchRoll(yaw, -pitch, 0.0f);
+		glm::vec3 sunDir = glm::vec3(sunMatrix[2]);
+		skyPipeline->SetSunDir(sunDir);
+		shadingPipeline->SetSunDir(sunDir);
+
+		ImGui::End();
+	}
+
+	void AhoEditorLayer::TempBVHControl() {
+		ImGui::Begin("Temp bvh control");
+		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+		auto view = entityManager->GetView<BVHComponent<Primitive>, TransformComponent>();
+		int find = -1;
+		
+		std::optional<IntersectResult> intersectionResult = std::nullopt;
+		auto& root = m_LevelLayer->GetCurrentLevel()->GetSceneBVHRoot();
+
+		view.each(
+			[&](auto entity, BVHComponent<Primitive>& bc, TransformComponent& tc) {
+				ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));
+				std::string showName = "Update BVH:" + std::to_string(static_cast<uint32_t>(entity));
+				if (ImGui::Button(showName.c_str())) {
+					//ScopedTimer timer(std::to_string(static_cast<uint32_t>(entity)));
+					bc.bvh.ApplyTransform(tc.GetTransform());
+				}
+				
+				if (find == -1 && m_ShouldPickObject) {
+					auto cam = m_CameraManager->GetMainEditorCamera();
+					{
+						ScopedTimer timer("Idx Intersecting test");
+						if (bc.bvh.Intersect(m_Ray)) {
+							find = static_cast<uint32_t>(entity);
+						}
+					}
+
+					// testing ptr version bvh
+					//if (!intersectionResult) {
+					//	ScopedTimer timer("PTR Intersecting test");
+					//	intersectionResult = BVH::GetIntersection(m_Ray, root.get());
+					//}
+				
+				}
+
+				ImGui::Separator();
+			});
+
+		if (intersectionResult) {
+			//AHO_CORE_WARN("Ptr intersecting!");
+		}
+
+		if (find != -1) {
+			AHO_CORE_INFO("Intersecting {}", find);
+		}
+
+		m_ShouldPickObject = false;
+
+		ImGui::End();
 	}
 }

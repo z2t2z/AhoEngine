@@ -49,6 +49,8 @@ struct AtmosphereParameters {
 	vec3 GroundAlbedo;
 };
 
+uniform vec3 u_SunDir;
+
 // Used in fragment shader only
 void assert(bool condition) {
 	if (!condition) {

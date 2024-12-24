@@ -6,26 +6,6 @@
 #include <chrono>
 
 namespace Aho {
-	class Timer {
-	public:
-		Timer() {
-			reset();
-		}
-
-		void reset() {
-			m_startTime = std::chrono::high_resolution_clock::now();
-		}
-
-		float GetElapsedTime() {
-			auto currentTime = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<float, std::milli> elapsed = currentTime - m_startTime;
-			return elapsed.count(); // In ms
-		}
-
-	private:
-		std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
-	};
-
 
 	class RayTracingLayer : public Layer {
 	public:

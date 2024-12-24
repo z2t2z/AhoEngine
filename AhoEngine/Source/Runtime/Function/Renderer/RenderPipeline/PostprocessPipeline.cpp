@@ -16,11 +16,16 @@ namespace Aho {
 		m_DrawSelectedOutlinePass->RegisterTextureBuffer({ m_DrawSelectedPass->GetTextureBuffer(TexType::Result), TexType::Entity });
 		m_FXAAPass->RegisterTextureBuffer({ m_DrawSelectedOutlinePass->GetTextureBuffer(TexType::Result), TexType::Result });
 
+		m_TestQuadPass = SetupTestQuadPass();
+		RegisterRenderPass(m_TestQuadPass.get(), RenderDataType::Empty);
+
 		RegisterRenderPass(m_DrawSelectedPass.get(), RenderDataType::ScreenQuad);
 		RegisterRenderPass(m_DrawSelectedOutlinePass.get(), RenderDataType::ScreenQuad);
 		RegisterRenderPass(m_FXAAPass.get(), RenderDataType::ScreenQuad);
 
-		m_RenderResult = m_FXAAPass->GetTextureBuffer(TexType::Result);
+		//m_RenderResult = m_FXAAPass->GetTextureBuffer(TexType::Result);
+
+		m_RenderResult = m_TestQuadPass->GetTextureBuffer(TexType::Result);
 	}
 
 	void PostprocessPipeline::SetInput(Texture* tex) {
@@ -144,6 +149,41 @@ namespace Aho {
 		auto fbo = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(fbo);
 		pass->SetRenderPassType(RenderPassType::FXAA);
+		return pass;
+	}
+
+	std::unique_ptr<RenderPass> PostprocessPipeline::SetupTestQuadPass() {
+		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
+		cmdBuffer->AddCommand(
+			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+				shader->Bind();
+				renderTarget->EnableAttachments(0);
+				RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+				for (const auto& data : renderData) {
+					data->Bind(shader);
+					RenderCommand::DrawArray();
+					data->Unbind();
+				}
+
+				RenderCommand::CheckError();
+				renderTarget->Unbind();
+				shader->Unbind();
+			});
+
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("InfiniteGrid");
+		pass->SetRenderCommand(std::move(cmdBuffer));
+
+		auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "infiniteGrid.glsl");
+		pass->SetShader(shader);
+
+		TexSpec texSpecColor; texSpecColor.type = TexType::Result;
+		texSpecColor.debugName = "InfiniteGrid";
+
+		FBSpec fbSpec(1280u, 720u, { texSpecColor });
+		auto fbo = Framebuffer::Create(fbSpec);
+		pass->SetRenderTarget(fbo);
+		pass->SetRenderPassType(RenderPassType::Test);
 		return pass;
 	}
 

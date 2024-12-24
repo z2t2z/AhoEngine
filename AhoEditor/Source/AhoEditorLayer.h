@@ -72,5 +72,16 @@ namespace Aho {
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
+
+	private:
+		int m_MouseX, m_MouseY;
+
+	// some temporary vars for testing here
+	private:
+		Ray m_Ray;
+	// some temporary funcs for testing here
+	private:
+		void TempSunDirControl();
+		void TempBVHControl();
 	};
 }

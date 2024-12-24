@@ -298,12 +298,16 @@ namespace Aho {
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 
-		// Update scene BVH
 		{
-			ScopedTimer timer("Update BVH");
-			const auto& bvhStructure = m_Levels[0]->GetSceneBVH();
+			ScopedTimer timer("Build BVH");
+			entityManager->AddComponent<BVHComponent<Primitive>>(gameObject, asset);
+		}
+
+		{
+			auto& bvhStructure = m_Levels[0]->GetSceneBVH();
 			auto primitives = BVH::GeneratePrimitives(asset, textureCached);
 			bvhStructure->AddPrimitives(primitives);
+			bvhStructure->BuildTree();
 		}
 
 		asset.reset(); // Free it??

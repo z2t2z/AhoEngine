@@ -4,7 +4,7 @@
 #include "Shader.h"
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/PathTracingPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline//PathTracing/PathTracingPipeline.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderSkyPipeline.h"
 #include "Runtime/Function/Renderer/RenderPipeline/DeferredShadingPipeline.h"
 #include "Runtime/Function/Renderer/RenderPipeline/IBLPipeline.h"
@@ -40,7 +40,7 @@ namespace Aho {
 			delete m_RP_Sky;
 			delete m_RP_DeferredShading;
 			delete m_RP_Postprocess;
-			delete m_PathTraciingPipeline;
+			delete m_RP_PathTraciing;
 		}
 
 		void SetRenderMode(RenderMode mode) { m_CurrentRenderMode = mode; }
@@ -56,6 +56,8 @@ namespace Aho {
 					return m_RP_Sky;
 				case RenderPipelineType::RPL_PostProcess:
 					return m_RP_Postprocess;
+				case RenderPipelineType::RPL_PathTracing:
+					return m_RP_PathTraciing;
 			}
 			AHO_CORE_ASSERT(false);
 		}
@@ -64,9 +66,7 @@ namespace Aho {
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
-		uint32_t GetRenderResultTextureID() {
-			return m_RP_Postprocess->GetRenderResult()->GetTextureID();
-		}
+		uint32_t GetRenderResultTextureID();
 
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data) { RenderTask::m_SceneData.push_back(data); }
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) { for (const auto& d : data) AddRenderData(d); }
@@ -79,7 +79,7 @@ namespace Aho {
 		RenderSkyPipeline* m_RP_Sky;
 		DeferredShadingPipeline* m_RP_DeferredShading;
 		PostprocessPipeline* m_RP_Postprocess;
-		PathTracerPipeline* m_PathTraciingPipeline{ nullptr };
+		PathTracingPipeline* m_RP_PathTraciing{ nullptr };
 
 	private:
 		RenderMode m_CurrentRenderMode{ RenderMode::DefaultLit };

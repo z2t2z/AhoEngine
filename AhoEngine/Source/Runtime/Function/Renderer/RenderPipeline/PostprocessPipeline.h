@@ -20,6 +20,9 @@ namespace Aho {
 		std::unique_ptr<RenderPass> m_DrawSelectedOutlinePass;
 		std::unique_ptr<RenderPass> m_FXAAPass;
 
+	private:
+		std::unique_ptr<RenderPass> SetupTestQuadPass();
+		std::unique_ptr<RenderPass> m_TestQuadPass;
 	};
 
 }

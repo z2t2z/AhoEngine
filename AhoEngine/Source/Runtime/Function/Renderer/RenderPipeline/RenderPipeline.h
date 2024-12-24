@@ -7,7 +7,7 @@
 
 namespace Aho {
 	enum class RenderDataType {
-		None = 0,
+		Empty = 0,
 		SceneData,
 		ScreenQuad,
 		DebugData,
@@ -16,6 +16,7 @@ namespace Aho {
 
 	enum class RenderPipelineType {
 		None = 0,
+		RPL_PathTracing,
 		RPL_Default,
 		RPL_RenderSky,
 		RPL_IBL,
@@ -33,6 +34,8 @@ namespace Aho {
 		static std::vector<std::shared_ptr<RenderData>> m_UnitCube;
 		static std::vector<std::shared_ptr<RenderData>> m_SceneData;	// render data is a per mesh basis
 		static std::vector<std::shared_ptr<RenderData>> m_DebugData;
+		static std::vector<std::shared_ptr<RenderData>> m_EmptyVao;
+
 	};
 
 	class RenderPipeline {
