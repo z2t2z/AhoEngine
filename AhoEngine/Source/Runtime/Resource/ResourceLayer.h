@@ -21,7 +21,7 @@ namespace Aho {
 		std::shared_ptr<StaticMesh> GetBone() { return m_Bone; }
 		std::shared_ptr<StaticMesh> GetPlane() { return m_Plane; }
 	private:
-		void LoadAssetFromFile(const std::string& path, bool isSkeletal);
+		void LoadAssetFromFile(const std::string& path, bool isSkeletal, const glm::mat4& preTransform = glm::mat4(1.0f));
 		template<typename T>
 		void PackRenderData(const T& res, bool isSkeletal);
 		void PackAnimation(const std::shared_ptr<AnimationAsset>& animation);

@@ -19,6 +19,7 @@ IncludeDir["glm"] = "AhoEngine/Vendor/glm"
 IncludeDir["entt"] = "AhoEngine/Vendor/entt/include"
 IncludeDir["assimp"] = "AhoEngine/Vendor/assimp/include"
 IncludeDir["stb_image"] = "AhoEngine/Vendor/stb_image"
+IncludeDir["gli"] = "AhoEngine/Vendor/gli"
 IncludeDir["json"] = "AhoEngine/Vendor/json"
 IncludeDir["ImGuizmo"] = "AhoEngine/Vendor/ImGuizmo"
 IncludeDir["Jolt"] = "AhoEngine/Vendor/JoltPhysics"
@@ -70,6 +71,7 @@ project "AhoEngine"
         "%{IncludeDir.entt}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.stb_image}",
+        "%{IncludeDir.gli}",
         "%{IncludeDir.json}",
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.Jolt}"

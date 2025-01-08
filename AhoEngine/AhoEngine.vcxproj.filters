@@ -58,6 +58,9 @@
     <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline">
       <UniqueIdentifier>{49FDEFE9-B538-50AD-BE2D-CD3C2AE8D4DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing">
+      <UniqueIdentifier>{ED0FD21E-59CD-7A55-E297-66BD4E54EDA9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Platform">
       <UniqueIdentifier>{FD947116-69CC-B9AD-72D6-1DD1DE8CE0A6}</UniqueIdentifier>
     </Filter>
@@ -144,7 +147,7 @@
     <ClInclude Include="Source\IamAho.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\AABB.h">
+    <ClInclude Include="Source\Runtime\Core\BBox.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\App\Application.h">
@@ -208,6 +211,9 @@
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Ray.h">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\SingletonBase.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Timer.h">
@@ -279,8 +285,11 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
@@ -303,10 +312,10 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h">
@@ -1665,12 +1674,15 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\SingletonBase.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBO.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
       <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\BBox.cpp">
+      <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp">
       <Filter>Source\Runtime\Core\App</Filter>
@@ -1700,6 +1712,9 @@
       <Filter>Source\Runtime\Core\Math</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Primitive.cpp">
+      <Filter>Source\Runtime\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Camera\CameraManager.cpp">
@@ -1748,7 +1763,7 @@
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
@@ -1771,7 +1786,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp">
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp">
@@ -1822,6 +1837,9 @@
     <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp">
       <Filter>Source\Runtime\Resource\AssetCreator</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp">
+      <Filter>Source\Runtime\Resource\FileWatcher</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\Model\Model.cpp">
       <Filter>Source\Runtime\Resource\Model</Filter>
     </ClCompile>
@@ -1837,8 +1855,6 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
-    <ClCompile Include="Source\Runtime\Core\AABB.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
   </ItemGroup>
 </Project>

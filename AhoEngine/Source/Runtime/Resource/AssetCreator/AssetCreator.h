@@ -57,8 +57,8 @@ namespace Aho {
 
 	class AssetCreator {
 	public:
-		static std::shared_ptr<StaticMesh> MeshAssetCreater(const std::string& filePath);
-		static std::shared_ptr<SkeletalMesh> SkeletalMeshAssetCreator(const std::string& filePath);
+		static std::shared_ptr<StaticMesh> MeshAssetCreater(const std::string& filePath, const glm::mat4& preTransform = glm::mat4(1.0f));
+		static std::shared_ptr<SkeletalMesh> SkeletalMeshAssetCreator(const std::string& filePath, const glm::mat4& preTransform = glm::mat4(1.0f));
 		static std::shared_ptr<MaterialAsset> MaterialAssetCreator(const std::string& filePath);
 		static std::shared_ptr<AnimationAsset> AnimationAssetCreator(const std::string& filePath, const std::shared_ptr<SkeletalMesh>& mesh);
 	private:

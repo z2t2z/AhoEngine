@@ -7,7 +7,7 @@
 namespace Aho {
 	uint32_t AssetCreator::s_MeshCnt = 0;
 
-	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath) {
+	std::shared_ptr<StaticMesh> AssetCreator::MeshAssetCreater(const std::string& filePath, const glm::mat4& preTransform) {
 		auto it = filePath.find_last_of('/\\');
 		std::string prefix;
 		if (it != std::string::npos) {
@@ -42,7 +42,7 @@ namespace Aho {
 			for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_SHININESS, aiTextureType_HEIGHT, aiTextureType_SPECULAR, aiTextureType_METALNESS, aiTextureType_DIFFUSE_ROUGHNESS, aiTextureType_AMBIENT_OCCLUSION }) {
 				for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 					aiString str;
-					AHO_CORE_WARN(std::string(str.data));
+					//AHO_CORE_WARN(std::string(str.data));
 					material->GetTexture(type, i, &str);
 					info.materials.emplace_back(Utils::AssimpTextureConvertor(type), prefix + std::string(str.data));
 				}
@@ -59,11 +59,15 @@ namespace Aho {
 			bool hasUVs = mesh->HasTextureCoords(0);
 			vertexCnt += mesh->mNumVertices;
 
+			glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(preTransform)));
 			for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 				Vertex vertex;
 				vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+				vertex.position = glm::vec3(preTransform * glm::vec4(vertex.position, 1.0f));
+
 				if (hasNormal) {
 					vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+					vertex.normal = normalMat * vertex.normal;
 				}
 				// Texture coords, tangent and bitangent
 				if (hasUVs) {
@@ -107,7 +111,7 @@ namespace Aho {
 		return std::make_shared<StaticMesh>(subMesh, fileName, vertexCnt);
 	}
 
-	std::shared_ptr<SkeletalMesh> AssetCreator::SkeletalMeshAssetCreator(const std::string& filePath) {
+	std::shared_ptr<SkeletalMesh> AssetCreator::SkeletalMeshAssetCreator(const std::string& filePath, const glm::mat4& preTransform) {
 		Assimp::Importer importer;
 		// TODO: flags can be customized in editor
 		// like path settings, absolute or relative
@@ -182,11 +186,18 @@ namespace Aho {
 			vertices.reserve(mesh->mNumVertices);
 			bool hasNormal = mesh->HasNormals();
 			bool hasUVs = mesh->HasTextureCoords(0);
+
+			glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(preTransform)));
+
 			for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 				VertexSkeletal vertex;
 				vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+				vertex.position = glm::vec3(preTransform * glm::vec4(vertex.position, 1.0f));
+
 				if (hasNormal) {
 					vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+					vertex.normal = normalMat * vertex.normal;
+
 				}
 				if (hasUVs) {
 					vertex.uv = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);

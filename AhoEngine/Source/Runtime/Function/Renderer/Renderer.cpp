@@ -3,7 +3,7 @@
 #include "VertexArrayr.h"
 #include "RenderCommand.h"
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
-#include "Runtime/Function/Renderer/UBOManager.h"
+#include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
 
 namespace Aho {
 	int RendererGlobalState::g_SelectedEntityID = -1;
@@ -41,21 +41,37 @@ namespace Aho {
 	}
 
 	void Renderer::Render() {
-		m_RP_Sky->Execute();
-		m_RP_DeferredShading->Execute();
-		m_RP_Postprocess->Execute();
+		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
+			m_RP_Sky->Execute();
+			m_RP_DeferredShading->Execute();
+			m_RP_Postprocess->Execute();
+		}
+		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
+			m_RP_PathTraciing->Execute();
+		}
 	}
 
 	bool Renderer::OnViewportResize(uint32_t width, uint32_t height) {
-		if (m_RP_Postprocess->ResizeRenderTarget(width, height)) {
-			m_RP_DeferredShading->ResizeRenderTarget(width, height);
-			return true;
+		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
+			if (m_RP_Postprocess->ResizeRenderTarget(width, height)) {
+				m_RP_DeferredShading->ResizeRenderTarget(width, height);
+				return true;
+			}
+			return false;
 		}
-		return false;
+		else {
+			return m_RP_PathTraciing->ResizeRenderTarget(width, height);
+		}
 	}
 
 	// TODO: Fix fxaa: it is appiled to all pixels
 	uint32_t Renderer::GetRenderResultTextureID() {
+		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
+			return m_RP_DeferredShading->GetRenderResult()->GetTextureID();
+		}
+		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
+			return m_RP_PathTraciing->GetRenderResult()->GetTextureID();
+		}
 		return m_RP_DeferredShading->GetRenderResult()->GetTextureID();
 		return m_RP_Postprocess->GetRenderResult()->GetTextureID();
 	}

@@ -32,6 +32,7 @@ namespace Aho {
 		TransmittanceLUT,
 		MutiScattLUT,
 		SkyViewLUT,
+		PathTracing,
 		Test,
 		/* TODO */
 	};

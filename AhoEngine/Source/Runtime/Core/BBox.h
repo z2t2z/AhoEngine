@@ -11,29 +11,36 @@ namespace Aho {
 		Z = 2
 	};
 
-	class AABB {
+	static const float inf = 1E25;
+	class alignas(16) BBox {
 	public:
-		AABB() : m_Pmin(glm::vec3(std::numeric_limits<float>::max())), m_Pmax(glm::vec3(std::numeric_limits<float>::min())) {}
-		AABB(const glm::vec3& p0, const glm::vec3& p1) {
-			m_Pmin = glm::min(p0, p1);
-			m_Pmax = glm::max(p0, p1);
+		bool operator==(const BBox& other) const {
+			return m_Pmax == other.m_Pmax
+				&& m_Pmin == other.m_Pmin
+				;
+		}
+	public:
+		BBox() : m_Pmin(glm::vec3(inf, inf, inf)), m_Pmax(glm::vec3(-inf, -inf, -inf)) {}
+		BBox(const glm::vec3& p0, const glm::vec3& p1) {
+			m_Pmin = Min(p0, p1);
+			m_Pmax = Max(p0, p1);
 		}
 
-		// Expand current AABB to include another AABB
-		void Merge(const AABB& other) {
-			m_Pmin = glm::min(m_Pmin, other.m_Pmin);
-			m_Pmax = glm::max(m_Pmax, other.m_Pmax);
+		// Expand current BBox to include another BBox
+		void Merge(const BBox& other) {
+			m_Pmin = Min(m_Pmin, other.m_Pmin);
+			m_Pmax = Max(m_Pmax, other.m_Pmax);
 		}
 
 		void Merge(const glm::vec3& p) {
-			m_Pmin = glm::min(m_Pmin, p);
-			m_Pmax = glm::max(m_Pmax, p);
+			m_Pmin = Min(m_Pmin, p);
+			m_Pmax = Max(m_Pmax, p);
 		}
 
-		static AABB Merge(const AABB& lhs, const AABB& rhs);
-		static AABB Merge(const AABB& lhs, const glm::vec3& p);
+		static BBox Merge(const BBox& lhs, const BBox& rhs);
+		static BBox Merge(const BBox& lhs, const glm::vec3& p);
 
-		bool Overlaps(const AABB& other) {
+		bool Overlaps(const BBox& other) {
 			return false;
 		}
 
@@ -47,11 +54,15 @@ namespace Aho {
 
 		bool Intersect(const Ray& ray) const;
 
+		bool IntersectNearest(const Ray& ray, float& t) const;
+
 		glm::vec3 GetCentroid() const { return glm::vec3(0.5) * m_Pmin + glm::vec3(0.5) * m_Pmax; }
 
 		// Diagonal
 		glm::vec3 GetAbsDiff() const {
-			return m_Pmax - m_Pmin;
+			glm::vec3 d = m_Pmax - m_Pmin;
+			AHO_CORE_ASSERT(d.x >= 0 && d.y >= 0 && d.z >= 0);
+			return d;
 		}
 
 		float GetSurfaceArea() const {
@@ -69,7 +80,7 @@ namespace Aho {
 		glm::vec3 GetMax() const { return m_Pmax; }
 
 	private:
-		glm::vec3 m_Pmin;
-		glm::vec3 m_Pmax;
+		glm::vec3 m_Pmin; float _padding0;
+		glm::vec3 m_Pmax; float _padding1;
 	};
 }

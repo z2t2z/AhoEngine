@@ -13,6 +13,7 @@ void main() {
 
 #type fragment
 #version 460 core
+
 #include "Common.glsl"
 
 out vec4 out_color;

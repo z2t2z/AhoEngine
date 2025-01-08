@@ -16,13 +16,11 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
-		bool OnFileChanged(FileChangedEvent& event);
-	private:
 		void DrawMaterialPanel();
 		void DrawContentBrowserPanel();
 		void DrawPropertiesPanel();
 		void DrawSceneHierarchyPanel();
-		void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+		bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 		void DrawViewport();
 		void DrawLightIcons();
 		void DrawToolBarOverlay();
@@ -40,7 +38,6 @@ namespace Aho {
 		uint32_t m_ViewportWidth;
 		uint32_t m_ViewportHeight;
 		std::string m_DroppedString;
-		bool m_StaticMesh{ true };
 	private:
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_AssetPath;

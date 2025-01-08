@@ -3,7 +3,7 @@
 #include "Runtime/Core/BVH.h"
 
 namespace Aho {
-	bool Intersect(const Ray& ray, const AABB& aabb) {
+	bool Intersect(const Ray& ray, const BBox& aabb) {
         float tEnter = -FLT_MAX;
         float tExit = FLT_MAX;
 
@@ -32,7 +32,7 @@ namespace Aho {
 	}
 
 	// Möller–Trumbore algo to test if a ray intersects a triangle
-	std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive* primitive) {
+	std::optional<IntersectResult> Intersect(const Ray& ray, const PrimitiveDesc* primitive) {
         // 三角形的顶点
         const glm::vec3& v0 = primitive->GetVertex(0).position;
         const glm::vec3& v1 = primitive->GetVertex(1).position;

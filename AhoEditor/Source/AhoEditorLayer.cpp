@@ -10,6 +10,8 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
+
 namespace Aho {
 	namespace fs = std::filesystem;
 
@@ -72,8 +74,10 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {
+
 		// Dock space settings and some basic settings
 		{
+			static bool showDemo = false;
 			// Dockspace
 			static bool opt_fullscreen = true;
 			static bool opt_padding = false;
@@ -123,10 +127,10 @@ namespace Aho {
 			static bool camSpeed = false;
 			static bool sens = false;
 			ImGui::GetStyle().FramePadding.x = padding;
-
 			ImGui::PushFont(io.Fonts->Fonts[0]);
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
+					ImGui::MenuItem("ShowImGuiDemoWindow", NULL, &showDemo);
 					ImGui::MenuItem("DebugView", NULL, &RendererGlobalState::g_ShowDebug);
 					ImGui::MenuItem("PickingPass", NULL, &m_PickingPass);
 					if (ImGui::BeginMenu("Camera Options")) {
@@ -148,12 +152,14 @@ namespace Aho {
 			ImGui::PopFont();
 			ImGui::End();
 			ImGui::GetStyle().TabRounding = 0.0f;
+			if (showDemo) {
+				ImGui::ShowDemoWindow();
+			}
 		}
 		DrawSceneHierarchyPanel();
 		DrawContentBrowserPanel();
 		DrawPropertiesPanel();
 		DrawViewport();
-		//ImGui::ShowDemoWindow();
 
 		// Temporary testing functions
 		TempSunDirControl();
@@ -172,22 +178,6 @@ namespace Aho {
 				m_IsClickingEventBlocked = false;
 			}
 		}
-	}
-
-	// TODO: Don't use a polling approach
-	// TODO: Shader hot-reloading
-	bool AhoEditorLayer::OnFileChanged(FileChangedEvent& e) {
-		//if (e.GetEventType() == EventType::FileChanged) {
-		//	const auto& FileName = e.GetFilePath();
-		//	if (!FileName.empty()) {
-		//		auto newShader = Shader::Create(FileName);
-		//		if (newShader->IsCompiled()) {
-		//			m_Renderer->GetCurrentRenderPipeline()->GetRenderPass(RenderPassType::SkyViewLUT)->SetShader(newShader);
-		//			return true;
-		//		}
-		//	}
-		//}
-		return false;
 	}
 
 	void AhoEditorLayer::DrawViewport() {
@@ -275,9 +265,9 @@ namespace Aho {
 			auto& translation = tc.GetTranslation();
 			auto& scale = tc.GetScale();
 			auto& rotation = tc.GetRotation();
-			DrawVec3Control("Translation", translation);
-			DrawVec3Control("Scale", scale, 1.0f);
-			DrawVec3Control("Rotation", rotation);
+			tc.dirty |= DrawVec3Control("Translation", translation);
+			tc.dirty |= DrawVec3Control("Scale", scale, 1.0f);
+			tc.dirty |= DrawVec3Control("Rotation", rotation);
 		}
 
 		ImGui::Separator();
@@ -505,12 +495,12 @@ namespace Aho {
 	void AhoEditorLayer::DrawToolBarRenderModeSelectionBtn() {
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
 		ImGui::SetNextWindowSize(ImVec2{ 0.0f, 0.0f });
-		ImGui::Begin("SelectRenderMode", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGui::Begin("SelectRenderMode##Window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		ImGui::PopStyleVar();
 
 		ImGuiStyle& style = ImGui::GetStyle();
 
-		if (ImGui::ImageButton("SelectRenderMode", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
+		if (ImGui::ImageButton("SelectRenderMode##Button", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
 			ImGui::OpenPopup("RenderModePopup");
 		}
 		ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
@@ -794,9 +784,11 @@ namespace Aho {
 		ImGui::End();
 	}
 
-	void AhoEditorLayer::DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth) {
+	bool AhoEditorLayer::DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth) {
 		ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
+
+		bool modified = false;
 
 		ImGui::PushID(label.c_str());
 
@@ -815,13 +807,15 @@ namespace Aho {
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("X", buttonSize))
+		if (ImGui::Button("X", buttonSize)) {
+			modified = true;
 			values.x = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		modified |= ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -829,13 +823,15 @@ namespace Aho {
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("Y", buttonSize))
+		if (ImGui::Button("Y", buttonSize)) {
+			modified = true;
 			values.y = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		modified |= ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -843,13 +839,15 @@ namespace Aho {
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 		ImGui::PushFont(boldFont);
-		if (ImGui::Button("Z", buttonSize))
+		if (ImGui::Button("Z", buttonSize)) {
+			modified = true;
 			values.z = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		modified |= ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar();
@@ -857,6 +855,8 @@ namespace Aho {
 		ImGui::Columns(1);
 
 		ImGui::PopID();
+
+		return modified;
 	}
 
 	void AhoEditorLayer::TryGetDragDropTarget() {
@@ -874,14 +874,27 @@ namespace Aho {
 		if (showPopup) {
 			ImGui::OpenPopup("Load Settings");
 		}
+
 		if (ImGui::BeginPopup("Load Settings")) {
-			std::string prompt = "Mesh Type: " + std::string(m_StaticMesh ? "Static Mesh" : "Skeletal Mesh");
+			static bool staticMesh{ true };
+			std::string prompt = "Mesh Type: " + std::string(staticMesh ? "Static Mesh" : "Skeletal Mesh");
 			ImGui::Text(prompt.c_str());
 			ImGui::Separator();
-			ImGui::Checkbox("Static Mesh", &m_StaticMesh);
+			ImGui::Checkbox("Static Mesh", &staticMesh);
 			ImGui::Separator();
+			
+			static glm::vec3 translation(0.0f);
+			static glm::vec3 scale(1.0f);
+			static glm::vec3 rotation(0.0f);
+			ImGui::Text("Import Settings");
+			ImGui::DragFloat3("Translation##Importing", &translation[0], 0.01f);
+			ImGui::DragFloat3("Scale##Importing", &scale[0], 0.01f);
+			ImGui::DragFloat3("Rotation##Importing", &rotation[0], 0.01f);
+			ImGui::Separator();
+
 			if (ImGui::Button("Load")) {
-				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(m_DroppedString, !m_StaticMesh);
+				glm::mat4 preTransform = ComposeTransform(translation, rotation, scale);
+				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(m_DroppedString, !staticMesh, preTransform);
 				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
 				m_EventManager->PushBack(event);
 				m_DroppedString.clear();
@@ -912,6 +925,7 @@ namespace Aho {
 		return nullptr;
 	}
 
+	// TODO: need to integrate in a skyatmosphere component
 	void AhoEditorLayer::TempSunDirControl() {
 		auto skyPipeline = static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
 		auto shadingPipeline = static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
@@ -935,47 +949,76 @@ namespace Aho {
 	void AhoEditorLayer::TempBVHControl() {
 		ImGui::Begin("Temp bvh control");
 		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-		auto view = entityManager->GetView<BVHComponent<Primitive>, TransformComponent>();
+		auto view = entityManager->GetView<BVHComponent, TransformComponent>();
 		int find = -1;
 		
-		std::optional<IntersectResult> intersectionResult = std::nullopt;
-		auto& root = m_LevelLayer->GetCurrentLevel()->GetSceneBVHRoot();
-
-		view.each(
-			[&](auto entity, BVHComponent<Primitive>& bc, TransformComponent& tc) {
-				ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));
-				std::string showName = "Update BVH:" + std::to_string(static_cast<uint32_t>(entity));
-				if (ImGui::Button(showName.c_str())) {
-					//ScopedTimer timer(std::to_string(static_cast<uint32_t>(entity)));
-					bc.bvh.ApplyTransform(tc.GetTransform());
-				}
-				
-				if (find == -1 && m_ShouldPickObject) {
-					auto cam = m_CameraManager->GetMainEditorCamera();
-					{
-						ScopedTimer timer("Idx Intersecting test");
-						if (bc.bvh.Intersect(m_Ray)) {
-							find = static_cast<uint32_t>(entity);
+		if (ImGui::Button("Update BVH")) {
+			bool dirty = false;
+			view.each(
+				[&dirty](auto entity, BVHComponent& bc, TransformComponent& tc) {
+					if (tc.dirty) {
+						tc.dirty = false;
+						dirty = true;
+						for (BVHi* bvh : bc.bvhs) {
+							bvh->ApplyTransform(tc.GetTransform());
 						}
 					}
+				});
 
-					// testing ptr version bvh
-					//if (!intersectionResult) {
-					//	ScopedTimer timer("PTR Intersecting test");
-					//	intersectionResult = BVH::GetIntersection(m_Ray, root.get());
-					//}
-				
-				}
 
-				ImGui::Separator();
-			});
+			if (dirty) {
+				BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+				alts.UpdateTLAS();
+				PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
+				ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
+			}
 
-		if (intersectionResult) {
-			//AHO_CORE_WARN("Ptr intersecting!");
 		}
 
+		if (ImGui::Button("GetData")) {
+			std::vector<BVHNodei> data(1);
+			SSBOManager::GetSubData<BVHNodei>(0, data, 0);
+		}
+		//view.each(
+		//	[&](auto entity, BVHComponent& bc, TransformComponent& tc) {
+		//		ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));
+		//		std::string showName = "Update BVH:" + std::to_string(static_cast<uint32_t>(entity));
+		//		if (ImGui::Button(showName.c_str())) {
+		//			//ScopedTimer timer(std::to_string(static_cast<uint32_t>(entity)));
+		//			bc.bvh.ApplyTransform(tc.GetTransform());
+		//		}
+		//		
+		//		if (find == -1 && m_ShouldPickObject) {
+		//			auto cam = m_CameraManager->GetMainEditorCamera();
+		//			{
+		//				ScopedTimer timer("Idx Intersecting test");
+		//				if (bc.bvh.Intersect(m_Ray)) {
+		//					find = static_cast<uint32_t>(entity);
+		//				}
+		//			}
+
+		//			// testing ptr version bvh
+		//			//if (!intersectionResult) {
+		//			//	ScopedTimer timer("PTR Intersecting test");
+		//			//	intersectionResult = BVH::GetIntersection(m_Ray, root.get());
+		//			//}
+		//		
+		//		}
+
+		//		ImGui::Separator();
+		//	});
+	
+		if (m_ShouldPickObject && Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL)) {
+			BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+			ScopedTimer timer("Intersecting test");
+			if (alts.Intersect(m_Ray)) {
+				find = 1;
+			}
+		}
+
+
 		if (find != -1) {
-			AHO_CORE_INFO("Intersecting {}", find);
+			AHO_CORE_TRACE("Intersecting {}", find);
 		}
 
 		m_ShouldPickObject = false;

@@ -32,14 +32,14 @@ namespace Aho {
 			auto ee = (AssetImportedEvent*)&(e);
 			AHO_CORE_WARN("Recieving a AssetImportedEvent!");
 			auto& path = ee->GetFilePath();
-			LoadAssetFromFile(path, ee->IsStaticMesh());
+			LoadAssetFromFile(path, ee->IsStaticMesh(), ee->GetPreTransform());
 		}
 	}
 	
 	/* BIG TODO */
-	void ResourceLayer::LoadAssetFromFile(const std::string& path, bool isSkeletal) {
+	void ResourceLayer::LoadAssetFromFile(const std::string& path, bool isSkeletal, const glm::mat4& preTransform) {
 		if (isSkeletal) {
-			auto res = AssetCreator::SkeletalMeshAssetCreator(path);
+			auto res = AssetCreator::SkeletalMeshAssetCreator(path, preTransform);
 			auto anim = AssetCreator::AnimationAssetCreator(path, res);
 			if (!anim) {
 				AHO_CORE_WARN("Skeletal mesh does not have animation data at path {}", path);
@@ -49,7 +49,7 @@ namespace Aho {
 		}
 		else {
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
-			m_AssetManager->LoadAssetFromFile(path, *res);
+			m_AssetManager->LoadAssetFromFile(path, *res, preTransform);
 			m_AssetManager->AddAsset(path, res->GetUUID(), res);
 			PackRenderData(res, false);
 		}

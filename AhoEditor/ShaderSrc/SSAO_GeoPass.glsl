@@ -114,6 +114,7 @@ void main() {
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
 		vec3 normalMap = texture(u_NormalMap, v_TexCoords).rgb;
+		normalMap.b = sqrt(1.0 - normalMap.r * normalMap.r - normalMap.g * normalMap.g);
 		normalMap = normalMap * 2.0f - 1.0f;
 		g_Normal = normalize(TBN * normalMap);
 	}

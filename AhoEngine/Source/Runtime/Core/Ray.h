@@ -8,7 +8,8 @@ namespace Aho {
 		Ray(const glm::vec3& origin, const glm::vec3& direction)
 			: origin(origin), direction(direction) {
 		}
-		glm::vec3 origin, direction;
+		glm::vec3 origin;		float _padding0;
+		glm::vec3 direction;	float _padding1;
 	};
 
 	struct IntersectResult {

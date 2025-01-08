@@ -256,7 +256,7 @@ void main() {
 		vec3 H = normalize(V + L);
 		float distance = length(lightPos - fragPos);
 		float attenuation = 1.0f / (distance * distance); 	// Inverse-square law, more physically correct
-		vec3 radiance = u_LightColor[i].rgb * (1.0f - attenuation);
+		vec3 radiance = u_LightColor[i].rgb * (1.0f - 0.0f);
 		
 		float NDF = DistributionGGX(N, H, roughness);
 		float G = GeometrySmith(N, V, L, roughness);

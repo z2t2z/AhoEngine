@@ -1,3 +1,6 @@
+#ifndef COMMON_GLSL
+#define COMMON_GLSL
+
 // https://www.shadertoy.com/view/tdSXzD
 vec3 jodieReinhardTonemap(vec3 c){
     float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -178,3 +181,5 @@ void SampleSkyViewLut(vec3 worldPos, vec3 worldDir, vec3 sunDir, out vec2 uv) {
 	bool intersectGround = RaySphereIntersectNearest(worldPos, worldDir, vec3(0.0, 0.0, 0.0), Atmosphere.BottomRadius) >= 0.0f;
 	SkyViewLutParamsToUv(Atmosphere, false, viewZenithCosAngle, lightViewCosAngle, viewHeight, uv);
 }
+
+#endif

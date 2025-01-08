@@ -3,7 +3,7 @@
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Ray.h"
 #include "Primitive.h"
-#include "AABB.h"
+#include "BBox.h"
 #include "Runtime/Core/Math/Math.h"
 
 #include <stack>
@@ -17,59 +17,33 @@ namespace Aho {
 		SAH
 	};
 
-	// Magic number from pbrt https://pbr-book.org/4ed/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies
+	enum class BVHLevel {
+		BLAS,
+		TLAS
+	};
+
+	// Heuristic number from pbrt https://pbr-book.org/4ed/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies
 	constexpr int SAH_SPLIT_BUCKETS_NUM = 12;
 
 	// The maximum number of primitives contained in a leaf node
-	constexpr int LEAF_PRIMS = 4;
+	constexpr int LEAF_PRIMS = 1;
 
-
-	// Pointer Based Bvh
-	struct BVHNode {
-		BVHNode() = default;
-		AABB aabb;
-		std::vector<Primitive*> primitives;
-		std::unique_ptr<BVHNode> left{ nullptr };
-		std::unique_ptr<BVHNode> right{ nullptr };
-		Axis axis{ Axis::X };
-	};
-
-	class BVH {
-	public:
-		BVH() : m_SplitMethod(SplitMethod::NAIVE) {}
-		std::unique_ptr<BVHNode>& GetRoot() { return m_Root; }
-		static std::optional<IntersectResult> GetIntersection(const Ray& ray, BVHNode* node) { return GetIntersectionRecursion(ray, node); }
-		const std::unique_ptr<BVHNode>& AddPrimitives(std::vector<std::unique_ptr<Primitive>>& primitives);
-		static std::vector<std::unique_ptr<Primitive>> GeneratePrimitives(const std::shared_ptr<StaticMesh>& mesh, const std::unordered_map<std::string, std::shared_ptr<Texture2D>>& textureCached);
-		void BuildTree();
-	private:
-		static std::optional<IntersectResult> GetIntersectionRecursion(const Ray& ray, BVHNode* node);
-
-		// [indexL, indexR)
-		std::unique_ptr<BVHNode> BuildTreeRecursion(int indexL, int indexR);
-	private:
-		//const int m_PrimsPerNode; do we need this?
-		std::unique_ptr<BVHNode> m_Root{ nullptr };
-		const SplitMethod m_SplitMethod;
-		std::vector<std::unique_ptr<Primitive>> m_Primitives;
-	};
-
-
-	// Index based Bvh, useful when passing to gpu
-	using Bbox = AABB;
-	struct BVHNodei {
+	struct alignas(16) BVHNodei {
 		BVHNodei() : left(-1), right(-1), nodeIdx(-1), firstPrimsIdx(-1), primsCnt(-1), axis(-1) {}
-		void InitLeaf(int nodeIdx_, int firstPrimsIdx_, int primsCnt_, const Bbox& bbox_) {
-			AHO_CORE_ASSERT(primsCnt_ > 0 && primsCnt_ <= LEAF_PRIMS);
+		void InitLeaf(int nodeIdx_, int firstPrimsIdx_, int primsCnt_, const BBox& bbox_) {
+			//AHO_CORE_ASSERT(primsCnt_ > 0 && primsCnt_ <= LEAF_PRIMS);
+			//if (primsCnt_ > LEAF_PRIMS) {
+			//	AHO_CORE_INFO("Initializing leaf with `{}` primitives", primsCnt_);
+			//}
 			nodeIdx = nodeIdx_;
-			left = right = -1;
+			left = -1;
+			right = -1;
 			firstPrimsIdx = firstPrimsIdx_;
 			primsCnt = primsCnt_;
 			bbox = bbox_;
-			axis = 0;
 		}
-	
-		void InitInterior(int nodeIdx_, int l, int r, const Bbox& bbox_, int axis_) {
+
+		void InitInterior(int nodeIdx_, int l, int r, const BBox& bbox_, int axis_) {
 			nodeIdx = nodeIdx_;
 			firstPrimsIdx = -1;
 			primsCnt = 0;
@@ -82,283 +56,386 @@ namespace Aho {
 			return primsCnt > 0;
 		}
 
-		Bbox GetBbox() const { return bbox; }
+		BBox GetBBox() const { return bbox; }
 
-		Bbox bbox;
+		BBox bbox;
 		int left, right;
 		int nodeIdx;
 		int firstPrimsIdx;
 		int primsCnt;
 		int axis;
+		int meshId;
+		int offset;
 	};
 
+	struct alignas(16) OffsetInfo {
+		OffsetInfo() = default;
+		OffsetInfo(int id, int node, int prim) 
+			: offset(id), nodeOffset(node), primOffset(prim) {
+		}
+		int _{ -1 };
+		int offset;
+		int nodeOffset;
+		int primOffset;
+	};
 
-	template <typename T>
 	class BVHi {
 	public:
-		template <typename U = T, typename = std::enable_if_t<std::is_same_v<U, Primitive>>>
+		BVHi() 
+			: m_SplitMethod(SplitMethod::SAH), m_BvhLevel(BVHLevel::TLAS) {
+		}
+		
 		BVHi(const std::shared_ptr<StaticMesh>& mesh, SplitMethod splitMethod = SplitMethod::SAH) 
-			: m_SplitMethod(splitMethod) {
+			: m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
+			AHO_CORE_ASSERT(false);
 			Build(mesh);
 		}
-
-		template <typename U = T, typename = std::enable_if_t<std::is_same_v<U, BVHi<Primitive>>>>
-		BVHi(const std::vector<BVHi>& sceneBvhs, SplitMethod splitMethod = SplitMethod::NAIVE)
-			: m_SplitMethod(splitMethod) {
-			Build(sceneBvhs);
+		
+		BVHi(const std::shared_ptr<MeshInfo>& info, int meshId, SplitMethod splitMethod = SplitMethod::SAH)
+			: m_MeshId(meshId), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
+			Build(info);
 		}
 
-		int GetIntersectNode(const Ray& ray);
+		size_t GetNodeCount() const { return m_Nodes.size(); }
+		size_t GetPrimsCount() const { return m_Primitives.size(); }
 
 		bool Intersect(const Ray& ray);
 
 		void ApplyTransform(const glm::mat4& transform);
 
-		int GetRoot() const { return m_Root; }
-		Bbox GetBbox() const {
-			AHO_CORE_ASSERT(m_Root >= 0 && m_Root < m_Nodes.size()); 
-			return m_Nodes[m_Root].GetBbox(); 
+		void UpdateTLAS();
+
+		int GetRoot() const { 
+			AHO_CORE_ASSERT(m_Root == 0); 
+			return m_Root; 
+		}
+		
+		int GetMeshId() const { return m_MeshId; }
+		
+		BBox GetBBox() const {
+			AHO_CORE_ASSERT(m_Root == 0); 
+			return m_Nodes[m_Root].GetBBox(); 
 		}
 
-		// Get the bounding box of a specific node
-		Bbox GetNodeBbox(int index) const {
-			AHO_CORE_ASSERT(index >= 0 && index < m_Nodes.size());
-			return m_Nodes[index].GetBbox();
-		}
+		void AddBLASPrimtive(const BVHi* blas);
 
+		const std::vector<BVHNodei>& GetNodesArr() const { return m_Nodes; }
+
+		const std::vector<PrimitiveDesc>& GetPrimsArr() const { return m_Primitives; }
+
+		const std::vector<OffsetInfo>& GetOffsetMap() const {
+			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS); 
+			return m_OffsetMap; 
+		}
+	
+		const BVHi* GetBLAS(int id) const {
+			AHO_CORE_ASSERT(id >= 0 && id < m_BLAS.size());
+			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
+			return m_BLAS[id];
+		}
 	private:
-		bool IntersectRecursion(const Ray& ray, int root);
-		bool IntersectLoop(const Ray& ray);
+		bool IntersectNearest_recursion(const Ray& ray, int root);
+		bool IntersectNearest_loop(const Ray& ray, float& t);
 		void Build(const std::shared_ptr<StaticMesh>& mesh);
-		void Build(const std::vector<BVHi>& sceneBvhs);
+		void Build(const std::shared_ptr<MeshInfo>& mesh);
 		
 		// Build tree for primitives of intervals [indexL, indexR)
 		int BuildTreeRecursion(int indexL, int indexR);
+
 	private:
+		inline static size_t s_NodeOffset{ 0 };
+		inline static size_t s_PrimOffset{ 0 };
+
+	private:
+		int m_MeshId{ -1 };
 		int m_Root{ -1 };
-		std::vector<T> m_Primitives;
-		const SplitMethod m_SplitMethod;
+		BVHLevel m_BvhLevel;
+		SplitMethod m_SplitMethod; // const member var will delete default operator=
+
+	private:
+		std::vector<BVHi*> m_BLAS;
+		std::vector<OffsetInfo> m_OffsetMap;
+		std::vector<PrimitiveDesc> m_Primitives;
+		std::vector<PrimitiveCompliment> m_PrimitiveComp;
 		std::vector<BVHNodei> m_Nodes; // dfs order
 	};
 
 
-	template<typename T>
-	int BVHi<T>::GetIntersectNode(const Ray& ray) {
-		return 0;
-	}
+	//template<typename PrimitiveType>
+	//inline bool BVHi<PrimitiveType>::Intersect(const Ray& ray) {
+	//	//return IntersectRecursion(ray, m_Root);
+	//	return IntersectLoop(ray);
+	//}
 
-	template<typename T>
-	inline bool BVHi<T>::Intersect(const Ray& ray) {
-		//return IntersectRecursion(ray, m_Root);
-		return IntersectLoop(ray);
-	}
+	//template<typename PrimitiveType>
+	//inline void BVHi<PrimitiveType>::ApplyTransform(const glm::mat4& transform) {
+	//	for (auto& primitive : m_Primitives) {
+	//		primitive.ApplyTransform(transform);
+	//	}
+	//	m_Nodes.clear();
+	//	m_Root = BuildTreeRecursion(0, m_Primitives.size());
+	//}
 
-	template<typename T>
-	inline void BVHi<T>::ApplyTransform(const glm::mat4& transform) {
-		for (auto& primitive : m_Primitives) {
-			primitive.ApplyTransform(transform);
-		}
-		m_Nodes.clear();
-		m_Root = BuildTreeRecursion(0, m_Primitives.size());
-	}
+	//template<typename PrimitiveType>
+	//bool BVHi<PrimitiveType>::IntersectRecursion(const Ray& ray, int root) {
+	//	AHO_CORE_ASSERT(root >= 0 && root < m_Nodes.size());
+	//	const BVHNodei& node = m_Nodes[root];
+	//	if (!node.bbox.Intersect(ray)) {
+	//		return false;
+	//	}
 
-	template<typename T>
-	bool BVHi<T>::IntersectRecursion(const Ray& ray, int root) {
-		AHO_CORE_ASSERT(root >= 0 && root < m_Nodes.size());
-		const BVHNodei& node = m_Nodes[root];
-		if (!node.bbox.Intersect(ray)) {
-			return false;
-		}
+	//	if (node.IsLeaf()) {
+	//		for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
+	//			AHO_CORE_ASSERT(i < m_Primitives.size());
+	//			const Primitive& p = m_Primitives[i];
+	//			if (p.Intersect(ray)) {
+	//				return true;
+	//			}
+	//		}
+	//		return false;
+	//	}
+	//	return IntersectRecursion(ray, node.left) ? true : IntersectRecursion(ray, node.right);
+	//}
 
-		if (node.IsLeaf()) {
-			for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
-				AHO_CORE_ASSERT(i < m_Primitives.size());
-				const Primitive& p = m_Primitives[i];
-				if (p.Intersect(ray)) {
-					return true;
-				}
-			}
-			return false;
-		}
-		return IntersectRecursion(ray, node.left) ? true : IntersectRecursion(ray, node.right);
-	}
+	//// Traverse bvh without recursion
+	//template<typename PrimitiveType>
+	//inline bool BVHi<PrimitiveType>::IntersectLoop(const Ray& ray) {
+	//	int n = m_Nodes.size();
+	//	std::stack<int> stk;
+	//	stk.push(m_Root);
 
-	// Traverse bvh without recursion
-	template<typename T>
-	inline bool BVHi<T>::IntersectLoop(const Ray& ray) {
-		int n = m_Nodes.size();
-		std::stack<int> stk;
-		stk.push(m_Root);
+	//	int find = -1;
+	//	while (!stk.empty()) {
+	//		int u = stk.top();
+	//		stk.pop();
 
-		int find = -1;
-		while (!stk.empty()) {
-			int u = stk.top();
-			stk.pop();
+	//		const BVHNodei& node = m_Nodes[u];
+	//		if (!node.bbox.Intersect(ray)) {
+	//			continue;
+	//		}
 
-			const BVHNodei& node = m_Nodes[u];
-			if (!node.bbox.Intersect(ray)) {
-				continue;
-			}
+	//		if (node.IsLeaf()) {
+	//			for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
+	//				AHO_CORE_ASSERT(i < m_Primitives.size());
+	//				const Primitive& p = m_Primitives[i];
+	//				if (p.Intersect(ray)) {
+	//					find = u;
+	//					break;
+	//				}
+	//			}
+	//			if (find != -1) {
+	//				break;
+	//			}	
+	//		}
+	//		else {
+	//			stk.push(node.right);
+	//			stk.push(node.left);
+	//		}
+	//	}
 
-			if (node.IsLeaf()) {
-				for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
-					AHO_CORE_ASSERT(i < m_Primitives.size());
-					const Primitive& p = m_Primitives[i];
-					if (p.Intersect(ray)) {
-						find = u;
-						break;
-					}
-				}
-				if (find != -1) {
-					break;
-				}	
-			}
-			else {
-				stk.push(node.right);
-				stk.push(node.left);
-			}
-		}
+	//	return find != -1;
+	//}
 
-		return find != -1;
-	}
+	//template<typename PrimitiveType>
+	//inline void BVHi<PrimitiveType>::Build(const std::shared_ptr<StaticMesh>& mesh) {
+	//	m_Primitives.reserve(mesh->GetVerticesCount() / 3);
+	//	const auto& meshInfo = mesh->GetMeshInfo();
+	//	for (const auto& info : meshInfo) {
+	//		const auto& vertices = info->vertexBuffer;
+	//		const auto& indices = info->indexBuffer;
+	//		size_t siz = indices.size();
+	//		AHO_CORE_ASSERT(siz % 3 == 0);
+	//		for (size_t i = 0; i < siz; i += 3) {
+	//			const Vertex& v0 = vertices[indices[i]];
+	//			const Vertex& v1 = vertices[indices[i + 1]];
+	//			const Vertex& v2 = vertices[indices[i + 2]];
+	//			m_Primitives.emplace_back(v0, v1, v2);
+	//		} 
+	//	}
 
-	template<typename T>
-	inline void BVHi<T>::Build(const std::shared_ptr<StaticMesh>& mesh) {
-		m_Primitives.reserve(mesh->GetVerticesCount() / 3);
-		const auto& meshInfo = mesh->GetMeshInfo();
-		for (const auto& info : meshInfo) {
-			const auto& vertices = info->vertexBuffer;
-			const auto& indices = info->indexBuffer;
-			size_t siz = indices.size();
-			AHO_CORE_ASSERT(siz % 3 == 0);
-			for (size_t i = 0; i < siz; i += 3) {
-				const Vertex& v0 = vertices[indices[i]];
-				const Vertex& v1 = vertices[indices[i + 1]];
-				const Vertex& v2 = vertices[indices[i + 2]];
-				m_Primitives.emplace_back(v0, v1, v2);
-			} 
-		}
+	//	m_Nodes.reserve(m_Primitives.size());
+	//	m_Root = BuildTreeRecursion(0, m_Primitives.size());
+	//	m_Nodes.shrink_to_fit();
+	//}
 
-		m_Nodes.reserve(m_Primitives.size());
-		m_Root = BuildTreeRecursion(0, m_Primitives.size());
-		m_Nodes.shrink_to_fit();
-	}
+	//template<typename PrimitiveType>
+	//void BVHi<PrimitiveType>::Build(const std::shared_ptr<MeshInfo>& info) {
+	//	const auto& vertices = info->vertexBuffer;
+	//	const auto& indices = info->indexBuffer;
+	//	size_t siz = indices.size();
+	//	AHO_CORE_ASSERT(siz % 3 == 0);
 
-	template<typename T>
-	void BVHi<T>::Build(const std::vector<BVHi>& sceneBvhs) {
+	//	m_Primitives.reserve(siz);
+	//	for (size_t i = 0; i < siz; i += 3) {
+	//		const Vertex& v0 = vertices[indices[i]];
+	//		const Vertex& v1 = vertices[indices[i + 1]];
+	//		const Vertex& v2 = vertices[indices[i + 2]];
+	//		m_Primitives.emplace_back(v0, v1, v2);
+	//	}
 
-	
-	}
+	//	m_Nodes.reserve(m_Primitives.size());
+	//	m_Root = BuildTreeRecursion(0, m_Primitives.size());
+	//	m_Nodes.shrink_to_fit();
+	//}
 
-	template<typename T>
-	int BVHi<T>::BuildTreeRecursion(int indexL, int indexR) {
-		AHO_CORE_ASSERT(indexL < indexR);
-		int nodeIndex = m_Nodes.size();
+	//template<typename PrimitiveType>
+	//void BVHi<PrimitiveType>::Build(const std::vector<BVHi>& sceneBvhs) {
+	//	m_Nodes.reserve(sceneBvhs.size());
 
-		m_Nodes.push_back(BVHNodei());
-		//BVHNodei& node = m_Nodes.back(); null reference!
+	//	auto build =
+	//		[&](auto&& self, int l, int r) -> int {
+	//		int nodeIndex = m_Nodes.size();
+	//		m_Nodes.push_back(BVHNodei());
 
-		AABB aabb, centroid;
-		for (int i = indexL; i < indexR; i++) {
-			const auto& p = m_Primitives[i];
-			aabb.Merge(p.GetAABB());
-			centroid.Merge(p.GetCentroid());
-		}
+	//		};
 
-		int primsCnt = indexR - indexL;
-		if (primsCnt <= LEAF_PRIMS) {
-			m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, aabb);
-		}
-		else {
-			int axis = (int)aabb.GetSplitAxis();
+	//	m_Root = build(build, 0, m_Nodes.size());
 
-			switch (m_SplitMethod) {
-				case (SplitMethod::NAIVE): {
+	//}
 
-					std::sort(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
-						[axis](const Primitive& lhs, const Primitive& rhs) {
-							return lhs.GetCentroid()[axis] < rhs.GetCentroid()[axis];
-						});
+	//template<typename PrimitiveType>
+	//int BVHi<PrimitiveType>::BuildTreeRecursion(int indexL, int indexR) {
+	//	AHO_CORE_ASSERT(indexL < indexR);
+	//	int nodeIndex = m_Nodes.size();
 
-					int l = BuildTreeRecursion(indexL, indexL + primsCnt / 2);
-					int r = BuildTreeRecursion(indexL + primsCnt / 2, indexR);
+	//	m_Nodes.push_back(BVHNodei());
+	//	//BVHNodei& node = m_Nodes.back(); null reference!
 
-					m_Nodes[nodeIndex].InitInterior(nodeIndex, l, r, aabb, axis);
-					break;
-				}
+	//	AABB aabb, centroid;
+	//	for (int i = indexL; i < indexR; i++) {
+	//		const auto& p = m_Primitives[i];
+	//		aabb.Merge(p.GetAABB());
+	//		centroid.Merge(p.GetCentroid());
+	//	}
 
-				case (SplitMethod::SAH): {
+	//	int primsCnt = indexR - indexL;
+	//	if (primsCnt <= LEAF_PRIMS) {
+	//		m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, aabb);
+	//	}
+	//	else {
+	//		int axis = (int)aabb.GetSplitAxis();
 
-					std::array<int, SAH_SPLIT_BUCKETS_NUM> bucketsCount{};
-					std::array<AABB, SAH_SPLIT_BUCKETS_NUM> bucketsBbox{};
+	//		switch (m_SplitMethod) {
+	//			case (SplitMethod::NAIVE): {
 
-					for (int i = indexL; i < indexR; i++) {
-						const auto& p = m_Primitives[i];
-						int b = SAH_SPLIT_BUCKETS_NUM *
-							centroid.Offset(p.GetCentroid())[axis];
+	//				std::sort(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
+	//					[axis](const Primitive& lhs, const Primitive& rhs) {
+	//						return lhs.GetCentroid()[axis] < rhs.GetCentroid()[axis];
+	//					});
 
-						if (b == SAH_SPLIT_BUCKETS_NUM) {
-							b -= 1;
-						}
+	//				int l = BuildTreeRecursion(indexL, indexL + primsCnt / 2);
+	//				int r = BuildTreeRecursion(indexL + primsCnt / 2, indexR);
 
-						bucketsCount[b] += 1;
-						bucketsBbox[b].Merge(p.GetAABB());
-					}
+	//				m_Nodes[nodeIndex].InitInterior(nodeIndex, l, r, aabb, axis);
+	//				break;
+	//			}
 
-					std::array<AABB, 1 + SAH_SPLIT_BUCKETS_NUM> suffixBbox{};
-					for (int i = SAH_SPLIT_BUCKETS_NUM - 1; i > 0; i--) {
-						suffixBbox[i].Merge(suffixBbox[i + 1]);
-						suffixBbox[i].Merge(bucketsBbox[i]);
-					}
+	//			case (SplitMethod::SAH): {
 
-					AABB prevBbox;
-					int totBbox = primsCnt;
-					int prevBboxCnt = 0;
-					std::array<float, SAH_SPLIT_BUCKETS_NUM> costs{};
-					std::fill(costs.begin(), costs.end(), std::numeric_limits<float>::max());
-					int splitPos = 0;
-					// split into two sets: [0, i], [i + 1, SAH_SPLIT_BUCKETS_NUM - 1]
-					for (int i = 0; i < SAH_SPLIT_BUCKETS_NUM - 1; i++) {
-						prevBbox.Merge(bucketsBbox[i]);
-						prevBboxCnt += bucketsCount[i];
+	//				std::array<int, SAH_SPLIT_BUCKETS_NUM> bucketsCount{};
+	//				std::array<AABB, SAH_SPLIT_BUCKETS_NUM> bucketsBBox{};
 
-						costs[i] = 1.0f + (prevBbox.GetSurfaceArea() * prevBboxCnt
-							+ suffixBbox[i + 1].GetSurfaceArea() * (totBbox - prevBboxCnt)) / aabb.GetSurfaceArea();
-						if (costs[i] < costs[splitPos]) {
-							splitPos = i;
-						}
-					}
+	//				for (int i = indexL; i < indexR; i++) {
+	//					const auto& p = m_Primitives[i];
+	//					int b = SAH_SPLIT_BUCKETS_NUM *
+	//						centroid.Offset(p.GetCentroid())[axis];
 
-					float leafCost = primsCnt;
-					if (costs[splitPos] < leafCost) {
-						int mid = std::partition(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
-							[&](const Primitive& p) {
-								int b = SAH_SPLIT_BUCKETS_NUM *
-									centroid.Offset(p.GetCentroid())[axis];
+	//					if (b == SAH_SPLIT_BUCKETS_NUM) {
+	//						b -= 1;
+	//					}
 
-								if (b == SAH_SPLIT_BUCKETS_NUM) {
-									b -= 1;
-								}
+	//					bucketsCount[b] += 1;
+	//					bucketsBBox[b].Merge(p.GetAABB());
+	//				}
 
-								return b <= splitPos;
-							}) - m_Primitives.begin();
+	//				std::array<AABB, 1 + SAH_SPLIT_BUCKETS_NUM> suffixBBox{};
+	//				for (int i = SAH_SPLIT_BUCKETS_NUM - 1; i > 0; i--) {
+	//					suffixBBox[i].Merge(suffixBBox[i + 1]);
+	//					suffixBBox[i].Merge(bucketsBBox[i]);
+	//				}
 
-						int l = BuildTreeRecursion(indexL, mid);
-						int r = BuildTreeRecursion(mid, indexR);
+	//				AABB prevBBox;
+	//				int totBBox = primsCnt;
+	//				int prevBBoxCnt = 0;
+	//				std::array<float, SAH_SPLIT_BUCKETS_NUM> costs{};
+	//				std::fill(costs.begin(), costs.end(), std::numeric_limits<float>::max());
+	//				int splitPos = 0;
+	//				// split into two sets: [0, i], [i + 1, SAH_SPLIT_BUCKETS_NUM - 1]
+	//				for (int i = 0; i < SAH_SPLIT_BUCKETS_NUM - 1; i++) {
+	//					prevBBox.Merge(bucketsBBox[i]);
+	//					prevBBoxCnt += bucketsCount[i];
 
-						m_Nodes[nodeIndex].InitInterior(nodeIndex, l, r, aabb, axis);
-					}
-					else {
-						// create leaf directly, ignoring LEAF_PRIMS
-						m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, aabb);
-					}
+	//					costs[i] = 1.0f + (prevBBox.GetSurfaceArea() * prevBBoxCnt
+	//						+ suffixBBox[i + 1].GetSurfaceArea() * (totBBox - prevBBoxCnt)) / aabb.GetSurfaceArea();
+	//					if (costs[i] < costs[splitPos]) {
+	//						splitPos = i;
+	//					}
+	//				}
 
-					break;
-				}
-			}
-		}
+	//				float leafCost = primsCnt;
+	//				if (costs.at(splitPos) < leafCost) {
+	//					int mid = std::partition(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
+	//						[&](const Primitive& p) {
+	//							int b = SAH_SPLIT_BUCKETS_NUM *
+	//								centroid.Offset(p.GetCentroid())[axis];
 
-		return nodeIndex;
-	}
+	//							if (b == SAH_SPLIT_BUCKETS_NUM) {
+	//								b -= 1;
+	//							}
+
+	//							return b <= splitPos;
+	//						}) - m_Primitives.begin();
+
+	//					int l = BuildTreeRecursion(indexL, mid);
+	//					int r = BuildTreeRecursion(mid, indexR);
+
+	//					m_Nodes[nodeIndex].InitInterior(nodeIndex, l, r, aabb, axis);
+	//				}
+	//				else {
+	//					// create leaf directly, ignoring LEAF_PRIMS
+	//					m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, aabb);
+	//				}
+
+	//				break;
+	//			}
+	//		}
+	//	}
+
+	//	return nodeIndex;
+	//}
 
 }
+
+
+// Trash code 
+//// Pointer Based Bvh
+//struct BVHNode {
+//	BVHNode() = default;
+//	AABB aabb;
+//	std::vector<Primitive*> primitives;
+//	std::unique_ptr<BVHNode> left{ nullptr };
+//	std::unique_ptr<BVHNode> right{ nullptr };
+//	Axis axis{ Axis::X };
+//};
+//
+//class BVH {
+//public:
+//	BVH() : m_SplitMethod(SplitMethod::NAIVE) {}
+//	std::unique_ptr<BVHNode>& GetRoot() { return m_Root; }
+//	static std::optional<IntersectResult> GetIntersection(const Ray& ray, BVHNode* node) { return GetIntersectionRecursion(ray, node); }
+//	const std::unique_ptr<BVHNode>& AddPrimitives(std::vector<std::unique_ptr<Primitive>>& primitives);
+//	static std::vector<std::unique_ptr<Primitive>> GeneratePrimitives(const std::shared_ptr<StaticMesh>& mesh, const std::unordered_map<std::string, std::shared_ptr<Texture2D>>& textureCached);
+//	void BuildTree();
+//private:
+//	static std::optional<IntersectResult> GetIntersectionRecursion(const Ray& ray, BVHNode* node);
+//
+//	// [indexL, indexR)
+//	std::unique_ptr<BVHNode> BuildTreeRecursion(int indexL, int indexR);
+//private:
+//	//const int m_PrimsPerNode; do we need this?
+//	std::unique_ptr<BVHNode> m_Root{ nullptr };
+//	const SplitMethod m_SplitMethod;
+//	std::vector<std::unique_ptr<Primitive>> m_Primitives;
+//};
+//
+//

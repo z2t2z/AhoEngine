@@ -1,11 +1,16 @@
+#ifndef UBO_GLSL
+#define UBO_GLSL
+
 layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_View;
 	mat4 u_ViewInv;
 	mat4 u_Projection;
 	mat4 u_ProjectionInv;
+	mat4 u_ViewProj;
 	vec4 u_ViewPosition;
 };
 
+// TODO: support multiple light types 
 const int MAX_LIGHT_CNT = 10;
 layout(std140, binding = 1) uniform LightUBO {
 	mat4 u_LightPV[MAX_LIGHT_CNT];
@@ -27,3 +32,5 @@ const int MAX_BONES_CNT = 200;
 layout(std140, binding = 3) uniform AnimationUBO {
 	mat4 u_BoneMatrices[MAX_BONES_CNT];
 };
+
+#endif

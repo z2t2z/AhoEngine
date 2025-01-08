@@ -149,7 +149,7 @@ namespace Aho {
 						std::string fullPath = basePath + includeFilePath;
 
 						if (includedFiles.find(fullPath) != includedFiles.end()) {
-							AHO_CORE_WARN("Warning: Circular include detected for file: {}", fullPath);
+							//AHO_CORE_WARN("Warning: Circular include detected for file: {}", fullPath);
 							continue;
 						}
 

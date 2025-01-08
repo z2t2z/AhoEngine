@@ -41,7 +41,7 @@ namespace Aho {
 
 		// TODO: Maybe try std::shared_ptr<T> assetOut
 		template<typename AssetType>
-		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut) {
+		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut, const glm::mat4& preTransform = glm::mat4(1.0f)) {
 			if (m_AssetPaths.contains(path.string())) {
 				/* TODO : pop out a window here */
 				auto uuid = m_AssetPaths.at(path.string());
@@ -49,7 +49,7 @@ namespace Aho {
 				return true;
 			}
 			if (path.extension().string() != ".asset") {
-				if (!CreateAsset(path, assetOut)) {
+				if (!CreateAsset(path, assetOut, preTransform)) {
 					AHO_CORE_ERROR("Import failed at path: {}", path.string());
 				}
 				return true;
@@ -76,13 +76,13 @@ namespace Aho {
 		}
 	private:
 		template<typename AssetType>
-		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut) {
+		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut, const glm::mat4& preTransform) {
 			const auto& fileExt = path.extension().string();
 			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
-				if (fileExt == ".fbx" || fileExt == ".FBX") {
-					AHO_CORE_WARN(".fbx does not use a verbose vertex format which may leads to incorrect tangent vector calculation");
-				}
-				assetOut = *AssetCreator::MeshAssetCreater(path.string());
+				//if (fileExt == ".fbx" || fileExt == ".FBX") {
+					//AHO_CORE_WARN(".fbx does not use a verbose vertex format which may leads to incorrect tangent vector calculation");
+				//}
+				assetOut = *AssetCreator::MeshAssetCreater(path.string(), preTransform);
 				return true;
 			}
 			AHO_CORE_ASSERT("Not supported yet");

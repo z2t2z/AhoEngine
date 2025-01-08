@@ -70,6 +70,11 @@ namespace Aho {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	// temp
+	void OpenGLFramebuffer::BindAt(uint32_t pos) {
+		glBindImageTexture(pos, m_ColorAttachmentTex[0]->GetTextureID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	}
+
 	bool OpenGLFramebuffer::Resize(uint32_t width, uint32_t height) {
 		if (!m_ResizeWithViewport) {
 			return false;

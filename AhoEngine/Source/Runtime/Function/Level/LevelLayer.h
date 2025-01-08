@@ -24,8 +24,10 @@ namespace Aho {
 		void AddLevel(const std::shared_ptr<Level>& scene) { m_Levels.push_back(scene); }
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
+
 	private:
 		void UpdateAnimation(float deltaTime);
+		void UpdateSceneBvh();
 		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
 		void AddLightSource(LightType lt);
 		void UpdataUBOData();
@@ -33,12 +35,17 @@ namespace Aho {
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
+		
 	private:
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
 		bool m_Update{ true };		// TODO: temporary...
+		
 	private:
-		int m_SkeletalMeshBoneOffset{ 0 };
+		inline static int m_SkeletalMeshBoneOffset{ 0 };
+		inline static int s_MeshCnt{ 0 };
+
+	private:
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };

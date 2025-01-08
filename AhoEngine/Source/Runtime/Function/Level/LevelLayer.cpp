@@ -50,6 +50,9 @@ namespace Aho {
 		// UpdatePhysics();
 		UpdateAnimation(deltaTime);
 		UpdataUBOData();
+		if (m_RenderLayer->GetRenderer()->GetRenderMode() == RenderMode::PathTracing) {
+			UpdateSceneBvh();
+		}
 	}
 
 	void LevelLayer::OnImGuiRender() {
@@ -93,6 +96,26 @@ namespace Aho {
 			//IKSolver::FABRIK(viewer.viewer, animator.globalMatrices, g_Node, g_Endeffector, g_Param->Translation);
 			Animator::ApplyPose(animator.globalMatrices, skeletal.root);
 		});
+	}
+
+	void LevelLayer::UpdateSceneBvh() {
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+		auto view = entityManager->GetView<TransformComponent, BVHComponent>();
+		bool gDirty = false;
+		view.each(
+			[&](auto entity, TransformComponent& transformComp, BVHComponent& bvhComp) {
+				//if (transformComp.dirty) {
+				//	gDirty = true;
+				//	for (auto& bvh : bvhComp.bvhs) {
+				//		bvh.ApplyTransform(transformComp.GetTransform());
+				//	}
+				//}
+			}
+		);
+
+		if (gDirty) {
+			
+		}
 	}
 
 	// TODO;
@@ -176,7 +199,8 @@ namespace Aho {
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
-	// TODO: subdata update
+	// TODO: Subdata update
+	// TODO: Maybe put this inside render layer
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		{
@@ -185,6 +209,7 @@ namespace Aho {
 			camUBO.u_Projection = cam->GetProjection();
 			camUBO.u_ProjectionInv = cam->GetProjectionInv();
 			camUBO.u_ViewInv = cam->GetViewInv();
+			camUBO.u_ViewProj = cam->GetView() * cam->GetProjection();
 			camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
 			UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 		}
@@ -221,6 +246,7 @@ namespace Aho {
 				}
 			});
 			UBOManager::UpdateUBOData<AnimationUBO>(3, *animationUBO);
+			delete animationUBO;
 		}
 
 		{
@@ -241,6 +267,7 @@ namespace Aho {
 				}
 			});
 			UBOManager::UpdateUBOData<SkeletonUBO>(4, *skeletonUBO);
+			delete skeletonUBO;
 		}
 	}
 
@@ -263,7 +290,7 @@ namespace Aho {
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
-			entityManager->AddComponent<MeshComponent>(meshEntity);
+			entityManager->AddComponent<MeshComponent>(meshEntity, s_MeshCnt);
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -298,19 +325,36 @@ namespace Aho {
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 
+
 		{
 			ScopedTimer timer("Build BVH");
-			entityManager->AddComponent<BVHComponent<Primitive>>(gameObject, asset);
+			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
+			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+			for (const auto& info : *asset) {
+				BVHi* bvhi = new BVHi(info, s_MeshCnt);
+				bvhComp.bvhs.push_back(bvhi);
+				tlasBvh.AddBLASPrimtive(bvhi);
+			}
+			tlasBvh.UpdateTLAS();
+			PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
+			ptpl->UpdateSSBO(m_CurrentLevel);
+			//std::thread(
+			//	[this, gameObject, asset, entityManager]() {
+			//		ScopedTimer timer("Build BVH(thread)");
+			//		BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
+			//		BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+			//		for (const auto& info : *asset) {
+			//			auto bvhi = new BVHi(info, s_MeshCnt);
+			//			bvhComp.bvhs.push_back(bvhi);
+			//			tlasBvh.AddBLASNode(*bvhi);
+			//		}
+			//		tlasBvh.UpdateTLAS();
+			//	}).detach();
 		}
 
-		{
-			auto& bvhStructure = m_Levels[0]->GetSceneBVH();
-			auto primitives = BVH::GeneratePrimitives(asset, textureCached);
-			bvhStructure->AddPrimitives(primitives);
-			bvhStructure->BuildTree();
-		}
+		s_MeshCnt += 1;
 
-		asset.reset(); // Free it??
+		//asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}
 
@@ -319,7 +363,7 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		entityManager->AddComponent<MeshComponent>(gameObject);
+		entityManager->AddComponent<MeshComponent>(gameObject, s_MeshCnt);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
@@ -357,6 +401,9 @@ namespace Aho {
 			renderData->SetTransformParam(param);
 			renderDataAll.push_back(renderData);
 		}
+		
+		s_MeshCnt += 1;
+
 		asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}

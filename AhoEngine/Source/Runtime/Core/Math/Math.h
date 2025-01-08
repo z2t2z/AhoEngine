@@ -12,8 +12,8 @@
 
 namespace Aho {
 	struct Ray;
-	class AABB;
-	struct Primitive;
+	class BBox;
+	struct PrimitiveDesc;
 	struct IntersectResult;
 
 	static glm::vec3 QuaternionToEuler(const glm::quat& q) {
@@ -59,6 +59,11 @@ namespace Aho {
 		return q;
 	}
 
+	static glm::mat4 ComposeTransform(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale) {
+		glm::quat orientation = EulerToQuaternion(rotation.x, rotation.y, rotation.z);
+		return glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(orientation) * glm::scale(glm::mat4(1.0f), scale);
+	}
+
 	inline static float SimpleLerp(float a, float b, float t) { return a + (b - a) * t; }
 
 	inline static void Clamp(float& v, float lb, float ub) {
@@ -70,9 +75,25 @@ namespace Aho {
 		}
 	}
 
-	bool Intersect(const Ray& ray, const AABB& aabb);
+	bool Intersect(const Ray& ray, const BBox& aabb);
 
-	std::optional<IntersectResult> Intersect(const Ray& ray, const Primitive* primitive);
+	std::optional<IntersectResult> Intersect(const Ray& ray, const PrimitiveDesc* primitive);
 	
 	Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv);
+
+	inline static glm::vec3 Min(const glm::vec3& a, const glm::vec3& b) {
+		return glm::vec3(
+			std::min(a.x, b.x),
+			std::min(a.y, b.y),
+			std::min(a.z, b.z)
+		);
+	}
+
+	inline static glm::vec3 Max(const glm::vec3& a, const glm::vec3& b) {
+		return glm::vec3(
+			std::max(a.x, b.x),
+			std::max(a.y, b.y),
+			std::max(a.z, b.z)
+		);
+	}
 }

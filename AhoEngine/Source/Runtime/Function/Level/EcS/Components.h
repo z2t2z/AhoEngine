@@ -27,15 +27,38 @@ namespace Aho {
 		}
 	};
 
-	template <typename T>
+	//struct BVHComponent {
+	//	std::vector<BVHi> bvhs;
+	//	BVHComponent() = default;
+	//	BVHComponent(const BVHComponent&) = default;
+	//	BVHComponent(const std::vector<BVHi>& bvhs)
+	//		: bvhs(bvhs) {
+	//	}
+	//};
+
 	struct BVHComponent {
-		BVHi<T> bvh;
+		std::vector<BVHi*> bvhs;
 		BVHComponent() = default;
 		BVHComponent(const BVHComponent&) = default;
-		BVHComponent(const BVHi<T>& bvh)
-			: bvh(bvh) {
+		BVHComponent(const std::vector<BVHi*>& bvhs)
+			: bvhs(bvhs) {
 		}
 	};
+
+	//struct BVHComponent {
+	//	BVHi bvh;
+	//	BVHComponent(const std::shared_ptr<StaticMesh>& mesh)
+	//		: bvh(mesh) {
+	//	}
+	//	BVHComponent(const std::shared_ptr<MeshInfo>& mesh)
+	//		: bvh(mesh) {
+	//	}
+	//	BVHComponent() = default;
+	//	BVHComponent(const BVHComponent&) = default;
+	//	BVHComponent(const BVHi& bvh)
+	//		: bvh(bvh) {
+	//	}
+	//};
 
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
@@ -46,6 +69,7 @@ namespace Aho {
 		glm::vec3& GetTranslation() { return transformPara->Translation; }
 		glm::vec3& GetScale() { return transformPara->Scale; }
 		glm::vec3& GetRotation() { return transformPara->Rotation; }
+		bool dirty{ true };
 		void SetTranslation(glm::vec3 translation) { transformPara->Translation = translation; }
 		void SetScale(glm::vec3 scale) { transformPara->Scale = scale; }
 		void SetRotation(glm::vec3 rotation) { transformPara->Rotation = rotation; }
@@ -63,6 +87,8 @@ namespace Aho {
 	// Temporary, consider how to design this
 	struct MeshComponent {
 		std::string name;
+		int meshId;
+		MeshComponent(int id) : meshId(id) {};
 		MeshComponent() : name{ "IDK" } {};
 		MeshComponent(const MeshComponent&) = default;
 	};

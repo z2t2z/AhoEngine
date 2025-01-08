@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\gli;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\gli;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -119,7 +119,7 @@
       <PrecompiledHeaderFile>Ahopch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;AHO_ENABLE_ASSERTS;AHO_PLATFORM_WINDOWS;AHO_BUILD_DLL;GLFW_INCLUDE_NONE;AHO_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Vendor\spdlog\include;Source;Vendor\ImGui;Vendor\GLFW\include;Vendor\Glad\include;Vendor\glm;Vendor\entt\include;Vendor\assimp\include;Vendor\stb_image;Vendor\gli;Vendor\json;Vendor\ImGuizmo;Vendor\JoltPhysics;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -141,7 +141,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\IamAho.h" />
-    <ClInclude Include="Source\Runtime\Core\AABB.h" />
+    <ClInclude Include="Source\Runtime\Core\BBox.h" />
     <ClInclude Include="Source\Runtime\Core\App\Application.h" />
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
     <ClInclude Include="Source\Runtime\Core\BVH.h" />
@@ -177,10 +177,11 @@
     <ClInclude Include="Source\Runtime\Function\Level\Level.h" />
     <ClInclude Include="Source\Runtime\Function\Level\LevelLayer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBO.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h" />
@@ -196,8 +198,8 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBO.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\UBOManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h" />
     <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h" />
@@ -655,7 +657,7 @@
     <ClCompile Include="Source\Ahopch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\AABB.cpp" />
+    <ClCompile Include="Source\Runtime\Core\BBox.cpp" />
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp" />
     <ClCompile Include="Source\Runtime\Core\BVH.cpp" />
     <ClCompile Include="Source\Runtime\Core\Core.cpp" />
@@ -674,6 +676,7 @@
     <ClCompile Include="Source\Runtime\Function\Level\Level.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
@@ -690,7 +693,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\UBOManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLContext.cpp" />

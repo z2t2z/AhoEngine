@@ -27,6 +27,7 @@ namespace Aho {
 			return m_TextureID == other.GetTextureID();
 		}
 	private:
+		int LoadGli(const std::string& path);
 		std::string m_Path;
 		uint32_t m_TextureID;	// texture ID
 	};
@@ -108,6 +109,8 @@ namespace Aho {
 				return GL_RGB16F;
 			case TexInterFormat::RGBA16F:
 				return GL_RGBA16F;
+			case TexInterFormat::RGBA32F:
+				return GL_RGBA32F;
 			case TexInterFormat::Depth24:
 				return GL_DEPTH_COMPONENT24;
 			case TexInterFormat::Depth32:

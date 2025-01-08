@@ -25,3 +25,6 @@
 [submodule "AhoEngine/Vendor/ImGuizmo"]
 	path = AhoEngine/Vendor/ImGuizmo
 	url = https://github.com/z2t2z/ImGuizmo.git
+[submodule "AhoEngine/Vendor/gli"]
+	path = AhoEngine/Vendor/gli
+	url = https://github.com/z2t2z/gli.git

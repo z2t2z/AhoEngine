@@ -32,7 +32,7 @@ namespace Aho {
 		static const std::vector<std::shared_ptr<RenderData>>& GetRenderData(RenderDataType type);
 		static std::vector<std::shared_ptr<RenderData>> m_ScreenQuad;
 		static std::vector<std::shared_ptr<RenderData>> m_UnitCube;
-		static std::vector<std::shared_ptr<RenderData>> m_SceneData;	// render data is a per mesh basis
+		static std::vector<std::shared_ptr<RenderData>> m_SceneData;	
 		static std::vector<std::shared_ptr<RenderData>> m_DebugData;
 		static std::vector<std::shared_ptr<RenderData>> m_EmptyVao;
 

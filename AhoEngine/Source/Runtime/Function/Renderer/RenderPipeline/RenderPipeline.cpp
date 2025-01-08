@@ -20,7 +20,7 @@ namespace Aho {
 	}
 
 	void RenderTask::Init() {
-		// Empty vao
+		// Empty vao, maybe replace quad vao with this for performance?
 		{
 			std::shared_ptr<VertexArray> quadVAO;
 			quadVAO.reset(VertexArray::Create());
