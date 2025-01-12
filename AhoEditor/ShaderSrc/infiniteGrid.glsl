@@ -1,7 +1,7 @@
 #type vertex
 #version 460 core
 
-#include "UniformBufferObjects.glsl"
+#include "./UniformBufferObjects.glsl"
 
 // vec3 gridPlane[6] = vec3[](
 //     vec3(1, 0, 1), vec3(-1, 0, -1), vec3(-1, 0, 1),

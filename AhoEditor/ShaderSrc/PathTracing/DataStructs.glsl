@@ -26,10 +26,9 @@ struct BVHNode {
 };
 
 struct Vertex {
-    vec3 position;      float _padding0;
-    vec3 normal;        float _padding1;
-    vec3 tangent;       float _padding2;
-    vec2 uv;            vec2 _padding;
+    vec3 position;      float u;
+    vec3 normal;        float v;
+    vec3 tangent;       float _padding;
 };
 
 struct PrimitiveDesc {
@@ -50,6 +49,7 @@ struct HitInfo {
     int meshId;
     float t;
     bool hit;
+    bool exceeded;
 };
 
 // Some helper functions

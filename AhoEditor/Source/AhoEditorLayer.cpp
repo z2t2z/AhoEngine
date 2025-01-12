@@ -975,10 +975,10 @@ namespace Aho {
 
 		}
 
-		if (ImGui::Button("GetData")) {
-			std::vector<BVHNodei> data(1);
-			SSBOManager::GetSubData<BVHNodei>(0, data, 0);
-		}
+		//if (ImGui::Button("GetData")) {
+		//	std::vector<BVHNodei> data(1);
+		//	SSBOManager::GetSubData<BVHNodei>(0, data, 0);
+		//}
 		//view.each(
 		//	[&](auto entity, BVHComponent& bc, TransformComponent& tc) {
 		//		ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));

@@ -44,7 +44,7 @@ namespace Aho {
         void SetSubData(const std::vector<T>& data, size_t offset) {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
             glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset * sizeof(T), data.size() * sizeof(T), data.data());
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
             GLenum error = glGetError();
             if (error != GL_NO_ERROR) {

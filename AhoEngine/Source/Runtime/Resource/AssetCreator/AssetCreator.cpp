@@ -71,7 +71,9 @@ namespace Aho {
 				}
 				// Texture coords, tangent and bitangent
 				if (hasUVs) {
-					vertex.uv = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+					vertex.u = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y).x;
+					vertex.v = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y).y;
+
 					vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 				}
 				vertices.push_back(vertex);

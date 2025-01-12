@@ -28,16 +28,16 @@ namespace Aho {
 
 	void PathTracingPipeline::Initialize() {
 		// TODO: Move these and check them in bvh
-		constexpr int MAX_MESH		= 12800;
-		constexpr int MAX_TLAS_NODE = 12800;
-		constexpr int MAX_BLAS_NODE = 12800;
-		constexpr int MAX_PRIMITIVE = 10'280'000;
+		constexpr int64_t MAX_MESH		= 12'800'000;
+		constexpr int64_t MAX_TLAS_NODE = 12'800'000;
+		constexpr int64_t MAX_BLAS_NODE = 12'800'000;
+		constexpr int64_t MAX_PRIMITIVE = 12'800'000;
 
-		SSBOManager::RegisterSSBO<BVHNodei>(0, MAX_TLAS_NODE, false);
-		SSBOManager::RegisterSSBO<PrimitiveDesc>(1, MAX_MESH, false);
-		SSBOManager::RegisterSSBO<BVHNodei>(2, MAX_BLAS_NODE, false);
-		SSBOManager::RegisterSSBO<PrimitiveDesc>(3, MAX_PRIMITIVE, false);
-		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, false);
+		SSBOManager::RegisterSSBO<BVHNodei>(0, MAX_TLAS_NODE, true);
+		SSBOManager::RegisterSSBO<PrimitiveDesc>(1, MAX_MESH, true);
+		SSBOManager::RegisterSSBO<BVHNodei>(2, MAX_BLAS_NODE, true);
+		SSBOManager::RegisterSSBO<PrimitiveDesc>(3, MAX_PRIMITIVE, true);
+		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
 
 		m_ShadingPass = SetupShadingPass();
 		RegisterRenderPass(m_ShadingPass.get(), RenderDataType::Empty);
@@ -46,8 +46,6 @@ namespace Aho {
 
 	void PathTracingPipeline::UpdateSSBO(const std::shared_ptr<Level>& currLevel) {
 		//auto entityManager = currLevel->GetEntityManager();
-
-		currLevel->GetTLAS().UpdateTLAS();
 
 		const auto& tlas = currLevel->GetTLAS();
 		SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas.GetNodesArr());

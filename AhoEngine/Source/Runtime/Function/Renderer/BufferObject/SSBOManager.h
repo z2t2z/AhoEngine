@@ -7,7 +7,7 @@ namespace Aho {
     class SSBOManager {
     public:
         template <typename T>
-        inline static void RegisterSSBO(uint32_t bindingPoint, int maxElements, bool staticDraw = false) {
+        inline static void RegisterSSBO(uint32_t bindingPoint, int64_t maxElements, bool staticDraw = false) {
             if (!m_SSBOs.contains(bindingPoint)) {
                 m_SSBOs[bindingPoint] = std::make_unique<SSBO<T>>(bindingPoint, maxElements, staticDraw);
             }
@@ -52,6 +52,6 @@ namespace Aho {
         }
 
     private:
-        static std::unordered_map<uint32_t, std::unique_ptr<SSBOBase>> m_SSBOs;
+        inline static std::unordered_map<uint32_t, std::unique_ptr<SSBOBase>> m_SSBOs;
     };
 }

@@ -62,8 +62,8 @@ namespace Aho {
 				vertices.push_back(vertex.normal.z);
 			}
 			if (meshInfo->hasUVs) {
-				vertices.push_back(vertex.uv.x);
-				vertices.push_back(vertex.uv.y);
+				vertices.push_back(vertex.u);
+				vertices.push_back(vertex.v);
 				// TODO;
 				vertices.push_back(vertex.tangent.x);
 				vertices.push_back(vertex.tangent.y);

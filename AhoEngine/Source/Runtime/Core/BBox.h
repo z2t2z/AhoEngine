@@ -49,6 +49,9 @@ namespace Aho {
 			if (m_Pmax.x > m_Pmin.x) o.x /= m_Pmax.x - m_Pmin.x;
 			if (m_Pmax.y > m_Pmin.y) o.y /= m_Pmax.y - m_Pmin.y;
 			if (m_Pmax.z > m_Pmin.z) o.z /= m_Pmax.z - m_Pmin.z;
+			AHO_CORE_ASSERT(o.x >= 0.0f && o.y >= 0.0f && o.z >= 0.0f);
+			AHO_CORE_ASSERT(o.x <= 1.0f && o.y <= 1.0f && o.z <= 1.0f);
+
 			return o;
 		}
 

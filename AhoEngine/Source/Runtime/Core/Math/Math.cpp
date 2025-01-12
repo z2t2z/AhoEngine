@@ -82,9 +82,10 @@ namespace Aho {
         glm::vec3 barycentric(u, v, 1 - u - v);              // 重心坐标
 
         // 根据三角形的顶点 UV 进行插值
-        glm::vec2 interpolatedUV = primitive->GetVertex(0).uv * barycentric.z
-                                    + primitive->GetVertex(1).uv * barycentric.x
-                                    + primitive->GetVertex(2).uv * barycentric.y;
+        glm::vec2 uv0{ primitive->GetVertex(0).u, primitive->GetVertex(0).v };
+        glm::vec2 interpolatedUV = uv0 * barycentric.z
+                                    + uv0 * barycentric.x
+                                    + uv0 * barycentric.y;
 
         // 返回相交信息
         return IntersectResult{ t, intersectionPoint, normal, barycentric, interpolatedUV };

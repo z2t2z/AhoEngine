@@ -42,6 +42,8 @@ namespace Aho {
 			target, mipmaplevel, internalFormat, width, height, boarder, dataFormat, dataType, initialData
 		*/
 
+		// TODO: Just used the same enum
+
 		static GLuint GetGLParam(TexTarget param) {
 			switch (param) {
 			case TexTarget::Texture1D:

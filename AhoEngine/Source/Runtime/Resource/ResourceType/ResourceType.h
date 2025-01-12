@@ -15,14 +15,16 @@ namespace Aho {
 	};
 
 	struct alignas(16) Vertex {
-		glm::vec3 position;		float _padding0;
-		glm::vec3 normal;		float _padding1;
-		glm::vec3 tangent;		float _padding2; 
-		glm::vec2 uv;			float _padding4; float _padding5;
+		glm::vec3 position;		float u;
+		glm::vec3 normal;		float v;
+		glm::vec3 tangent;		float _padding; 
+		//glm::vec2 uv;			float _padding4; float _padding5;
 
+		//Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
+		//	: position(pos), normal(normal), tangent(tangent), uv(uv) { }
 		Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-			: position(pos), normal(normal), tangent(tangent), uv(uv) { }
-
+			: position(pos), normal(normal), tangent(tangent), u(uv.x), v(uv.y) {
+		}
 		Vertex() = default;
 	};
 

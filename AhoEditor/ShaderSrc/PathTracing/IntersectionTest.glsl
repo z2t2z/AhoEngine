@@ -74,27 +74,6 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout float t) {
     }
 
     return true;
-    // const vec3 v0 = p.v[0].position;
-    // const vec3 v1 = p.v[1].position;
-    // const vec3 v2 = p.v[2].position;
-
-    // vec3 E1 = v1 - v0;
-    // vec3 E2 = v2 - v0;
-    // vec3 S = ray.origin - v0;
-    // vec3 S1 = cross(ray.direction, E2);
-    // vec3 S2 = cross(S, E1);
-    // vec3 result = vec3(dot(S2, E2), dot(S1, S), dot(S2, ray.direction)) / dot(S1, E1);
-
-    // float tnear = result.x;
-    // t = tnear;
-    // float u = result.y;
-    // float v = result.z;
-    
-    // if (tnear > 0.0 && v >= 0.0 && v <= 1 && u >= 0.0 && u <= 1.0) {
-    //     return true;
-    // }
-    // t = -1.0;
-    // return false;
 }
 
 

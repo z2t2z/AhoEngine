@@ -222,7 +222,9 @@ void main() {
 		return;
 	}
 
-	vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
+	// vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
+
+	vec3 albedo = texture(u_gAlbedo, v_TexCoords).rgb;
 	float AO = texture(u_gPBR, v_TexCoords).b;
 	if (AO == -1.0f) {
 		AO = texture(u_gAO, v_TexCoords).r;
@@ -270,7 +272,7 @@ void main() {
 		kD *= 1.0f - metalic;
 
 		vec3 specular = Numerator / Denominator;
-		Lo += (kD * albedo / PI + specular) 
+		Lo += 3.0 * (kD * albedo / PI + specular) 
 					* radiance 
 					* NdotL 
 					* PCSS(vec4(fragPos, 1.0f), NdotL, i);
@@ -296,9 +298,9 @@ void main() {
 	
 	vec3 ambient = (kD * diffuse + specular) * AO;
 
-	vec3 Color = ambient + Lo;
-	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
-	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
+	vec3 Color = (ambient + Lo);
+	// Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
+	// Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 
 	out_Color = vec4(Color, 1.0f);
 }

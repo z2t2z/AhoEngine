@@ -30,16 +30,22 @@ namespace Aho {
 		// Screen Quad
 		Vertex upperLeft, lowerLeft, upperRight, lowerRight;
 		upperLeft.position = glm::vec3(-1.0, 1.0, 0.0);
-		upperLeft.uv = glm::vec2(0.0, 1.0);
+		upperLeft.u = glm::vec2(0.0, 1.0).x;
+		upperLeft.v = glm::vec2(0.0, 1.0).y;
+
 
 		lowerLeft.position = glm::vec3(-1.0, -1.0, 0.0);
-		lowerLeft.uv = glm::vec2(0.0, 0.0);
+		lowerLeft.u = glm::vec2(0.0, 0.0).x;
+		lowerLeft.v = glm::vec2(0.0, 0.0).y;
 
 		lowerRight.position = glm::vec3(1.0, -1.0, 0.0);
-		lowerRight.uv = glm::vec2(1.0, 0.0);
+		lowerRight.u = glm::vec2(1.0, 0.0).x;
+		lowerRight.v = glm::vec2(1.0, 0.0).y;
 
 		upperRight.position = glm::vec3(1.0, 1.0, 0.0);
-		upperRight.uv = glm::vec2(1.0, 1.0);
+		upperRight.u = glm::vec2(1.0, 1.0).x;
+		upperRight.v = glm::vec2(1.0, 1.0).y;
+
 
 		std::vector<Vertex> quadVertices = { upperLeft, lowerLeft, lowerRight, upperRight };
 		std::vector<uint32_t> quadIndices = {
@@ -60,29 +66,37 @@ namespace Aho {
 
 		// Front face
 		frontUpperLeft.position = glm::vec3(-1.0, 1.0, 1.0);
-		frontUpperLeft.uv = glm::vec2(0.0, 1.0);
+		frontUpperLeft.u = 0.0f;
+		frontUpperLeft.v = 1.0f;
 
 		frontLowerLeft.position = glm::vec3(-1.0, -1.0, 1.0);
-		frontLowerLeft.uv = glm::vec2(0.0, 0.0);
+		frontLowerLeft.u = 0.0f;
+		frontLowerLeft.v = 0.0f;
 
 		frontUpperRight.position = glm::vec3(1.0, 1.0, 1.0);
-		frontUpperRight.uv = glm::vec2(1.0, 1.0);
+		frontUpperRight.u = 1.0f;
+		frontUpperRight.v = 1.0f;
 
 		frontLowerRight.position = glm::vec3(1.0, -1.0, 1.0);
-		frontLowerRight.uv = glm::vec2(1.0, 0.0);
+		frontLowerRight.u = 1.0f;
+		frontLowerRight.v = 0.0f;
 
 		// Back face
 		backUpperLeft.position = glm::vec3(-1.0, 1.0, -1.0);
-		backUpperLeft.uv = glm::vec2(1.0, 1.0);
+		backUpperLeft.u = 1.0f;
+		backUpperLeft.v = 1.0f;
 
 		backLowerLeft.position = glm::vec3(-1.0, -1.0, -1.0);
-		backLowerLeft.uv = glm::vec2(1.0, 0.0);
+		backLowerLeft.u = 1.0f;
+		backLowerLeft.v = 0.0f;
 
 		backUpperRight.position = glm::vec3(1.0, 1.0, -1.0);
-		backUpperRight.uv = glm::vec2(0.0, 1.0);
+		backUpperRight.u = 0.0f;
+		backUpperRight.v = 1.0f;
 
 		backLowerRight.position = glm::vec3(1.0, -1.0, -1.0);
-		backLowerRight.uv = glm::vec2(0.0, 0.0);
+		backLowerRight.u = 0.0f;
+		backLowerRight.v = 0.0f;
 
 		std::vector<Vertex> cubeVertices = {
 			frontUpperLeft, frontLowerLeft, frontUpperRight, frontLowerRight,

@@ -194,7 +194,7 @@ namespace Aho {
 			switch (m_SplitMethod) {
 				case (SplitMethod::NAIVE): {
 
-					AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
+					//AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
 					std::sort(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
 						[axis](const PrimitiveDesc& lhs, const PrimitiveDesc& rhs) {
 							return lhs.GetCentroid()[axis] < rhs.GetCentroid()[axis];

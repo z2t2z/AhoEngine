@@ -32,9 +32,9 @@ namespace Aho {
 		BVHNodei() : left(-1), right(-1), nodeIdx(-1), firstPrimsIdx(-1), primsCnt(-1), axis(-1) {}
 		void InitLeaf(int nodeIdx_, int firstPrimsIdx_, int primsCnt_, const BBox& bbox_) {
 			//AHO_CORE_ASSERT(primsCnt_ > 0 && primsCnt_ <= LEAF_PRIMS);
-			//if (primsCnt_ > LEAF_PRIMS) {
-			//	AHO_CORE_INFO("Initializing leaf with `{}` primitives", primsCnt_);
-			//}
+			if (primsCnt_ > 10) {
+				AHO_CORE_INFO("Initializing leaf with `{}` primitives", primsCnt_);
+			}
 			nodeIdx = nodeIdx_;
 			left = -1;
 			right = -1;
@@ -82,7 +82,7 @@ namespace Aho {
 	class BVHi {
 	public:
 		BVHi() 
-			: m_SplitMethod(SplitMethod::SAH), m_BvhLevel(BVHLevel::TLAS) {
+			: m_SplitMethod(SplitMethod::NAIVE), m_BvhLevel(BVHLevel::TLAS) {
 		}
 		
 		BVHi(const std::shared_ptr<StaticMesh>& mesh, SplitMethod splitMethod = SplitMethod::SAH) 

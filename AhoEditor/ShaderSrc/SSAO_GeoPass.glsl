@@ -101,7 +101,7 @@ void main() {
 
 	// PBR
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_RawAlbedo;
-	g_PBR.r = u_HasMetallic ? 1.0f - texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
+	g_PBR.r = u_HasMetallic ? texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
 	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : -1.0f;
 
