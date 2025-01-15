@@ -20,8 +20,8 @@ struct BVHNode {
     int nodeIdx;             
     int firstPrimsIdx;       
     int primsCnt;            
-    int axis; // not used
-    int meshId;
+    int axis;   // not used
+    int meshId; // only valid for root node
     int offset;
 };
 
@@ -34,7 +34,7 @@ struct Vertex {
 struct PrimitiveDesc {
     BBox bbox;
     Vertex v[3];
-    int meshId;
+    int meshId; // not used
     int id;
     int primId;
     float _padding;
@@ -47,12 +47,34 @@ struct Ray {
 
 struct HitInfo {
     int meshId;
+    int globalPrimtiveId;
+    vec2 uv; 
     float t;
     bool hit;
     bool exceeded;
 };
 
-// Some helper functions
+struct TempHitInfo {
+    vec2 uv;
+    float t;
+};
+
+struct TextureHandles {
+    layout(bindless_sampler) sampler2D albedo;
+    layout(bindless_sampler) sampler2D normal;
+
+    layout(bindless_sampler) sampler2D metallic;
+    layout(bindless_sampler) sampler2D roughness;
+};
+
+// struct TextureHandles {
+//     layout(bindless_sampler) uint64_t albedo;
+//     layout(bindless_sampler) uint64_t normal;
+//     layout(bindless_sampler) uint64_t metallic;
+//     layout(bindless_sampler) uint64_t roughness;
+// };
+
+
 bool IsLeaf(BVHNode node) {
     return node.left == -1 && node.right == -1 && node.firstPrimsIdx >= 0 && node.primsCnt > 0;
 }

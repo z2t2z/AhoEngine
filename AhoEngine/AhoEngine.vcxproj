@@ -141,9 +141,9 @@
   <ItemGroup>
     <ClInclude Include="Source\Ahopch.h" />
     <ClInclude Include="Source\IamAho.h" />
-    <ClInclude Include="Source\Runtime\Core\BBox.h" />
     <ClInclude Include="Source\Runtime\Core\App\Application.h" />
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
+    <ClInclude Include="Source\Runtime\Core\BBox.h" />
     <ClInclude Include="Source\Runtime\Core\BVH.h" />
     <ClInclude Include="Source\Runtime\Core\Core.h" />
     <ClInclude Include="Source\Runtime\Core\Debugger.h" />
@@ -179,6 +179,8 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBO.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
@@ -198,8 +200,6 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h" />
     <ClInclude Include="Source\Runtime\Function\SkeletonViewer.h" />
     <ClInclude Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.h" />
@@ -657,8 +657,8 @@
     <ClCompile Include="Source\Ahopch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\BBox.cpp" />
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp" />
+    <ClCompile Include="Source\Runtime\Core\BBox.cpp" />
     <ClCompile Include="Source\Runtime\Core\BVH.cpp" />
     <ClCompile Include="Source\Runtime\Core\Core.cpp" />
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiBuild.cpp" />
@@ -677,6 +677,7 @@
     <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
@@ -693,7 +694,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLContext.cpp" />

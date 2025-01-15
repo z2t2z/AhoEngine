@@ -87,6 +87,7 @@ namespace Aho {
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetTextureID() const = 0;
 		virtual uint32_t ReadPixel(float u, float v) const = 0;
+		virtual uint64_t GetTextureHandle() const = 0;
 		virtual TexType GetTexType() const { return m_Specification.type; }
 		virtual void SetTexType(const TexType type) { m_Specification.type = type; }
 		virtual void SetTextureID(uint32_t id) = 0;

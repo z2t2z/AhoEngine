@@ -1,10 +1,37 @@
 #pragma once
 
 #include "Runtime/Function/Renderer/Texture.h"
-
+#include "Runtime/Core/Log/Log.h"
 #include <glad/glad.h>
 
 namespace Aho {
+
+	struct alignas(16) TextureHandles {
+		uint64_t albedo;
+		uint64_t normal;
+
+		uint64_t metallic;
+		uint64_t roughness;
+
+		void SetHandles(uint64_t handleId, TexType type) {
+			AHO_CORE_ASSERT(handleId > 0);
+			switch (type) {
+				case TexType::Albedo:
+					albedo = handleId;
+					break;
+				case TexType::Normal:
+					normal = handleId;
+					break;
+				case TexType::Roughness:
+					roughness = handleId;
+					break;
+				case TexType::Metallic:
+					metallic = handleId;
+					break;
+				AHO_CORE_WARN("Wrong texture type");
+			}
+		}
+	};
 
 	class OpenGLTexture2D : public Texture2D {
 	public:
@@ -19,6 +46,7 @@ namespace Aho {
 		virtual uint32_t GetHeight() const override { return m_Specification.height; }
 		virtual uint32_t GetTextureID() const override { return m_TextureID; }
 		virtual uint32_t ReadPixel(float u, float v) const override;
+		virtual uint64_t GetTextureHandle() const override;
 		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual void SetTextureID(uint32_t id) { m_TextureID = id; }
 		virtual void SetData(void* data, uint32_t size) override;
@@ -29,7 +57,8 @@ namespace Aho {
 	private:
 		int LoadGli(const std::string& path);
 		std::string m_Path;
-		uint32_t m_TextureID;	// texture ID
+		uint32_t m_TextureID{ 0 };	// texture ID
+		mutable GLuint64 m_TextureHandle{ 0 };
 	};
 
 	namespace Utils {

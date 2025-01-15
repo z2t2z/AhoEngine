@@ -30,11 +30,11 @@ namespace Aho {
 		glBindTexture(target, m_TextureID);
 		glObjectLabel(GL_TEXTURE, m_TextureID, -1, m_Specification.debugName.c_str());
 
-		m_Specification.height = m_Specification.height;
-		m_Specification.width = m_Specification.width;
+		//m_Specification.height = m_Specification.height;
+		//m_Specification.width = m_Specification.width;
 		if (m_Specification.target == TexTarget::TextureCubemap) {
 			for (int i = 0; i < 6; i++) {
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, m_Specification.width, m_Specification.height, 0, dataFormat, dataType, nullptr);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, m_Specification.width, m_Specification.width, 0, dataFormat, dataType, nullptr);
 			}
 		}
 		else {
@@ -125,10 +125,10 @@ namespace Aho {
 		glTextureStorage2D(m_TextureID, 1, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height);
 
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_LINEAR);
-		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, spec.width, spec.height, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -142,7 +142,16 @@ namespace Aho {
 
 	// BIG TODO
 	uint32_t OpenGLTexture2D::ReadPixel(float u, float v) const {
+		AHO_CORE_ASSERT(false);
 		return 0;
+	}
+
+	uint64_t OpenGLTexture2D::GetTextureHandle() const {
+		if (m_TextureHandle == 0) { 
+			m_TextureHandle = glGetTextureHandleARB(m_TextureID);
+			glMakeTextureHandleResidentARB(m_TextureHandle);
+		}
+		return m_TextureHandle;
 	}
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size) {

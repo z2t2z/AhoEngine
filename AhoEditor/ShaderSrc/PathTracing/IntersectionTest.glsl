@@ -3,6 +3,7 @@
 
 #include "./DataStructs.glsl"
 #include "../UniformBufferObjects.glsl"
+#include "./SSBO.glsl"
 
 bool IntersectBbox(Ray ray, BBox bbox, inout float tEnter) {
     tEnter = -FLT_MAX;
@@ -36,8 +37,7 @@ bool IntersectBbox(Ray ray, BBox bbox, inout float tEnter) {
     return true; 
 }
 
-bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout float t) {
-    t = -1.0;
+bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout TempHitInfo tinfo) {
     const vec3 v0 = p.v[0].position;
     const vec3 v1 = p.v[1].position;
     const vec3 v2 = p.v[2].position;
@@ -67,13 +67,106 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout float t) {
         return false;
     }
 
-    t = f * dot(edge2, q); //edge2.dot(q);
+    float t = f * dot(edge2, q); //edge2.dot(q);
 
     if (t < 0.0f) {
         return false;
     }
 
+    tinfo.t = t;
+    tinfo.uv = vec2(u, v);
+
     return true;
+}
+
+
+void RayTracePrimitive(Ray ray, int id, inout HitInfo info) {
+
+    int nodeOffset = s_OffsetInfo[id].nodeOffset;
+    int primOffset = s_OffsetInfo[id].primtiveOffset;
+    int meshId = s_bNodes[nodeOffset].meshId;
+
+    int stk[BLAS_STACK_DEPTH];
+    int ptr = -1;
+    stk[++ptr] = 0;
+
+    while (ptr >= 0 && ptr < BLAS_STACK_DEPTH) {
+        int u = stk[ptr--] + nodeOffset;
+        BVHNode bNode = s_bNodes[u];
+
+        float t;
+        if (!IntersectBbox(ray, bNode.bbox, t)) {
+            continue;
+        }
+
+        if (info.hit && t > info.t) {
+            continue;
+        }
+
+        if (IsLeaf(bNode)) {
+            // Check all primitives this node contains
+            int i = bNode.firstPrimsIdx;
+            int primsCnt = bNode.primsCnt;
+            for (int cnt = 0; cnt < primsCnt; ++i, ++cnt) {
+                PrimitiveDesc p = s_bPrimitives[i + primOffset];
+
+                TempHitInfo tempInfo;
+                if (IntersectPrimitive(ray, p, tempInfo)) {
+                    if (info.t < 0 || info.t > tempInfo.t) {
+                        info.t = tempInfo.t;
+                        info.uv = tempInfo.uv;
+                        info.hit = true;
+                        info.meshId = meshId;
+                        info.globalPrimtiveId = i + primOffset;
+                    }
+                }
+            }
+        } else {
+            if (ptr + 2 >= BLAS_STACK_DEPTH) {
+                // info.hit = false;
+                // info.exceeded = true;
+                break;
+            }
+            stk[++ptr] = bNode.right;
+            stk[++ptr] = bNode.left;
+        }
+    }  
+}
+
+// Find the nearest primitive
+void RayTrace(Ray ray, inout HitInfo info) {
+    int stk[TLAS_STACK_DEPTH];
+    int ptr = -1;
+    stk[++ptr] = 0;
+    while (ptr >= 0 && ptr < TLAS_STACK_DEPTH) {
+        int u = stk[ptr--];
+
+        BVHNode tNode = s_tNodes[u];
+        float t;
+        if (!IntersectBbox(ray, tNode.bbox, t)) {
+            continue;
+        }
+
+        if (info.hit && t > info.t) {
+            continue;
+        }
+
+        if (IsLeaf(tNode)) {
+            PrimitiveDesc p = s_tPrimitives[tNode.firstPrimsIdx];
+            
+            RayTracePrimitive(ray, p.id, info);
+ 
+        } else {
+            if (ptr + 2 >= TLAS_STACK_DEPTH) {
+                // info.exceeded = true;
+                // info.hit = false;
+                break;
+            }
+            stk[++ptr] = tNode.right;
+            stk[++ptr] = tNode.left;
+        }
+    }
+
 }
 
 

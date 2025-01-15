@@ -162,13 +162,16 @@ namespace Aho {
 			const Vertex& v0 = vertices[indices[i]];
 			const Vertex& v1 = vertices[indices[i + 1]];
 			const Vertex& v2 = vertices[indices[i + 2]];
-			m_Primitives.emplace_back(v0, v1, v2, i / 3);
+			m_Primitives.emplace_back(v0, v1, v2, i / 3, m_MeshId);
 			m_PrimitiveComp.emplace_back(v0, v1, v2);
 		}
 
 		m_Nodes.reserve(m_Primitives.size());
 		m_Root = BuildTreeRecursion(0, m_Primitives.size());
 		m_Nodes.shrink_to_fit();
+
+		AHO_CORE_ASSERT(m_Root == 0);
+		m_Nodes[m_Root].meshId = m_MeshId;
 	}
 
 	int BVHi::BuildTreeRecursion(int indexL, int indexR) {

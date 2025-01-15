@@ -11,6 +11,8 @@
 #include <future>
 
 namespace Aho {
+	struct TextureHandles;
+
 	class LevelLayer : public Layer {
 	public:
 		LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
@@ -43,7 +45,6 @@ namespace Aho {
 		
 	private:
 		inline static int m_SkeletalMeshBoneOffset{ 0 };
-		inline static int s_MeshCnt{ 0 };
 
 	private:
 		RenderLayer* m_RenderLayer{ nullptr };
@@ -52,5 +53,10 @@ namespace Aho {
 		std::shared_ptr<Level> m_CurrentLevel{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
 		std::vector<std::shared_ptr<Level>> m_Levels;
+
+	// temporary
+	private:
+		inline static int s_globalSubMeshId{ 0 };
+		std::vector<TextureHandles> m_TextureHandles;
 	};
 } // namespace Aho

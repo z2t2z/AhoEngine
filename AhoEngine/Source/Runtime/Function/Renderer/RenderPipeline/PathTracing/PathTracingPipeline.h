@@ -10,7 +10,6 @@ namespace Aho {
 	public:
 		PathTracingPipeline();
 		virtual void Initialize() override;
-		//virtual void Execute() override;
 		void UpdateSSBO(const std::shared_ptr<Level>& currlevel);
 
 	private:
@@ -21,6 +20,9 @@ namespace Aho {
 		std::unique_ptr<RenderPass> m_ShadingPass;
 		std::unique_ptr<RenderPass> m_GbufferPass;
 
+
+	private:
+		uint32_t m_Frame;
 	};
 
 }

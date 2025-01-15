@@ -87,7 +87,7 @@ namespace Aho {
 	// Temporary, consider how to design this
 	struct MeshComponent {
 		std::string name;
-		int meshId;
+		int meshId; // of no use
 		MeshComponent(int id) : meshId(id) {};
 		MeshComponent() : name{ "IDK" } {};
 		MeshComponent(const MeshComponent&) = default;

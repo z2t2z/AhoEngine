@@ -53,7 +53,7 @@ namespace Aho {
 	protected:
 		bool m_Compiled{ false };
 		ShaderType m_Type{ ShaderType::None };
-		uint32_t m_ShaderID;
+		uint32_t m_ShaderID{ 0u };
 	};
 
 	class ShaderLibrary {

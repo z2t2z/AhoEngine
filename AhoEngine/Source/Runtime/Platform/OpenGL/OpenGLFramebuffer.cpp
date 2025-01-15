@@ -162,7 +162,19 @@ namespace Aho {
 			m_ColorAttachmentTex[i]->Invalidate();
 			auto target = Utils::GetGLParam(m_ColorAttachmentTex[i]->GetSpecification().target);
 			auto id = m_ColorAttachmentTex[i]->GetTextureID();
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, id, 0);
+
+			if (target == GL_TEXTURE_CUBE_MAP) {
+				for (int face = 0; face < 6; face++) {
+					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
+						GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, id, 0);
+				}
+			}
+			else if (target == GL_TEXTURE_2D) {
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, id, 0);
+			}
+			else {
+				AHO_CORE_ASSERT(false);
+			}
 		}
 	}
 }

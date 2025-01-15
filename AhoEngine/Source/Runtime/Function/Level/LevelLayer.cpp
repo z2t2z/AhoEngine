@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "LevelLayer.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Core/Timer.h"
 #include "Runtime/Resource/Asset/Animation/Animator.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
@@ -8,6 +9,7 @@
 #include "Runtime/Function/Renderer/Texture.h"
 #include "Runtime/Function/Gameplay/IK.h"
 #include "Runtime/Core/BVH.h"
+#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 #include <unordered_map>
 
 
@@ -271,6 +273,8 @@ namespace Aho {
 		}
 	}
 
+
+	// Needs refactoring
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
@@ -290,7 +294,7 @@ namespace Aho {
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
-			entityManager->AddComponent<MeshComponent>(meshEntity, s_MeshCnt);
+			entityManager->AddComponent<MeshComponent>(meshEntity, s_globalSubMeshId);
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -298,11 +302,16 @@ namespace Aho {
 			renderData->SetEntityID(entityID);
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
+
+			TextureHandles handle;
+
 			if (meshInfo->materialInfo.HasMaterial()) {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
 						tex->SetTexType(type);
+						handle.SetHandles(tex->GetTextureHandle(), type);
+						AHO_CORE_WARN("HandleId: {}", tex->GetTextureHandle());
 						textureCached[path] = tex;
 					}
 					mat->AddMaterialProperties({ textureCached.at(path), type });
@@ -321,6 +330,7 @@ namespace Aho {
 				mat->AddMaterialProperties({ 0.2f, TexType::AO });
 			}
 
+			m_TextureHandles.push_back(handle);
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
@@ -331,7 +341,7 @@ namespace Aho {
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
 			for (const auto& info : *asset) {
-				BVHi* bvhi = new BVHi(info, s_MeshCnt);
+				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++);
 				bvhComp.bvhs.push_back(bvhi);
 				tlasBvh.AddBLASPrimtive(bvhi);
 			}
@@ -351,8 +361,7 @@ namespace Aho {
 			//		tlasBvh.UpdateTLAS();
 			//	}).detach();
 		}
-
-		s_MeshCnt += 1;
+		SSBOManager::UpdateSSBOData<TextureHandles>(5, m_TextureHandles);
 
 		//asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
@@ -363,7 +372,7 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		entityManager->AddComponent<MeshComponent>(gameObject, s_MeshCnt);
+		entityManager->AddComponent<MeshComponent>(gameObject, s_globalSubMeshId);
 		entityManager->AddComponent<EntityComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
@@ -402,8 +411,6 @@ namespace Aho {
 			renderDataAll.push_back(renderData);
 		}
 		
-		s_MeshCnt += 1;
-
 		asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}

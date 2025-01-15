@@ -2,6 +2,7 @@
 #include "PathTracingPipeline.h"
 #include "Runtime/Function/Level/Level.h"
 #include "Runtime/Core/BVH.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 #include <memory>
@@ -24,20 +25,22 @@ namespace Aho {
 
 	PathTracingPipeline::PathTracingPipeline() {
 		Initialize();
+		m_Frame = 0u;
 	}
 
 	void PathTracingPipeline::Initialize() {
 		// TODO: Move these and check them in bvh
-		constexpr int64_t MAX_MESH		= 12'800'000;
-		constexpr int64_t MAX_TLAS_NODE = 12'800'000;
-		constexpr int64_t MAX_BLAS_NODE = 12'800'000;
-		constexpr int64_t MAX_PRIMITIVE = 12'800'000;
+		constexpr int64_t MAX_MESH		= 1'280'000;
+		constexpr int64_t MAX_TLAS_NODE = 1'280'000;
+		constexpr int64_t MAX_BLAS_NODE = 1'280'000;
+		constexpr int64_t MAX_PRIMITIVE = 1'280'000;
 
 		SSBOManager::RegisterSSBO<BVHNodei>(0, MAX_TLAS_NODE, true);
 		SSBOManager::RegisterSSBO<PrimitiveDesc>(1, MAX_MESH, true);
 		SSBOManager::RegisterSSBO<BVHNodei>(2, MAX_BLAS_NODE, true);
 		SSBOManager::RegisterSSBO<PrimitiveDesc>(3, MAX_PRIMITIVE, true);
 		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
+		SSBOManager::RegisterSSBO<TextureHandles>(5, MAX_MESH, true);
 
 		m_ShadingPass = SetupShadingPass();
 		RegisterRenderPass(m_ShadingPass.get(), RenderDataType::Empty);
@@ -76,6 +79,7 @@ namespace Aho {
 			[this](const std::vector<std::shared_ptr<RenderData>>& _, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				static int g = 16;
 				shader->Bind();
+				shader->SetInt("u_Frame", m_Frame++);
 				renderTarget->BindAt(0);
 
 				uint32_t width = renderTarget->GetSpecification().Width;

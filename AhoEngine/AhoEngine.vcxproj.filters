@@ -52,6 +52,9 @@
     <Filter Include="Source\Runtime\Function\Renderer">
       <UniqueIdentifier>{64CB9F28-501C-8B6A-7980-792C65301ED4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\BufferObject">
+      <UniqueIdentifier>{A480FB6C-10F1-FDE5-D90F-786E453F36E7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Function\Renderer\RenderPass">
       <UniqueIdentifier>{0A6DBA87-76D2-4D0E-FFAA-EFE66B0F437D}</UniqueIdentifier>
     </Filter>
@@ -147,14 +150,14 @@
     <ClInclude Include="Source\IamAho.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\BBox.h">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\App\Application.h">
       <Filter>Source\Runtime\Core\App</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h">
       <Filter>Source\Runtime\Core\App</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\BBox.h">
+      <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\BVH.h">
       <Filter>Source\Runtime\Core</Filter>
@@ -255,6 +258,18 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Buffer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBO.h">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
@@ -310,12 +325,6 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArrayr.h">
@@ -1674,18 +1683,16 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBO.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\BBox.cpp">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp">
       <Filter>Source\Runtime\Core\App</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\BBox.cpp">
+      <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\BVH.cpp">
       <Filter>Source\Runtime\Core</Filter>
@@ -1738,6 +1745,12 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
@@ -1784,9 +1797,6 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArrayr.cpp">
@@ -1855,6 +1865,5 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
   </ItemGroup>
 </Project>
