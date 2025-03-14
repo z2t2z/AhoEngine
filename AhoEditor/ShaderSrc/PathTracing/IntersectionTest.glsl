@@ -60,14 +60,14 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout TempHitInfo tinfo) {
         return false;
     } 
 
-    vec3 q = cross(s, edge1); //s.cross(edge1);
-    float v = f * dot(ray.direction, q); // ray.direction.dot(q);
+    vec3 q = cross(s, edge1);
+    float v = f * dot(ray.direction, q);
 
     if (v < 0.0f || u + v > 1.0f) {
         return false;
     }
 
-    float t = f * dot(edge2, q); //edge2.dot(q);
+    float t = f * dot(edge2, q);
 
     if (t < 0.0f) {
         return false;
@@ -81,7 +81,6 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout TempHitInfo tinfo) {
 
 
 void RayTracePrimitive(Ray ray, int id, inout HitInfo info) {
-
     int nodeOffset = s_OffsetInfo[id].nodeOffset;
     int primOffset = s_OffsetInfo[id].primtiveOffset;
     int meshId = s_bNodes[nodeOffset].meshId;

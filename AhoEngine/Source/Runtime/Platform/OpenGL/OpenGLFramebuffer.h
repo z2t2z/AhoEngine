@@ -10,7 +10,7 @@ namespace Aho {
 		virtual ~OpenGLFramebuffer();
 		virtual void Bind() override;
 		virtual void Unbind() override;
-		virtual void BindAt(uint32_t pos) override;  // temp, this is for compute shader
+		virtual void BindAt(uint32_t pos, uint32_t colorAttachmentId) override;  // temp, this is for compute shader
 		virtual bool Resize(uint32_t width, uint32_t height) override;
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt) override;
 		virtual void BindCubeMap(Texture* tex, int faceIndex, int attachmentID, int mipLevel) override;

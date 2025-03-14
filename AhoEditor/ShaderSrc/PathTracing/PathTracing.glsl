@@ -8,19 +8,17 @@
 #include "./GlobalVars.glsl"
 #include "../UniformBufferObjects.glsl"
 #include "./IntersectionTest.glsl"
-#include "./rnd.glsl"
+#include "./Random.glsl"
+#include "./LightSources/InfiniteLight.glsl"
 
-layout(binding = 0, rgba32f) uniform image2D outputImage;
+layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
-
-vec3 SampleInfiniteLight(Ray ray) {
-    return vec3(0.0, 0.0, 0.7);
-}
 
 vec3 SampleEmissive() {
     return vec3(0.0, 0.0, 0.0);
 }
+
 
 vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
     vec3 albedo = vec3(0.9, 0.9, 0.9);
@@ -41,9 +39,13 @@ vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int 
     float attenuation = length(lightPos - hitPos);
     attenuation *= attenuation;
 
-    float I = 1000.0;
+    float I = 5000.0;
 
     return I * (albedo / PI) * NdotL / attenuation;
+}
+
+bool HasNormalMap(in out PrimitiveDesc p) {
+    return (p.materialMask & NormalMapMask) > 0;
 }
 
 vec3 LiRandomWalk(Ray ray) {
@@ -53,11 +55,7 @@ vec3 LiRandomWalk(Ray ray) {
     vec3 eps = vec3(0.01, 0.01, 0.01);
 
     while (depth < LI_MAX_DEPTH) {
-        HitInfo info;
-        info.hit = false;
-        info.t = -1.0;
-        info.globalPrimtiveId = -1;
-        info.meshId = -1;
+        HitInfo info = InitHitInfo();
 
         RayTrace(ray, info);
 
@@ -81,15 +79,24 @@ vec3 LiRandomWalk(Ray ray) {
         float w = 1.0 - u - v;
         vec3 N = w * p.v[0].normal + u * p.v[1].normal + v * p.v[2].normal;
         N = normalize(N);
+
         vec2 uv = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u,
             w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
-            
+
+        // Retrieve normal from normal map if there is
         int meshId = p.meshId;
+        if (HasNormalMap(p)) {
+            TextureHandles handle = s_TextureHandles[meshId];
+            vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
+            T = normalize(T);
+            T = normalize(T - dot(T, N) * N);
+            vec3 B = cross(N, T); // Right-handed
+            mat3 TBN = mat3(T, B, N);
+            vec3 n = texture(handle.normal, uv).xyz; // Normal from normal map
+            N = normalize(TBN * n);
+        }        
 
         vec3 hitPos = normalize(ray.origin + info.t * ray.direction);
-        // hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;
-
-        // return hitPos;
 
         L += beta * SampleEmissive();
 
@@ -97,39 +104,44 @@ vec3 LiRandomWalk(Ray ray) {
 
         L += beta * SampleDirectLight(ray, hitPos, N, info, uv, meshId);
 
-        break;
+        // L = N;
+        // break;
 
-        float P_reflected = rand();
-        // vec3 direction = P_reflected > 0.5 ? reflect()
-        vec3 direction = vec3(rand(), rand(), rand());
-        direction = normalize(direction);
-        // uint64_t x;
-        vec3 origin = ray.origin + info.t * direction;
+        // float P_reflected = rand();
+        vec3 dir = reflect(ray.direction, -N);
 
-        ray.direction = direction;
-        ray.origin = origin;
+        dir = vec3(rand(), rand(), rand());
+        dir = normalize(dir);
 
-        beta *= 0.5;
+        ray.direction = dir;
+        ray.origin = hitPos;
+
+        beta *= 0.2;
         depth += 1;
     }
 
     return L;
 }
 
+vec3 accumulate = vec3(0.0, 0.0, 0.0);
+
 void main() {
+    InitRNG(gl_GlobalInvocationID.xy, u_Frame);
+
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
     Ray ray = GetRayFromScreenSpace(
             vec2(pixelCoord), 
-            vec2(imageSize(outputImage))
+            vec2(imageSize(accumulatedImage))
         );
 
-    InitRNG(gl_GlobalInvocationID.xy, u_Frame);
+    vec3 resColor = LiRandomWalk(ray);
 
-    vec3 outColor = LiRandomWalk(ray);
+    vec4 tmp = vec4(resColor, 1.0);
+    // tmp = vec4(1.0, 1.0, 1.0, 1.0);
 
-    // float rnd = rand();
+    vec4 accumulated = imageLoad(accumulatedImage, pixelCoord);
 
-    // outColor = vec3(rnd, 0.0, 0.0);
+    accumulated += vec4(resColor, 1.0);
 
-    imageStore(outputImage, ivec2(gl_GlobalInvocationID.xy), vec4(outColor, 1.0));
+    imageStore(accumulatedImage, ivec2(gl_GlobalInvocationID.xy), accumulated);
 }

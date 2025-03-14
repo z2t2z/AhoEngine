@@ -51,7 +51,7 @@ namespace Aho {
 		MultiScattLUT,
 		SkyViewLUT,
 		AreialPerspectiveLUT,
-		PathTracerAccumulate,
+		PathTracingAccumulate,
 		Result	// The final result texture of a render pass
 	};
 
@@ -93,6 +93,7 @@ namespace Aho {
 		virtual void SetTextureID(uint32_t id) = 0;
 		virtual const std::string& GetPath() const = 0;
 		virtual void SetData(void* data, uint32_t size) = 0;
+		virtual void ClearTexImage(const void* data) = 0;
 		virtual void Bind(uint32_t slot = 0) const = 0;
 		virtual bool operator==(const Texture& other) const = 0;
 		virtual std::string GetDebugName() { return m_Specification.debugName; }

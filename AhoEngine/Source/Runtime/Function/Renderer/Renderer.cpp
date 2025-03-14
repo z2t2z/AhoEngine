@@ -47,8 +47,16 @@ namespace Aho {
 			m_RP_Postprocess->Execute();
 		}
 		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
+			if (m_CameraDirty) {
+				m_RP_PathTraciing->ClearAccumulateData();
+				m_CameraDirty = false;
+			}
 			m_RP_PathTraciing->Execute();
 		}
+	}
+
+	void Renderer::SetCameraDirty() {
+		m_CameraDirty = true;
 	}
 
 	bool Renderer::OnViewportResize(uint32_t width, uint32_t height) {

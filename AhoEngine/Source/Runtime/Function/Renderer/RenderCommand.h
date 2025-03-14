@@ -85,29 +85,28 @@ namespace Aho {
 		~RenderCommandBuffer() = default;
 
 		RenderCommandBuffer(const std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
-							const std::shared_ptr<Shader>& shader,
-							const std::vector<TextureBuffer>& textureBuffers,
-							const std::shared_ptr<Framebuffer>& renderTarget)>& cmd) {
+														const std::shared_ptr<Shader>& shader,
+														const std::vector<TextureBuffer>& textureBuffers,
+														const std::shared_ptr<Framebuffer>& renderTarget)>& cmd) {
+			//m_Command = cmd;
 			AddCommand(cmd);
 		}
 		void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData,	// Meshes to render
 					 const std::shared_ptr<Shader>& shader, 						// Shader to use
 					 const std::shared_ptr<Framebuffer>& renderTarget, 				// RenderTarget 
 					 const std::vector<TextureBuffer>& textureBuffers) const {			// G-Buffer textures
-			for (const auto& command : m_Commands) {
-				command(renderData, shader, textureBuffers, renderTarget);			// TODO: actually only one command is needed for now
-			}
+			m_Command(renderData, shader, textureBuffers, renderTarget);			// TODO: actually only one command is needed for now
 		}
 		void AddCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&,
-						const std::shared_ptr<Shader>&,
-						const std::vector<TextureBuffer>&,
-						const std::shared_ptr<Framebuffer>&)>& func) {
-			m_Commands.push_back(func);
+												const std::shared_ptr<Shader>&,
+												const std::vector<TextureBuffer>&,
+												const std::shared_ptr<Framebuffer>&)>& func) {
+			m_Command = func;
 		}
 	private:
-		std::vector<std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
+		std::function<void(const std::vector<std::shared_ptr<RenderData>>& renderData,
 									   const std::shared_ptr<Shader>& shader,
 									   const std::vector<TextureBuffer>& textureBuffers,
-									   const std::shared_ptr<Framebuffer>& renderTarget)>> m_Commands;
+									   const std::shared_ptr<Framebuffer>& renderTarget)> m_Command;
 	};
 }

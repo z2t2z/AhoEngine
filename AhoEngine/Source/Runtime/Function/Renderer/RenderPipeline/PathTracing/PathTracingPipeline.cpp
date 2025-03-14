@@ -11,21 +11,9 @@
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
-	//namespace Utils {
-	//	static uint32_t ConvertToRGBA(const glm::vec4& color) {
-	//		uint8_t r = (uint8_t)(color.r * 255.0f);
-	//		uint8_t g = (uint8_t)(color.g * 255.0f);
-	//		uint8_t b = (uint8_t)(color.b * 255.0f);
-	//		uint8_t a = (uint8_t)(color.a * 255.0f);
-
-	//		uint32_t result = (a << 24) | (b << 16) | (g << 8) | r;
-	//		return result;
-	//	}
-	//}
-
 	PathTracingPipeline::PathTracingPipeline() {
 		Initialize();
-		m_Frame = 0u;
+		m_Frame = 1u;
 	}
 
 	void PathTracingPipeline::Initialize() {
@@ -42,14 +30,15 @@ namespace Aho {
 		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
 		SSBOManager::RegisterSSBO<TextureHandles>(5, MAX_MESH, true);
 
-		m_ShadingPass = SetupShadingPass();
-		RegisterRenderPass(m_ShadingPass.get(), RenderDataType::Empty);
-		m_RenderResult = m_ShadingPass->GetTextureBuffer(TexType::Result);
+		m_AccumulatePass = SetupAccumulatePass();
+
+		m_AccumulatePass->RegisterTextureBuffer({ m_AccumulatePass->GetTextureBuffer(TexType::PathTracingAccumulate), TexType::PathTracingAccumulate });
+
+		RegisterRenderPass(m_AccumulatePass.get(), RenderDataType::ScreenQuad);
+		m_RenderResult = m_AccumulatePass->GetTextureBuffer(TexType::Result);
 	}
 
 	void PathTracingPipeline::UpdateSSBO(const std::shared_ptr<Level>& currLevel) {
-		//auto entityManager = currLevel->GetEntityManager();
-
 		const auto& tlas = currLevel->GetTLAS();
 		SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas.GetNodesArr());
 		SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas.GetPrimsArr());
@@ -73,14 +62,33 @@ namespace Aho {
 		}
 	}
 
-	std::unique_ptr<RenderPass> PathTracingPipeline::SetupShadingPass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand(
+	void PathTracingPipeline::ClearAccumulateData() {
+		m_Frame = 1u;
+		static constexpr float clearData[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		m_AccumulatePass->GetRenderTarget()->GetTexture(TexType::PathTracingAccumulate)->ClearTexImage(clearData);
+	}
+
+	bool PathTracingPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
+		bool resized = false;
+		for (auto& task : m_RenderTasks) {
+			resized |= task.pass->GetRenderTarget()->Resize(width, height);
+		}
+		if (resized) {
+			m_Frame = 1u;
+		}
+		return resized;
+	}
+
+	std::unique_ptr<RenderPass> PathTracingPipeline::SetupAccumulatePass() {
+		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("PathTracingPass");
+		// Accumulate in compute shader
+		pass->AddRenderCommand(
 			[this](const std::vector<std::shared_ptr<RenderData>>& _, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				static int g = 16;
 				shader->Bind();
+				renderTarget->BindAt(0, 0);
+
 				shader->SetInt("u_Frame", m_Frame++);
-				renderTarget->BindAt(0);
 
 				uint32_t width = renderTarget->GetSpecification().Width;
 				uint32_t height = renderTarget->GetSpecification().Height;
@@ -92,11 +100,38 @@ namespace Aho {
 				shader->Unbind();
 			});
 
-		auto shader = Shader::Create((g_CurrentPath / "ShaderSrc" / "PathTracing" / "PathTracing.glsl").string());
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("PathTracingPass");
-		AHO_CORE_ASSERT(shader->IsCompiled());
-		pass->SetShader(shader);
-		pass->SetRenderCommand(std::move(cmdBuffer));
+		// Present in fragment shader
+		pass->AddRenderCommand(
+			[this](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+				shader->Bind();
+				renderTarget->EnableAttachments(1);
+				RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+				shader->SetInt("u_Frame", m_Frame++);
+
+				uint32_t texOffset = 0u;
+				for (const auto& texBuffer : textureBuffers) {
+					shader->SetInt(TextureBuffer::GetTexBufferUniformName(texBuffer.m_Type), texOffset);
+					texBuffer.m_Texture->Bind(texOffset++);
+				}
+
+				for (const auto& data : renderData) {
+					data->Bind(shader, texOffset);
+					RenderCommand::DrawIndexed(data->GetVAO());
+					data->Unbind();
+				}
+				renderTarget->Unbind();
+				shader->Unbind();
+			});
+
+		auto accumulateShader = Shader::Create((g_CurrentPath / "ShaderSrc" / "PathTracing" / "PathTracing.glsl").string());
+		AHO_CORE_ASSERT(accumulateShader->IsCompiled());
+		pass->AddShader(accumulateShader);
+
+		auto preSentShader = Shader::Create((g_CurrentPath / "ShaderSrc" / "PathTracing" / "Present.glsl").string());
+		AHO_CORE_ASSERT(preSentShader->IsCompiled());
+		pass->AddShader(preSentShader);
+
 
 		TexSpec colorAttachment;
 		colorAttachment.debugName = "pathTracerResult";
@@ -107,7 +142,11 @@ namespace Aho {
 		colorAttachment.filterModeMag = TexFilterMode::Nearest;
 		colorAttachment.type = TexType::Result;
 
-		FBSpec fbSpec(1280u, 720u, { colorAttachment });
+		TexSpec colorAttachmentAccumulate(colorAttachment);
+		colorAttachmentAccumulate.type = TexType::PathTracingAccumulate;
+		colorAttachmentAccumulate.debugName = "pathTracerAccumulate";
+
+		FBSpec fbSpec(1280u, 720u, { colorAttachmentAccumulate, colorAttachment });
 
 		auto fbo = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(fbo);

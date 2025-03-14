@@ -162,7 +162,7 @@ namespace Aho {
 			const Vertex& v0 = vertices[indices[i]];
 			const Vertex& v1 = vertices[indices[i + 1]];
 			const Vertex& v2 = vertices[indices[i + 2]];
-			m_Primitives.emplace_back(v0, v1, v2, i / 3, m_MeshId);
+			m_Primitives.emplace_back(v0, v1, v2, i / 3, m_MaterialMask, m_MeshId);
 			m_PrimitiveComp.emplace_back(v0, v1, v2);
 		}
 

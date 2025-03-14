@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Runtime/Function/Renderer/Material.h"
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Ray.h"
 #include "BBox.h"
@@ -14,8 +15,8 @@ namespace Aho {
 	public:
 		PrimitiveDesc() = default;
 		// BLAS Constructor
-		PrimitiveDesc(const Vertex& v0, const Vertex& v1, const Vertex& v2, int id, int meshId = -1)
-			: m_PrimId(id), m_MeshId(meshId) {
+		PrimitiveDesc(const Vertex& v0, const Vertex& v1, const Vertex& v2, int id, MaterialMaskEnum mask = MaterialMaskEnum::Empty, int meshId = -1)
+			: m_PrimId(id), m_MaterialMask(mask), m_MeshId(meshId) {
 			m_Vertices[0] = v0;
 			m_Vertices[1] = v1;
 			m_Vertices[2] = v2;
@@ -48,8 +49,8 @@ namespace Aho {
 		int m_MeshId;
 		int m_Id{ -1 };
 		int m_PrimId{ -1 };
-		float _padding;
-		//glm::vec2 _padding0{ -1 };
+		MaterialMaskEnum m_MaterialMask{ MaterialMaskEnum::Empty };
+		
 	};
 
 
@@ -63,43 +64,13 @@ namespace Aho {
 			normal[0] = v0.normal;
 			normal[1] = v1.normal;
 			normal[2] = v2.normal;
+
+			tangent[0] = v0.tangent;
+			tangent[1] = v1.tangent;
+			tangent[2] = v2.tangent;
 		}
 		glm::vec3 position[3];
 		glm::vec3 normal[3];
+		glm::vec3 tangent[3];
 	};
-
-	//class Primitive {
-	//public:
-	//	Primitive() = default;
-	//	Primitive(const Vertex& v0, const Vertex& v1, const Vertex& v2, int meshId = -1)
-	//		: m_PrimDesc(v0, v1, v2, meshId) {
-
-	//		m_ov0.normal = v0.normal;
-	//		m_ov0.position = v0.position;
-
-	//		m_ov1.normal = v1.normal;
-	//		m_ov1.position = v1.position;
-
-	//		m_ov2.normal = v2.normal;
-	//		m_ov2.position = v2.position;
-	//	}
-
-	//	BBox GetBBox() const;
-	//	void ApplyTransform(const glm::mat4& transform);
-	//	glm::vec3 GetCentroid() const { return GetBBox().GetCentroid(); }
-
-	//	Vertex GetVertex(int num) const { return m_PrimDesc.v[num]; }
-
-	//	bool Intersect(const Ray& ray) const;
-
-	//private:
-	//	PrimitiveDesc m_PrimDesc;
-
-	//	// stores the original position and normal
-	//	struct oVertex {
-	//		oVertex() = default;
-	//		glm::vec3 position;
-	//		glm::vec3 normal;
-	//	} m_ov0, m_ov1, m_ov2;
-	//};
 }

@@ -16,6 +16,7 @@ namespace Aho {
         for (int i = 0; i < 3; i++) {
             m_Vertices[i].position = glm::vec3(transform * glm::vec4(pc.position[i], 1.0f));
             m_Vertices[i].normal = normalMat * pc.normal[i], 1.0f;
+            m_Vertices[i].tangent = normalMat * pc.tangent[i], 1.0f;
         }
 
         const auto& p0 = m_Vertices[0].position;

@@ -160,6 +160,10 @@ namespace Aho {
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Specification.width, m_Specification.height, Utils::GetGLParam(m_Specification.dataFormat), GL_UNSIGNED_BYTE, data);
 	}
 
+	void OpenGLTexture2D::ClearTexImage(const void* data) {
+		glClearTexImage(m_TextureID, 0, Utils::GetGLParam(m_Specification.dataFormat), Utils::GetGLParam(m_Specification.dataType), data);
+	}
+
 	void OpenGLTexture2D::Bind(uint32_t slot) const {
 		glBindTextureUnit(slot, m_TextureID);
 	}

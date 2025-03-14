@@ -287,6 +287,9 @@ namespace Aho {
 		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
 		renderDataAll.reserve(asset->size());
 		int index = 0;
+
+
+		std::vector<int> materialMasks;
 		for (const auto& meshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -304,6 +307,7 @@ namespace Aho {
 			renderData->SetMaterial(mat);
 
 			TextureHandles handle;
+			int materialMask = MaterialMaskEnum::All;
 
 			if (meshInfo->materialInfo.HasMaterial()) {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
@@ -319,17 +323,29 @@ namespace Aho {
 			}
 			if (!mat->HasProperty(TexType::Albedo)) {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
-			}
-			if (!mat->HasProperty(TexType::Metallic)) {
-				mat->AddMaterialProperties({ 0.2f, TexType::Metallic });
-			}
-			if (!mat->HasProperty(TexType::Roughness)) {
-				mat->AddMaterialProperties({ 0.90f, TexType::Roughness });
-			}
-			if (!mat->HasProperty(TexType::AO)) {
-				mat->AddMaterialProperties({ 0.2f, TexType::AO });
+				materialMask ^= MaterialMaskEnum::AlbedoMap;
 			}
 
+			if (!mat->HasProperty(TexType::Normal)) {
+				materialMask ^= MaterialMaskEnum::NormalMap;
+			}
+
+			if (!mat->HasProperty(TexType::Metallic)) {
+				mat->AddMaterialProperties({ 0.2f, TexType::Metallic });
+				materialMask ^= MaterialMaskEnum::MetallicMap;
+			}
+
+			if (!mat->HasProperty(TexType::Roughness)) {
+				mat->AddMaterialProperties({ 0.90f, TexType::Roughness });
+				materialMask ^= MaterialMaskEnum::RoughnessMap;
+			}
+
+			if (!mat->HasProperty(TexType::AO)) {
+				mat->AddMaterialProperties({ 0.2f, TexType::AO });
+				materialMask ^= MaterialMaskEnum::AOMap;
+			} 
+
+			materialMasks.push_back(materialMask);
 			m_TextureHandles.push_back(handle);
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
@@ -340,8 +356,9 @@ namespace Aho {
 			ScopedTimer timer("Build BVH");
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+			int i = 0;
 			for (const auto& info : *asset) {
-				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++);
+				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, static_cast<MaterialMaskEnum>(materialMasks[i++]));
 				bvhComp.bvhs.push_back(bvhi);
 				tlasBvh.AddBLASPrimtive(bvhi);
 			}

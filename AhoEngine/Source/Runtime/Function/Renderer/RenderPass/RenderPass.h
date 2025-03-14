@@ -67,6 +67,9 @@ namespace Aho {
 			s_TexBufferMap[TexType::TransmittanceLUT] = "u_TransmittanceLUT";
 			s_TexBufferMap[TexType::SkyViewLUT]		  = "u_SkyviewLUT";
 			s_TexBufferMap[TexType::MultiScattLUT]	  = "u_MultiScattLUT";
+			
+			// Path tracing
+			s_TexBufferMap[TexType::PathTracingAccumulate] = "u_PathTracingAccumulate";
 		}
 		static const std::string GetTexBufferUniformName(TexType type) { return s_TexBufferMap.at(type); }
 	private:
@@ -81,13 +84,41 @@ namespace Aho {
 			m_RenderCommandBuffer.reset();
 		}
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
-		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { m_RenderCommandBuffer = std::move(renderCommandBuffer); }
-		virtual void SetShader(const std::shared_ptr<Shader>& shader) { m_Shader = shader; }
+		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { 
+			m_RenderCommandBuffer = std::move(renderCommandBuffer);
+			//m_RenderCommandBuffers.emplace_back(renderCommandBuffer);
+		}
+
+		virtual void AddRenderCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&,
+																const std::shared_ptr<Shader>&,
+																const std::vector<TextureBuffer>&,
+																const std::shared_ptr<Framebuffer>&)>& func) {
+			m_RenderCommandBuffers.emplace_back(std::make_unique<RenderCommandBuffer>(func));
+		}
+
+		virtual void SetShader(const std::shared_ptr<Shader>& shader) { 
+			m_Shader = shader; 
+		}
+
+		virtual void AddShader(const std::shared_ptr<Shader>& shader) {
+			m_Shaders.push_back(shader);
+		}
+
 		virtual RenderPassType GetRenderPassType() { return m_RenderPassType; }
 		virtual void SetRenderPassType(RenderPassType type) { m_RenderPassType = type; }
 		
 		virtual void Execute(const std::vector<std::shared_ptr<RenderData>>& renderData) {
-			m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
+			auto it = m_Shaders.begin();
+			for (const auto& cmd : m_RenderCommandBuffers) {
+				cmd->Execute(renderData, *it, m_Framebuffer, m_TextureBuffers);
+				if (std::next(it) != m_Shaders.end()) {
+					it = std::next(it);
+				}
+			}
+
+			if (m_RenderCommandBuffer) {
+				m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
+			}
 		}
 
 		virtual Texture* GetTextureBuffer(TexType type) {
@@ -100,7 +131,7 @@ namespace Aho {
 				[&](const Texture* texBuffer) {
 					return texBuffer->GetTexType() == type;
 				});
-			AHO_CORE_ASSERT(it != textureBuffer.end(), "Did not have this texture buffer: {}");
+			AHO_CORE_ASSERT(it != textureBuffer.end(), "Does not have this texture buffer: {}");
 			return *it;
 		}
 
@@ -118,16 +149,21 @@ namespace Aho {
 		}
 
 		virtual std::shared_ptr<Shader> GetShader() { return m_Shader; }
+		virtual std::shared_ptr<Shader> GetShader(int idx) { return m_Shaders.at(idx); }
 		std::shared_ptr<Framebuffer> GetRenderTarget() { return m_Framebuffer; }
 		std::string GetPassDebugName() { return m_Name; }
 
 	private:
+		std::vector<std::shared_ptr<Shader>> m_Shaders;
 		std::string m_Name;
 		std::vector<TextureBuffer> m_TextureBuffers;
 		RenderPassType m_RenderPassType{ RenderPassType::None };
 		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
 		std::shared_ptr<Shader> m_Shader{ nullptr };			// Currently each render pass uses a single shader
 		std::unique_ptr<RenderCommandBuffer> m_RenderCommandBuffer{ nullptr };
+
+		std::vector<std::unique_ptr<RenderCommandBuffer>> m_RenderCommandBuffers;
+
 	};
 
 };

@@ -37,7 +37,7 @@ struct PrimitiveDesc {
     int meshId; // not used
     int id;
     int primId;
-    float _padding;
+    int materialMask;
 };
 
 struct Ray {
@@ -53,6 +53,15 @@ struct HitInfo {
     bool hit;
     bool exceeded;
 };
+
+HitInfo InitHitInfo() {
+    HitInfo info;
+    info.hit = false;
+    info.t = -1.0;
+    info.globalPrimtiveId = -1;
+    info.meshId = -1;
+    return info;
+}
 
 struct TempHitInfo {
     vec2 uv;

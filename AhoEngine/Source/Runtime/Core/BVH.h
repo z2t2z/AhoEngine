@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Runtime/Function/Renderer/Material.h"
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Ray.h"
 #include "Primitive.h"
@@ -91,8 +92,8 @@ namespace Aho {
 			Build(mesh);
 		}
 		
-		BVHi(const std::shared_ptr<MeshInfo>& info, int meshId, SplitMethod splitMethod = SplitMethod::SAH)
-			: m_MeshId(meshId), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
+		BVHi(const std::shared_ptr<MeshInfo>& info, int meshId, MaterialMaskEnum mask = MaterialMaskEnum::Empty, SplitMethod splitMethod = SplitMethod::SAH)
+			: m_MeshId(meshId), m_MaterialMask(mask), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
 			Build(info);
 		}
 
@@ -105,16 +106,16 @@ namespace Aho {
 
 		void UpdateTLAS();
 
-		int GetRoot() const { 
-			AHO_CORE_ASSERT(m_Root == 0); 
-			return m_Root; 
+		int GetRoot() const {
+			AHO_CORE_ASSERT(m_Root == 0);
+			return m_Root;
 		}
-		
+
 		int GetMeshId() const { return m_MeshId; }
-		
+
 		BBox GetBBox() const {
-			AHO_CORE_ASSERT(m_Root == 0); 
-			return m_Nodes[m_Root].GetBBox(); 
+			AHO_CORE_ASSERT(m_Root == 0);
+			return m_Nodes[m_Root].GetBBox();
 		}
 
 		void AddBLASPrimtive(const BVHi* blas);
@@ -124,10 +125,10 @@ namespace Aho {
 		const std::vector<PrimitiveDesc>& GetPrimsArr() const { return m_Primitives; }
 
 		const std::vector<OffsetInfo>& GetOffsetMap() const {
-			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS); 
-			return m_OffsetMap; 
+			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
+			return m_OffsetMap;
 		}
-	
+
 		const BVHi* GetBLAS(int id) const {
 			AHO_CORE_ASSERT(id >= 0 && id < m_BLAS.size());
 			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
@@ -138,7 +139,7 @@ namespace Aho {
 		bool IntersectNearest_loop(const Ray& ray, float& t);
 		void Build(const std::shared_ptr<StaticMesh>& mesh);
 		void Build(const std::shared_ptr<MeshInfo>& mesh);
-		
+
 		// Build tree for primitives of intervals [indexL, indexR)
 		int BuildTreeRecursion(int indexL, int indexR);
 
@@ -147,6 +148,7 @@ namespace Aho {
 		inline static size_t s_PrimOffset{ 0 };
 
 	private:
+		MaterialMaskEnum m_MaterialMask{ MaterialMaskEnum::Empty };
 		int m_MeshId{ -1 };
 		int m_Root{ -1 };
 		BVHLevel m_BvhLevel;

@@ -62,6 +62,8 @@ namespace Aho {
 			AHO_CORE_ASSERT(false);
 		}
 
+		void SetCameraDirty();
+
 		bool OnViewportResize(uint32_t width, uint32_t height);
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
@@ -82,6 +84,7 @@ namespace Aho {
 		PathTracingPipeline* m_RP_PathTraciing{ nullptr };
 
 	private:
+		bool m_CameraDirty{ false };
 		RenderMode m_CurrentRenderMode{ RenderMode::DefaultLit };
 	};
 }

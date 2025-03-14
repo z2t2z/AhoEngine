@@ -8,6 +8,15 @@
 #include <glm/glm.hpp>
 
 namespace Aho {
+	enum MaterialMaskEnum {
+		Empty		 = 0,
+		AlbedoMap	 = 1 << 0,
+		NormalMap	 = 1 << 1,
+		RoughnessMap = 1 << 2,
+		MetallicMap  = 1 << 3,
+		AOMap		 = 1 << 4,
+		All          = AlbedoMap | NormalMap | RoughnessMap | MetallicMap | AOMap
+	};
 	
 	struct MaterialProperty {
 		using Value = std::variant<std::shared_ptr<Texture2D>, glm::vec3, float>;

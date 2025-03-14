@@ -61,7 +61,10 @@ namespace Aho {
 				m_CursorLocked = true;
 				Input::LockCursor();
 			}
-			m_CameraManager->Update(deltaTime, firstClick);
+			bool changed = m_CameraManager->Update(deltaTime, firstClick);
+			if (changed) {
+				m_Renderer->SetCameraDirty();
+			}
 		}
 		else if (m_CursorLocked) {
 			m_CursorLocked = false;

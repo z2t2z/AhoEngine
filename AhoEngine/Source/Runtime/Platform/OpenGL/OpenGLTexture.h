@@ -50,6 +50,7 @@ namespace Aho {
 		virtual const std::string& GetPath() const override { return m_Path; }
 		virtual void SetTextureID(uint32_t id) { m_TextureID = id; }
 		virtual void SetData(void* data, uint32_t size) override;
+		virtual void ClearTexImage(const void* data) override;
 		virtual void Bind(uint32_t slot = 0) const override;
 		virtual bool operator==(const Texture& other) const override {
 			return m_TextureID == other.GetTextureID();

@@ -19,7 +19,7 @@ namespace Aho {
 		virtual ~Framebuffer() = default;
 		virtual void Bind() = 0;
 		virtual void Unbind() = 0;
-		virtual void BindAt(uint32_t pos) = 0;
+		virtual void BindAt(uint32_t pos, uint32_t colorAttachmentId) = 0;
 		virtual void Invalidate() = 0;
 		virtual bool Resize(uint32_t width, uint32_t height) = 0;
 		virtual Texture* GetDepthTexture() = 0;

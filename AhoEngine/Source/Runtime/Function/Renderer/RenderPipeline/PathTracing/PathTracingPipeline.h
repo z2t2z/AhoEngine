@@ -11,15 +11,18 @@ namespace Aho {
 		PathTracingPipeline();
 		virtual void Initialize() override;
 		void UpdateSSBO(const std::shared_ptr<Level>& currlevel);
+		void ClearAccumulateData();
+
+		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height) override;
 
 	private:
 		std::unique_ptr<RenderPass> SetupGBufferPass();
-		std::unique_ptr<RenderPass> SetupShadingPass();
+		std::unique_ptr<RenderPass> SetupAccumulatePass();
 
 	private:
-		std::unique_ptr<RenderPass> m_ShadingPass;
+		std::unique_ptr<RenderPass> m_AccumulatePass;
+		std::unique_ptr<RenderPass> m_PresentPass;
 		std::unique_ptr<RenderPass> m_GbufferPass;
-
 
 	private:
 		uint32_t m_Frame;

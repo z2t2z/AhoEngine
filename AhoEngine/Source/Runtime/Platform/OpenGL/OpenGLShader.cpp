@@ -290,13 +290,18 @@ namespace Aho {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform1i(location, value);
 	}
 
 	void OpenGLShader::SetUint(const std::string& name, uint32_t value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
-		AHO_CORE_ASSERT(location != -1);
+		//AHO_CORE_ASSERT(location != -1);
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+			return;
+		}
 		glUniform1ui(location, value);
 	}
 
@@ -305,6 +310,7 @@ namespace Aho {
 		//AHO_CORE_ASSERT(location != -1);
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform1i(location, value);
 	}
@@ -313,6 +319,7 @@ namespace Aho {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform1iv(location, count, values);
 	}
@@ -321,6 +328,7 @@ namespace Aho {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform1f(location, value);
 	}
@@ -329,6 +337,7 @@ namespace Aho {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform2f(location, value.x, value.y);
 	}
@@ -337,6 +346,7 @@ namespace Aho {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
+			return;
 		}
 		glUniform3f(location, value.x, value.y, value.z);
 	}
@@ -344,6 +354,7 @@ namespace Aho {
 	void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
+			return;
 			//AHO_CORE_ERROR("{}", name);
 		}
 		glUniform4f(location, value.x, value.y, value.z, value.w);
@@ -352,6 +363,7 @@ namespace Aho {
 	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
+			return;
 			//AHO_CORE_ERROR("{}", name);
 		}
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
@@ -360,6 +372,7 @@ namespace Aho {
 	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
+			return;
 			//AHO_CORE_ERROR("{}", name);
 		}
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
@@ -368,6 +381,7 @@ namespace Aho {
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
+			return;
 			//AHO_CORE_ERROR("{}", name);
 		}
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
