@@ -76,14 +76,6 @@ struct TextureHandles {
     layout(bindless_sampler) sampler2D roughness;
 };
 
-// struct TextureHandles {
-//     layout(bindless_sampler) uint64_t albedo;
-//     layout(bindless_sampler) uint64_t normal;
-//     layout(bindless_sampler) uint64_t metallic;
-//     layout(bindless_sampler) uint64_t roughness;
-// };
-
-
 bool IsLeaf(BVHNode node) {
     return node.left == -1 && node.right == -1 && node.firstPrimsIdx >= 0 && node.primsCnt > 0;
 }

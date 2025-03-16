@@ -4,6 +4,7 @@
 #include "Runtime/Function/Camera/RuntimeCamera.h"
 #include "Runtime/Resource/Asset/MeshAsset.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
 #include "Runtime/Function/SkeletonViewer.h"
 #include "Runtime/Core/BVH.h"
@@ -77,10 +78,14 @@ namespace Aho {
 
 	struct MaterialComponent {
 		std::shared_ptr<Material> material;
+
+		// For path tracing 
+		TextureHandles* handle{ nullptr };
+		MaterialMaskEnum* matMask{ nullptr };
+
 		MaterialComponent() = default;
-		MaterialComponent(std::shared_ptr<Material>& _material)
-			: material(_material) {
-		}
+		MaterialComponent(std::shared_ptr<Material>& _material, TextureHandles* handle, MaterialMaskEnum* matMask)
+			: material(_material), handle(handle), matMask(matMask) { }
 		MaterialComponent(const MaterialComponent&) = default;
 	};
 
@@ -91,6 +96,18 @@ namespace Aho {
 		MeshComponent(int id) : meshId(id) {};
 		MeshComponent() : name{ "IDK" } {};
 		MeshComponent(const MeshComponent&) = default;
+	};
+
+	// For path tracing 
+	struct TextureHandlesComponent {
+		TextureHandles* handle{ nullptr };
+		MaterialMaskEnum* matMask{ nullptr };
+		TextureHandlesComponent(TextureHandles* handle, MaterialMaskEnum* matMask) : handle(handle), matMask(matMask) {};
+		TextureHandlesComponent() {
+			handle = new TextureHandles();
+			matMask = new MaterialMaskEnum();
+		}
+		TextureHandlesComponent(const TextureHandlesComponent&) = default;
 	};
 
 	struct MultiMeshComponent {

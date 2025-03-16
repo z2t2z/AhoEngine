@@ -1,0 +1,6 @@
+#ifndef DISTANT_LIGHT_GLSL
+#define DISTANT_LIGHT_GLSL
+
+
+
+#endif

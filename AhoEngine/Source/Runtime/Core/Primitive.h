@@ -42,6 +42,7 @@ namespace Aho {
 		int GetId() const { return m_Id; } // this id is for transform only
 		void SetID(int id) { m_Id = id; }
 		int GetPrimId() const { return m_PrimId; } // this id is for transform only
+		void SetMaterialMask(MaterialMaskEnum mask) { m_MaterialMask = mask; }
 
 	private:
 		BBox m_BBox;

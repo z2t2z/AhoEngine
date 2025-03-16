@@ -278,6 +278,8 @@ namespace Aho {
 		opened = ImGui::CollapsingHeader("Material");
 		ImGui::PopFont();
 
+		bool textureChanged = false;
+		// NEED BIG TODO!
 		if (opened) {
 			if (entityManager->HasComponent<MaterialComponent>(m_SelectedObject)) {
 				auto& materialComp = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
@@ -317,6 +319,11 @@ namespace Aho {
 								auto texture = TryGetDragDropTargetTexture();
 								if (texture) {
 									prop = { texture, TexType::Normal };
+
+									*materialComp.matMask |= MaterialMaskEnum::NormalMap;
+									materialComp.handle->SetHandles(texture->GetTextureHandle(), TexType::Normal);
+
+									textureChanged = true;
 								}
 
 							}, prop.m_Value);
@@ -411,6 +418,30 @@ namespace Aho {
 					}
 					ImGui::EndPopup();
 				}
+			}
+
+			if (textureChanged) {
+				m_LevelLayer->UpdatePathTracingTextureHandlesSSBO();
+				//m_LevelLayer->GetCurrentLevel()->GetTLAS().
+				auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+				auto view = entityManager->GetView<BVHComponent, TransformComponent>();
+
+				auto& materialComp = entityManager->GetComponent<MaterialComponent>(m_SelectedObject);
+				MaterialMaskEnum mask = *materialComp.matMask;
+				view.each(
+					[&mask](auto entity, BVHComponent& bc, TransformComponent& tc) {
+						for (BVHi* bvh : bc.bvhs) {
+							bvh->UpdateMaterialMask(mask);
+							bvh->ApplyTransform(tc.GetTransform());
+						}
+					});
+
+				BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+				alts.UpdateTLAS();
+
+				PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
+				ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
+
 			}
 		}
 

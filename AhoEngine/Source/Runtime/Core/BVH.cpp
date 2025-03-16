@@ -46,6 +46,15 @@ namespace Aho {
 		}
 	}
 
+	void BVHi::UpdateMaterialMask(MaterialMaskEnum mask) {
+		m_MaterialMask = mask;
+
+		for (auto& p : m_Primitives) {
+			p.SetMaterialMask(m_MaterialMask);
+		}
+
+	}
+
 	void BVHi::AddBLASPrimtive(const BVHi* blas) {
 		AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
 		m_Primitives.emplace_back(blas, m_BLAS.size());

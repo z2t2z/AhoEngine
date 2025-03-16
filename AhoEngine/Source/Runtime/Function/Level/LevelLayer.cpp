@@ -87,6 +87,10 @@ namespace Aho {
 		m_EventManager->PushBack(newEv);
 	}
 
+	void LevelLayer::UpdatePathTracingTextureHandlesSSBO() {
+		SSBOManager::UpdateSSBOData<TextureHandles>(5, m_TextureHandles);
+	}
+
 	void LevelLayer::UpdateAnimation(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
@@ -288,8 +292,8 @@ namespace Aho {
 		renderDataAll.reserve(asset->size());
 		int index = 0;
 
+		//std::vector<MaterialMaskEnum> tmp;
 
-		std::vector<int> materialMasks;
 		for (const auto& meshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -303,11 +307,15 @@ namespace Aho {
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
 			renderData->SetEntityID(entityID);
-			entityManager->AddComponent<MaterialComponent>(meshEntity, mat);
 			renderData->SetMaterial(mat);
 
-			TextureHandles handle;
-			int materialMask = MaterialMaskEnum::All;
+			m_MatMaskEnums.emplace_back(MaterialMaskEnum());
+			MaterialMaskEnum& materialMask = m_MatMaskEnums.back();
+			materialMask = MaterialMaskEnum::All;
+			m_TextureHandles.emplace_back(TextureHandles());
+			TextureHandles& handle = m_TextureHandles.back();
+
+			entityManager->AddComponent<MaterialComponent>(meshEntity, mat, &handle, &materialMask);
 
 			if (meshInfo->materialInfo.HasMaterial()) {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
@@ -345,8 +353,10 @@ namespace Aho {
 				materialMask ^= MaterialMaskEnum::AOMap;
 			} 
 
-			materialMasks.push_back(materialMask);
-			m_TextureHandles.push_back(handle);
+			//tmp.push_back(materialMask);
+			//entityManager->AddComponent<TextureHandlesComponent>(meshEntity, &handle, &materialMask);
+
+
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
@@ -356,9 +366,16 @@ namespace Aho {
 			ScopedTimer timer("Build BVH");
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
-			int i = 0;
+			//int i = 0;
 			for (const auto& info : *asset) {
-				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, static_cast<MaterialMaskEnum>(materialMasks[i++]));
+				assert(s_globalSubMeshId < m_MatMaskEnums.size());
+				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, m_MatMaskEnums[s_globalSubMeshId - 1]); // bad
+				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, tmp[i++]);
+				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId++]); // bad
+				BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
+				s_globalSubMeshId += 1;
+
+
 				bvhComp.bvhs.push_back(bvhi);
 				tlasBvh.AddBLASPrimtive(bvhi);
 			}
@@ -378,8 +395,8 @@ namespace Aho {
 			//		tlasBvh.UpdateTLAS();
 			//	}).detach();
 		}
-		SSBOManager::UpdateSSBOData<TextureHandles>(5, m_TextureHandles);
 
+		UpdatePathTracingTextureHandlesSSBO();
 		//asset.reset();
 		UploadRenderDataEventTrigger(renderDataAll);
 	}

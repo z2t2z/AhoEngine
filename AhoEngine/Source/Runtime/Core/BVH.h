@@ -106,6 +106,8 @@ namespace Aho {
 
 		void UpdateTLAS();
 
+		void UpdateMaterialMask(MaterialMaskEnum mask);
+
 		int GetRoot() const {
 			AHO_CORE_ASSERT(m_Root == 0);
 			return m_Root;

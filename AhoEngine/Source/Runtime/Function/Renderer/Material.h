@@ -17,6 +17,36 @@ namespace Aho {
 		AOMap		 = 1 << 4,
 		All          = AlbedoMap | NormalMap | RoughnessMap | MetallicMap | AOMap
 	};
+	inline MaterialMaskEnum operator|(MaterialMaskEnum a, MaterialMaskEnum b) {
+		return static_cast<MaterialMaskEnum>(static_cast<int>(a) | static_cast<int>(b));
+	}
+
+	inline MaterialMaskEnum operator&(MaterialMaskEnum a, MaterialMaskEnum b) {
+		return static_cast<MaterialMaskEnum>(static_cast<int>(a) & static_cast<int>(b));
+	}
+
+	inline MaterialMaskEnum operator^(MaterialMaskEnum a, MaterialMaskEnum b) {
+		return static_cast<MaterialMaskEnum>(static_cast<int>(a) ^ static_cast<int>(b));
+	}
+
+	inline MaterialMaskEnum operator~(MaterialMaskEnum a) {
+		return static_cast<MaterialMaskEnum>(~static_cast<int>(a));
+	}
+
+	inline MaterialMaskEnum& operator|=(MaterialMaskEnum& a, MaterialMaskEnum b) {
+		a = a | b;
+		return a;
+	}
+
+	inline MaterialMaskEnum& operator&=(MaterialMaskEnum& a, MaterialMaskEnum b) {
+		a = a & b;
+		return a;
+	}
+
+	inline MaterialMaskEnum& operator^=(MaterialMaskEnum& a, MaterialMaskEnum b) {
+		a = a ^ b;
+		return a;
+	}
 	
 	struct MaterialProperty {
 		using Value = std::variant<std::shared_ptr<Texture2D>, glm::vec3, float>;

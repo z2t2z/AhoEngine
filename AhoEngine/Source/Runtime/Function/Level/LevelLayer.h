@@ -27,6 +27,7 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 
+		void UpdatePathTracingTextureHandlesSSBO();
 	private:
 		void UpdateAnimation(float deltaTime);
 		void UpdateSceneBvh();
@@ -58,5 +59,6 @@ namespace Aho {
 	private:
 		inline static int s_globalSubMeshId{ 0 };
 		std::vector<TextureHandles> m_TextureHandles;
+		std::vector<MaterialMaskEnum> m_MatMaskEnums;
 	};
 } // namespace Aho

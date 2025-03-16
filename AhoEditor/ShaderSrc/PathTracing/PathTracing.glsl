@@ -10,6 +10,7 @@
 #include "./IntersectionTest.glsl"
 #include "./Random.glsl"
 #include "./LightSources/InfiniteLight.glsl"
+#include "./BxDF.glsl"
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
 
@@ -18,58 +19,60 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 vec3 SampleEmissive() {
     return vec3(0.0, 0.0, 0.0);
 }
+bool HasNormalMap(in out PrimitiveDesc p) {
+    return (p.materialMask & NormalMapMask) > 0;
+}
+bool HasAlbedoMap(in out PrimitiveDesc p) {
+    return (p.materialMask & AlbedoMapMask) > 0;
+}
+vec3 GetAlbedo(vec2 uv, int textureHandleId) {
+    TextureHandles handle = s_TextureHandles[textureHandleId];
+    return texture(handle.albedo, uv).rgb;
+}
 
+// Need a more efficient RayTrace func
+bool VisibilityTest(vec3 from, vec3 to) {
+
+    // return true;
+
+    Ray ray;
+    ray.direction = normalize(to - from);
+    ray.origin = from + 0.0001 * ray.direction;
+    HitInfo info = InitHitInfo();
+    RayTrace(ray, info);
+    if (!info.hit || info.t < 0 || info.globalPrimtiveId < 0) {
+        return true;
+    }
+    return false;
+}
 
 vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
-    vec3 albedo = vec3(0.9, 0.9, 0.9);
-    if (textureHandleId >= 0) {
-        TextureHandles handle = s_TextureHandles[textureHandleId];
-        albedo = texture(handle.albedo, uv).rgb;
-        // uint64_t albedoHandle = handle.albedo;
-        // sampler2D albedoSampler = sampler2D(albedoHandle);
-        // albedo = texture(albedoSampler, uv).rgb;
-    }
-
-    // return albedo;
-
     vec3 lightPos = vec3(u_LightPosition[0]);
     vec3 Ldir = normalize(lightPos - hitPos);
 
-    float NdotL = max(0.0, dot(N, Ldir));
-    float attenuation = length(lightPos - hitPos);
-    attenuation *= attenuation;
+    if (VisibilityTest(hitPos, lightPos)) {
+        float NdotL = max(0.0, dot(N, Ldir));
+        float attenuation = length(lightPos - hitPos);
+        attenuation *= attenuation;
+        float I = 1000.0;
+        return I * InvPI * NdotL / attenuation * vec3(1.0, 1.0, 1.0);
+    }
 
-    float I = 5000.0;
-
-    return I * (albedo / PI) * NdotL / attenuation;
-}
-
-bool HasNormalMap(in out PrimitiveDesc p) {
-    return (p.materialMask & NormalMapMask) > 0;
+    return vec3(0.0, 0.0, 0.0);
 }
 
 vec3 LiRandomWalk(Ray ray) {
     vec3 L = vec3(0.0, 0.0, 0.0);
     vec3 beta = vec3(1.0, 1.0, 1.0);  // attenuation
     int depth = 0;
-    vec3 eps = vec3(0.01, 0.01, 0.01);
 
     while (depth < LI_MAX_DEPTH) {
         HitInfo info = InitHitInfo();
 
         RayTrace(ray, info);
 
-        if (!info.hit) {
+        if (!info.hit || info.t < 0 || info.globalPrimtiveId < 0) {
             L += beta * SampleInfiniteLight(ray);
-            break;
-        }
-
-        if (info.t < 0) {
-            break;
-        }
-
-        if (info.globalPrimtiveId < 0) {
-            return vec3(0.0, 1.0, 0.0);
             break;
         }
 
@@ -96,34 +99,41 @@ vec3 LiRandomWalk(Ray ray) {
             N = normalize(TBN * n);
         }        
 
-        vec3 hitPos = normalize(ray.origin + info.t * ray.direction);
+        vec3 albedo = vec3(0.9, 0.9, 0.9);
+        if (HasAlbedoMap(p)) {
+            albedo = GetAlbedo(uv, meshId);
+        }
+
+        vec3 hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;
+        // vec3 hitPos = ray.origin + info.t * ray.direction; // same result as above
 
         L += beta * SampleEmissive();
+        L += beta * albedo * SampleDirectLight(ray, hitPos, N, info, uv, meshId);
 
         // BSDF bsdf = GetBSDF(ray, info);
 
-        L += beta * SampleDirectLight(ray, hitPos, N, info, uv, meshId);
+        // Uniformly sample hemisphere to get new path direction
+        float pdf;
+        vec3 wi;
+        wi = SampleUniformHemisphere();
+        pdf = UniformHemispherePDF();
 
-        // L = N;
-        // break;
+        beta *= InvPI * albedo * abs(wi.y) / pdf;
 
-        // float P_reflected = rand();
-        vec3 dir = reflect(ray.direction, -N);
+        vec3 dir = LocalToWorld(wi, N);
 
-        dir = vec3(rand(), rand(), rand());
         dir = normalize(dir);
 
         ray.direction = dir;
-        ray.origin = hitPos;
+        ray.origin = hitPos + 0.001 * dir;
 
-        beta *= 0.2;
         depth += 1;
+
+        // break;
     }
 
     return L;
 }
-
-vec3 accumulate = vec3(0.0, 0.0, 0.0);
 
 void main() {
     InitRNG(gl_GlobalInvocationID.xy, u_Frame);
@@ -136,12 +146,9 @@ void main() {
 
     vec3 resColor = LiRandomWalk(ray);
 
-    vec4 tmp = vec4(resColor, 1.0);
-    // tmp = vec4(1.0, 1.0, 1.0, 1.0);
-
     vec4 accumulated = imageLoad(accumulatedImage, pixelCoord);
 
     accumulated += vec4(resColor, 1.0);
-
+    
     imageStore(accumulatedImage, ivec2(gl_GlobalInvocationID.xy), accumulated);
 }
