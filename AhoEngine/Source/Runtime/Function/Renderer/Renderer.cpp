@@ -18,13 +18,14 @@ namespace Aho {
 		RenderCommand::SetDepthTest(true);
 
 		m_RP_IBL				= new IBLPipeline();
-		auto currentPath = std::filesystem::current_path();
-		Texture* hdr = new OpenGLTexture2D((currentPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string()/*, true*/);
-		hdr->SetTexType(TexType::HDR);
-		m_RP_IBL->AddSphericalMap(hdr);
+		//auto currentPath = std::filesystem::current_path();
+		//Texture* hdr = new OpenGLTexture2D((currentPath / "Asset" / "HDR" / "rogland_clear_night_4k.hdr").string()/*, true*/);
+		//hdr->SetTexType(TexType::HDR);
+		//m_RP_IBL->AddSphericalMap(hdr);
 
 		m_RP_Sky				= new RenderSkyPipeline();
 		m_RP_DeferredShading	= new DeferredShadingPipeline();
+		m_RP_DeferredShading->SetSunDir(m_RP_Sky->GetSunDir());
 		m_RP_PathTraciing		= new PathTracingPipeline();
 		m_RP_Postprocess		= new PostprocessPipeline();
 		

@@ -51,7 +51,7 @@ namespace Aho {
 
 	class RenderSkyPipeline : public RenderPipeline {
 	public:
-		RenderSkyPipeline() { Initialize(); }
+		RenderSkyPipeline();
 		~RenderSkyPipeline() = default;
 		virtual void Initialize() override;
 

@@ -181,8 +181,14 @@ namespace Aho {
 	std::unique_ptr<RenderPass> IBLPipeline::SetupGenLUTPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("BRDFLut");
+		static bool Generated = false;
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
+				if (Generated) {
+					return;
+				}
+				Generated = true;
+
 				RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
 				shader->Bind();
 				renderTarget->Bind();

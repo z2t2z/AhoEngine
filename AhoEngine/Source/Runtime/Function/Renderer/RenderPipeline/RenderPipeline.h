@@ -53,7 +53,7 @@ namespace Aho {
 		}
 
 		virtual RenderPass* GetRenderPass(RenderPassType type) {
-			for (auto& task : m_RenderTasks) {
+			for (const auto& task : m_RenderTasks) {
 				if (task.pass->GetRenderPassType() == type) {
 					return task.pass;
 				}

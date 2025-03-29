@@ -58,6 +58,10 @@ namespace Aho {
 					return m_RP_Postprocess;
 				case RenderPipelineType::RPL_PathTracing:
 					return m_RP_PathTraciing;
+				case RenderPipelineType::RPL_IBL:
+					return m_RP_IBL;
+				default:
+					AHO_CORE_ASSERT(false);
 			}
 			AHO_CORE_ASSERT(false);
 		}

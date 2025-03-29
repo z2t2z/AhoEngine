@@ -4,7 +4,6 @@
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 
 namespace Aho {
-
 	// BRDF lut is the same for all ibl sources, still have it here for consistency
 	struct IBLLuts {
 		IBLLuts() = default;
@@ -19,11 +18,15 @@ namespace Aho {
 	class IBLPipeline : public RenderPipeline {
 	public:
 		IBLPipeline() { Initialize(); }
+		~IBLPipeline() {
+			// Delete everything
+		}
 		virtual void Initialize() override;
 
 		const std::unordered_map<Texture*, IBLLuts>& GetIBLLutsMap() { return m_IBLLutsMap; }
 		
 		void AddSphericalMap(Texture* sphericalMap) {
+			AHO_CORE_ASSERT(sphericalMap != nullptr);
 			if (m_IBLLutsMap.contains(sphericalMap)) {
 				AHO_CORE_WARN("HDR Map at path:{} already exists", sphericalMap->GetPath());
 				return;
@@ -50,7 +53,7 @@ namespace Aho {
 
 	private:
 		std::unique_ptr<RenderPass> m_RP_GenCubemapFromSphericalMap;
-		std::unique_ptr<RenderPass> m_RP_PrecomputeIrradiance;	// Diffuse 
+		std::unique_ptr<RenderPass> m_RP_PrecomputeIrradiance;		// Diffuse 
 		std::unique_ptr<RenderPass> m_RP_Prefiltering;				// Specular
 		std::unique_ptr<RenderPass> m_RP_GenLUT;
 

@@ -184,6 +184,8 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\InfiniteAreaLight.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h" />

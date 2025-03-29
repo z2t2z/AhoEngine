@@ -39,6 +39,26 @@ namespace Aho {
 		m_RenderResult = m_ShadingPass->GetTextureBuffer(TexType::Result);
 	}
 
+	void DeferredShadingPipeline::SetEnvLightState(bool state) {
+		if (state && m_EnvLightState) {
+			return;
+		}
+		if (state && !m_EnvLightState) {
+			m_EnvLightState = true;
+			auto shader = m_ShadingPass->GetShader();
+			shader->Bind();
+			shader->SetBool("u_SampleEnvLight", true);
+			return;
+		}
+		if (!state && !m_EnvLightState) {
+			return;
+		}
+		m_EnvLightState = state;
+		auto shader = m_ShadingPass->GetShader();
+		shader->Bind();
+		shader->SetBool("u_SampleEnvLight", false);
+	}
+
 	std::unique_ptr<RenderPass> DeferredShadingPipeline::SetupShadowMapPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(

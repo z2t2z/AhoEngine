@@ -17,6 +17,23 @@ namespace Aho {
 		AOMap		 = 1 << 4,
 		All          = AlbedoMap | NormalMap | RoughnessMap | MetallicMap | AOMap
 	};
+
+	enum BxDFFlags {
+		Unset = 0,
+		Reflection = 1 << 0,
+		Transmission = 1 << 1,
+		Diffuse = 1 << 2,
+		Glossy = 1 << 3,
+		Specular = 1 << 4,
+		DiffuseReflection = Diffuse | Reflection,
+		DiffuseTransmission = Diffuse | Transmission,
+		GlossyReflection = Glossy | Reflection,
+		GlossyTransmission = Glossy | Transmission,
+		SpecularReflection = Specular | Reflection,
+		SpecularTransmission = Specular | Transmission,
+		BxDFAll = Diffuse | Glossy | Specular | Reflection | Transmission
+	};
+
 	inline MaterialMaskEnum operator|(MaterialMaskEnum a, MaterialMaskEnum b) {
 		return static_cast<MaterialMaskEnum>(static_cast<int>(a) | static_cast<int>(b));
 	}

@@ -22,5 +22,8 @@ uniform int u_Frame;
 void main() {
     vec4 accumulate = texture(u_PathTracingAccumulate, v_TexCoords);
     float index = u_Frame;
-    out_Color = accumulate / index;  
+    out_Color = accumulate / index;
+    vec3 gamma = vec3(2.2, 2.2, 2.2);
+
+    out_Color = vec4(pow(vec3(out_Color), (1.0 / gamma)), 1.0); 
 }

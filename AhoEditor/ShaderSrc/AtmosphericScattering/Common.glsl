@@ -168,8 +168,8 @@ void SkyViewLutParamsToUv(AtmosphereParameters Atmosphere, in bool IntersectGrou
 void SampleSkyViewLut(vec3 worldPos, vec3 worldDir, vec3 sunDir, out vec2 uv) {
 	AtmosphereParameters Atmosphere;
 	Atmosphere.BottomRadius = 6360.0f;
-	vec3 upVector = normalize(worldPos);
 	float viewHeight = length(worldPos);
+	vec3 upVector = normalize(worldPos);
 	float viewZenithCosAngle = dot(worldDir, upVector);
 
 	vec3 sideVector = normalize(cross(upVector, worldDir));		// assumes non parallel vectors

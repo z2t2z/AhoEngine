@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IamAho.h"
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <ImGuizmo.h>
+#include "ContentBrowser.h"
+#include "HierarchicalPenal.h"
+#include "PropertiesPanel.h"
+#include "Viewport.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -16,69 +16,28 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
-		void DrawMaterialPanel();
-		void DrawContentBrowserPanel();
-		void DrawPropertiesPanel();
-		void DrawSceneHierarchyPanel();
-		bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
-		void DrawViewport();
-		void DrawLightIcons();
-		void DrawToolBarOverlay();
-		void DrawToolBarAddObjectBtn();
-		void DrawToolBarRenderModeSelectionBtn();
-		void DrawManipulationToolBar();
-		void DrawGizmo();
-		template<typename T>
-		void DrawNode(const T& node);
 		void DrawCircle(const ImVec2& center, float radius);
 	private:
-		void TryGetDragDropTarget();
-		std::shared_ptr<Texture2D> TryGetDragDropTargetTexture();
+		ContentBrowser m_ContentBrowser;
+		PropertiesPanel m_PropertiesPanel;
+		HierachicalPanel m_HierachicalPanel;
+		Viewport m_Viewport;
 	private:
-		uint32_t m_ViewportWidth;
-		uint32_t m_ViewportHeight;
-		std::string m_DroppedString;
-	private:
-		std::filesystem::path m_FolderPath;
-		std::filesystem::path m_AssetPath;
-		std::filesystem::path m_CurrentPath;
-	private:
-		bool m_Selected{ false };
-		bool m_DrawDepthMap{ false };
 		bool m_PickingPass{ false };
-		bool m_IsViewportFocused{ false };
 		bool m_CursorLocked{ false };
-		bool m_IsCursorInViewport{ false };
 		bool m_ShouldPickObject{ false };
 		bool m_IsClickingEventBlocked{ false };
-		uint32_t m_PickPixelData{ 998244353u }; // TODO, try using std::optional?
-		Entity m_SelectedObject;
 		float m_DeltaTime{ 0.0f };
-	private:
-		//std::unique_ptr<Texture2D> m_LightIcon; ??
-		std::shared_ptr<Texture2D> m_CursorIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_AddIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_BackIcon{ nullptr };
 	private:
 		LevelLayer* m_LevelLayer{ nullptr }; 
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
-
-	private:
-		int m_MouseX, m_MouseY;
-
-	// some temporary vars for testing here
 	private:
 		Ray m_Ray;
-	// some temporary funcs for testing here
 	private:
-		void TempSunDirControl();
+		void TempSunDirControl(); // temporary
 		void TempBVHControl();
 	};
 }

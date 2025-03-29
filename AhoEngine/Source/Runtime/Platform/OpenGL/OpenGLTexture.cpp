@@ -151,6 +151,9 @@ namespace Aho {
 			m_TextureHandle = glGetTextureHandleARB(m_TextureID);
 			glMakeTextureHandleResidentARB(m_TextureHandle);
 		}
+		//GLint maxResidentHandles;
+		//glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB, &maxResidentHandles);
+		//AHO_CORE_ERROR("maxResidentHandles : {}", maxResidentHandles); 192
 		return m_TextureHandle;
 	}
 

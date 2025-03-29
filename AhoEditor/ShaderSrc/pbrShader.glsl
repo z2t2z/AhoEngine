@@ -30,6 +30,7 @@ uniform sampler2D u_gAO;
 uniform sampler2D u_gPBR; 
 
 // IBL
+uniform bool u_SampleEnvLight = false;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gLUT;
@@ -282,21 +283,23 @@ void main() {
 	// for (int i = 0; i < u_SSRSampleCnt; ++i) {
 
 	// }
-
 	// Ambient lighting
-	vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
-	vec3 kS = F;
-	vec3 kD = 1.0 - kS;
-	kD *= 1.0 - metalic;
+	vec3 ambient = vec3(0.0, 0.0, 0.0);
+	if (u_SampleEnvLight) {
+		vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+		vec3 kS = F;
+		vec3 kD = 1.0 - kS;
+		kD *= 1.0 - metalic;
 
-	vec3 irradiance = texture(u_gIrradiance, N).rgb;
-	vec3 diffuse = irradiance * albedo;
+		vec3 irradiance = texture(u_gIrradiance, N).rgb;
+		vec3 diffuse = irradiance * albedo;
 
-	vec3 preFilter = textureLod(u_gPrefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
-	vec2 brdf = texture(u_gLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-	vec3 specular = preFilter * (F * brdf.x + brdf.y);
-	
-	vec3 ambient = (kD * diffuse + specular) * AO;
+		vec3 preFilter = textureLod(u_gPrefilter, R, roughness * MAX_REFLECTION_LOD).rgb;
+		vec2 brdf = texture(u_gLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+		vec3 specular = preFilter * (F * brdf.x + brdf.y);
+		
+		ambient = (kD * diffuse + specular) * AO;
+	}
 
 	vec3 Color = (ambient + Lo);
 	// Color = Color / (Color + vec3(1.0f));	// HDR tone mapping

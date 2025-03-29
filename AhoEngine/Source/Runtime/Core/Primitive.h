@@ -47,9 +47,9 @@ namespace Aho {
 	private:
 		BBox m_BBox;
 		Vertex m_Vertices[3];
-		int m_MeshId;
-		int m_Id{ -1 };
-		int m_PrimId{ -1 };
+		int m_MeshId;		// which submesh it belongs to
+		int m_Id{ -1 };		
+		int m_PrimId{ -1 }; 
 		MaterialMaskEnum m_MaterialMask{ MaterialMaskEnum::Empty };
 		
 	};

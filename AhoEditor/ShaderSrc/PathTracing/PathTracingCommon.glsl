@@ -3,13 +3,19 @@
 
 #include "DataStructs.glsl"
 #include "../UniformBufferObjects.glsl"
+#include "./Random.glsl"
 
 /* 
     TODO: Figure out how UE does this:
     https://github.com/EpicGames/UnrealEngine/blob/585df42eb3a391efd295abd231333df20cddbcf3/Engine/Shaders/Private/RayTracing/RayTracingCommon.ush#L508
 */
 Ray GetRayFromScreenSpace(vec2 coords, vec2 resolution) {
-    vec4 worldPos = vec4(coords / resolution * vec2(2.0f) - vec2(1.0f), 1.0, 1.0);
+	vec2 jitter = vec2(rand(), rand());
+	vec2 uv = (coords + jitter) / resolution;
+
+    // vec4 worldPos = vec4(coords / resolution * vec2(2.0f) - vec2(1.0f), 1.0, 1.0);
+    vec4 worldPos = vec4(uv * vec2(2.0f) - vec2(1.0f), 1.0, 1.0);
+
     worldPos = u_ProjectionInv * worldPos;
 
     worldPos = u_ViewInv * worldPos;

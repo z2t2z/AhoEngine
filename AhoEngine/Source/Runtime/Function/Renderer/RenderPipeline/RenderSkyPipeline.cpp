@@ -1,14 +1,26 @@
 #include "Ahopch.h"
 #include "RenderSkyPipeline.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Aho {
-	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 0.0f, 0.45f };
-
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
+	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 3.14 / 6.0, 3.14 * 45.0 / 180.0 };
+
+	RenderSkyPipeline::RenderSkyPipeline() {
+		Initialize();
+	}
 
 	void RenderSkyPipeline::Initialize() {
 		m_Type = RenderPipelineType::RPL_RenderSky;
+		
+		//m_SunYawPitch = std::make_pair(0.0f, 0.45f);
+		float yaw = m_SunYawPitch.first, pitch = m_SunYawPitch.second;
+		m_SunDir = glm::vec3(glm::cos(pitch) * glm::cos(yaw), glm::sin(pitch), glm::cos(pitch) * glm::sin(yaw));
+		AHO_CORE_INFO("{}, {}, {}", m_SunDir.x, m_SunDir.y, m_SunDir.z);
 
 		m_AtmosParams.TopRadius		= 6460.0f;
 		m_AtmosParams.BottomRadius	= 6360.0f;

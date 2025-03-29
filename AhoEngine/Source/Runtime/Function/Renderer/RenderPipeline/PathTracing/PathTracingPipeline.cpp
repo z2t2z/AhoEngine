@@ -84,7 +84,7 @@ namespace Aho {
 		// Accumulate in compute shader
 		pass->AddRenderCommand(
 			[this](const std::vector<std::shared_ptr<RenderData>>& _, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				static int g = 16;
+				static int g = 32;
 				shader->Bind();
 				renderTarget->BindAt(0, 0);
 

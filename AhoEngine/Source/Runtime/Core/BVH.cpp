@@ -181,6 +181,7 @@ namespace Aho {
 
 		AHO_CORE_ASSERT(m_Root == 0);
 		m_Nodes[m_Root].meshId = m_MeshId;
+		//AHO_CORE_INFO("Total primitives count: {}", m_Primitives.size());
 	}
 
 	int BVHi::BuildTreeRecursion(int indexL, int indexR) {

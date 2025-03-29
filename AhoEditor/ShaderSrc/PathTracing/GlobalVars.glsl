@@ -6,6 +6,10 @@ uniform int u_SrcWidth;
 uniform int u_SrcHeight;
 
 uniform int u_Frame;
+
+// Infinite area light, ibl 
+uniform sampler2D u_EnvLight;
+
 // uniform sampelr2D u_PathTracingAccumulate;
 
 // Constants

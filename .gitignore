@@ -25,6 +25,9 @@ Bistro_v5_2/
 # Mono auto generated files
 mono_crash.*
 
+# big assets
+pbrt/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

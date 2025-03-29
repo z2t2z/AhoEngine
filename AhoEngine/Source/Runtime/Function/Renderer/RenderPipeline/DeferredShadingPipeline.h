@@ -8,6 +8,7 @@ namespace Aho {
 		DeferredShadingPipeline() { Initialize(); }
 		virtual void Initialize() override;
 		void SetSunDir(const glm::vec3& dir) { m_SunDir = dir; }
+		void SetEnvLightState(bool state);
 	private:
 		std::unique_ptr<RenderPass> SetupShadowMapPass(); // TODO: multiple shadow map passes
 		std::unique_ptr<RenderPass> SetupGBufferPass();
@@ -16,6 +17,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupBlurRPass(); // bluring r channel only, for ssao use
 
 	private:
+		bool m_EnvLightState{ false };
 		glm::vec3 m_SunDir;
 	private:
 		std::unique_ptr<RenderPass> m_ShadowMapPass;

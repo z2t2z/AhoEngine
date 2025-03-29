@@ -184,6 +184,7 @@ namespace Aho {
 		m_Compiled = false;
 		std::vector<GLuint> shaderHandles;
 		for (const auto& [shaderType, Source] : m_OpenGLSourceCode) {
+			//AHO_CORE_INFO("{}", Source);
 			(shaderType == GL_COMPUTE_SHADER ? ComputeFlag : NormalFlag) = true;
 			GLuint shader = glCreateShader(shaderType);
 			const GLchar* source = Source.c_str();

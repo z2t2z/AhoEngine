@@ -157,15 +157,92 @@ void RayTrace(Ray ray, inout HitInfo info) {
  
         } else {
             if (ptr + 2 >= TLAS_STACK_DEPTH) {
-                // info.exceeded = true;
-                // info.hit = false;
                 break;
             }
             stk[++ptr] = tNode.right;
             stk[++ptr] = tNode.left;
         }
     }
+}
 
+// Checks if a ray has any intersection
+bool _AnyHit(Ray ray, int id, const float tNearest) {
+    int nodeOffset = s_OffsetInfo[id].nodeOffset;
+    int primOffset = s_OffsetInfo[id].primtiveOffset;
+    int meshId = s_bNodes[nodeOffset].meshId;
+
+    int stk[BLAS_STACK_DEPTH];
+    int ptr = -1;
+    stk[++ptr] = 0;
+
+    while (ptr >= 0 && ptr < BLAS_STACK_DEPTH) {
+        int u = stk[ptr--] + nodeOffset;
+
+        BVHNode bNode = s_bNodes[u];
+        float t;
+        if (!IntersectBbox(ray, bNode.bbox, t)) {
+            continue;
+        }
+
+        if (t > tNearest) {
+            continue;
+        }
+
+        if (IsLeaf(bNode)) {
+            // Check all primitives this node contains
+            int i = bNode.firstPrimsIdx;
+            int primsCnt = bNode.primsCnt;
+            for (int cnt = 0; cnt < primsCnt; ++i, ++cnt) {
+                PrimitiveDesc p = s_bPrimitives[i + primOffset];
+                TempHitInfo tempInfo;
+                if (IntersectPrimitive(ray, p, tempInfo)) {
+                    if (tempInfo.t <= tNearest) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            if (ptr + 2 >= BLAS_STACK_DEPTH) {
+                break;
+            }
+            stk[++ptr] = bNode.right;
+            stk[++ptr] = bNode.left;
+        }
+    }
+    return false;
+}
+
+// Checks if a ray has any intersection, given distance
+bool AnyHit(Ray ray, const float tNearest) {
+    int stk[TLAS_STACK_DEPTH];
+    int ptr = -1;
+    stk[++ptr] = 0;
+    while (ptr >= 0 && ptr < TLAS_STACK_DEPTH) {
+        int u = stk[ptr--];
+
+        BVHNode tNode = s_tNodes[u];
+        float t;
+        if (!IntersectBbox(ray, tNode.bbox, t)) {
+            continue;
+        }
+        if (t > tNearest) {
+            continue;
+        }
+
+        if (IsLeaf(tNode)) {
+            PrimitiveDesc p = s_tPrimitives[tNode.firstPrimsIdx];
+            if (_AnyHit(ray, p.id, tNearest)) {
+                return true;
+            }
+        } else {
+            if (ptr + 2 >= TLAS_STACK_DEPTH) {
+                break;
+            }
+            stk[++ptr] = tNode.right;
+            stk[++ptr] = tNode.left;
+        }
+    }
+    return false;
 }
 
 

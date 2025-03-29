@@ -18,12 +18,11 @@ namespace Aho {
 		TagComponent(const std::string& tag) : Tag(tag) {}
 	};
 
-	// To support mutiple mesh components
-	struct EntityComponent {
+	struct RootComponent {
 		std::vector<entt::entity> entities;
-		EntityComponent() = default;
-		EntityComponent(const EntityComponent&) = default;
-		EntityComponent(const std::vector<entt::entity>& _entities)
+		RootComponent() = default;
+		RootComponent(const RootComponent&) = default;
+		RootComponent(const std::vector<entt::entity>& _entities)
 			: entities(_entities) {
 		}
 	};
@@ -179,5 +178,22 @@ namespace Aho {
 		PointLightComponent(const PointLightComponent&) = default;
 		
 		static int s_PointLightCnt;
+	};
+
+	struct TextureComponent {
+		TextureComponent() = default;
+		TextureComponent(const Texture* tex) : texture(tex) {}
+		TextureComponent(const TextureComponent&) = default;
+		const Texture* texture{ nullptr };
+	};
+
+	// Temporary, think about how to design light class
+	struct EnvComponent {
+		std::vector<const Texture*> envTextures;
+		EnvComponent() = default;
+		EnvComponent(const Texture* tex) {
+			envTextures.push_back(tex);
+		}
+		EnvComponent(const EnvComponent&) = default;
 	};
 }

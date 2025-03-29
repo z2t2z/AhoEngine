@@ -137,7 +137,7 @@ namespace Aho {
 				entityManager->AddComponent<AnimationComponent>(entity, anim);
 				entityManager->AddComponent<SkeletonViewerComponent>(entity, viewer);
 
-				auto& entityComponent = entityManager->GetComponent<EntityComponent>(entity); // store all bone entities
+				auto& entityComponent = entityManager->GetComponent<RootComponent>(entity); // store all bone entities
 				// Adding all its bones to the ecs system
 				const auto& transformMap = viewer->GetTransformMap();
 				const auto& nodeIndexMap = viewer->GetBoneNodeIndexMap();
@@ -170,7 +170,7 @@ namespace Aho {
 				}
 				UploadRenderDataEventTrigger(renderDataAll);
 			}
-		});
+			});
 
 	}
 
@@ -236,7 +236,7 @@ namespace Aho {
 				lightUBO.u_Info[index].x = 1; // Flag: enabled or not
 				lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
 				lightUBO.u_LightColor[index] = pc.color;
-			});
+				});
 			UBOManager::UpdateUBOData<LightUBO>(1, lightUBO);
 		}
 
@@ -250,14 +250,14 @@ namespace Aho {
 				for (size_t i = 0; i < globalMatrices.size(); i++) {
 					animationUBO->u_BoneMatrices[i + offset] = globalMatrices[i];
 				}
-			});
+				});
 			UBOManager::UpdateUBOData<AnimationUBO>(3, *animationUBO);
 			delete animationUBO;
 		}
 
 		{
 			SkeletonUBO* skeletonUBO = new SkeletonUBO();
-			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, EntityComponent>();
+			auto view = entityManager->GetView<SkeletonViewerComponent, AnimatorComponent, RootComponent>();
 			view.each([&](auto entity, auto& viewerComponent, auto& animatorComponent, auto& entityComponent) {
 				const auto& boneTransform = viewerComponent.viewer->GetBoneTransform();
 				const auto& transformMap = viewerComponent.viewer->GetTransformMap();
@@ -271,7 +271,7 @@ namespace Aho {
 					skeletonUBO->u_BoneEntityID[i].x = static_cast<uint32_t>(entities[i]);
 					i += 1;
 				}
-			});
+				});
 			UBOManager::UpdateUBOData<SkeletonUBO>(4, *skeletonUBO);
 			delete skeletonUBO;
 		}
@@ -283,7 +283,7 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		entityManager->AddComponent<EntityComponent>(gameObject);
+		entityManager->AddComponent<RootComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
 
@@ -292,8 +292,6 @@ namespace Aho {
 		renderDataAll.reserve(asset->size());
 		int index = 0;
 
-		//std::vector<MaterialMaskEnum> tmp;
-
 		for (const auto& meshInfo : *asset) {
 			std::shared_ptr<VertexArray> vao;
 			vao.reset(VertexArray::Create());
@@ -301,7 +299,7 @@ namespace Aho {
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
-			entityManager->AddComponent<MeshComponent>(meshEntity, s_globalSubMeshId);
+			//entityManager->AddComponent<MeshComponent>(meshEntity, s_globalSubMeshId);
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -317,6 +315,7 @@ namespace Aho {
 
 			entityManager->AddComponent<MaterialComponent>(meshEntity, mat, &handle, &materialMask);
 
+			// should not be here
 			if (meshInfo->materialInfo.HasMaterial()) {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
 					if (!textureCached.contains(path)) {
@@ -351,14 +350,14 @@ namespace Aho {
 			if (!mat->HasProperty(TexType::AO)) {
 				mat->AddMaterialProperties({ 0.2f, TexType::AO });
 				materialMask ^= MaterialMaskEnum::AOMap;
-			} 
+			}
 
 			//tmp.push_back(materialMask);
 			//entityManager->AddComponent<TextureHandlesComponent>(meshEntity, &handle, &materialMask);
 
 
 			renderDataAll.push_back(renderData);
-			entityManager->GetComponent<EntityComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
+			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 
 
@@ -366,15 +365,12 @@ namespace Aho {
 			ScopedTimer timer("Build BVH");
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
-			//int i = 0;
 			for (const auto& info : *asset) {
 				assert(s_globalSubMeshId < m_MatMaskEnums.size());
 				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, m_MatMaskEnums[s_globalSubMeshId - 1]); // bad
-				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, tmp[i++]);
 				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId++]); // bad
 				BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
 				s_globalSubMeshId += 1;
-
 
 				bvhComp.bvhs.push_back(bvhi);
 				tlasBvh.AddBLASPrimtive(bvhi);
@@ -406,8 +402,8 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		entityManager->AddComponent<MeshComponent>(gameObject, s_globalSubMeshId);
-		entityManager->AddComponent<EntityComponent>(gameObject);
+		//entityManager->AddComponent<MeshComponent>(gameObject, s_globalSubMeshId);
+		entityManager->AddComponent<RootComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);
 		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);

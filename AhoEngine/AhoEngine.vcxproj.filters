@@ -1683,6 +1683,8 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\InfiniteAreaLight.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

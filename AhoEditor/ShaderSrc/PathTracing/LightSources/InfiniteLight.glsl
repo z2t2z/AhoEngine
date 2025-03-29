@@ -7,6 +7,13 @@ vec3 SampleInfiniteLight(Ray ray) {
     return uniformSky;
 }
 
+vec3 SampleInfiniteImageLight(const Ray ray) {
+    float theta = acos(ray.direction.y); 
+    float phi = atan(ray.direction.z, ray.direction.x); // azimuthal angle
+    vec2 uv = vec2((phi + PI) * Inv2PI, (theta + PI / 2.0) * InvPI);
+    vec3 color = texture(u_EnvLight, uv).rgb;
+    return color;
+}
 
 
 #endif
