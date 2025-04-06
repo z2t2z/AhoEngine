@@ -16,6 +16,7 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
+		void AddEnvMap(const Texture* texture);
 		void DrawCircle(const ImVec2& center, float radius);
 	private:
 		ContentBrowser m_ContentBrowser;

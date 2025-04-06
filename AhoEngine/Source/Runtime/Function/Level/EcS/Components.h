@@ -88,15 +88,6 @@ namespace Aho {
 		MaterialComponent(const MaterialComponent&) = default;
 	};
 
-	// Temporary, consider how to design this
-	struct MeshComponent {
-		std::string name;
-		int meshId; // of no use
-		MeshComponent(int id) : meshId(id) {};
-		MeshComponent() : name{ "IDK" } {};
-		MeshComponent(const MeshComponent&) = default;
-	};
-
 	// For path tracing 
 	struct TextureHandlesComponent {
 		TextureHandles* handle{ nullptr };
@@ -107,15 +98,6 @@ namespace Aho {
 			matMask = new MaterialMaskEnum();
 		}
 		TextureHandlesComponent(const TextureHandlesComponent&) = default;
-	};
-
-	struct MultiMeshComponent {
-		std::vector<MeshComponent> meshes; // Rendering data. ?
-		MultiMeshComponent() = default;
-		MultiMeshComponent(const std::vector<MeshComponent>& _meshes)
-			: meshes(_meshes) {
-		}
-		MultiMeshComponent(const MultiMeshComponent&) = default;
 	};
 
 	struct AnimatorComponent {

@@ -173,6 +173,10 @@ namespace Aho {
 		}
 	}
 
+	void AhoEditorLayer::AddEnvMap(const Texture* texture) {
+
+	}
+
 	void AhoEditorLayer::DrawCircle(const ImVec2& center, float radius) {
 		int segments = 32;
 		auto draw_list = ImGui::GetWindowDrawList();

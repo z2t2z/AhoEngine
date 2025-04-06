@@ -21,6 +21,7 @@ namespace Aho {
 		virtual void SetIntArray(const std::string& name, int* values, uint32_t count) override;
 		virtual void SetFloat(const std::string& name, float value) override;
 		virtual void SetVec2(const std::string& name, const glm::vec2& value) override;
+		virtual void SetIvec2(const std::string& name, const glm::ivec2& value) override;
 		virtual void SetVec3(const std::string& name, const glm::vec3& value) override;
 		virtual void SetVec4(const std::string& name, const glm::vec4& value) override;
 		virtual void SetMat2(const std::string& name, const glm::mat2& mat) override;

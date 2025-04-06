@@ -245,5 +245,17 @@ bool AnyHit(Ray ray, const float tNearest) {
     return false;
 }
 
+bool VisibilityTest(vec3 from, vec3 to) {
+#ifndef OPT_SHADOW_TEST
+    return true;
+#endif
+    Ray ray;
+    ray.direction = normalize(to - from);
+    ray.origin = from + 0.01 * ray.direction;
+    if (AnyHit(ray, length(to - from))) {
+        return false;
+    }
+    return true;
+}
 
 #endif

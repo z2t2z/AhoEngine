@@ -24,6 +24,7 @@ namespace Aho {
 		void DrawGizmo();
 		void DrawManipulationToolBar();
 		void DrawLightIcons();
+	private:
 		void TryGetDragDropTarget();
 	private:
 		Entity m_EnvEntity;

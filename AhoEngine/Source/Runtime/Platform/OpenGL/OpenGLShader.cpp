@@ -343,6 +343,15 @@ namespace Aho {
 		glUniform2f(location, value.x, value.y);
 	}
 
+	void OpenGLShader::SetIvec2(const std::string& name, const glm::ivec2& value) {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_ERROR("{}", name);
+			return;
+		}
+		glUniform2i(location, value.x, value.y);
+	}
+
 	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {

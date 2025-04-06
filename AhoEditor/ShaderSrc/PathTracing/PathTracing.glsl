@@ -4,6 +4,10 @@
 #extension GL_ARB_gpu_shader_int64 : enable
 #extension GL_ARB_bindless_texture : enable
 
+#define SAMPLE_TEXTURE
+#define OPT_SHADOW_TEST
+
+
 #include "./PathTracingCommon.glsl"
 #include "./GlobalVars.glsl"
 #include "../UniformBufferObjects.glsl"
@@ -14,9 +18,7 @@
 #include "./Sampling.glsl"
 #include "./BxDFCommon.glsl"
 #include "./MicrofacetReflection.glsl"
-
-#define SAMPLE_TEXTURE
-#define OPT_SHADOW_TEST
+#include "./Disney.glsl"
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
 
@@ -43,23 +45,9 @@ vec3 GetAlbedo(vec2 uv, int textureHandleId) {
     // return texelFetch(handle.albedo, tsize, 0).rgb;
 }
 
-bool VisibilityTest(vec3 from, vec3 to) {
-#ifndef OPT_SHADOW_TEST
-    return true;
-#endif
-    Ray ray;
-    ray.direction = normalize(to - from);
-    ray.origin = from + 0.01 * ray.direction;
-    if (AnyHit(ray, length(to - from))) {
-        return false;
-    }
-    return true;
-}
-
 vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
     vec3 lightPos = vec3(u_LightPosition[0]);
     vec3 Ldir = normalize(lightPos - hitPos);
-
     if (VisibilityTest(hitPos, lightPos)) {
         float NdotL = max(0.0, dot(N, Ldir));
         float attenuation = length(lightPos - hitPos);
@@ -67,22 +55,20 @@ vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int 
         float I = 1000.0;
         return I * InvPI * NdotL / attenuation * vec3(1.0, 1.0, 1.0);
     }
-
     return vec3(0.0, 0.0, 0.0);
 }
 
 vec3 LiRandomWalk(Ray ray) {
-    vec3 L = vec3(0.0, 0.0, 0.0);
-    vec3 beta = vec3(1.0, 1.0, 1.0);  // also called throughput, fr*cos/pdf
+    vec3 L = vec3(0.0);
+    vec3 beta = vec3(1.0);  // throughput, fr*cos/pdf
     int depth = 0;
-
-    while (depth < 3) {
+    while (depth++ < 3) {
         HitInfo info = InitHitInfo();
 
         RayTrace(ray, info);
 
         if (!info.hit || info.t < 0 || info.globalPrimtiveId < 0) {
-            L += beta * 1.0 * SampleInfiniteLight(ray);
+            L += beta * SampleInfiniteLight(ray);
             break;
         }
 
@@ -109,12 +95,10 @@ vec3 LiRandomWalk(Ray ray) {
                 T = normalize(T - dot(T, N) * N);
                 vec3 B = cross(N, T); // Right-handed
                 mat3 TBN = mat3(T, B, N);
-
                 ivec2 tsize = textureSize(handle.normal, 0);
                 tsize.x = int(uv.x * float(tsize.x));
                 tsize.y = int(uv.y * float(tsize.y));
                 vec3 n = texture(handle.normal, uv).xyz; // Normal from normal map
-                // vec3 n = texelFetch(handle.normal, tsize, 0).xyz;
                 N = normalize(TBN * n);
             }
         }        
@@ -128,52 +112,42 @@ vec3 LiRandomWalk(Ray ray) {
         L += beta * SampleEmissive();
         L += beta * albedo * SampleDirectLight(ray, hitPos, N, info, uv, meshId);
 
-        float pdf;
-        vec3 wi;
+        // float iblPdf = 0.0f;
+        // vec3 iblL = SampleIBL(iblPdf, hitPos);
 
-        vec3 wo = -ray.direction;
-        mat3 tbn = CalTBN(N);
-        wo = WorldToLocal(wo, tbn);
-        vec3 fv = Sample_f_MR(wo, wi, pdf);
-
-        // vec3 H = SampleGGXVNDF(wo, 0.01, 0.01, rand(), rand());
-        // if (H.z < 0) {
-        //     H = -H;
+        // if (iblPdf != 0.0) {
+        //     L += beta * iblL / iblPdf;
         // }
-        // wi = normalize(reflect(-wo, H));
 
-        if (wi.x == 0 && wi.y == 0 && wi.z == 0) {
-            L = vec3(1.0, 0.0, 0.0);
-            break;
-        }
+        float pdf = 0.0;
+        vec3 wi;
+        vec3 wo = -ray.direction;
 
-        wi = LocalToWorld(wi, tbn);
-
-        // vec3 uniwi = SampleCosineHemisphere();
-        // float unipdf = CosineHemispherePDF(uniwi);
-        // uniwi = normalize(uniwi);
+        State state;
+        state.baseColor = albedo;
+        state.metallic = 0.1;
+        state.roughness = 0.1;
+        state.subsurface = 0.99;
+        state.specTrans = 0.1;
+        state.specular = 0.5;
+        state.specularTint = 0.5;
+        state.sheenTint = 0.5;
+        state.ax = 0.01;
+        state.ay = 0.01;
+        state.ior = 1.3;
         
-        if (pdf == 0) {
-            L = vec3(1.0, 0.0, 0.0);
-            break;
+        // vec3 disneyDiffuse = DisneyDiffuse(state, wo, wi, N, pdf);
+        vec3 disneySpec = DisneySpecular(state, wo, wi, N, pdf);
+
+        if (pdf > 0.0) {
+            beta *= 90.0 * disneySpec * abs(dot(N, wi)) / pdf;
+        } else {
+            continue;
         }
-        if (isnan(wi.x) || isnan(wi.y) || isnan(wi.z)) {
-            L = vec3(1.0, 0.0, 0.0);
-            break;
-        }
 
-        wi = normalize(wi);
-        // beta *= InvPI * albedo * abs(uniwi.y) / unipdf;
-        beta *= fv * albedo * abs(dot(N, wi)) / pdf;
+        ray.direction = normalize(wi);
+        ray.origin = hitPos + EPS * wi;
 
-        // uniwi = LocalToWorld(uniwi, N);        
-        vec3 dir = wi;
-        // dir = uniwi;
-
-        ray.direction = dir;
-        ray.origin = hitPos + 0.0001 * dir;
-
-        depth += 1;
     }
 
     return L;

@@ -26,22 +26,4 @@ vec3 f_MR(vec3 wo, vec3 wi) {
 }
 
 
-vec3 Sample_f_MR(vec3 wo, out vec3 wi, out float pdf) {
-    if (wo.y == 0) {
-        return vec3(0.0, 0.0, 0.0);
-    }
-    vec3 wh = Sample_wh(wo);
-    if (dot(wo, wh) < 0) {
-        return vec3(0.0, 0.0, 0.0);
-    }   
-    wi = reflect(-wo, wh);
-    if (!SameHemisphere(wo, wi)) {
-        return vec3(0.0, 0.0, 0.0);
-    }
-
-    // Compute PDF of wi for microfacet reflection
-    pdf = Pdf_TR(wo, wh) / (4 * dot(wo, wh));
-    return f_MR(wo, wi);    
-}
-
 #endif

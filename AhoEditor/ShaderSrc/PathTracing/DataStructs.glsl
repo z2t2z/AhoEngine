@@ -68,6 +68,20 @@ struct TempHitInfo {
     float t;
 };
 
+struct State {
+    vec3 baseColor; // albedo
+    float metallic;
+    float roughness;
+    float subsurface;
+    float specTrans;
+    float specular;
+    float specularTint;
+    float sheenTint;
+    float ax;
+    float ay;
+    float ior;
+};
+
 struct TextureHandles {
     layout(bindless_sampler) sampler2D albedo;
     layout(bindless_sampler) sampler2D normal;

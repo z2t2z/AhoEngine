@@ -21,7 +21,7 @@ namespace Aho {
     class CameraManager {
     public:
         CameraManager() {
-            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f); // 1000m far plane
+            std::shared_ptr<EditorCamera> cam = std::make_shared<EditorCamera>(45.0f, 16.0f / 9.0f, 0.01f, 1000.0f); // 1000m far plane
             m_Cameras.push_back(cam);
         }
         ~CameraManager() = default;

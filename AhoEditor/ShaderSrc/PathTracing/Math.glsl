@@ -65,11 +65,12 @@ vec3 Faceforward(const vec3 n, const vec3 n2) {
     return (dot(n, n2) < 0.0) ? -n : n;
 }
 
-mat3 CalTBN(const vec3 n) {
-    vec3 t = (abs(n.y) < 0.9999) ? normalize(cross(Y, n)) : normalize(cross(X, n));
-    vec3 b = cross(t, n);
-    return mat3(t, n, b);
+mat3 ConstructTBN(const vec3 N) {
+    vec3 T = (abs(N.y) < 0.9999) ? normalize(cross(Y, N)) : normalize(cross(X, N));
+    vec3 B = -normalize(cross(N, T));
+    return mat3(T, N, B);
 }
+
 vec3 WorldToLocal(vec3 vWorld, mat3 tbn) {
     return transpose(tbn) * vWorld;
 }

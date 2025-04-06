@@ -91,6 +91,18 @@ namespace Aho {
 		SSBOManager::UpdateSSBOData<TextureHandles>(5, m_TextureHandles);
 	}
 
+	void LevelLayer::AddEnvironmentMap(Texture* texture) {
+		static_cast<IBLPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_IBL))->AddSphericalMap(texture);
+		const auto& entityManager = m_CurrentLevel->GetEntityManager();
+		auto& envComponent =
+			entityManager->HasComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) ? entityManager->GetComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) : entityManager->AddComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity());
+		envComponent.envTextures.push_back(texture);
+		static_cast<DeferredShadingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetEnvLightState(true);
+
+		static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing))->SetEnvMap(texture);
+
+	}
+
 	void LevelLayer::UpdateAnimation(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
@@ -174,10 +186,12 @@ namespace Aho {
 
 	}
 
+	// BIG TODO
 	void LevelLayer::AddLightSource(LightType lt) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<PointLightComponent>();
 		auto gameObject = entityManager->CreateEntity("PointLight " + std::to_string(view.size()));
+		auto root = entityManager->AddComponent<RootComponent>(gameObject);
 		auto& pc = entityManager->AddComponent<PointLightComponent>(gameObject);
 		pc.index = PointLightComponent::s_PointLightCnt++;
 		if (pc.index == 0) {
@@ -299,7 +313,6 @@ namespace Aho {
 			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
-			//entityManager->AddComponent<MeshComponent>(meshEntity, s_globalSubMeshId);
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
@@ -402,7 +415,6 @@ namespace Aho {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 
 		Entity gameObject(entityManager->CreateEntity(asset->GetName())); // TODO: give it a proper name
-		//entityManager->AddComponent<MeshComponent>(gameObject, s_globalSubMeshId);
 		entityManager->AddComponent<RootComponent>(gameObject);
 		TransformParam* param = new TransformParam();
 		entityManager->AddComponent<TransformComponent>(gameObject, param);

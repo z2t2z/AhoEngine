@@ -129,13 +129,6 @@ namespace Aho {
 			}
 			if (ImGui::MenuItem("Environment Light")) {
 				showFileExplorer = true;
-				const auto& entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-				if (!m_EnvEntity.Valid()) {
-					m_EnvEntity = Entity(entityManager->CreateEntity("Environment"));
-				}
-				if (!entityManager->HasComponent<EnvComponent>(m_EnvEntity)) {
-					entityManager->AddComponent<EnvComponent>(m_EnvEntity);
-				}
 			}
 			else {
 				showFileExplorer = false;
@@ -166,14 +159,9 @@ namespace Aho {
 				showFileExplorer = false;
 				if (file != ".") {
 					AHO_CORE_INFO("{}", file.string());
-					const auto& entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-
 					Texture* hdr = new OpenGLTexture2D(file.string());
 					hdr->SetTexType(TexType::HDR);
-					static_cast<IBLPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_IBL))->AddSphericalMap(hdr);
-					//m_RP_IBL->AddSphericalMap(hdr);
-
-					static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetEnvLightState(true);
+					m_LevelLayer->AddEnvironmentMap(hdr);
 				}
 			}
 		}

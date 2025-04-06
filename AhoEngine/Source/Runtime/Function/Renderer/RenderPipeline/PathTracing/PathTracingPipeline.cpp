@@ -68,6 +68,14 @@ namespace Aho {
 		m_AccumulatePass->GetRenderTarget()->GetTexture(TexType::PathTracingAccumulate)->ClearTexImage(clearData);
 	}
 
+	static Texture* s_EnvMap = nullptr;
+	void PathTracingPipeline::SetEnvMap(Texture* texture) {
+		s_EnvMap = texture;
+
+		m_IBL = new IBL(texture);
+
+	}
+
 	bool PathTracingPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
 		bool resized = false;
 		for (auto& task : m_RenderTasks) {
@@ -79,6 +87,7 @@ namespace Aho {
 		return resized;
 	}
 
+	constexpr uint32_t g_EnvMapBindingPoint = 0;
 	std::unique_ptr<RenderPass> PathTracingPipeline::SetupAccumulatePass() {
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("PathTracingPass");
 		// Accumulate in compute shader
@@ -89,6 +98,21 @@ namespace Aho {
 				renderTarget->BindAt(0, 0);
 
 				shader->SetInt("u_Frame", m_Frame++);
+				if (s_EnvMap) {
+					shader->SetInt("u_EnvLight", g_EnvMapBindingPoint);
+					s_EnvMap->Bind(g_EnvMapBindingPoint);
+				}
+
+				if (m_IBL) {
+					shader->SetInt("u_EnvMap.EnvLight", g_EnvMapBindingPoint + 1);
+					shader->SetInt("u_EnvMap.Env1DCDF", g_EnvMapBindingPoint + 2);
+					shader->SetInt("u_EnvMap.Env2DCDF", g_EnvMapBindingPoint + 3);
+					m_IBL->BindEnvMap(g_EnvMapBindingPoint + 1);
+					m_IBL->Bind1DCDF(g_EnvMapBindingPoint + 2);
+					m_IBL->Bind2DCDF(g_EnvMapBindingPoint + 3);
+					shader->SetIvec2("u_EnvMap.EnvSize", glm::ivec2(m_IBL->GetSize()));
+					shader->SetFloat("u_EnvMap.EnvTotalLum", m_IBL->GetTotLuminance());
+				}
 
 				uint32_t width = renderTarget->GetSpecification().Width;
 				uint32_t height = renderTarget->GetSpecification().Height;

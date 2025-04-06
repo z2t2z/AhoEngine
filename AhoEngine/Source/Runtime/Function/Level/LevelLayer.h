@@ -26,8 +26,10 @@ namespace Aho {
 		void AddLevel(const std::shared_ptr<Level>& scene) { m_Levels.push_back(scene); }
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
-
 		void UpdatePathTracingTextureHandlesSSBO();
+	public:
+		void AddEnvironmentMap(Texture* texture);
+
 	private:
 		void UpdateAnimation(float deltaTime);
 		void UpdateSceneBvh();

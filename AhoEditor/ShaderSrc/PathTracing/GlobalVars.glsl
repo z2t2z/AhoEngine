@@ -10,7 +10,7 @@ uniform int u_Frame;
 // Infinite area light, ibl 
 uniform sampler2D u_EnvLight;
 
-// uniform sampelr2D u_PathTracingAccumulate;
+#define EPS 0.00001
 
 // Constants
 const float PI      = 3.14159265358979323846;
