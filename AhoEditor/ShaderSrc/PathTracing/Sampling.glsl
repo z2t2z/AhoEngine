@@ -41,9 +41,10 @@ vec3 SampleUniformSphere() {
     return vec3(r * cos(phi), r * sin(phi), z);
 }
 
-
-float DielectricFresnel(float cosThetaI, float eta)
-{
+float PowerHeuristicPdf(float pdfA, float pdfB) {
+    return Sqr(pdfA) / (Sqr(pdfA) + Sqr(pdfB));
+}
+float DielectricFresnel(float cosThetaI, float eta) {
     float sinThetaTSq = eta * eta * (1.0f - cosThetaI * cosThetaI);
 
     // Total internal reflection
@@ -57,6 +58,11 @@ float DielectricFresnel(float cosThetaI, float eta)
 
     return 0.5f * (rs * rs + rp * rp);
 }
-
-
+float FresnelDielectric(vec3 L, vec3 V, vec3 H, float ior) {
+    float VdotH = dot(V, H);
+    float LdotH = dot(L, H);
+    float Rs = (VdotH - ior * LdotH) / (VdotH + ior * LdotH);
+    float Rp = (ior * VdotH - LdotH) / (ior * VdotH + LdotH);
+    return 0.5 * (Sqr(Rs) + Sqr(Rp));
+}
 #endif

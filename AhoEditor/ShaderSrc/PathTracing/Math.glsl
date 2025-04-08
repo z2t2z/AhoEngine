@@ -1,6 +1,15 @@
 #ifndef MATH_GLSL
 #define MATH_GLSL
 
+// world axis(right-handed)
+const vec3 X = vec3(1.0, 0.0, 0.0);
+const vec3 Y = vec3(0.0, 1.0, 0.0);
+const vec3 Z = vec3(0.0, 0.0, 1.0);
+
+float Luminance(vec3 c) {
+    return 0.212671 * c.x + 0.715160 * c.y + 0.072169 * c.z;
+}
+
 float Sqr(float v) {
     return v * v;
 }

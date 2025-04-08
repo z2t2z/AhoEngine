@@ -107,9 +107,12 @@ namespace Aho {
 					shader->SetInt("u_EnvMap.EnvLight", g_EnvMapBindingPoint + 1);
 					shader->SetInt("u_EnvMap.Env1DCDF", g_EnvMapBindingPoint + 2);
 					shader->SetInt("u_EnvMap.Env2DCDF", g_EnvMapBindingPoint + 3);
+					shader->SetInt("u_EnvMap.Env2DCDF_Reference", g_EnvMapBindingPoint + 4);
+
 					m_IBL->BindEnvMap(g_EnvMapBindingPoint + 1);
 					m_IBL->Bind1DCDF(g_EnvMapBindingPoint + 2);
 					m_IBL->Bind2DCDF(g_EnvMapBindingPoint + 3);
+					m_IBL->Bind2DCDFReference(g_EnvMapBindingPoint + 4);
 					shader->SetIvec2("u_EnvMap.EnvSize", glm::ivec2(m_IBL->GetSize()));
 					shader->SetFloat("u_EnvMap.EnvTotalLum", m_IBL->GetTotLuminance());
 				}

@@ -43,6 +43,9 @@ float VNDFHPdf(vec3 V, vec3 H, float ax, float ay) {
 }
 // PDF of sampling outgoing direction L = reflect(-V, H)
 float GGXVNDFLPdf(in vec3 V, in vec3 H, in vec3 L, float ax, float ay) {
+    if (L.y <= 0.0) {
+        return 0.0; // not sure
+    }
     float Dv = VNDFHPdf(V, H, ax, ay);
     float pdf = Dv / (4.0 * max(dot(V, H), 1e-6));
     return pdf;

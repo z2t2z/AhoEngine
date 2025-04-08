@@ -47,6 +47,9 @@ vec3 GetAlbedo(vec2 uv, int textureHandleId) {
 
 vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
     vec3 lightPos = vec3(u_LightPosition[0]);
+    if (lightPos.y == 0.0) {
+        return vec3(0.0, 0.0, 0.0);
+    }
     vec3 Ldir = normalize(lightPos - hitPos);
     if (VisibilityTest(hitPos, lightPos)) {
         float NdotL = max(0.0, dot(N, Ldir));
@@ -58,17 +61,26 @@ vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int 
     return vec3(0.0, 0.0, 0.0);
 }
 
-vec3 LiRandomWalk(Ray ray) {
+
+void RetrieveIntersection(const HitInfo info, inout State state) {
+    PrimitiveDesc p = s_bPrimitives[info.globalPrimtiveId];
+}
+
+#define MAX_DEPTH 5
+vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
-    vec3 beta = vec3(1.0);  // throughput, fr*cos/pdf
-    int depth = 0;
-    while (depth++ < 3) {
+    vec3 beta = vec3(1.0);  // throughput, fr * cos / pdf
+    State state;
+    state.pdf = 0.0;
+    state.eta = 1.0 / 1.5;
+    state.cosTheta = 1.0;
+    for (int depth = 0; depth < MAX_DEPTH; ++depth) {
         HitInfo info = InitHitInfo();
-
         RayTrace(ray, info);
-
-        if (!info.hit || info.t < 0 || info.globalPrimtiveId < 0) {
-            L += beta * SampleInfiniteLight(ray);
+        if (!info.hit) {
+            vec4 env = SampleInfiniteLight(ray);
+            float misWeight = depth > 0 ? PowerHeuristicPdf(state.pdf, env.w) : 1.0; // Need better understanding of this
+            L += misWeight * beta * env.rgb;
             break;
         }
 
@@ -84,7 +96,7 @@ vec3 LiRandomWalk(Ray ray) {
 
         // Retrieve normal from normal map if there is
         int meshId = p.meshId;
-        vec3 albedo = vec3(0.9, 0.9, 0.9);
+        vec3 albedo = vec3(1.0, 1.0, 1.0);
 
 #ifdef SAMPLE_TEXTURE
         if (HasNormalMap(p)) {
@@ -106,48 +118,55 @@ vec3 LiRandomWalk(Ray ray) {
             albedo = GetAlbedo(uv, meshId);
         }
 #endif
+        N = dot(N, ray.direction) <= 0.0 ? N : -N; // flip normal if inside the object
 
         vec3 hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position; // <==> ray.origin + info.t * ray.direction; 
 
         L += beta * SampleEmissive();
         L += beta * albedo * SampleDirectLight(ray, hitPos, N, info, uv, meshId);
 
-        // float iblPdf = 0.0f;
-        // vec3 iblL = SampleIBL(iblPdf, hitPos);
+        float iblPdf = 0.0f;
+        vec3 iblL = SampleIBL(iblPdf, hitPos);
+        if (iblPdf != 0.0) {
+            L += beta * abs(state.cosTheta) * iblL / iblPdf;
+        }
 
-        // if (iblPdf != 0.0) {
-        //     L += beta * iblL / iblPdf;
-        // }
+        // L = iblL;
+        // break;
+
 
         float pdf = 0.0;
         vec3 wi;
         vec3 wo = -ray.direction;
 
-        State state;
+        // Temporary state for the material
         state.baseColor = albedo;
         state.metallic = 0.1;
-        state.roughness = 0.1;
-        state.subsurface = 0.99;
+        state.roughness = 0.5;
+        state.subsurface = 0.0;
+        state.specular = 0.1;
         state.specTrans = 0.1;
-        state.specular = 0.5;
-        state.specularTint = 0.5;
-        state.sheenTint = 0.5;
-        state.ax = 0.01;
-        state.ay = 0.01;
-        state.ior = 1.3;
+        state.clearcoatGloss = 0.99;
+        state.ax = 0.001;
+        state.ay = 0.001;
+        state.ior = 1.5;
         
-        // vec3 disneyDiffuse = DisneyDiffuse(state, wo, wi, N, pdf);
-        vec3 disneySpec = DisneySpecular(state, wo, wi, N, pdf);
+        // vec3 brdf = DisneyDiffuse(state, wo, wi, N, pdf);
+        vec3 brdf = DisneySpecular(state, wo, wi, N, pdf);
+        // vec3 brdf = DisneyClearcoat(state, wo, wi, N, pdf);
+        // vec3 brdf = DisneyGlass(state, wo, wi, N, pdf);
 
         if (pdf > 0.0) {
-            beta *= 90.0 * disneySpec * abs(dot(N, wi)) / pdf;
+            beta *= brdf * abs(dot(N, wi)) / pdf;
+            state.pdf = pdf;
         } else {
             continue;
         }
 
         ray.direction = normalize(wi);
         ray.origin = hitPos + EPS * wi;
-
+        state.cosTheta = dot(ray.direction, N);
+        state.eta = dot(ray.direction, N) < 0.0 ? (1.0 / 1.5) : 1.5;
     }
 
     return L;
@@ -162,7 +181,7 @@ void main() {
                 vec2(imageSize(accumulatedImage))
             );
 
-    vec3 resColor = LiRandomWalk(ray);
+    vec3 resColor = PathTrace(ray);
 
     vec4 accumulated = imageLoad(accumulatedImage, pixelCoord);
 

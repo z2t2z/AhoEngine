@@ -37,7 +37,7 @@ struct PrimitiveDesc {
     int meshId; // not used
     int id;
     int primId;
-    int materialMask;
+    int materialMask; // not used
 };
 
 struct Ray {
@@ -68,19 +68,54 @@ struct TempHitInfo {
     float t;
 };
 
+struct Material {
+    vec3 baseColor;
+    float metallic;
+    float specTrans;
+    float roughness;
+    float subsurface;
+    float ior;
+    float clearcoat;
+    float clearcoatGloss;
+    float sheen;
+// private:
+    float ax;
+    float ay;
+}; 
+
 struct State {
     vec3 baseColor; // albedo
+    float cosTheta;
     float metallic;
     float roughness;
     float subsurface;
-    float specTrans;
     float specular;
-    float specularTint;
-    float sheenTint;
+    float specTrans;
     float ax;
     float ay;
     float ior;
+    float clearcoat;
+    float clearcoatGloss;
+    float pdf;
+    float eta;
+    vec3 uvw;
+    vec3 N;
 };
+
+struct DotProducts {
+    float LdotH;
+    float LdotN;
+    float VdotN;
+    float VdotH;
+    float LdotV;
+};
+void SetDotProducts(vec3 L, vec3 V, vec3 H, vec3 N, out DotProducts dp) {
+    dp.LdotH = dot(L, H);
+    dp.LdotN = dot(L, N);
+    dp.VdotN = dot(V, N);
+    dp.VdotH = dot(V, H);
+    dp.LdotV = dot(L, V);
+}
 
 struct TextureHandles {
     layout(bindless_sampler) sampler2D albedo;

@@ -35,9 +35,5 @@ const int MetallicMapMask  = 1 << 3;
 const int AOMapMask		   = 1 << 4;
 const int AllMask          = AlbedoMapMask | NormalMapMask | RoughnessMapMask | MetallicMapMask | AOMapMask;
 
-// world axis(right-handed)
-const vec3 X = vec3(1.0, 0.0, 0.0);
-const vec3 Y = vec3(0.0, 1.0, 0.0);
-const vec3 Z = vec3(0.0, 0.0, 1.0);
 
 #endif

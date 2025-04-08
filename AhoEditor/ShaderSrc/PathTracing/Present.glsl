@@ -13,18 +13,24 @@ void main() {
 
 #type fragment
 #version 460 core
+
+#include "./Math.glsl"
+
 out vec4 out_Color;
 in vec2 v_TexCoords;
 
 uniform sampler2D u_PathTracingAccumulate;
 uniform int u_Frame;
 
+vec3 ToneMapping(vec3 c, float limit) {
+    return c * 1.0 / (1.0 + Luminance(c) / limit);
+}
+
 void main() {
     vec4 accumulate = texture(u_PathTracingAccumulate, v_TexCoords);
     float index = u_Frame;
     out_Color = accumulate / index;
     
-    vec3 gamma = vec3(2.2, 2.2, 2.2);
-
-    out_Color = vec4(pow(vec3(out_Color), (1.0 / gamma)), 1.0); 
+    out_Color.rgb = ToneMapping(out_Color.rgb, 1.5);
+    out_Color = vec4(pow(out_Color.rgb, vec3(1.0 / 2.2)), 1.0); 
 }

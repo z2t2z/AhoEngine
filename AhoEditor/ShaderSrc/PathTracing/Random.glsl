@@ -31,9 +31,6 @@ vec3 FaceForward(vec3 a, vec3 b)
     return dot(a, b) < 0.0 ? -b : b;
 }
 
-float Luminance(vec3 c)
-{
-    return 0.212671 * c.x + 0.715160 * c.y + 0.072169 * c.z;
-}
+
 
 #endif

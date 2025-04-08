@@ -21,6 +21,10 @@ namespace Aho {
 		glBindTextureUnit(slot, m_2DCDF);
 	}
 
+	void IBL::Bind2DCDFReference(uint32_t slot) const {
+		glBindTextureUnit(slot, m_2DCDF_Reference);
+	}
+
 	void IBL::BindEnvMap(uint32_t slot) const {
 		m_EnvTexture->Bind(slot);
 	}
@@ -43,6 +47,23 @@ namespace Aho {
 			}
 		}
 
+		{
+			std::vector<float> cdf(height * width);
+			cdf[0] = lum[0];
+			for (int i = 1; i < height * width; i++) {
+				cdf[i] = cdf[i - 1] + lum[i];
+			}
+			m_EnvTotalLum = cdf[height * width - 1];
+			glGenTextures(1, &m_2DCDF_Reference);
+			glBindTexture(GL_TEXTURE_2D, m_2DCDF_Reference);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, cdf.data());
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			//delete pixels;
+			//return;
+		}
+
 		std::vector<float> col(width);
 		for (int v = 0; v < height; v++) {
 			for (int u = 0; u < width; u++) {
@@ -50,13 +71,13 @@ namespace Aho {
 			}
 		}
 		
-		float sum = std::accumulate(col.begin(), col.end(), 0.0f);
-		m_EnvTotalLum = sum;
+		m_EnvTotalLum = std::accumulate(col.begin(), col.end(), 0.0f);
 		std::vector<float> marginalCDF(width);
-		marginalCDF[0] = col[0] / sum;
+		marginalCDF[0] = col[0] / m_EnvTotalLum;
 		for (int u = 1; u < width; u++) {
-			marginalCDF[u] = marginalCDF[u - 1] + col[u] / sum;
+			marginalCDF[u] = marginalCDF[u - 1] + col[u] / m_EnvTotalLum;
 		}
+		AHO_CORE_ASSERT((marginalCDF.back() - 1.0f) <= 0.00001);
 
 		// TO FIX: division by zero
 		// TO FIX: slow indexing
@@ -66,6 +87,7 @@ namespace Aho {
 			for (int v = 1; v < height; v++) {
 				condCDF[v * width + u] = condCDF[(v - 1) * width + u] + lum[v * width + u] / col[u];
 			}
+			AHO_CORE_ASSERT((condCDF[(width - 1) * (height - 1) + u] - 1.0f) <= 0.00001);
 		}
 
 		glGenTextures(1, &m_1DCDF);
