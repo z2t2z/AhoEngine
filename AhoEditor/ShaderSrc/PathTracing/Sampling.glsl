@@ -9,9 +9,9 @@ vec3 SampleCosineHemisphere() {
     float r = sqrt(u.x);
     float phi = 2.0f * PI * u.y;
     float x = r * cos(phi);
-    float y = r * sin(phi);
-    float z = sqrt(max(0.0, 1.0 - x * x - y * y));
-    return vec3(x, z, y);
+    float z = r * sin(phi);
+    float y = sqrt(max(0.0, 1.0 - x * x - z * z));
+    return vec3(x, y, z);
 }
 
 float CosineHemispherePDF(vec3 dir) {
@@ -41,9 +41,11 @@ vec3 SampleUniformSphere() {
     return vec3(r * cos(phi), r * sin(phi), z);
 }
 
+// https://pbr-book.org/3ed-2018/Monte_Carlo_Integration/Importance_Sampling
 float PowerHeuristicPdf(float pdfA, float pdfB) {
-    return Sqr(pdfA) / (Sqr(pdfA) + Sqr(pdfB));
+    return (pdfA * pdfA) / ((pdfA * pdfA) + (pdfB * pdfB));
 }
+
 float DielectricFresnel(float cosThetaI, float eta) {
     float sinThetaTSq = eta * eta * (1.0f - cosThetaI * cosThetaI);
 

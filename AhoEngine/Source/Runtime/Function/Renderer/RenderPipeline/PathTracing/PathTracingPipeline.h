@@ -19,11 +19,14 @@ namespace Aho {
 	private:
 		std::unique_ptr<RenderPass> SetupGBufferPass();
 		std::unique_ptr<RenderPass> SetupAccumulatePass();
-
 	private:
 		std::unique_ptr<RenderPass> m_AccumulatePass;
 		std::unique_ptr<RenderPass> m_PresentPass;
 		std::unique_ptr<RenderPass> m_GbufferPass;
+	private:
+		glm::ivec2 m_TileSize{ 8, 8 };
+		glm::ivec2 m_TileNum;
+		glm::ivec2 m_Resolution;
 	private:
 		IBL* m_IBL{ nullptr };
 		uint32_t m_Frame;

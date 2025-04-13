@@ -17,14 +17,13 @@ namespace Aho {
 		m_FXAAPass->RegisterTextureBuffer({ m_DrawSelectedOutlinePass->GetTextureBuffer(TexType::Result), TexType::Result });
 
 		m_TestQuadPass = SetupTestQuadPass();
-		RegisterRenderPass(m_TestQuadPass.get(), RenderDataType::Empty);
 
+		RegisterRenderPass(m_TestQuadPass.get(), RenderDataType::Empty);
 		RegisterRenderPass(m_DrawSelectedPass.get(), RenderDataType::ScreenQuad);
 		RegisterRenderPass(m_DrawSelectedOutlinePass.get(), RenderDataType::ScreenQuad);
 		RegisterRenderPass(m_FXAAPass.get(), RenderDataType::ScreenQuad);
 
 		//m_RenderResult = m_FXAAPass->GetTextureBuffer(TexType::Result);
-
 		m_RenderResult = m_TestQuadPass->GetTextureBuffer(TexType::Result);
 	}
 

@@ -184,6 +184,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
@@ -686,6 +687,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.cpp" />

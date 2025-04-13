@@ -2,8 +2,8 @@
 #define PT_COMMON_GLSL
 
 #include "DataStructs.glsl"
+#include "Random.glsl"
 #include "../UniformBufferObjects.glsl"
-#include "./Random.glsl"
 
 /* 
     TODO: Figure out how UE does this:

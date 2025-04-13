@@ -50,7 +50,14 @@ namespace Aho {
 	};
 
 	constexpr int MAX_LIGHT_CNT = 10;
+	struct alignas(16) PointLight {
+		glm::vec4 position; // world space, radius in w
+		glm::vec4 color;    // RGB, intensity in w
+		PointLight() = default;
+		PointLight(const glm::vec4& pos, const glm::vec4& col) : position(pos), color(col) {}
+	};
 	struct alignas(16) LightUBO {
+		PointLight u_PointLight[MAX_LIGHT_CNT];
 		glm::mat4 u_LightPV[MAX_LIGHT_CNT];
 		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
 		glm::vec4 u_LightColor[MAX_LIGHT_CNT];

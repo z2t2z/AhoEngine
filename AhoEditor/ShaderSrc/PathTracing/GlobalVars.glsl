@@ -1,16 +1,20 @@
-#ifndef PT_UNIFORMS_GLSL
-#define PT_UNIFORMS_GLSL
+#ifndef GLOBAL_VARS_GLSL
+#define GLOBAL_VARS_GLSL
 
 // Uniforms
 uniform int u_SrcWidth;
 uniform int u_SrcHeight;
+
+uniform ivec2 u_Resolution;
+uniform ivec2 u_TileSize;
+uniform ivec2 u_TileNum;
 
 uniform int u_Frame;
 
 // Infinite area light, ibl 
 uniform sampler2D u_EnvLight;
 
-#define EPS 0.00001
+#define EPS 0.000001
 
 // Constants
 const float PI      = 3.14159265358979323846;

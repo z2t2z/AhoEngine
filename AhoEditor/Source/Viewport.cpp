@@ -68,7 +68,7 @@ namespace Aho {
 
 		// TODO: Should be able to select any render result of any passes
 		uint32_t renderResult = m_Renderer->GetRenderResultTextureID();
-		//renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_PostProcess)->GetRenderResult()->GetTextureID();
+		renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_DebugVisual)->GetRenderResult()->GetTextureID();
 		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
@@ -81,10 +81,10 @@ namespace Aho {
 			//m_ShouldPickObject = false;
 			if (IsCursorInViewport()) {
 				//m_Ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
-				//	glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
-				//	m_EditorCamera->GetPosition(),
-				//	m_EditorCamera->GetProjectionInv(),
-				//	m_EditorCamera->GetViewInv());
+				//glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
+				//m_EditorCamera->GetPosition(),
+				//m_EditorCamera->GetProjectionInv(),
+				//m_EditorCamera->GetViewInv());
 				//m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading)->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
 				//s_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
 				//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
@@ -363,6 +363,8 @@ namespace Aho {
 			ImGui::Text(prompt.c_str());
 			ImGui::Separator();
 			ImGui::Checkbox("Static Mesh", &staticMesh);
+			ImGui::Separator();
+			ImGui::Checkbox("Build BVH", &m_LevelLayer->GetBuildBvhState());
 			ImGui::Separator();
 
 			static glm::vec3 translation(0.0f);

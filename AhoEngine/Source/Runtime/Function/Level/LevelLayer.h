@@ -27,9 +27,9 @@ namespace Aho {
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		void UpdatePathTracingTextureHandlesSSBO();
+		bool& GetBuildBvhState() { return m_BuildBVH; }
 	public:
 		void AddEnvironmentMap(Texture* texture);
-
 	private:
 		void UpdateAnimation(float deltaTime);
 		void UpdateSceneBvh();
@@ -40,7 +40,6 @@ namespace Aho {
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);
 		void LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset);
 		void UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll);
-		
 	private:
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
@@ -50,6 +49,7 @@ namespace Aho {
 		inline static int m_SkeletalMeshBoneOffset{ 0 };
 
 	private:
+		bool m_BuildBVH{ true };
 		RenderLayer* m_RenderLayer{ nullptr };
 		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };

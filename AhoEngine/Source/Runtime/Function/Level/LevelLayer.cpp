@@ -41,8 +41,6 @@ namespace Aho {
 		//JPH::RegisterTypes();
 		//JPH::Factory::sInstance = new JPH::Factory();
 		//JPH::RegisterDefaultAllocator();
-
-
 	}
 
 	void LevelLayer::OnDetach() {
@@ -98,9 +96,7 @@ namespace Aho {
 			entityManager->HasComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) ? entityManager->GetComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) : entityManager->AddComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity());
 		envComponent.envTextures.push_back(texture);
 		static_cast<DeferredShadingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetEnvLightState(true);
-
 		static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing))->SetEnvMap(texture);
-
 	}
 
 	void LevelLayer::UpdateAnimation(float deltaTime) {
@@ -203,20 +199,22 @@ namespace Aho {
 		param->Translation = glm::vec3(0.0f, 1.0f, 0.0f);
 		g_Param = param;
 		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
-		std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		for (const auto& meshInfo : *m_ResourceLayer->GetSphere()) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
-			renderData->SetTransformParam(param);
-			renderData->SetDebug(true);
-			renderData->SetEntityID(entityID);
-			renderDataAll.push_back(renderData);
-		}
-		UploadRenderDataEventTrigger(renderDataAll);
+		
+
+		//std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		//for (const auto& meshInfo : *m_ResourceLayer->GetSphere()) {
+		//	std::shared_ptr<VertexArray> vao;
+		//	vao.reset(VertexArray::Create());
+		//	vao->Init(meshInfo);
+		//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+		//	renderData->SetVAOs(vao);
+		//	uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
+		//	renderData->SetTransformParam(param);
+		//	renderData->SetDebug(true);
+		//	renderData->SetEntityID(entityID);
+		//	renderDataAll.push_back(renderData);
+		//}
+		//UploadRenderDataEventTrigger(renderDataAll);
 	}
 
 	// TODO: Subdata update
@@ -238,18 +236,21 @@ namespace Aho {
 		{
 			LightUBO lightUBO;
 			auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
-			view.each([&](auto entity, auto& pc, auto& tc) {
-				int index = pc.index;
-				if (pc.castShadow) {
-					float nearPlane = 0.1f, farPlane = 100.0f;
-					glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-					auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
-					lightUBO.u_LightPV[index] = lightMat;
-					tc.GetTranslation().y = 20.0f;
-				}
-				lightUBO.u_Info[index].x = 1; // Flag: enabled or not
-				lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
-				lightUBO.u_LightColor[index] = pc.color;
+			view.each(
+				[&](auto entity, auto& pc, auto& tc) {
+					int index = pc.index;
+					if (pc.castShadow) {
+						float nearPlane = 0.1f, farPlane = 100.0f;
+						glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+						auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
+						lightUBO.u_LightPV[index] = lightMat;
+						tc.GetTranslation().y = 20.0f;
+					}
+					lightUBO.u_PointLight[index] = PointLight(glm::vec4(glm::vec3(tc.GetTranslation()), 10.0f), glm::vec4(pc.color.x, pc.color.y, pc.color.z, 10.0));
+
+					lightUBO.u_Info[index].x = 1; // Flag: enabled or not
+					lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
+					lightUBO.u_LightColor[index] = pc.color;
 				});
 			UBOManager::UpdateUBOData<LightUBO>(1, lightUBO);
 		}
@@ -335,7 +336,6 @@ namespace Aho {
 						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
 						tex->SetTexType(type);
 						handle.SetHandles(tex->GetTextureHandle(), type);
-						AHO_CORE_WARN("HandleId: {}", tex->GetTextureHandle());
 						textureCached[path] = tex;
 					}
 					mat->AddMaterialProperties({ textureCached.at(path), type });
@@ -373,8 +373,7 @@ namespace Aho {
 			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
 		}
 
-
-		{
+		if (m_BuildBVH) {
 			ScopedTimer timer("Build BVH");
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);

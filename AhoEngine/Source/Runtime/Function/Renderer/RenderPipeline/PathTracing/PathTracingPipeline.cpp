@@ -71,9 +71,7 @@ namespace Aho {
 	static Texture* s_EnvMap = nullptr;
 	void PathTracingPipeline::SetEnvMap(Texture* texture) {
 		s_EnvMap = texture;
-
 		m_IBL = new IBL(texture);
-
 	}
 
 	bool PathTracingPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
@@ -83,6 +81,8 @@ namespace Aho {
 		}
 		if (resized) {
 			m_Frame = 1u;
+			m_TileNum = glm::ivec2((width + m_TileSize.x - 1) / m_TileSize.x, 
+									(height + m_TileSize.y - 1) / m_TileSize.y);
 		}
 		return resized;
 	}
@@ -98,6 +98,10 @@ namespace Aho {
 				renderTarget->BindAt(0, 0);
 
 				shader->SetInt("u_Frame", m_Frame++);
+				shader->SetIvec2("u_Resolution", m_Resolution);
+				shader->SetIvec2("u_TileSize", m_TileSize);
+				shader->SetIvec2("u_TileNum", m_TileNum);
+
 				if (s_EnvMap) {
 					shader->SetInt("u_EnvLight", g_EnvMapBindingPoint);
 					s_EnvMap->Bind(g_EnvMapBindingPoint);
@@ -119,8 +123,10 @@ namespace Aho {
 
 				uint32_t width = renderTarget->GetSpecification().Width;
 				uint32_t height = renderTarget->GetSpecification().Height;
-				uint32_t workGroupCountX = (width + g - 1) / g;
-				uint32_t workGroupCountY = (height + g - 1) / g;
+				uint32_t workGroupCountX = (width + m_TileSize.x - 1) / m_TileSize.x;
+				uint32_t workGroupCountY = (height + m_TileSize.y - 1) / m_TileSize.y;
+				//uint32_t workGroupCountX = (width + g - 1) / g;
+				//uint32_t workGroupCountY = (height + g - 1) / g;
 				shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
 
 				renderTarget->Unbind();

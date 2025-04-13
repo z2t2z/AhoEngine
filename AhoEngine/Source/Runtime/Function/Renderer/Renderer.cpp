@@ -26,9 +26,14 @@ namespace Aho {
 		m_RP_Sky				= new RenderSkyPipeline();
 		m_RP_DeferredShading	= new DeferredShadingPipeline();
 		m_RP_DeferredShading->SetSunDir(m_RP_Sky->GetSunDir());
+
 		m_RP_PathTraciing		= new PathTracingPipeline();
 		m_RP_Postprocess		= new PostprocessPipeline();
-		
+		m_RP_Dbg				= new DebugVisualPipeline();
+
+		auto shadingResFBO = m_RP_DeferredShading->GetRenderPassTarget(RenderPassType::Shading);
+		m_RP_Dbg->SetRenderTarget(RenderPassType::DebugVisual, shadingResFBO);
+
 		// Register buffers from ibl
 		auto rp_deferred = m_RP_DeferredShading->GetRenderPass(RenderPassType::Shading);
 		rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
@@ -39,13 +44,17 @@ namespace Aho {
 		rp_deferred->RegisterTextureBuffer({ m_RP_Sky->GetRenderResult(), TexType::SkyViewLUT });
 
 		m_RP_Postprocess->SetInput(m_RP_DeferredShading->GetRenderResult());
+		
+		//m_RP_Dbg->SetInput(m_RP_DeferredShading->GetRenderResult());
+
 	}
 
 	void Renderer::Render() {
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
 			m_RP_Sky->Execute();
 			m_RP_DeferredShading->Execute();
-			m_RP_Postprocess->Execute();
+			//m_RP_Postprocess->Execute();
+			m_RP_Dbg->Execute();
 		}
 		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
 			if (m_CameraDirty) {

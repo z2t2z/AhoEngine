@@ -15,17 +15,18 @@ void main() {
 #version 460 core
 
 #include "Common.glsl"
+#include "../UniformBufferObjects.glsl"
 
 out vec4 out_color;
 in vec2 v_TexCoords;
 
-layout(std140, binding = 0) uniform CameraUBO {
-	mat4 u_View;
-	mat4 u_ViewInv;
-	mat4 u_Projection;
-	mat4 u_ProjectionInv;
-	vec4 u_ViewPosition;
-};
+// layout(std140, binding = 0) uniform CameraUBO {
+// 	mat4 u_View;
+// 	mat4 u_ViewInv;
+// 	mat4 u_Projection;
+// 	mat4 u_ProjectionInv;
+// 	vec4 u_ViewPosition;
+// };
 
 const float PI = 3.14159265358979323846;
 const int SAMPLE_CNT = 24;

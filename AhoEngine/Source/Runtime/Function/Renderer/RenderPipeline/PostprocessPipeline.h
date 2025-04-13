@@ -3,7 +3,7 @@
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 
 namespace Aho {
-	class DeferredShadingPipeline;
+	//class DeferredShadingPipeline;
 
 	class PostprocessPipeline : public RenderPipeline {
 	public:
@@ -19,7 +19,6 @@ namespace Aho {
 		std::unique_ptr<RenderPass> m_DrawSelectedPass;
 		std::unique_ptr<RenderPass> m_DrawSelectedOutlinePass;
 		std::unique_ptr<RenderPass> m_FXAAPass;
-
 	private:
 		std::unique_ptr<RenderPass> SetupTestQuadPass();
 		std::unique_ptr<RenderPass> m_TestQuadPass;

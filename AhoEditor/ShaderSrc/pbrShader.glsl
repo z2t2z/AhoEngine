@@ -238,6 +238,9 @@ void main() {
 	vec3 V = normalize(viewPos - fragPos); 		// View direction
 	vec3 R = reflect(-V, N);
 
+	// out_Color = vec4(N, 1.0f);
+	// return;
+
 	vec3 F0 = vec3(0.04f);
 	F0 = mix(F0, albedo, metalic); 	// Metalic workflow
 	
@@ -247,7 +250,7 @@ void main() {
 		if (u_Info[i].x == 0) {
 			break;
 		}
-
+		
 		vec3 lightPos = vec3(u_LightPosition[i]);
 		vec3 L = normalize(lightPos - fragPos);		// Light direction
 		float NdotL = dot(N, L);
@@ -273,7 +276,7 @@ void main() {
 		kD *= 1.0f - metalic;
 
 		vec3 specular = Numerator / Denominator;
-		Lo += 3.0 * (kD * albedo / PI + specular) 
+		Lo += 		2.0 * (kD * albedo / PI + specular) 
 					* radiance 
 					* NdotL 
 					* PCSS(vec4(fragPos, 1.0f), NdotL, i);
@@ -298,7 +301,7 @@ void main() {
 		vec2 brdf = texture(u_gLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
 		vec3 specular = preFilter * (F * brdf.x + brdf.y);
 		
-		ambient = (kD * diffuse + specular) * AO;
+		// ambient = (kD * diffuse + specular) * AO;
 	}
 
 	vec3 Color = (ambient + Lo);

@@ -3,8 +3,8 @@
 
 #define OPT_IMAGE_LIGHT
 
-#include "./Math.glsl"
-#include "./IntersectionTest.glsl"
+#include "../Math.glsl"
+#include "../IntersectionTest.glsl"
 
 struct EnvironmentMap {
     sampler2D EnvLight;
@@ -86,8 +86,7 @@ vec2 BinarySearch(float value) {
 }
 
 // Sample environment light
-// Not sure if correct
-vec3 SampleIBL(inout float pdf, vec3 from) {
+vec3 SampleIBL(out float pdf, out vec3 sampleDir) {
     pdf = 0.0;
     int width = u_EnvMap.EnvSize.x;
     int height = u_EnvMap.EnvSize.y;
@@ -99,30 +98,17 @@ vec3 SampleIBL(inout float pdf, vec3 from) {
     int u = _BinarySearchCDF1D(rnd2.x);
     int v = _BinarySearchCDF2D(u, rnd2.y);
 
-    // vec2 uv = BinarySearch(rand() * u_EnvMap.EnvTotalLum);
-
     vec2 uv = vec2(u, v) / vec2(width, height);
-    vec3 dir = UVToDirection(uv);
-    if (!VisibilityTest(from, from + 1000000.0 * dir)) {
-        return vec3(0.0, 0.0, 0.0);
-    }
+    sampleDir = UVToDirection(uv);
 
     vec3 color = texture(u_EnvMap.EnvLight, uv).rgb;
     pdf = Luminance(color) / u_EnvMap.EnvTotalLum;
     
-    // float pu = texelFetch(u_EnvMap.Env1DCDF, u, 0).r;
-    // pu -= u > 0 ? texelFetch(u_EnvMap.Env1DCDF, u - 1, 0).r : 0.0f;
-    // float pv = texelFetch(u_EnvMap.Env2DCDF, ivec2(u, v), 0).r;
-    // pv -= v > 0 ? texelFetch(u_EnvMap.Env2DCDF, ivec2(u, v - 1), 0).r : 0.0f;
-    // float testpdf = pu * pv; 
-    // if (abs(testpdf - pdf) >= 0.01f) {
-    //     return vec3(1.0, 0.0, 0.0);
-    // }
-
     float phi = uv.x * 2.0 * PI;
     float theta = uv.y * PI;
 
-    pdf = 5 * (pdf * width * height) / (2 * PI * PI * sin(theta));
+    // https://pbr-book.org/3ed-2018/Monte_Carlo_Integration/Transforming_between_Distributions#sec:mc-transform-multiple-dimensions
+    pdf = (pdf * width * height) / (2 * PI * PI * sin(theta));
     return color;
 }
 

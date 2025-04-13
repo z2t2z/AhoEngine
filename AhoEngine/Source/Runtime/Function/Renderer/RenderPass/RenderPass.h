@@ -33,6 +33,7 @@ namespace Aho {
 		MutiScattLUT,
 		SkyViewLUT,
 		PathTracing,
+		DebugVisual,
 		Test,
 		/* TODO */
 	};

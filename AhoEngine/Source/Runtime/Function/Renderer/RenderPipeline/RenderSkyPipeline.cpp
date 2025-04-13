@@ -143,6 +143,7 @@ namespace Aho {
 		pass->SetRenderCommand(std::move(cmdBuffer));
 
 		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "AtmosphericScattering" / "SkyLUT.glsl");
+		AHO_CORE_ASSERT(pp->IsCompiled());
 		pass->SetShader(pp);
 		TexSpec texSpecColor;
 		texSpecColor.debugName = "SkyViewLUT";

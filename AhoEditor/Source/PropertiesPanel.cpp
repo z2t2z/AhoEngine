@@ -61,24 +61,24 @@ namespace Aho {
 				bool textureChanged = DrawMaterialProperties(entityManager->GetComponent<MaterialComponent>(selectedEntity));
 				if (textureChanged) {
 					m_LevelLayer->UpdatePathTracingTextureHandlesSSBO();
-					auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-					auto view = entityManager->GetView<BVHComponent, TransformComponent>();
+					//auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+					//auto view = entityManager->GetView<BVHComponent, TransformComponent>();
 
-					auto& materialComp = entityManager->GetComponent<MaterialComponent>(selectedEntity);
-					MaterialMaskEnum mask = *materialComp.matMask;
-					view.each(
-						[&mask](auto entity, BVHComponent& bc, TransformComponent& tc) {
-							for (BVHi* bvh : bc.bvhs) {
-								bvh->UpdateMaterialMask(mask);
-								bvh->ApplyTransform(tc.GetTransform());
-							}
-						});
+					//auto& materialComp = entityManager->GetComponent<MaterialComponent>(selectedEntity);
+					//MaterialMaskEnum mask = *materialComp.matMask;
+					//view.each(
+					//	[&mask](auto entity, BVHComponent& bc, TransformComponent& tc) {
+					//		for (BVHi* bvh : bc.bvhs) {
+					//			bvh->UpdateMaterialMask(mask);
+					//			bvh->ApplyTransform(tc.GetTransform());
+					//		}
+					//	});
 
-					BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
-					alts.UpdateTLAS();
+					//BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+					//alts.UpdateTLAS();
 
-					PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
-					ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
+					//PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
+					//ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
 
 				}
 			}

@@ -96,11 +96,35 @@ struct State {
     float ior;
     float clearcoat;
     float clearcoatGloss;
+
+    float sheen;
+    float sheenTint; // mix between white and baseColor
     float pdf;
     float eta;
     vec3 uvw;
     vec3 N;
+    vec3 pos;
 };
+
+State InitState() {
+    State state;
+    state.pdf = 0.0;
+    state.eta = 1.0 / 1.5;
+    state.cosTheta = 1.0;
+    // Temporary state for the material
+    state.baseColor = vec3(1.0, 1.0, 1.0);
+    state.roughness = 0.5;
+    state.sheenTint = 0.9;
+    state.metallic = 0.1;
+    state.subsurface = 0.9;
+    state.specular = 0.1;
+    state.specTrans = 0.1;
+    state.clearcoatGloss = 0.99;
+    state.ax = 0.001;
+    state.ay = 0.001;
+    state.ior = 1.5;    
+    return state;
+}
 
 struct DotProducts {
     float LdotH;
@@ -109,10 +133,11 @@ struct DotProducts {
     float VdotH;
     float LdotV;
 };
+
 void SetDotProducts(vec3 L, vec3 V, vec3 H, vec3 N, out DotProducts dp) {
     dp.LdotH = dot(L, H);
-    dp.LdotN = dot(L, N);
-    dp.VdotN = dot(V, N);
+    dp.LdotN = L.y; 
+    dp.VdotN = V.y; 
     dp.VdotH = dot(V, H);
     dp.LdotV = dot(L, V);
 }

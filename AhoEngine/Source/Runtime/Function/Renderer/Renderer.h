@@ -9,6 +9,7 @@
 #include "Runtime/Function/Renderer/RenderPipeline/DeferredShadingPipeline.h"
 #include "Runtime/Function/Renderer/RenderPipeline/IBLPipeline.h"
 #include "Runtime/Function/Renderer/RenderPipeline/PostprocessPipeline.h"
+#include "Runtime/Function/Renderer/RenderPipeline/DebugVisualPipeline.h"
 
 #include <memory>
 #include <typeindex>
@@ -60,6 +61,8 @@ namespace Aho {
 					return m_RP_PathTraciing;
 				case RenderPipelineType::RPL_IBL:
 					return m_RP_IBL;
+				case RenderPipelineType::RPL_DebugVisual:
+					return m_RP_Dbg;
 				default:
 					AHO_CORE_ASSERT(false);
 			}
@@ -86,6 +89,7 @@ namespace Aho {
 		DeferredShadingPipeline* m_RP_DeferredShading;
 		PostprocessPipeline* m_RP_Postprocess;
 		PathTracingPipeline* m_RP_PathTraciing{ nullptr };
+		DebugVisualPipeline* m_RP_Dbg{ nullptr };
 
 	private:
 		bool m_CameraDirty{ false };

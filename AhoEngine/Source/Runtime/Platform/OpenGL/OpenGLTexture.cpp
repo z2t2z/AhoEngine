@@ -118,20 +118,26 @@ namespace Aho {
 		}
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-		//glBindTexture(GL_TEXTURE_2D, m_TextureID);
+		glBindTexture(GL_TEXTURE_2D, m_TextureID);
 		//glTexImage2D(GL_TEXTURE_2D, 0, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height, 0, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
 		//glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTextureStorage2D(m_TextureID, 1, Utils::GetGLParam(spec.internalFormat), spec.width, spec.height);
 
-		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		//glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, spec.width, spec.height, Utils::GetGLParam(spec.dataFormat), Utils::GetGLParam(spec.dataType), data);
+		//glGenerateMipmap(GL_TEXTURE_2D); // TODO: buggy
+
 		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		stbi_image_free(data);
 	}

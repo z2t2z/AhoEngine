@@ -108,13 +108,13 @@ void main() {
 	if (!u_HasNormal) {
 		g_Normal = normalize(v_Normal);
 	} else {
-		vec3 T = normalize(v_Tangent);
-		vec3 N = normalize(v_Normal);
+		vec3 T = v_Tangent;
+		vec3 N = v_Normal;
 		T = normalize(T - dot(T, N) * N);
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
-		vec3 normalMap = texture(u_NormalMap, v_TexCoords).rgb;
-		normalMap.b = sqrt(1.0 - normalMap.r * normalMap.r - normalMap.g * normalMap.g);
+		vec3 normalMap = texture(u_NormalMap, vec2(v_TexCoords.x, v_TexCoords.y)).rgb;
+		// normalMap.y = 1.0 - normalMap.y;
 		normalMap = normalMap * 2.0f - 1.0f;
 		g_Normal = normalize(TBN * normalMap);
 	}

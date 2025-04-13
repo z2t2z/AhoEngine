@@ -107,7 +107,7 @@ namespace Aho {
 			AHO_CORE_ERROR("Could not open file '{0}'", filepath);
 		}
 		if (result.empty()) {
-			AHO_CORE_ERROR("No content from file:" + filepath);
+			AHO_CORE_WARN("No content from file:" + filepath);
 		}
 		return result;
 	}
@@ -132,21 +132,30 @@ namespace Aho {
 	}
 
 	void OpenGLShader::ReplaceIncludes() {
-		//std::string basePath = std::filesystem::current_path().string();
-		std::string basePath = std::filesystem::path(m_FilePath).parent_path().string() + '/';
+		namespace fs = std::filesystem;
+		std::string basePath = fs::path(m_FilePath).parent_path().string() + '/';
+		fs::path basePathfs = fs::path(m_FilePath).parent_path();
 
-		auto processIncludesRecursion = [&](auto&& self, const std::string& source, std::unordered_set<std::string>& includedFiles) -> std::string {
+		// TODO: Don't hard code this!!
+		auto rootPath = fs::current_path();
+		rootPath = rootPath / "ShaderSrc";
+
+		auto processIncludesRecursion = [&](auto&& self, const std::string& source, const std::string& currBasePath, std::unordered_set<std::string>& includedFiles) -> std::string {
 			std::stringstream processed;
 			std::istringstream sourceStream(source);
 			std::string line;
 			
 			while (std::getline(sourceStream, line)) {
+				auto commentStartPos = line.find("//");
+				if (commentStartPos != std::string::npos) {
+					line = line.substr(0, commentStartPos);
+				}
 				if (line.find("#include") != std::string::npos) {
 					size_t start = line.find("\"");
 					size_t end = line.rfind("\"");
 					if (start != std::string::npos && end != std::string::npos && start < end) {
 						std::string includeFilePath = line.substr(start + 1, end - start - 1);
-						std::string fullPath = basePath + includeFilePath;
+						std::string fullPath = currBasePath + includeFilePath;
 
 						if (includedFiles.find(fullPath) != includedFiles.end()) {
 							//AHO_CORE_WARN("Warning: Circular include detected for file: {}", fullPath);
@@ -154,10 +163,9 @@ namespace Aho {
 						}
 
 						includedFiles.insert(fullPath);
-
 						try {
 							std::string includeContent = ReadFile(fullPath);
-							processed << self(self, includeContent, includedFiles);
+							processed << self(self, includeContent, fs::path(fullPath).parent_path().string() + '/', includedFiles);
 						}
 						catch (const std::runtime_error& e) {
 							AHO_CORE_ERROR(e.what());
@@ -174,7 +182,7 @@ namespace Aho {
 
 		for (auto& [shaderType, source] : m_OpenGLSourceCode) {
 			std::unordered_set<std::string> includedFiles;
-			source = processIncludesRecursion(processIncludesRecursion, source, includedFiles);
+			source = processIncludesRecursion(processIncludesRecursion, source, basePath, includedFiles);
 		}
 	}
 

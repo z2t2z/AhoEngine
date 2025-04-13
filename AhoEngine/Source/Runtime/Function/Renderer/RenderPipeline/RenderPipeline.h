@@ -11,7 +11,8 @@ namespace Aho {
 		SceneData,
 		ScreenQuad,
 		DebugData,
-		UnitCube
+		UnitCube,
+		UnitCircle
 	};
 
 	enum class RenderPipelineType {
@@ -21,7 +22,8 @@ namespace Aho {
 		RPL_RenderSky,
 		RPL_IBL,
 		RPL_PostProcess,
-		RPL_DeferredShading
+		RPL_DeferredShading,
+		RPL_DebugVisual,
 	};
 
 	struct RenderTask {
@@ -36,6 +38,7 @@ namespace Aho {
 		static std::vector<std::shared_ptr<RenderData>> m_DebugData;
 		static std::vector<std::shared_ptr<RenderData>> m_EmptyVao;
 
+		static std::vector<std::shared_ptr<RenderData>> m_UnitCircle;
 	};
 
 	class RenderPipeline {
@@ -63,6 +66,11 @@ namespace Aho {
 
 		virtual RenderPipelineType GetType() { return m_Type; }
 		virtual Texture* GetRenderResult() { return m_RenderResult; }
+		virtual void SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo) {
+			auto pass = GetRenderPass(type);
+			pass->SetRenderTarget(fbo);
+			m_RenderResult = pass->GetTextureBuffer(TexType::Result);
+		}
 
 		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height) {
 			bool resized = false;

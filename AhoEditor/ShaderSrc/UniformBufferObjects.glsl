@@ -1,6 +1,8 @@
 #ifndef UBO_GLSL
 #define UBO_GLSL
 
+#include "LightStructs.glsl"
+
 layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_View;
 	mat4 u_ViewInv;
@@ -13,6 +15,7 @@ layout(std140, binding = 0) uniform CameraUBO {
 // TODO: support multiple light types 
 const int MAX_LIGHT_CNT = 10;
 layout(std140, binding = 1) uniform LightUBO {
+	PointLight u_PointLight[MAX_LIGHT_CNT];
 	mat4 u_LightPV[MAX_LIGHT_CNT];
 	vec4 u_LightPosition[MAX_LIGHT_CNT];
 	vec4 u_LightColor[MAX_LIGHT_CNT];

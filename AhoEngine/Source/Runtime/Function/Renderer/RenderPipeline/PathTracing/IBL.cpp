@@ -48,6 +48,7 @@ namespace Aho {
 		}
 
 		{
+			// DELETE THIS SOME DAY
 			std::vector<float> cdf(height * width);
 			cdf[0] = lum[0];
 			for (int i = 1; i < height * width; i++) {

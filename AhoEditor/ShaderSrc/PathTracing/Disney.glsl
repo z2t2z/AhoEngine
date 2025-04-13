@@ -19,20 +19,24 @@ float SchlickFresnel(float u) {
 }
 
 /* ========== Diffuse + Subsurface ========== */
-vec3 _DisneyDiffuse(const State state, const DotProducts dp, vec3 V, vec3 L, vec3 N) {
+vec3 _DisneyDiffuse(const State state, const DotProducts dp, vec3 V, vec3 L, vec3 N, out float pdf) {
+    pdf = 0.0;
+    pdf = CosineHemispherePDF(L);
+
     float Fd90 = 0.5 + 2 * state.roughness * Sqr(dp.LdotH);
     return state.baseColor * InvPI * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.LdotN)) 
-                                   * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.VdotN));
+                                   * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.VdotN))
+                                   * abs(dp.LdotN);
 }
 vec3 _DisneySubsurface(State state, DotProducts dp, vec3 V, vec3 L, vec3 N) {
-    float Fss90 = state.roughness * dp.LdotH * dp.LdotH;
+    float Fss90 = state.roughness * Sqr(dp.LdotH);
     float FssL = 1.0 + (Fss90 - 1.0) * SchlickFresnel(dp.LdotN);
     float FssV = 1.0 + (Fss90 - 1.0) * SchlickFresnel(dp.VdotN);
     float tmp = 1.0 / (abs(dp.LdotN) + abs(dp.VdotN)) - 0.5;
     return state.baseColor * 1.25 * InvPI * (FssL * FssV * tmp + 0.5) * abs(dp.LdotN);
 }
+// Diffuse + Subsurface + Sheen
 vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
-    pdf = 0.0;
     mat3 tbn = ConstructTBN(N);
     V = WorldToLocal(V, tbn);
     L = SampleCosineHemisphere();
@@ -41,13 +45,19 @@ vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
     DotProducts dp;
     SetDotProducts(L, V, H, N, dp);
 
-    pdf = CosineHemispherePDF(L);
-    vec3 BaseDiffuse = _DisneyDiffuse(state, dp, V, L, Y);
+    vec3 BaseDiffuse = _DisneyDiffuse(state, dp, V, L, Y, pdf);
     vec3 Subsurface = _DisneySubsurface(state, dp, V, L, Y);
-    vec3 brdf = (1.0 - state.subsurface) * BaseDiffuse + Subsurface * state.subsurface;
     
+    float lum = Luminance(state.baseColor);
+    vec3 Ctint = lum > 0.0 ? state.baseColor / lum : vec3(1.0);
+    vec3 Csheen = (1.0 - state.sheenTint) + state.sheenTint * Ctint;
+    vec3 fsheen = Csheen * (SchlickFresnel(abs(dp.LdotH))) * abs(dp.LdotN);
+    
+    vec3 f = (1.0 - state.subsurface) * BaseDiffuse + Subsurface * state.subsurface + fsheen;
+    f = BaseDiffuse;
+
     L = LocalToWorld(L, tbn);
-    return brdf;
+    return f * abs(L.y);
 }
 
 /* ========== Metallic Specular ========== */
@@ -69,12 +79,12 @@ vec3 DisneySpecular(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) {
     SetDotProducts(L, V, H, N, dp);
 
     float Fm = mix(0.04, 1.0, SchlickFresnel(dp.VdotH));
-    vec3 brdf = vec3(Fm) * _DisneySpecularEval(state, V, L, H, Y);
+    vec3 f = vec3(Fm) * _DisneySpecularEval(state, V, L, H, Y);
 
     pdf = GGXVNDFLPdf(V, H, L, state.ax, state.ay);
 
     L = LocalToWorld(L, tbn);
-    return brdf;
+    return f * abs(L.y);
 }
 
 /* ========== Clearcoat ========== */

@@ -9,6 +9,7 @@ namespace Aho {
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_SceneData;	// render data is a per mesh basis
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_DebugData;
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_EmptyVao;
+	std::vector<std::shared_ptr<RenderData>> RenderTask::m_UnitCircle; // line
 
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
@@ -124,6 +125,31 @@ namespace Aho {
 			cubeVAO->Init(meshInfo);
 			m_UnitCube.push_back(std::make_shared<RenderData>(cubeVAO));
 		}
+
+
+		// Unit circle
+		{
+			int numSegments = 32;
+			std::vector<float> vertices;
+			std::vector<uint32_t> indices;
+			for (int i = 0; i < numSegments; i++) {
+				float theta = 2.0f * glm::pi<float>() * i / numSegments;
+				float x = cos(theta);
+				float y = sin(theta);
+				vertices.push_back(x);
+				vertices.push_back(0.0f);
+				vertices.push_back(y);
+
+				indices.push_back(i);
+				indices.push_back((i + 1) % numSegments); 
+			}
+
+			std::shared_ptr<LineInfo> lineInfo = std::make_shared<LineInfo>(vertices, indices);
+			std::shared_ptr<VertexArray> circleVAO;
+			circleVAO.reset(VertexArray::Create());
+			circleVAO->Init(lineInfo);
+			m_UnitCircle.push_back(std::make_shared<RenderData>(circleVAO));
+		}
 	}
 
 	const std::vector<std::shared_ptr<RenderData>>& RenderTask::GetRenderData(RenderDataType type) {
@@ -138,6 +164,8 @@ namespace Aho {
 				return m_DebugData;
 			case RenderDataType::UnitCube:
 				return m_UnitCube;
+			case RenderDataType::UnitCircle:
+				return m_UnitCircle;
 		}
 		AHO_CORE_ERROR("wrong render data type");
 	}
