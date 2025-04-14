@@ -19,11 +19,6 @@ void main() {
 out vec4 out_color;
 in vec2 v_TexCoords;
 
-const float PI = 3.14159265358979323846;
-const int SAMPLE_CNT = 24;
-const float Rground = 6360.0; 
-const float Rtop = 6460.0;
-
 uniform sampler2D u_TransmittanceLUT;
 
 // n : sample count
@@ -167,7 +162,6 @@ void LutTransmittanceParamsToUv(AtmosphereParameters Atmosphere, in float viewHe
 	float x_r = rho / H;
 
 	uv = vec2(x_mu, x_r);
-	//uv = vec2(fromUnitToSubUvs(uv.x, TRANSMITTANCE_TEXTURE_WIDTH), fromUnitToSubUvs(uv.y, TRANSMITTANCE_TEXTURE_HEIGHT)); // No real impact so off
 }
 
 bool Valid(vec3 P) {
@@ -179,7 +173,6 @@ const int MS_SAMPLE_CNT = 8;
 
 vec3 GetWorldDir(int x, int y) {
 	float cnt = float(x * 8 + y);
-
 	float i = 0.5 + float(cnt / MS_SAMPLE_CNT);
 	float j = 0.5 + float(cnt - float((cnt / MS_SAMPLE_CNT) * MS_SAMPLE_CNT));
 
@@ -194,8 +187,8 @@ vec3 GetWorldDir(int x, int y) {
 	float sinTheta = sin(theta);
 	vec3 worldDir;
 	worldDir.x = cosTheta * sinPhi;
-	worldDir.y = sinTheta * sinPhi;
-	worldDir.z = cosPhi;
+	worldDir.y = cosPhi;
+	worldDir.z = sinTheta * sinPhi;
 
 	return worldDir;
 }
@@ -203,20 +196,15 @@ vec3 GetWorldDir(int x, int y) {
 void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_order, out vec3 f_ms) {
     vec3 earthO = vec3(0.0);
     float invSamples = 4.0 * PI / float(MS_SAMPLE_CNT * MS_SAMPLE_CNT); 
-
 	float uniformPhase = 1.0 / (4.0 * PI);
-
 	AtmosphereParameters atmosparam;
 	atmosparam.TopRadius = Rtop;
 	atmosparam.BottomRadius = Rground;
 
     for (int i = 0; i < MS_SAMPLE_CNT; ++i) {
         for (int j = 0; j < MS_SAMPLE_CNT; ++j) {
-            // vec3 rayDir = GetSphericSampleDirection(i, j, MS_SAMPLE_CNT);
 			vec3 rayDir = GetWorldDir(i, j);
-
 			rayDir = normalize(rayDir);
-
             float tAtmos = RaySphereIntersectNearest(worldPos, rayDir, earthO, Rtop);
             float tGround = RaySphereIntersectNearest(worldPos, rayDir, earthO, Rground);
 
@@ -289,8 +277,6 @@ void ComputeMultiScatteringTexture(vec3 worldPos, vec3 sunDir, out vec3 L2nd_ord
     }
 }
 
-#define PLANET_RADIUS_OFFSET 0.01
-
 void main() {
     float r;
     float mu;
@@ -302,7 +288,7 @@ void main() {
 	r = Rground + clamp(uv.y + PLANET_RADIUS_OFFSET, 0.0, 1.0) * (Rtop - Rground - PLANET_RADIUS_OFFSET);
 
     vec3 worldPos = vec3(0.0, r, 0.0);
-    vec3 sunDir = normalize(vec3(sqrt(1.0 - mu * mu), mu, 0.0));
+	vec3 sunDir = normalize(vec3(0.0, sqrt(1.0 - mu * mu), mu));
 
     vec3 L2nd_order = vec3(0.0);
     vec3 f_ms = vec3(0.0);

@@ -53,11 +53,10 @@ vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
     vec3 Csheen = (1.0 - state.sheenTint) + state.sheenTint * Ctint;
     vec3 fsheen = Csheen * (SchlickFresnel(abs(dp.LdotH))) * abs(dp.LdotN);
     
-    vec3 f = (1.0 - state.subsurface) * BaseDiffuse + Subsurface * state.subsurface + fsheen;
-    f = BaseDiffuse;
+    vec3 f = (1.0 - state.subsurface) * BaseDiffuse + Subsurface * state.subsurface;// + fsheen;
 
     L = LocalToWorld(L, tbn);
-    return f * abs(L.y);
+    return f * abs(dp.LdotN);
 }
 
 /* ========== Metallic Specular ========== */

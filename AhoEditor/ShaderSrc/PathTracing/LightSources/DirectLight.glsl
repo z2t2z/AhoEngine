@@ -27,6 +27,7 @@ vec3 SampleDirectLight(const State state, const Ray ray) {
     float EnvPdf = 0.0;
     vec3 EnvDir = vec3(0.0);
     vec3 Ld = SampleIBL(EnvPdf, EnvDir);
+    return vec3(0.0);
 
     if (EnvPdf != 0.0 && VisibilityTest(state.pos, state.pos + 1000000.0 * EnvDir)) {
         vec3 L = EnvDir;

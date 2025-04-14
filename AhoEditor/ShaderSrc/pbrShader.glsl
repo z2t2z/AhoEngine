@@ -41,7 +41,6 @@ uniform sampler2D u_SkyviewLUT;
 // SSR sample counts
 uniform uint u_SSRSampleCnt = 32;
 
-const float PI = 3.14159265359f;
 const float MAX_REFLECTION_LOD = 4.0;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -120,7 +119,7 @@ const float nearPlane = 0.1f;
 const float frustumWidth = 100.0f;
 const float lightSize = 2.0f; 	// light width
 const float lightUV = lightSize / frustumWidth;
-const int SAMPLE_CNT = 16;
+const int PCSS_SAMPLE_CNT = 16;
 float BIAS = 0.0001f;
 vec2 depthMapDt;
 float zPosFromLight;
@@ -131,7 +130,7 @@ float FindBlocker(vec2 uv, float zReceiver) {
 	float blockerSum = 0.0f;
 	int sampleCnt = 0;
 
-	for (int i = 0; i < SAMPLE_CNT; ++i) {
+	for (int i = 0; i < PCSS_SAMPLE_CNT; ++i) {
 		float sampleDepth = texture(u_gLightDepth, uv + poissonDisk[i] * searchWidth).r;
 		if (zReceiver > sampleDepth) {
 			blockerSum += sampleDepth;
@@ -149,12 +148,12 @@ float FindBlocker(vec2 uv, float zReceiver) {
 float PCF(vec2 uv, float zReceiver, float radius, float bias) {
 	float shadowSum = 0.0f;
 
-	for (int i = 0; i < SAMPLE_CNT; ++i) {
+	for (int i = 0; i < PCSS_SAMPLE_CNT; ++i) {
 		float sampleDepth = texture(u_gLightDepth, uv + poissonDisk[i] * radius).r;
 		shadowSum += zReceiver > sampleDepth + 0.0025f? 0.0f : 1.0f;
 	}
 
-	return shadowSum / float(SAMPLE_CNT);
+	return shadowSum / float(PCSS_SAMPLE_CNT);
 }
 
 float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
@@ -188,27 +187,20 @@ float PCSS(vec4 fragPos, float NdotL, int lightIdx) {
 	return PCF(uv, zReceiver, pcfRadius, bias);
 }
 
-
 void main() {
 	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
 	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
 
 	float d = texture(u_gDepth, v_TexCoords).r;
 	if (d == 1.0f) { 
-		vec3 clipSpace = vec3(v_TexCoords * 2.0 - vec2(1.0), 1.0);
-		vec4 viewPos = u_ProjectionInv * vec4(clipSpace, 1.0);
+		vec2 uv = v_TexCoords;
+		vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
+		vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
+		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
 		
-		if (viewPos.w != 0.0) {
-			viewPos /= viewPos.w;
-		}
-		vec3 worldDir = mat3(u_ViewInv) * viewPos.xyz; 
-		worldDir = normalize(worldDir);
 		const float Rground = 6360.0; 
-		vec3 worldPos = vec3(u_ViewPosition) / 1000.0;
-		if (worldPos.y < 0.001) {
-			worldPos.y = 0.001f; // don't go under surface
-		}
-		worldPos.y += Rground;
+		vec3 worldPos = u_ViewPosition.xyz / 1000.0;
+		worldPos.y = max(0.01, worldPos.y) + Rground;
 
 		vec2 sampleUV;
 		SampleSkyViewLut(worldPos, worldDir, u_SunDir, sampleUV);
@@ -217,8 +209,7 @@ void main() {
 		lum /= (smoothstep(0.0, 0.2, clamp(u_SunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
 		
 		lum = jodieReinhardTonemap(lum);
-		
-		lum = pow(lum, vec3(1.0 / 2.2));
+		lum = 8 * pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, u_SunDir, Rground);
 		out_Color = vec4(lum, 1.0);
 		return;
 	}
@@ -305,8 +296,8 @@ void main() {
 	}
 
 	vec3 Color = (ambient + Lo);
-	// Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
-	// Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
+	Color = Color / (Color + vec3(1.0f));	// HDR tone mapping
+	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 
 	out_Color = vec4(Color, 1.0f);
 }

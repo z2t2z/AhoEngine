@@ -8,7 +8,7 @@
 
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
-	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 3.14 / 6.0, 3.14 * 45.0 / 180.0 };
+	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 0.0, 3.14 * 45.0 / 180.0 };
 
 	RenderSkyPipeline::RenderSkyPipeline() {
 		Initialize();
@@ -31,6 +31,13 @@ namespace Aho {
 
 		m_MutiScattLutPass->RegisterTextureBuffer({ m_TransmittanceLutPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
 		m_SkyViewLutPass->RegisterTextureBuffer({ m_TransmittanceLutPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
+		{
+			//static std::shared_ptr<Texture2D> translut = Texture2D::Create((g_CurrentPath / "Test" / "transmittancelut.hdr").string());
+			//m_MutiScattLutPass->RegisterTextureBuffer({ translut.get(), TexType::TransmittanceLUT });
+			//m_SkyViewLutPass->RegisterTextureBuffer({ translut.get(), TexType::TransmittanceLUT });
+		}
+
+
 		m_SkyViewLutPass->RegisterTextureBuffer({ m_MutiScattLutPass->GetTextureBuffer(TexType::Result), TexType::MultiScattLUT });
 
 		RegisterRenderPass(m_TransmittanceLutPass.get(), RenderDataType::ScreenQuad);
@@ -59,7 +66,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("TransmittanceLUT");
 		pass->SetRenderCommand(std::move(cmdBuffer));
 
-		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "PrecomputeAtmospheric.glsl");
+		auto pp = Shader::Create(g_CurrentPath / "ShaderSrc" / "AtmosphericScattering" / "TransmittanceLUT.glsl");
 		pass->SetShader(pp);
 		TexSpec texSpecColor;
 		texSpecColor.debugName = "transmittanceLUT";
@@ -123,6 +130,7 @@ namespace Aho {
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				shader->SetVec3("u_SunDir", m_SunDir);
+
 				// Sampler uniforms
 				uint32_t texOffset = 0u;
 				for (const auto& texBuffer : textureBuffers) {

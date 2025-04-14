@@ -10,6 +10,7 @@ namespace Aho {
 	bool RendererGlobalState::g_ShowDebug = false;
 	bool RendererGlobalState::g_IsEntityIDValid = false;
 	std::shared_ptr<RenderData> RendererGlobalState::g_SelectedData = nullptr;
+	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
 	Renderer::Renderer() {
 		TextureBuffer::Init();
@@ -46,7 +47,10 @@ namespace Aho {
 		m_RP_Postprocess->SetInput(m_RP_DeferredShading->GetRenderResult());
 		
 		//m_RP_Dbg->SetInput(m_RP_DeferredShading->GetRenderResult());
-
+		{
+			//static std::shared_ptr<Texture2D> skyviewLut = Texture2D::Create((g_CurrentPath / "Test" / "skyviewlut.hdr").string());
+			//rp_deferred->RegisterTextureBuffer({ skyviewLut.get(), TexType::SkyViewLUT });
+		}
 	}
 
 	void Renderer::Render() {
@@ -85,7 +89,7 @@ namespace Aho {
 	// TODO: Fix fxaa: it is appiled to all pixels
 	uint32_t Renderer::GetRenderResultTextureID() {
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
-			return m_RP_DeferredShading->GetRenderResult()->GetTextureID();
+			return m_RP_Dbg->GetRenderResult()->GetTextureID();
 		}
 		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
 			return m_RP_PathTraciing->GetRenderResult()->GetTextureID();

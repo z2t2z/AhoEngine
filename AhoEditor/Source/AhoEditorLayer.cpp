@@ -211,21 +211,23 @@ namespace Aho {
 	// TODO: need to integrate in a skyatmosphere component
 	void AhoEditorLayer::TempSunDirControl() {
 		auto skyPipeline = static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
-		auto shadingPipeline = static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
+		auto shadingPipeline = static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading));
 
 		// super strange bug
 		auto& [yaw, pitch] = skyPipeline->GetSunYawPitch();
 		auto sundir = skyPipeline->GetSunDir();
 		ImGui::Begin("Temp Sky Control");
 		ImGui::DragFloat("Yaw", &yaw, 0.01f, -3.14f, 3.14f);
-		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f / 2, 3.14f / 2);
-		glm::vec3 sunDir = glm::vec3(glm::cos(pitch) * glm::cos(yaw), glm::sin(pitch), glm::cos(pitch) * glm::sin(yaw));
+		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f, 3.14f);
+
+		static glm::vec3 sunPosition(0.0, 1.0, 0.0);
+		ImGui::DragFloat3("SunPos", &sunPosition[0], 0.01f);
+
+		glm::vec3 sunDir = glm::vec3(glm::cos(pitch) * glm::sin(yaw), glm::sin(pitch), glm::sin(pitch) * glm::sin(yaw));
 		std::string text = std::to_string(sunDir.x) + " " + std::to_string(sunDir.y) + " " + std::to_string(sunDir.z);
 		ImGui::Text(text.c_str());
-		sunDir = glm::normalize(sunDir);
-		skyPipeline->SetSunDir(sunDir);
-		shadingPipeline->SetSunDir(sunDir);
-
+		skyPipeline->SetSunDir(normalize(sunPosition));
+		shadingPipeline->SetSunDir(normalize(sunPosition));
 		ImGui::End();
 	}
 

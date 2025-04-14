@@ -116,7 +116,7 @@ State InitState() {
     state.roughness = 0.5;
     state.sheenTint = 0.9;
     state.metallic = 0.1;
-    state.subsurface = 0.9;
+    state.subsurface = 0.2;
     state.specular = 0.1;
     state.specTrans = 0.1;
     state.clearcoatGloss = 0.99;

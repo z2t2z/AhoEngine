@@ -79,7 +79,6 @@ mat3 ConstructTBN(const vec3 N) {
     vec3 B = -normalize(cross(N, T));
     return mat3(T, N, B);
 }
-
 vec3 WorldToLocal(vec3 vWorld, mat3 tbn) {
     return transpose(tbn) * vWorld;
 }

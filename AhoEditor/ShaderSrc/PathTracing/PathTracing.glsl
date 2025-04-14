@@ -73,7 +73,6 @@ vec3 PathTrace(Ray ray) {
             vec4 env = SampleInfiniteLight(ray);
             float misWeight = depth > 0 ? PowerHeuristicPdf(state.pdf, env.w) : 1.0; // Need better understanding of this
             L += misWeight * beta * env.rgb;
-            // L += uniformSky * beta;
             break;
         }
 
@@ -114,14 +113,14 @@ vec3 PathTrace(Ray ray) {
         vec3 hitPos = ray.origin + info.t * ray.direction; 
         state.pos = hitPos;     
 
-        L += beta * SampleEmissive();
+        // L += beta * SampleEmissive();
         L += beta * SampleDirectLight(state, ray);
 
         float pdf = 0.0;
         vec3 wi;
         vec3 wo = -ray.direction;
-        vec3 f = DisneyDiffuse(state, wo, wi, N, pdf);
-        // vec3 f = DisneySpecular(state, wo, wi, N, pdf);
+        // vec3 f = DisneyDiffuse(state, wo, wi, N, pdf);
+        vec3 f = DisneySpecular(state, wo, wi, N, pdf);
         // vec3 f = DisneyClearcoat(state, wo, wi, N, pdf);
         // vec3 f = DisneyGlass(state, wo, wi, N, pdf);
 
@@ -163,19 +162,19 @@ void main() {
     //     imageStore(accumulatedImage, pixelCoord, tileColor);
     //     return;
     // }
-    float SKIP_P = u_Frame == 1 ? 0.1 : 1.0;
-    if (u_Frame == 1) {
-        float skip = rand();
-        if (skip > SKIP_P) {
-            return;
-        }
-    }
+    // float SKIP_P = u_Frame == 1 ? 0.1 : 1.0;
+    // if (u_Frame == 1) {
+    //     float skip = rand();
+    //     if (skip > SKIP_P) {
+    //         return;
+    //     }
+    // }
 
     Ray ray = GetRayFromScreenSpace(
                 vec2(pixelCoord), 
                 vec2(imageSize(accumulatedImage))
             );
-    vec3 resColor = PathTrace(ray) / SKIP_P;
+    vec3 resColor = PathTrace(ray);
     vec4 accumulated = imageLoad(accumulatedImage, pixelCoord);
     accumulated += vec4(resColor, 1.0);
     imageStore(accumulatedImage, pixelCoord, accumulated);

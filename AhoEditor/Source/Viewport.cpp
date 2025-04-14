@@ -68,7 +68,7 @@ namespace Aho {
 
 		// TODO: Should be able to select any render result of any passes
 		uint32_t renderResult = m_Renderer->GetRenderResultTextureID();
-		renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_DebugVisual)->GetRenderResult()->GetTextureID();
+		//renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_DebugVisual)->GetRenderResult()->GetTextureID();
 		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
