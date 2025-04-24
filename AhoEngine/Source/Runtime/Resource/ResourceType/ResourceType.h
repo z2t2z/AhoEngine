@@ -14,20 +14,6 @@ namespace Aho {
 		SpotLgiht
 	};
 
-	struct alignas(16) Vertex {
-		glm::vec3 position;		float u;
-		glm::vec3 normal;		float v;
-		glm::vec3 tangent;		float _padding; 
-		//glm::vec2 uv;			float _padding4; float _padding5;
-
-		//Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-		//	: position(pos), normal(normal), tangent(tangent), uv(uv) { }
-		Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-			: position(pos), normal(normal), tangent(tangent), u(uv.x), v(uv.y) {
-		}
-		Vertex() = default;
-	};
-
 	constexpr int MAX_BONES = 4;
 	struct VertexSkeletal {
 		glm::vec3 position;

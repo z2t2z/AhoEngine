@@ -1,6 +1,7 @@
 #ifndef SSBO_GLSL
 #define SSBO_GLSL
 
+#include "DataStructs.glsl"
 
 // SSBO 
 layout(std430, binding = 0) buffer TLASNode {
@@ -18,7 +19,7 @@ layout(std430, binding = 3) buffer BLASPrimitives {
 layout(std430, binding = 4) buffer Offset {
     OffsetInfo s_OffsetInfo[];
 };
-layout(std430, binding = 5) buffer Textures {
+layout(std140, binding = 5) buffer Textures {
     TextureHandles s_TextureHandles[];
 };
 

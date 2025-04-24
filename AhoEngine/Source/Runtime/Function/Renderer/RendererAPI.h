@@ -8,9 +8,9 @@
 namespace Aho {
 	enum class ClearFlags {
 		None = 0,
-		Color_Buffer = 0x00004000,
-		Depth_Buffer = 0x00000100,
-		Stencil_Buffer = 0x00000400,
+		Color_Buffer	= 0x00004000,
+		Depth_Buffer	= 0x00000100,
+		Stencil_Buffer	= 0x00000400,
 	};
 	inline ClearFlags operator|(ClearFlags lhs, ClearFlags rhs) {
 		return static_cast<ClearFlags>(static_cast<int>(lhs) | static_cast<int>(rhs));

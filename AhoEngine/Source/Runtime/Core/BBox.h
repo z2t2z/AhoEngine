@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Math/Math.h"
-#include "Ray.h"
 #include <limits>
 
 namespace Aho {
@@ -10,6 +9,7 @@ namespace Aho {
 		Y = 1,
 		Z = 2
 	};
+	struct Ray;
 
 	static const float inf = 1E25;
 	class alignas(16) BBox {

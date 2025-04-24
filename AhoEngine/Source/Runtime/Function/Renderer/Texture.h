@@ -8,13 +8,13 @@
 namespace Aho {
 	// Texture parameters
 	enum class TexInterFormat {
-		None, RED, UINT, RED32F, RG8, RG16F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth32,
+		None, RED, UINT, RED32F, RG8, RG16F, RGB8, RGBA8, RGB16F, RGBA16F, RGBA32F, Depth24, Depth24Stencil8, Depth32,
 	};
 	enum class TexDataFormat {
-		None, RED, UINT, RG, RGB, RGBA, DepthComponent,
+		None, RED, UINT, RG, RGB, RGBA, DepthComponent, DepthStencil
 	};
 	enum class TexDataType {
-		None, UnsignedByte, Float, UnsignedInt
+		None, UnsignedByte, Float, UnsignedInt, UnsignedInt248
 	};
 	enum class TexTarget {
 		None, Texture1D, Texture2D, Texture3D, TextureCubemap
@@ -28,12 +28,24 @@ namespace Aho {
 
 	enum class TexType {
 		None = 0,
-		Albedo,
 		Normal,
 		Height,
-		Roughness,
-		Metallic,
 		AO,
+		
+		// Disney principled
+		Albedo,
+		Subsurface,
+		Metallic,
+		Specular,
+		SpecTint,
+		Roughness,
+		Anisotropic,
+		Sheen,
+		SheenTint,
+		Clearcoat,
+		ClearcoatGloss,
+		SpecTrans,
+		ior,
 
 		// Framebuffer texture type
 		Noise,

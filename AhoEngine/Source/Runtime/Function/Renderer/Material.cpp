@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "Material.h"
+#include "Shader.h"
 
 namespace Aho {
 	// TODO: Try to come up with a better way
@@ -74,7 +75,7 @@ namespace Aho {
 				}, property.m_Value);
 				break;
 			default:
-				AHO_CORE_ERROR("Wrong texture type");
+				//AHO_CORE_ERROR("Wrong texture type");
 				continue;
 			}
 		}

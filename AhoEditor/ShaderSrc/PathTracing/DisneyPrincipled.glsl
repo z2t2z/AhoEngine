@@ -1,0 +1,202 @@
+#ifndef GLSL_DISNEY_PRINCIPLED_GLSL
+#define GLSL_DISNEY_PRINCIPLED_GLSL
+
+// Reference
+// https://github.com/mitsuba-renderer/mitsuba3/blob/master/src/bsdfs/principled.cpp#L333
+// https://schuttejoe.github.io/post/disneybsdf/
+
+// Notation follows mitsuba's impl and is different from pbrt
+// wi: incoming direction of the bsdf, view direction V
+// wo: outwards direction of the bsdf, light direction L
+
+#include "Random.glsl"
+#include "Sampling.glsl"
+#include "Disney.glsl"
+#include "DisneyPrincipledHelpers.glsl"
+
+vec3 principled_eval(const State state, const vec3 V, const vec3 H, const vec3 L, out float pdf);
+
+vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
+    if (state.cosTheta == 0.0) {
+        pdf = 0.0;
+        return vec3(0.0);
+    }
+
+    Material mat = state.material;
+    bool front_side = state.cosTheta > 0.0;
+    vec3 Nworld = front_side ? state.N : -state.N; // Ensure N is always in the same hemisphere as V so that we can calculate the correct L direction
+    state.eta = mat.ior;
+    float rpc_eta = 1.0 / state.eta;
+
+    // TODO: Not sure about this part
+    // Use eta or specular to guide reflect/transmit
+
+    // Store the weights
+    float anisotropic = mat.anisotropic;
+    float roughness   = mat.roughness;
+    float specTrans   = mat.specTrans;
+    float metallic    = mat.metallic;
+    float clearcoat   = mat.clearcoat;
+
+    bool has_clearcoat = clearcoat > 0.0;
+    bool has_spec_trans = specTrans > 0.0;
+
+    // Dielectric reflection weight
+    float brdf = (1.0 - metallic) * (1.0 - specTrans);
+    // Dielectric refraction weight
+    float bsdf = (1.0 - metallic) * specTrans;
+
+    // Local coordinates
+    mat3 tbn = ConstructTBN(Nworld);
+    vec3 V = WorldToLocal(Vworld, tbn);
+
+    // Defining main specular reflection distribution
+    vec3 H = normalize(SampleGGXVNDF(V, mat.ax, mat.ay, rand(), rand()));
+
+    // Fresnel coefficient for the main specular
+    FresnelResult fresnel = fresnel(sign(state.cosTheta) * dot(V, H), state.eta);
+    float F_spec_dielectric = fresnel.r;    
+
+    // probability definitions
+    float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
+    float prob_spec_trans   = float(has_spec_trans) * (front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric)); 
+    float prob_diffuse      = front_side ? brdf : 0;
+    
+    // Clearcoat has 1/4 of the main specular reflection energy.
+    float prob_clearcoat = float(has_clearcoat) * (front_side ? 0.25 * clearcoat : 0);
+
+    // Normalizing the probabilities
+    float rcp_tot_prob = 1.0 / (prob_spec_reflect + prob_spec_trans + prob_clearcoat + prob_diffuse);
+    prob_spec_reflect *= rcp_tot_prob;
+    prob_spec_trans *= rcp_tot_prob;
+    prob_clearcoat *= rcp_tot_prob;
+    prob_diffuse *= rcp_tot_prob;
+    vec4 probs = vec4(prob_spec_reflect, prob_spec_trans, prob_clearcoat, prob_diffuse);
+
+    // Sampling mask definitions
+    float sample1 = rand();
+    float curr_prob = 0.0;
+    float prev[3]; 
+    prev[0] = prob_diffuse;
+    prev[1] = prev[0] + prob_spec_reflect;
+    prev[2] = prev[1] + prob_spec_trans;
+
+    vec3 L;
+    // TODO: use remap to reduce extra rand
+    if (sample1 < prev[0]) {
+        L = SampleCosineHemisphere();
+        H = normalize(L + V);
+
+    } else if (sample1 < prev[1]) {
+        L = normalize(reflect(-V, H));
+
+    } else if (sample1 < prev[2]) {
+        L = normalize(refract(-V, H, !front_side ? state.eta : rpc_eta));
+
+    } else { // clearcoat
+        L = normalize(reflect(-V, H));
+    }
+
+    vec3 f = principled_eval(state, V, H, L, pdf);
+    Lworld = LocalToWorld(L, tbn);
+
+    return f;
+}
+
+vec3 principled_eval(const State state, const vec3 V, const vec3 H, const vec3 L, out float pdf) {
+    pdf = 0.0;
+
+    DotProducts dp;
+    SetDotProducts(L, V, H, Y, dp);
+
+    Material mat = state.material;
+    float roughness   = mat.roughness;
+    float specTrans   = mat.specTrans;
+    float metallic    = mat.metallic;
+    float clearcoat   = mat.clearcoat;
+
+    bool front_side = state.cosTheta > 0.0;
+
+    bool is_reflect = SameHemisphere(V, L);
+    bool is_refract = !is_reflect;
+
+    bool has_clearcoat = clearcoat > 0.0;
+    bool has_spec_trans = specTrans > 0.0;
+
+    // Reflection weight
+    float brdf = (1.0 - metallic) * (1.0 - specTrans);
+    // Refraction weight
+    float bsdf = (1.0 - metallic) * specTrans;
+
+    float eta_path = front_side ? state.eta : 1.0 / state.eta;
+    
+    // Fresnel coefficient for the main specular
+    FresnelResult fresnel = fresnel(sign(state.cosTheta) * dp.VdotH, state.eta);
+    float F_spec_dielectric = fresnel.r;
+
+    // probability definitions
+    float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
+    float prob_spec_trans   = float(has_spec_trans) * (front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric)); 
+    float prob_diffuse      = front_side ? brdf : 0;
+
+    float D = D_GGX(H, mat.ax, mat.ay);
+    float G = G1(V, mat.ax, mat.ay) * G1(L, mat.ax, mat.ay);
+    float ppdf = GGXVNDFLPdf(V, H, L, mat.ax, mat.ay);
+
+    float lum = Luminance(mat.baseColor);
+
+    vec3 f = vec3(0.0);
+
+    // Reflection
+    if (is_reflect && prob_spec_reflect > 0.0) {
+        vec3 F_principled = principled_fresnel(mat.baseColor, bsdf, sign(state.cosTheta) * dp.VdotH, state.eta, metallic, mat.specTint, F_spec_dielectric, front_side);
+        f += F_principled * D * G / (4.0 * abs(dp.VdotN));
+        pdf += prob_spec_reflect * ppdf;
+    }
+    
+    // Transmission
+    if (is_refract && prob_spec_trans > 0.0) {
+        float denom = dp.VdotH + eta_path * abs(dp.LdotH);
+        f += sqrt(mat.baseColor) * bsdf 
+                                * abs((1.0 - F_spec_dielectric) * D * G * eta_path
+                                * eta_path * dp.VdotH * dp.LdotH / (dp.VdotN * denom * denom)); 
+        pdf += prob_spec_trans * ppdf;
+    }
+
+    // Diffuse, retro reflection, fake subsurface and sheen
+    if (is_reflect && brdf > 0.0) {
+        float Fi = SchlickWeight(abs(dp.VdotN));
+        float Fo = SchlickWeight(abs(dp.LdotN));
+        
+        // Diffuse
+        float f_diff = (1.0 - 0.5 * Fi) * (1.0 - 0.5 * Fo);
+        float Rr = 2.0 * mat.roughness * dp.LdotH * dp.LdotH;
+
+        // Retro reflection
+        float f_retro = Rr * (Fo + Fi + Fo * Fi * (Rr - 1.0f));
+        
+        // fake subsurface
+        float Fss90 = Rr / 2.0;
+        float Fss = mix(1.0, Fss90, Fo) * mix(1.0, Fss90, Fi);
+        float f_ss = 1.25 * (Fss * (1.0 / (abs(dp.VdotN) + abs(dp.LdotN)) - 0.5f) + 0.5f);
+
+        f += brdf * mat.baseColor * InvPI * mix(f_diff + f_retro, f_ss, mat.subsurface);
+        
+        // Sheen
+        float Fd = SchlickWeight(abs(dp.LdotH));
+        vec3 c_tint = lum > 0.0 ? mat.baseColor / lum : vec3(1.0);
+        vec3 c_sheen = mix(vec3(1.0), c_tint, mat.sheenTint.x);
+
+        f += brdf * mat.sheen * (1.0 - mat.metallic) * Fd * c_sheen;
+        pdf += prob_diffuse * CosineHemispherePDF(L);
+    }
+
+    // Clearcoat
+    if (is_reflect && has_clearcoat) {
+
+    }
+
+    return f * abs(dp.LdotN);
+}
+
+#endif

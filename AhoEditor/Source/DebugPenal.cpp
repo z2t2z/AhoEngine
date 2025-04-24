@@ -1,0 +1,110 @@
+#include "DebugPenal.h"
+
+namespace Aho {
+	DebugPenal::DebugPenal() {
+
+	}
+
+	void DebugPenal::Draw() {
+		SunDirControl();
+		BVHControl();
+	}
+
+	void DebugPenal::SunDirControl() {
+		// super strange bug
+		auto& [yaw, pitch] = m_SkyPipeline->GetSunYawPitch();
+		auto sundir = m_SkyPipeline->GetSunDir();
+		ImGui::Begin("Temp Sky Control");
+		ImGui::DragFloat("Yaw", &yaw, 0.01f, -3.14f, 3.14f);
+		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f, 3.14f);
+
+		static glm::vec3 sunPosition(0.0, 1.0, 0.0);
+		ImGui::DragFloat3("SunPos", &sunPosition[0], 0.01f);
+
+		glm::vec3 sunDir = glm::vec3(glm::cos(pitch) * glm::sin(yaw), glm::sin(pitch), glm::sin(pitch) * glm::sin(yaw));
+		std::string text = std::to_string(sunDir.x) + " " + std::to_string(sunDir.y) + " " + std::to_string(sunDir.z);
+		ImGui::Text(text.c_str());
+		m_SkyPipeline->SetSunDir(normalize(sunPosition));
+		m_ShadingPipeline->SetSunDir(normalize(sunPosition));
+		ImGui::End();
+	}
+
+	void DebugPenal::BVHControl() {
+		ImGui::Begin("Temp bvh control");
+		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
+		auto view = entityManager->GetView<BVHComponent, TransformComponent>();
+		int find = -1;
+
+		if (ImGui::Button("Update BVH")) {
+			bool dirty = false;
+			view.each(
+				[&dirty](auto entity, BVHComponent& bc, TransformComponent& tc) {
+					if (tc.dirty) {
+						tc.dirty = false;
+						dirty = true;
+						for (BVHi* bvh : bc.bvhs) {
+							bvh->ApplyTransform(tc.GetTransform());
+						}
+					}
+				});
+
+
+			if (dirty) {
+				BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+				alts.UpdateTLAS();
+				m_PtPipeline->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
+			}
+
+		}
+
+		// BVH Intersection test
+		//if (ImGui::Button("GetData")) {
+		//	std::vector<BVHNodei> data(1);
+		//	SSBOManager::GetSubData<BVHNodei>(0, data, 0);
+		//}
+		//view.each(
+		//	[&](auto entity, BVHComponent& bc, TransformComponent& tc) {
+		//		ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));
+		//		std::string showName = "Update BVH:" + std::to_string(static_cast<uint32_t>(entity));
+		//		if (ImGui::Button(showName.c_str())) {
+		//			//ScopedTimer timer(std::to_string(static_cast<uint32_t>(entity)));
+		//			bc.bvh.ApplyTransform(tc.GetTransform());
+		//		}
+		//		
+		//		if (find == -1 && m_ShouldPickObject) {
+		//			auto cam = m_CameraManager->GetMainEditorCamera();
+		//			{
+		//				ScopedTimer timer("Idx Intersecting test");
+		//				if (bc.bvh.Intersect(m_Ray)) {
+		//					find = static_cast<uint32_t>(entity);
+		//				}
+		//			}
+
+		//			// testing ptr version bvh
+		//			//if (!intersectionResult) {
+		//			//	ScopedTimer timer("PTR Intersecting test");
+		//			//	intersectionResult = BVH::GetIntersection(m_Ray, root.get());
+		//			//}
+		//		
+		//		}
+
+		//		ImGui::Separator();
+		//	});
+
+		//if (m_ShouldPickObject && Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL)) {
+		//	BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
+		//	ScopedTimer timer("Intersecting test");
+		//	if (alts.Intersect(m_Ray)) {
+		//		find = 1;
+		//	}
+		//}
+
+
+		//if (find != -1) {
+		//	AHO_CORE_TRACE("Intersecting {}", find);
+		//}
+		//m_ShouldPickObject = false;
+		ImGui::End();
+	}
+
+}

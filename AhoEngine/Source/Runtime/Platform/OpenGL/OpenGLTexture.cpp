@@ -1,8 +1,8 @@
 #include "Ahopch.h"
 #include "OpenGLTexture.h"
 #include "Runtime/Core/Core.h"
-#include "stb_image.h"
 
+#include "stb_image.h"
 #include <gli/gli.hpp>
 
 namespace Aho {

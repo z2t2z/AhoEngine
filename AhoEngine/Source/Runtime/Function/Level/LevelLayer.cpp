@@ -5,14 +5,17 @@
 #include "Runtime/Resource/Asset/Animation/Animator.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
 #include "Runtime/Function/Level/EcS/Components.h"
-#include "Runtime/Function/Renderer/RenderData.h"
-#include "Runtime/Function/Renderer/Texture.h"
 #include "Runtime/Function/Gameplay/IK.h"
 #include "Runtime/Core/BVH.h"
+#include "Level.h"
+#include "Runtime/Function/SkeletonViewer.h"
+#include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
+#include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Resource/ResourceLayer.h"
+#include "Runtime/Function/Renderer/RenderLayer.h"
+
 #include <unordered_map>
-
-
 #include <Jolt/Jolt.h>
 // Jolt includes
 #include <Jolt/RegisterTypes.h>
@@ -50,9 +53,6 @@ namespace Aho {
 		// UpdatePhysics();
 		UpdateAnimation(deltaTime);
 		UpdataUBOData();
-		if (m_RenderLayer->GetRenderer()->GetRenderMode() == RenderMode::PathTracing) {
-			UpdateSceneBvh();
-		}
 	}
 
 	void LevelLayer::OnImGuiRender() {
@@ -110,26 +110,6 @@ namespace Aho {
 			//IKSolver::FABRIK(viewer.viewer, animator.globalMatrices, g_Node, g_Endeffector, g_Param->Translation);
 			Animator::ApplyPose(animator.globalMatrices, skeletal.root);
 		});
-	}
-
-	void LevelLayer::UpdateSceneBvh() {
-		auto entityManager = m_CurrentLevel->GetEntityManager();
-		auto view = entityManager->GetView<TransformComponent, BVHComponent>();
-		bool gDirty = false;
-		view.each(
-			[&](auto entity, TransformComponent& transformComp, BVHComponent& bvhComp) {
-				//if (transformComp.dirty) {
-				//	gDirty = true;
-				//	for (auto& bvh : bvhComp.bvhs) {
-				//		bvh.ApplyTransform(transformComp.GetTransform());
-				//	}
-				//}
-			}
-		);
-
-		if (gDirty) {
-			
-		}
 	}
 
 	// TODO;
@@ -327,7 +307,7 @@ namespace Aho {
 			m_TextureHandles.emplace_back(TextureHandles());
 			TextureHandles& handle = m_TextureHandles.back();
 
-			entityManager->AddComponent<MaterialComponent>(meshEntity, mat, &handle, &materialMask);
+			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, &handle, &materialMask);
 
 			// should not be here
 			if (meshInfo->materialInfo.HasMaterial()) {
@@ -341,27 +321,67 @@ namespace Aho {
 					mat->AddMaterialProperties({ textureCached.at(path), type });
 				}
 			}
+			// TODO: Ugly code, find a way to iterate these
 			if (!mat->HasProperty(TexType::Albedo)) {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
+				handle.SetValue(glm::vec3(0.95), TexType::Albedo);
 				materialMask ^= MaterialMaskEnum::AlbedoMap;
 			}
-
 			if (!mat->HasProperty(TexType::Normal)) {
+				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
 				materialMask ^= MaterialMaskEnum::NormalMap;
 			}
-
 			if (!mat->HasProperty(TexType::Metallic)) {
-				mat->AddMaterialProperties({ 0.2f, TexType::Metallic });
+				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+				handle.SetValue(0.0f, TexType::Metallic);
 				materialMask ^= MaterialMaskEnum::MetallicMap;
 			}
-
-			if (!mat->HasProperty(TexType::Roughness)) {
-				mat->AddMaterialProperties({ 0.90f, TexType::Roughness });
-				materialMask ^= MaterialMaskEnum::RoughnessMap;
+			if (!mat->HasProperty(TexType::Specular)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Specular });
+				handle.SetValue(0.0f, TexType::Specular);
 			}
-
+			if (!mat->HasProperty(TexType::Roughness)) {
+				mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
+				handle.SetValue(0.5f, TexType::Roughness);
+			}
+			if (!mat->HasProperty(TexType::Subsurface)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
+				handle.SetValue(0.0f, TexType::Subsurface);
+			}
+			if (!mat->HasProperty(TexType::SpecTint)) {
+				mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
+				handle.SetValue(0.0f, TexType::SpecTint);
+			}
+			if (!mat->HasProperty(TexType::Anisotropic)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
+				handle.SetValue(0.0f, TexType::Anisotropic);
+			}
+			if (!mat->HasProperty(TexType::Sheen)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
+				handle.SetValue(0.0f, TexType::Sheen);
+			}
+			if (!mat->HasProperty(TexType::SheenTint)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
+				handle.SetValue(0.0f, TexType::SheenTint);
+			}
+			if (!mat->HasProperty(TexType::Clearcoat)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
+				handle.SetValue(0.0f, TexType::Clearcoat);
+			}
+			if (!mat->HasProperty(TexType::ClearcoatGloss)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
+				handle.SetValue(0.0f, TexType::ClearcoatGloss);
+			}
+			if (!mat->HasProperty(TexType::SpecTrans)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
+				handle.SetValue(0.0f, TexType::SpecTrans);
+			}
+			if (!mat->HasProperty(TexType::ior)) {
+				mat->AddMaterialProperties({ 1.5f, TexType::ior });
+				handle.SetValue(1.5f, TexType::ior);
+			}
 			if (!mat->HasProperty(TexType::AO)) {
-				mat->AddMaterialProperties({ 0.2f, TexType::AO });
+				mat->AddMaterialProperties({ 0.0f, TexType::AO });
 				materialMask ^= MaterialMaskEnum::AOMap;
 			}
 
@@ -378,11 +398,11 @@ namespace Aho {
 			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
 			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
 			for (const auto& info : *asset) {
-				assert(s_globalSubMeshId < m_MatMaskEnums.size());
 				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, m_MatMaskEnums[s_globalSubMeshId - 1]); // bad
 				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId++]); // bad
-				BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
-				s_globalSubMeshId += 1;
+				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++); 
+				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
+				//s_globalSubMeshId += 1;
 
 				bvhComp.bvhs.push_back(bvhi);
 				tlasBvh.AddBLASPrimtive(bvhi);

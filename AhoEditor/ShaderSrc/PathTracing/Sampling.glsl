@@ -1,8 +1,8 @@
 #ifndef SAMPLING_GLSL
 #define SAMPLING_GLSL
 
-#include "./Random.glsl"
-#include "./GlobalVars.glsl"
+#include "Random.glsl"
+#include "GlobalVars.glsl"
 
 vec3 SampleCosineHemisphere() {
     vec2 u = vec2(rand(), rand());
@@ -67,4 +67,76 @@ float FresnelDielectric(vec3 L, vec3 V, vec3 H, float ior) {
     float Rp = (ior * VdotH - LdotH) / (ior * VdotH + LdotH);
     return 0.5 * (Sqr(Rs) + Sqr(Rp));
 }
+
+// Mituba's implememtation
+// 定义返回类型
+struct FresnelResult {
+    float  r;            // 能量反射率
+    float  cos_theta_t;  // 带符号的折射余弦
+    float  eta_it;       // 入射→透射折射率比
+    float  eta_ti;       // 透射→入射折射率比
+};
+
+// 计算菲涅尔特例的函数
+FresnelResult fresnel(float cos_theta_i, float eta) {
+    // 1. 内外部判断
+    bool outside = (cos_theta_i >= 0.0);
+    
+    // 2. η 比率
+    float rcp_eta = 1.0 / eta;
+    float eta_it  = outside ? eta     : rcp_eta;
+    float eta_ti  = outside ? rcp_eta : eta;
+    
+    // 3. Snell 定律，计算 cos²θ_t
+    float sin2_i = max(0.0, 1.0 - cos_theta_i*cos_theta_i);
+    float sin2_t = eta_ti * eta_ti * sin2_i;
+    float cos2_t = max(0.0, 1.0 - sin2_t);
+    
+    // 4. 绝对值余弦
+    float cos_i_abs = abs(cos_theta_i);
+    float cos_t_abs = sqrt(cos2_t);
+    
+    // 5. 特殊情况掩码
+    bool index_matched = (eta == 1.0);
+    bool grazing       = (cos_i_abs == 0.0);
+    bool special_case  = index_matched || grazing;
+    float r_sc         = index_matched ? 0.0 : 1.0;
+    
+    // 6. 计算 s/p 振幅反射系数
+    float a_s = (eta_it * cos_t_abs - cos_i_abs) /
+                (eta_it * cos_t_abs + cos_i_abs);
+    float a_p = (eta_it * cos_i_abs - cos_t_abs) /
+                (eta_it * cos_i_abs + cos_t_abs);
+    
+    // 7. 能量反射率
+    float r = 0.5 * (a_s*a_s + a_p*a_p);
+    if (special_case) {
+        r = r_sc;
+    }
+    
+    // 8. 带符号的折射余弦
+    float cos_t = cos_t_abs * (cos_theta_i < 0.0 ? -1.0 : 1.0);
+    
+    // 9. 返回结果
+    FresnelResult result;
+    result.r           = r;
+    result.cos_theta_t = cos_t;
+    result.eta_it      = eta_it;
+    result.eta_ti      = eta_ti;
+    return result;
+}
+
+// Return pow(1 - u, 5)
+float SchlickFresnel(float u) {
+    float m = clamp(1.0 - u, 0.0, 1.0);
+    float m2 = m * m;
+    return m2 * m2 * m; // pow(m,5)
+}
+// Return pow(1 - u, 5)
+float SchlickWeight(float u) {
+    float m = clamp(1.0 - u, 0.0, 1.0);
+    float m2 = m * m;
+    return m2 * m2 * m; // pow(m,5) 
+}
+
 #endif

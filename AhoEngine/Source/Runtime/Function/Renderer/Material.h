@@ -1,13 +1,16 @@
 #pragma once
 
 #include "Runtime/Core/Core.h"
+#include "Runtime/Core/Math/Math.h"
+
 #include "Texture.h"
-#include "Shader.h"
 #include <memory>
 #include <variant>
 #include <glm/glm.hpp>
 
 namespace Aho {
+	class Shader;
+
 	enum MaterialMaskEnum {
 		Empty		 = 0,
 		AlbedoMap	 = 1 << 0,
@@ -64,7 +67,8 @@ namespace Aho {
 		a = a ^ b;
 		return a;
 	}
-	
+
+
 	struct MaterialProperty {
 		using Value = std::variant<std::shared_ptr<Texture2D>, glm::vec3, float>;
 		Value m_Value;

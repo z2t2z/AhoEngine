@@ -1686,6 +1686,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1870,5 +1871,6 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\DisneyPrincipled.cpp" />
   </ItemGroup>
 </Project>

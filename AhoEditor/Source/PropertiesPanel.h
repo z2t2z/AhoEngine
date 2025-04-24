@@ -12,7 +12,8 @@ namespace Aho {
 		void Initialize(LevelLayer* levelLayer, Renderer* renderer);
 		void Draw(const Entity& selectedEntity);
 	private:
-		bool DrawMaterialProperties(const MaterialComponent& materialComp);
+		bool DrawSingleMaterialProperty(MaterialComponent& materialComp, MaterialProperty& prop);
+		bool DrawMaterialProperties(MaterialComponent& materialComp);
 	private:
 		std::shared_ptr<Texture2D> TryGetDragDropTargetTexture();
 	private:

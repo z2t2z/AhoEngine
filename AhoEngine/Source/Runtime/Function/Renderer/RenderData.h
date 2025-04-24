@@ -23,17 +23,19 @@ namespace Aho {
 		void SetTransformParam(TransformParam* param) { m_Param = param; }
 		void Bind(const std::shared_ptr<Shader>& shader, uint32_t texOffset = 0);
 		void SetInstanced() { m_Instanced = true; };
+		void SetShouldWriteStencil(bool state) { m_WriteStencil = state; };
+		bool GetWriteStencil() { return m_WriteStencil; }
 		void SetDebug(bool state = true) { m_IsDebug = state; }
 		void Unbind();
 		void SetEntityID(uint32_t id) { m_EntityID = id; }
 		int& GetBoneOffset() { return m_BoneOffset; }
 		uint32_t GetEntityID() { return m_EntityID; }
 	public:
-		void SetRendered(bool state) { m_ShouldRender = state; }
 		bool ShouldBeRendered() { return m_ShouldRender; }
 		bool IsDebug() { return m_IsDebug; }
 		bool IsInstanced() { return m_Instanced; }
 	private:
+		bool m_WriteStencil{ false };
 		uint32_t m_EntityID{ 0u };
 		bool m_IsDebug{ false };
 		bool m_Instanced{ false };

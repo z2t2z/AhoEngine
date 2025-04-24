@@ -12,7 +12,7 @@ namespace Aho {
 			m_AspectRatio(aspectRatio), 
 			m_NearPlane(nearPlane), 
 			m_FarPlane(farPlane),
-			m_Position{ 0.0f, 0.0f, 0.0f },
+			m_Position{ 0.0f, 1.0f, 0.0f },
 			m_Up{ 0.0f, 1.0f, 0.0f },
 			m_Front{ 0.0f, 0.0f, -1.0f },
 			m_Right{ 1.0f, 0.0f, 0.0f } { }

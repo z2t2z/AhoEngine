@@ -1,6 +1,7 @@
 #pragma once
 #include "Runtime/Resource/ResourceType/ResourceType.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
+#include "Runtime/Function/SkeletonViewer.h"
 
 namespace Aho {
 	static bool s_SkeletalVisualized = true;

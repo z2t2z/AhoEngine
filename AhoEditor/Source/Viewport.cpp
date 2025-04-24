@@ -127,6 +127,10 @@ namespace Aho {
 			if (ImGui::MenuItem("Distant Light")) {
 				// TODO
 			}
+			if (ImGui::MenuItem("Spot Light")) {
+				// TODO
+			}
+
 			if (ImGui::MenuItem("Environment Light")) {
 				showFileExplorer = true;
 			}

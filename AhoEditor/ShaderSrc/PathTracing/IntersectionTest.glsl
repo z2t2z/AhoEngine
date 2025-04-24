@@ -5,6 +5,11 @@
 #include "../UniformBufferObjects.glsl"
 #include "./SSBO.glsl"
 
+
+bool IsLeaf(BVHNode node) {
+    return node.left == -1 && node.right == -1 && node.firstPrimsIdx >= 0 && node.primsCnt > 0;
+}
+
 bool IntersectBbox(Ray ray, BBox bbox, inout float tEnter) {
     tEnter = -FLT_MAX;
     float tExit = FLT_MAX;
@@ -115,7 +120,7 @@ void RayTracePrimitive(Ray ray, int id, inout HitInfo info) {
                         info.t = tempInfo.t;
                         info.uv = tempInfo.uv;
                         info.hit = true;
-                        info.meshId = meshId;
+                        info.meshId = p.meshId;
                         info.globalPrimtiveId = i + primOffset;
                     }
                 }

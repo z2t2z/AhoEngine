@@ -1,6 +1,7 @@
 #include "Ahopch.h"
 #include "DeferredShadingPipeline.h"
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 
 namespace Aho {
@@ -106,12 +107,20 @@ namespace Aho {
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
 				renderTarget->Bind();
-				RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
+				RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer | ClearFlags::Stencil_Buffer);
 
 				for (const auto& data : renderData) {
 					if (!data->ShouldBeRendered()) {
 						continue;
 					}
+					
+					if (data->GetWriteStencil()) {
+						glEnable(GL_STENCIL_TEST);
+						glStencilFunc(GL_ALWAYS, 1, 0xFF); 
+						glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+						glStencilMask(0xFF);
+					}
+
 					data->Bind(shader);
 
 					shader->SetUint("u_EntityID", data->GetEntityID());
@@ -119,7 +128,6 @@ namespace Aho {
 						RendererGlobalState::g_SelectedData = data;
 					}
 
-					//RenderCommand::SetPolygonModeLine();
 					if (data->IsInstanced()) {
 						shader->SetBool("u_IsInstanced", true);
 						RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
@@ -129,8 +137,12 @@ namespace Aho {
 						RenderCommand::DrawIndexed(data->GetVAO());
 					}
 					data->Unbind();
-					//RenderCommand::SetPolygonModeFill();
 
+					if (data->GetWriteStencil()) {
+						glStencilMask(0xFF);
+						glDepthMask(GL_TRUE);
+						glDisable(GL_STENCIL_TEST);
+					}
 				}
 
 				renderTarget->Unbind();
@@ -142,7 +154,8 @@ namespace Aho {
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		pass->SetShader(shader);
 		pass->SetRenderCommand(std::move(cmdBuffer));
-		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent; depth.type = TexType::Depth; depth.debugName = "depth";
+		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24Stencil8; depth.dataType = TexDataType::UnsignedInt248;
+		depth.dataFormat = TexDataFormat::DepthStencil; depth.type = TexType::Depth; depth.debugName = "depth";
 
 		TexSpec positionAttachment;
 		positionAttachment.debugName = "position";

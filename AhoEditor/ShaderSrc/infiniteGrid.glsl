@@ -1,12 +1,7 @@
 #type vertex
 #version 460 core
 
-#include "./UniformBufferObjects.glsl"
-
-// vec3 gridPlane[6] = vec3[](
-//     vec3(1, 0, 1), vec3(-1, 0, -1), vec3(-1, 0, 1),
-//     vec3(-1, 0, -1), vec3(1, 0, 1), vec3(1, 0, -1)
-// );
+#include "UniformBufferObjects.glsl"
 
 out vec3 v_nearP;
 out vec3 v_farP;
@@ -17,19 +12,18 @@ vec3 gridPlane[6] = vec3[](
 );
 
 // To world space
-vec3 UnprojectPoint(vec3 p) {
-    vec4 unprojectedPoint = u_ViewInv * u_ProjectionInv * vec4(p, 1.0);
-    if (unprojectedPoint.w != 0.0) {
-        unprojectedPoint /= unprojectedPoint.w;
+vec3 NDCToWorld(vec3 p) {
+    vec4 pos = u_ViewInv * u_ProjectionInv * vec4(p, 1.0);
+    if (pos.w != 0.0) {
+        pos /= pos.w;
     }
-    return unprojectedPoint.xyz;
+    return pos.xyz;
 }
 
 void main() {
     vec3 p = gridPlane[gl_VertexID].xyz;
-    v_nearP = UnprojectPoint(vec3(p.xy, -1.0));
-    // v_nearP = vec3(p.xy, 0.0);
-    v_farP = UnprojectPoint(vec3(p.xy, 1.0));
+    v_nearP = NDCToWorld(vec3(p.xy, -1.0));
+    v_farP = NDCToWorld(vec3(p.xy, 1.0));
     gl_Position = vec4(p, 1.0);
 }
 
@@ -73,7 +67,10 @@ float Grid(vec2 uv) {
     return grid;
 }
 
+// Set as a constant for now
 const float camFarPlane = 1000.0f;
+
+uniform sampler2D u_Depth;
 
 void main() {
     float t = -v_nearP.y / (v_farP.y - v_nearP.y);

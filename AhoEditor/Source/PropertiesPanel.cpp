@@ -1,6 +1,7 @@
 #include "PropertiesPanel.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "HierarchicalPenal.h"
+#include "Runtime/Function/Renderer/Renderer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -61,25 +62,6 @@ namespace Aho {
 				bool textureChanged = DrawMaterialProperties(entityManager->GetComponent<MaterialComponent>(selectedEntity));
 				if (textureChanged) {
 					m_LevelLayer->UpdatePathTracingTextureHandlesSSBO();
-					//auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-					//auto view = entityManager->GetView<BVHComponent, TransformComponent>();
-
-					//auto& materialComp = entityManager->GetComponent<MaterialComponent>(selectedEntity);
-					//MaterialMaskEnum mask = *materialComp.matMask;
-					//view.each(
-					//	[&mask](auto entity, BVHComponent& bc, TransformComponent& tc) {
-					//		for (BVHi* bvh : bc.bvhs) {
-					//			bvh->UpdateMaterialMask(mask);
-					//			bvh->ApplyTransform(tc.GetTransform());
-					//		}
-					//	});
-
-					//BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
-					//alts.UpdateTLAS();
-
-					//PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
-					//ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
-
 				}
 			}
 		}
@@ -116,143 +98,60 @@ namespace Aho {
 		ImGui::End();
 	}
 
-	bool PropertiesPanel::DrawMaterialProperties(const MaterialComponent& materialComp) {
+
+	bool PropertiesPanel::DrawSingleMaterialProperty(MaterialComponent& materialComp, MaterialProperty& prop) {
+		bool textureChanged = false;
+		ImGui::TableNextColumn();
+		ImGui::Text(TextureHandles::s_Umap.at(prop.m_Type).c_str());
+		ImGui::TableNextColumn();
+		std::visit(
+			[&](auto& value) {
+				bool valueChanged = false;
+				using T = std::decay_t<decltype(value)>;
+				if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
+					ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
+				}
+				else if constexpr (std::is_same_v<T, glm::vec3>) {
+					if (prop.m_Type == TexType::Albedo) {
+						valueChanged |= ImGui::ColorPicker3("Color Picker", glm::value_ptr(value));
+					}
+					else {
+						ImGui::Text("Empty");
+					}
+				}
+				else if constexpr (std::is_same_v<T, float>) {
+					std::string displayname = "##" + TextureHandles::s_Umap.at(prop.m_Type);
+					float lo = prop.m_Type == TexType::ior ? 1.001 : 0.0;
+					float up = prop.m_Type == TexType::ior ? 2.5 : 1.0;
+					valueChanged |= ImGui::DragFloat(displayname.c_str(), &value, 0.01f, lo, up);
+				}
+				auto texture = TryGetDragDropTargetTexture();
+				if (texture) {
+					materialComp.handle->SetHandles(texture->GetTextureHandle(), prop.m_Type);
+					prop = { texture, prop.m_Type };
+					textureChanged = true;
+				}
+				if (!texture && valueChanged) {
+					textureChanged = true;
+					materialComp.handle->SetValue(value, prop.m_Type);
+					//if constexpr (std::is_same_v<T, float>) {
+					//	AHO_CORE_TRACE("{}, {}", TextureHandles::s_Umap.at(prop.m_Type), value);
+					//}
+
+				}
+			}, prop.m_Value);
+		return textureChanged;
+	}
+
+	bool PropertiesPanel::DrawMaterialProperties(MaterialComponent& materialComp) {
 		bool textureChanged = false;
 		if (ImGui::BeginTable("TwoColumnTable", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV)) {
 			for (auto& prop : *materialComp.material) {
-				switch (prop.m_Type) {
-				case TexType::Albedo:
-					ImGui::TableNextColumn();
-					ImGui::Text("Aledo");
-					ImGui::TableNextColumn();
-					std::visit([&](auto& value) {
-						using T = std::decay_t<decltype(value)>;
-						if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-							ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
-						}
-						else if constexpr (std::is_same_v<T, glm::vec3>) {
-							ImGui::ColorPicker3("Color Picker", glm::value_ptr(value));
-						}
-						auto texture = TryGetDragDropTargetTexture();
-						if (texture) {
-							prop = { texture, TexType::Albedo };
-						}
-						}, prop.m_Value);
-					break;
-				case TexType::Normal:
-					ImGui::TableNextColumn();
-					ImGui::Text("Normal");
-					ImGui::TableNextColumn();
-					std::visit([&](auto& value) {
-						using T = std::decay_t<decltype(value)>;
-						if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-							ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
-						}
-						else if constexpr (std::is_same_v<T, float>) {
-							ImGui::Text("Empty");
-						}
-						auto texture = TryGetDragDropTargetTexture();
-						if (texture) {
-							prop = { texture, TexType::Normal };
-
-							*materialComp.matMask |= MaterialMaskEnum::NormalMap;
-							materialComp.handle->SetHandles(texture->GetTextureHandle(), TexType::Normal);
-
-							textureChanged = true;
-						}
-
-						}, prop.m_Value);
-					break;
-				case TexType::Roughness:
-					ImGui::TableNextColumn();
-					ImGui::Text("Roughness");
-					ImGui::TableNextColumn();
-					std::visit([&](auto& value) {
-						using T = std::decay_t<decltype(value)>;
-						if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-							ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
-						}
-						else if constexpr (std::is_same_v<T, float>) {
-							ImGui::DragFloat("##Roughness", &value, 0.01f, 0.0f, 1.0f);
-						}
-						auto texture = TryGetDragDropTargetTexture();
-						if (texture) {
-							prop = { texture, TexType::Roughness };
-						}
-						}, prop.m_Value);
-					break;
-				case TexType::Metallic:
-					ImGui::TableNextColumn();
-					ImGui::Text("Metallic");
-					ImGui::TableNextColumn();
-					std::visit([&](auto& value) {
-						using T = std::decay_t<decltype(value)>;
-						if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-							ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
-						}
-						else if constexpr (std::is_same_v<T, float>) {
-							ImGui::DragFloat("##Metallic", &value, 0.01f, 0.0f, 1.0f);
-						}
-						auto texture = TryGetDragDropTargetTexture();
-						if (texture) {
-							prop = { texture, TexType::Metallic };
-						}
-						}, prop.m_Value);
-					break;
-				case TexType::AO:
-					ImGui::TableNextColumn();
-					ImGui::Text("AO");
-					ImGui::TableNextColumn();
-					std::visit([&](auto& value) {
-						using T = std::decay_t<decltype(value)>;
-						if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-							ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
-						}
-						else if constexpr (std::is_same_v<T, float>) {
-							ImGui::DragFloat("##AO", &value, 0.01f, 0.0f, 1.0f);
-						}
-						auto texture = TryGetDragDropTargetTexture();
-						if (texture) {
-							prop = { texture, TexType::AO };
-						}
-						}, prop.m_Value);
-					break;
-				default:
-					continue;
-				}
+				textureChanged |= DrawSingleMaterialProperty(materialComp, prop);
 			}
 			ImGui::EndTable();
 		}
-		if (ImGui::Button(ICON_FA_FILE_CIRCLE_PLUS " New Slot")) {
-			ImGui::OpenPopup("popup_menu_material");
-		}
-		ImVec2 buttonMin = ImGui::GetItemRectMin(); // upper left
-		ImVec2 buttonMax = ImGui::GetItemRectMax(); // lower right
-		ImVec2 nxtPos = ImVec2(buttonMin.x, buttonMax.y);
-		ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
-		if (ImGui::BeginPopup("popup_menu_material")) {
-			if (!materialComp.material->HasProperty(TexType::Normal)) {
-				if (ImGui::MenuItem("Normal")) {
-					materialComp.material->AddMaterialProperties({ 0.0f, TexType::Normal });
-				}
-			}
-			if (!materialComp.material->HasProperty(TexType::Metallic)) {
-				if (ImGui::MenuItem("Metallic")) {
-					materialComp.material->AddMaterialProperties({ 0.0f, TexType::Metallic });
-				}
-			}
-			if (!materialComp.material->HasProperty(TexType::Roughness)) {
-				if (ImGui::MenuItem("Roughness")) {
-					materialComp.material->AddMaterialProperties({ 1.0f, TexType::Roughness });
-				}
-			}
-			if (!materialComp.material->HasProperty(TexType::AO)) {
-				if (ImGui::MenuItem("AO")) {
-					materialComp.material->AddMaterialProperties({ 0.2f, TexType::AO });
-				}
-			}
-			ImGui::EndPopup();
-		}
+
 		return textureChanged;
 	}
 
@@ -262,7 +161,7 @@ namespace Aho {
 			if (payload) {
 				const char* droppedData = static_cast<const char*>(payload->Data);
 				std::string droppedString = std::string(droppedData, payload->DataSize);
-				AHO_TRACE("Payload accepted! {}", droppedString);
+				AHO_TRACE("Payload accepted: {}", droppedString);
 				auto texture = Texture2D::Create(droppedString);
 				return texture;
 			}

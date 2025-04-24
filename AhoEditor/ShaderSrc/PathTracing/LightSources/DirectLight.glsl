@@ -4,8 +4,10 @@
 #include "InfiniteLight.glsl"
 #include "../GlobalVars.glsl"
 #include "../DataStructs.glsl"
+#include "../DisneyPrincipled.glsl"
 #include "../Disney.glsl"
 #include "../../UniformBufferObjects.glsl"
+
 
 vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
     vec3 lightPos = vec3(u_LightPosition[0]);
@@ -27,7 +29,6 @@ vec3 SampleDirectLight(const State state, const Ray ray) {
     float EnvPdf = 0.0;
     vec3 EnvDir = vec3(0.0);
     vec3 Ld = SampleIBL(EnvPdf, EnvDir);
-    return vec3(0.0);
 
     if (EnvPdf != 0.0 && VisibilityTest(state.pos, state.pos + 1000000.0 * EnvDir)) {
         vec3 L = EnvDir;
@@ -41,12 +42,10 @@ vec3 SampleDirectLight(const State state, const Ray ray) {
         }
         vec3 H = normalize(L + V);
 
-        DotProducts dp;
-        SetDotProducts(L, V, H, Y, dp);
+        float pdf = 0.0;
+        vec3 f = principled_eval(state, V, H, L, pdf);
 
-        float BsdfPdf = 0.0;
-        vec3 f = _DisneyDiffuse(state, dp, V, L, N, BsdfPdf) * abs(L.y); // Evaluate bsdf pdf for this direction
-        float misWeight = PowerHeuristicPdf(EnvPdf, BsdfPdf); // Mis weighted
+        float misWeight = PowerHeuristicPdf(EnvPdf, pdf); // Mis weighted
         if (misWeight > 0.0) {
             return misWeight * (f * Ld / EnvPdf);
         }

@@ -5,34 +5,6 @@
 #include <glad/glad.h>
 
 namespace Aho {
-
-	struct alignas(16) TextureHandles {
-		uint64_t albedo;
-		uint64_t normal;
-
-		uint64_t metallic;
-		uint64_t roughness;
-
-		void SetHandles(uint64_t handleId, TexType type) {
-			AHO_CORE_ASSERT(handleId > 0);
-			switch (type) {
-				case TexType::Albedo:
-					albedo = handleId;
-					break;
-				case TexType::Normal:
-					normal = handleId;
-					break;
-				case TexType::Roughness:
-					roughness = handleId;
-					break;
-				case TexType::Metallic:
-					metallic = handleId;
-					break;
-				AHO_CORE_WARN("Wrong texture type");
-			}
-		}
-	};
-
 	class OpenGLTexture2D : public Texture2D {
 	public:
 		OpenGLTexture2D() = default;
@@ -147,6 +119,8 @@ namespace Aho {
 				return GL_DEPTH_COMPONENT24;
 			case TexInterFormat::Depth32:
 				return GL_DEPTH_COMPONENT32F;
+			case TexInterFormat::Depth24Stencil8:
+				return GL_DEPTH24_STENCIL8;
 			default:
 				return GL_RGB8;
 			}
@@ -166,6 +140,8 @@ namespace Aho {
 				return GL_RGBA;
 			case TexDataFormat::DepthComponent:
 				return GL_DEPTH_COMPONENT;
+			case TexDataFormat::DepthStencil:
+				return GL_DEPTH_STENCIL;
 			default:
 				return GL_RGB;
 			}
@@ -179,6 +155,8 @@ namespace Aho {
 				return GL_FLOAT;
 			case TexDataType::UnsignedInt:
 				return GL_UNSIGNED_INT;
+			case TexDataType::UnsignedInt248:
+				return GL_UNSIGNED_INT_24_8;
 			default:
 				return GL_UNSIGNED_BYTE;
 			}
@@ -190,7 +168,7 @@ namespace Aho {
 
 		static Texture* CreateNoiseTexture(int siz) {
 			std::vector<glm::vec3> ssaoNoise;
-			for (unsigned int i = 0; i < siz; i++) {
+			for (int i = 0; i < siz; i++) {
 				glm::vec3 noise = GenerateRandomVec3();
 				noise.z = 0.0f;
 				ssaoNoise.push_back(noise);
@@ -209,7 +187,7 @@ namespace Aho {
 		}
 
 		static bool IsDepthFormat(TexDataFormat format) {
-			return format == TexDataFormat::DepthComponent;
+			return format == TexDataFormat::DepthComponent || format == TexDataFormat::DepthStencil;
 		}
 	} // namespace Utils
 } // namespace Aho

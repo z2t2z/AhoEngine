@@ -181,6 +181,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
@@ -681,6 +682,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\DisneyPrincipled.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />

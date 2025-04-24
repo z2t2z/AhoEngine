@@ -34,8 +34,8 @@ namespace Aho {
 		SkyViewLUT,
 		PathTracing,
 		DebugVisual,
+		InfiniteGrid,
 		Test,
-		/* TODO */
 	};
 	
 
@@ -87,7 +87,6 @@ namespace Aho {
 		virtual void SetRenderTarget(const std::shared_ptr<Framebuffer>& framebuffer) { m_Framebuffer = framebuffer; }
 		virtual void SetRenderCommand(std::unique_ptr<RenderCommandBuffer> renderCommandBuffer) { 
 			m_RenderCommandBuffer = std::move(renderCommandBuffer);
-			//m_RenderCommandBuffers.emplace_back(renderCommandBuffer);
 		}
 
 		virtual void AddRenderCommand(const std::function<void(const std::vector<std::shared_ptr<RenderData>>&,
@@ -162,9 +161,7 @@ namespace Aho {
 		std::shared_ptr<Framebuffer> m_Framebuffer{ nullptr };  // This is the render target of this pass
 		std::shared_ptr<Shader> m_Shader{ nullptr };			// Currently each render pass uses a single shader
 		std::unique_ptr<RenderCommandBuffer> m_RenderCommandBuffer{ nullptr };
-
 		std::vector<std::unique_ptr<RenderCommandBuffer>> m_RenderCommandBuffers;
-
 	};
 
 };

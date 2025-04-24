@@ -11,13 +11,11 @@
 #include <variant>
 
 namespace Aho {
-	
 	// Some general bvh props
 	enum class SplitMethod {
 		NAIVE,
 		SAH
 	};
-
 	enum class BVHLevel {
 		BLAS,
 		TLAS
@@ -25,9 +23,8 @@ namespace Aho {
 
 	// Heuristic number from pbrt https://pbr-book.org/4ed/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies
 	constexpr int SAH_SPLIT_BUCKETS_NUM = 12;
-
 	// The maximum number of primitives contained in a leaf node
-	constexpr int LEAF_PRIMS = 1;
+	constexpr int MAX_LEAF_PRIMS = 1;
 
 	struct alignas(16) BVHNodei {
 		BVHNodei() : left(-1), right(-1), nodeIdx(-1), firstPrimsIdx(-1), primsCnt(-1), axis(-1) {}
@@ -43,7 +40,6 @@ namespace Aho {
 			primsCnt = primsCnt_;
 			bbox = bbox_;
 		}
-
 		void InitInterior(int nodeIdx_, int l, int r, const BBox& bbox_, int axis_) {
 			nodeIdx = nodeIdx_;
 			firstPrimsIdx = -1;
@@ -52,13 +48,10 @@ namespace Aho {
 			axis = axis_;
 			bbox = bbox_;
 		}
-
 		bool IsLeaf() const {
 			return primsCnt > 0;
 		}
-
 		BBox GetBBox() const { return bbox; }
-
 		BBox bbox;
 		int left, right;
 		int nodeIdx;
@@ -85,52 +78,37 @@ namespace Aho {
 		BVHi() 
 			: m_SplitMethod(SplitMethod::NAIVE), m_BvhLevel(BVHLevel::TLAS) {
 		}
-		
 		BVHi(const std::shared_ptr<StaticMesh>& mesh, SplitMethod splitMethod = SplitMethod::SAH) 
 			: m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
 			AHO_CORE_ASSERT(false);
 			Build(mesh);
 		}
-		
 		BVHi(const std::shared_ptr<MeshInfo>& info, int meshId, MaterialMaskEnum mask = MaterialMaskEnum::Empty, SplitMethod splitMethod = SplitMethod::SAH)
 			: m_MeshId(meshId), m_MaterialMask(mask), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
 			Build(info);
 		}
-
 		size_t GetNodeCount() const { return m_Nodes.size(); }
 		size_t GetPrimsCount() const { return m_Primitives.size(); }
-
 		bool Intersect(const Ray& ray);
-
 		void ApplyTransform(const glm::mat4& transform);
-
 		void UpdateTLAS();
-
 		void UpdateMaterialMask(MaterialMaskEnum mask);
-
 		int GetRoot() const {
 			AHO_CORE_ASSERT(m_Root == 0);
 			return m_Root;
 		}
-
 		int GetMeshId() const { return m_MeshId; }
-
 		BBox GetBBox() const {
 			AHO_CORE_ASSERT(m_Root == 0);
 			return m_Nodes[m_Root].GetBBox();
 		}
-
 		void AddBLASPrimtive(const BVHi* blas);
-
 		const std::vector<BVHNodei>& GetNodesArr() const { return m_Nodes; }
-
 		const std::vector<PrimitiveDesc>& GetPrimsArr() const { return m_Primitives; }
-
 		const std::vector<OffsetInfo>& GetOffsetMap() const {
 			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
 			return m_OffsetMap;
 		}
-
 		const BVHi* GetBLAS(int id) const {
 			AHO_CORE_ASSERT(id >= 0 && id < m_BLAS.size());
 			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
@@ -141,24 +119,20 @@ namespace Aho {
 		bool IntersectNearest_loop(const Ray& ray, float& t);
 		void Build(const std::shared_ptr<StaticMesh>& mesh);
 		void Build(const std::shared_ptr<MeshInfo>& mesh);
-
 		// Build tree for primitives of intervals [indexL, indexR)
 		int BuildTreeRecursion(int indexL, int indexR);
-
 	private:
 		inline static size_t s_NodeOffset{ 0 };
 		inline static size_t s_PrimOffset{ 0 };
-
 	private:
 		MaterialMaskEnum m_MaterialMask{ MaterialMaskEnum::Empty };
-		int m_MeshId{ -1 };
+		int m_MeshId{ -1 }; // Global mesh id
 		int m_Root{ -1 };
 		BVHLevel m_BvhLevel;
 		SplitMethod m_SplitMethod; // const member var will delete default operator=
-
 	private:
 		std::vector<BVHi*> m_BLAS;
-		std::vector<OffsetInfo> m_OffsetMap;
+		std::vector<OffsetInfo> m_OffsetMap; // Every blas as a primitive has a corresponding offsetInfo; BLAS primtives are stored in a big array in shader, so for every mesh we need this to spicify its starting primtives id
 		std::vector<PrimitiveDesc> m_Primitives;
 		std::vector<PrimitiveCompliment> m_PrimitiveComp;
 		std::vector<BVHNodei> m_Nodes; // dfs order

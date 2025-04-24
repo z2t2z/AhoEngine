@@ -27,12 +27,15 @@ namespace Aho {
 
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("EditorLayer on attach");
-		
 		m_ContentBrowser.Initialize();
 		m_PropertiesPanel.Initialize(m_LevelLayer, m_Renderer);
 		m_HierachicalPanel.Initialize(m_LevelLayer);
 		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_ResourceLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
 
+		m_DbgPenal.m_LevelLayer			= m_LevelLayer;
+		m_DbgPenal.m_PtPipeline			= static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
+		m_DbgPenal.m_ShadingPipeline	= static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading));
+		m_DbgPenal.m_SkyPipeline		= static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
 	}
 	
 	void AhoEditorLayer::OnDetach() {
@@ -154,9 +157,7 @@ namespace Aho {
 		m_PropertiesPanel.Draw(selectedEntity);
 		m_Viewport.Draw();
 
-		// Temporary testing functions
-		TempSunDirControl();
-		TempBVHControl();
+		m_DbgPenal.Draw();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
@@ -171,143 +172,5 @@ namespace Aho {
 				m_IsClickingEventBlocked = false;
 			}
 		}
-	}
-
-	void AhoEditorLayer::AddEnvMap(const Texture* texture) {
-
-	}
-
-	void AhoEditorLayer::DrawCircle(const ImVec2& center, float radius) {
-		int segments = 32;
-		auto draw_list = ImGui::GetWindowDrawList();
-		ImU32 color = IM_COL32(255, 255, 0, 255);
-		for (int i = 1; i < segments / 2; ++i) {
-			float theta = IM_PI * i / (segments / 2);  // 纬线角度
-			float r = radius * sin(theta);             // 环的半径
-			float y = radius * cos(theta);             // 环的偏移量
-
-			draw_list->AddCircle(ImVec2(center.x, center.y + y), r, color, segments);
-		}
-
-		for (int i = 0; i < segments; ++i) {
-			float theta = 2 * IM_PI * i / segments;    // 经线角度6
-			float x = radius * cos(theta);             // 环的 x 偏移量
-			float z = radius * sin(theta);             // 环的 z 偏移量（投影为 y 轴偏移）
-
-			for (int j = 0; j <= segments / 2; ++j) {
-				float phi = IM_PI * j / (segments / 2);
-				float y = radius * cos(phi);           // 计算垂直方向上的高度
-				float r = radius * sin(phi);           // 计算垂直方向上的半径
-
-				ImVec2 point(center.x + x * r / radius, center.y + y);
-				if (j > 0) {
-					draw_list->PathLineTo(point);
-				}
-			}
-			draw_list->PathStroke(color, ImDrawFlags_None, 1.0f);
-		}
-	}
-
-	// TODO: need to integrate in a skyatmosphere component
-	void AhoEditorLayer::TempSunDirControl() {
-		auto skyPipeline = static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
-		auto shadingPipeline = static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading));
-
-		// super strange bug
-		auto& [yaw, pitch] = skyPipeline->GetSunYawPitch();
-		auto sundir = skyPipeline->GetSunDir();
-		ImGui::Begin("Temp Sky Control");
-		ImGui::DragFloat("Yaw", &yaw, 0.01f, -3.14f, 3.14f);
-		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f, 3.14f);
-
-		static glm::vec3 sunPosition(0.0, 1.0, 0.0);
-		ImGui::DragFloat3("SunPos", &sunPosition[0], 0.01f);
-
-		glm::vec3 sunDir = glm::vec3(glm::cos(pitch) * glm::sin(yaw), glm::sin(pitch), glm::sin(pitch) * glm::sin(yaw));
-		std::string text = std::to_string(sunDir.x) + " " + std::to_string(sunDir.y) + " " + std::to_string(sunDir.z);
-		ImGui::Text(text.c_str());
-		skyPipeline->SetSunDir(normalize(sunPosition));
-		shadingPipeline->SetSunDir(normalize(sunPosition));
-		ImGui::End();
-	}
-
-	void AhoEditorLayer::TempBVHControl() {
-		ImGui::Begin("Temp bvh control");
-		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-		auto view = entityManager->GetView<BVHComponent, TransformComponent>();
-		int find = -1;
-		
-		if (ImGui::Button("Update BVH")) {
-			bool dirty = false;
-			view.each(
-				[&dirty](auto entity, BVHComponent& bc, TransformComponent& tc) {
-					if (tc.dirty) {
-						tc.dirty = false;
-						dirty = true;
-						for (BVHi* bvh : bc.bvhs) {
-							bvh->ApplyTransform(tc.GetTransform());
-						}
-					}
-				});
-
-
-			if (dirty) {
-				BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
-				alts.UpdateTLAS();
-				PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
-				ptpl->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
-			}
-
-		}
-
-		//if (ImGui::Button("GetData")) {
-		//	std::vector<BVHNodei> data(1);
-		//	SSBOManager::GetSubData<BVHNodei>(0, data, 0);
-		//}
-		//view.each(
-		//	[&](auto entity, BVHComponent& bc, TransformComponent& tc) {
-		//		ImGui::Text("EntityID: %d", static_cast<uint32_t>(entity));
-		//		std::string showName = "Update BVH:" + std::to_string(static_cast<uint32_t>(entity));
-		//		if (ImGui::Button(showName.c_str())) {
-		//			//ScopedTimer timer(std::to_string(static_cast<uint32_t>(entity)));
-		//			bc.bvh.ApplyTransform(tc.GetTransform());
-		//		}
-		//		
-		//		if (find == -1 && m_ShouldPickObject) {
-		//			auto cam = m_CameraManager->GetMainEditorCamera();
-		//			{
-		//				ScopedTimer timer("Idx Intersecting test");
-		//				if (bc.bvh.Intersect(m_Ray)) {
-		//					find = static_cast<uint32_t>(entity);
-		//				}
-		//			}
-
-		//			// testing ptr version bvh
-		//			//if (!intersectionResult) {
-		//			//	ScopedTimer timer("PTR Intersecting test");
-		//			//	intersectionResult = BVH::GetIntersection(m_Ray, root.get());
-		//			//}
-		//		
-		//		}
-
-		//		ImGui::Separator();
-		//	});
-	
-		if (m_ShouldPickObject && Input::IsKeyPressed(AHO_KEY_LEFT_CONTROL)) {
-			BVHi& alts = m_LevelLayer->GetCurrentLevel()->GetTLAS();
-			ScopedTimer timer("Intersecting test");
-			if (alts.Intersect(m_Ray)) {
-				find = 1;
-			}
-		}
-
-
-		if (find != -1) {
-			AHO_CORE_TRACE("Intersecting {}", find);
-		}
-
-		m_ShouldPickObject = false;
-
-		ImGui::End();
 	}
 }

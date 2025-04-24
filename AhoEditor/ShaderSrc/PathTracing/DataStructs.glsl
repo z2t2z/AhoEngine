@@ -21,7 +21,7 @@ struct BVHNode {
     int firstPrimsIdx;       
     int primsCnt;            
     int axis;   // not used
-    int meshId; // only valid for root node
+    int meshId;
     int offset;
 };
 
@@ -34,7 +34,7 @@ struct Vertex {
 struct PrimitiveDesc {
     BBox bbox;
     Vertex v[3];
-    int meshId; // not used
+    int meshId; 
     int id;
     int primId;
     int materialMask; // not used
@@ -70,59 +70,42 @@ struct TempHitInfo {
 
 struct Material {
     vec3 baseColor;
-    float metallic;
-    float specTrans;
-    float roughness;
     float subsurface;
-    float ior;
-    float clearcoat;
-    float clearcoatGloss;
+
+    float metallic;
+    float specular;
+    float specTint;
+    float roughness;
+
+    float anisotropic;
     float sheen;
-// private:
+    float sheenTint;
+    float clearcoat;
+
+    float clearcoatGloss;
+    float specTrans;
+    float ior;
     float ax;
+
     float ay;
-}; 
+};
 
 struct State {
-    vec3 baseColor; // albedo
     float cosTheta;
-    float metallic;
-    float roughness;
-    float subsurface;
-    float specular;
-    float specTrans;
-    float ax;
-    float ay;
-    float ior;
-    float clearcoat;
-    float clearcoatGloss;
-
-    float sheen;
-    float sheenTint; // mix between white and baseColor
     float pdf;
     float eta;
-    vec3 uvw;
     vec3 N;
     vec3 pos;
+    Material material;
 };
 
 State InitState() {
     State state;
-    state.pdf = 0.0;
-    state.eta = 1.0 / 1.5;
+    state.pdf = 1.0;
+    state.eta = 1.5;
     state.cosTheta = 1.0;
-    // Temporary state for the material
-    state.baseColor = vec3(1.0, 1.0, 1.0);
-    state.roughness = 0.5;
-    state.sheenTint = 0.9;
-    state.metallic = 0.1;
-    state.subsurface = 0.2;
-    state.specular = 0.1;
-    state.specTrans = 0.1;
-    state.clearcoatGloss = 0.99;
-    state.ax = 0.001;
-    state.ay = 0.001;
-    state.ior = 1.5;    
+    state.N = vec3(0.0, 1.0, 0.0);
+    state.pos = vec3(0.0);
     return state;
 }
 
@@ -142,17 +125,37 @@ void SetDotProducts(vec3 L, vec3 V, vec3 H, vec3 N, out DotProducts dp) {
     dp.LdotV = dot(L, V);
 }
 
+// Weired bugs
 struct TextureHandles {
-    layout(bindless_sampler) sampler2D albedo;
-    layout(bindless_sampler) sampler2D normal;
+    layout(bindless_sampler) sampler2D albedoHandle;
+    layout(bindless_sampler) sampler2D normalHandle;
 
-    layout(bindless_sampler) sampler2D metallic;
-    layout(bindless_sampler) sampler2D roughness;
+    layout(bindless_sampler) sampler2D metallicHandle;
+    layout(bindless_sampler) sampler2D roughnessHandle;
+
+    vec3 baseColor;
+    float subsurface;
+
+    float metallic;
+    float specular;
+    float specTint;
+    float roughness;
+
+    float anisotropic;
+    float sheen;
+    float sheenTint;
+    float clearcoat;
+    
+    float clearcoatGloss;
+    float specTrans;
+    float ior;
+    float ax;
+
+    float ay;
+    float padding0;
+    float padding1;
+    float padding2;
 };
-
-bool IsLeaf(BVHNode node) {
-    return node.left == -1 && node.right == -1 && node.firstPrimsIdx >= 0 && node.primsCnt > 0;
-}
 
 
 #endif

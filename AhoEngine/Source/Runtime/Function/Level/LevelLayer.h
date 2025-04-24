@@ -1,17 +1,20 @@
 #pragma once
-#include "Runtime/Core/Layer/Layer.h"
-#include "Runtime/Resource/Asset/AssetManager.h"
-#include "Runtime/Resource/ResourceLayer.h"
-#include "Runtime/Platform/OpenGL/OpenGLShader.h"
-#include "Runtime/Function/Renderer/RenderLayer.h"
-#include "Runtime/Function/SkeletonViewer.h"
-#include "Level.h"
 
+#include "Runtime/Core/Layer/Layer.h"
+#include <memory>
 #include <thread>
 #include <future>
 
 namespace Aho {
-	struct TextureHandles;
+	struct alignas(16) TextureHandles;
+	class Texture;
+	class RenderLayer;
+	class ResourceLayer;
+	class CameraManager;
+	class Level;
+	class StaticMesh;
+	class SkeletalMesh;
+	enum MaterialMaskEnum;
 
 	class LevelLayer : public Layer {
 	public:
@@ -32,7 +35,6 @@ namespace Aho {
 		void AddEnvironmentMap(Texture* texture);
 	private:
 		void UpdateAnimation(float deltaTime);
-		void UpdateSceneBvh();
 		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
 		void AddLightSource(LightType lt);
 		void UpdataUBOData();
@@ -44,10 +46,8 @@ namespace Aho {
 		bool m_SimulateMode{ false };
 		bool m_PlayMode{ false };
 		bool m_Update{ true };		// TODO: temporary...
-		
 	private:
 		inline static int m_SkeletalMeshBoneOffset{ 0 };
-
 	private:
 		bool m_BuildBVH{ true };
 		RenderLayer* m_RenderLayer{ nullptr };
@@ -56,7 +56,6 @@ namespace Aho {
 		std::shared_ptr<Level> m_CurrentLevel{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
 		std::vector<std::shared_ptr<Level>> m_Levels;
-
 	// temporary
 	private:
 		inline static int s_globalSubMeshId{ 0 };

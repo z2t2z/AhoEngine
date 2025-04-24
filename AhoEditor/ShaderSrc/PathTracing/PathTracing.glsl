@@ -4,7 +4,7 @@
 #extension GL_ARB_gpu_shader_int64 : enable
 #extension GL_ARB_bindless_texture : enable
 
-#define SAMPLE_TEXTURE
+// #define SAMPLE_TEXTURE
 #define OPT_SHADOW_TEST
 
 #include "PathTracingCommon.glsl"
@@ -15,58 +15,86 @@
 #include "Math.glsl"
 #include "Sampling.glsl"
 #include "MicrofacetReflection.glsl"
-#include "Disney.glsl"
+#include "DisneyPrincipled.glsl"
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
-// layout(binding = 1, r32ui) uniform uimage2D tileMarkers;
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-vec3 SampleEmissive() {
-    return vec3(0.0, 0.0, 0.0);
-}
-bool HasNormalMap(in out PrimitiveDesc p) {
-    return (p.materialMask & NormalMapMask) > 0;
-}
-bool HasAlbedoMap(in out PrimitiveDesc p) {
-    return (p.materialMask & AlbedoMapMask) > 0;
-}
-vec3 GetAlbedo(vec2 uv, int textureHandleId) {
-    TextureHandles handle = s_TextureHandles[textureHandleId];
-    if (int64_t(handle.albedo) == 0) {
-        return vec3(1.0, 1.0, 1.0);
+void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
+    Material mat;// = InitMaterial();
+    float u = uv.x, v = uv.y, w = 1.0 - u - v;
+    
+    vec3 N = w * p.v[0].normal + u * p.v[1].normal + v * p.v[2].normal;
+    N = normalize(N);
+
+    vec3 hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;  // Don't use ray.origin + info.t * ray.direction
+    state.pos = hitPos;
+    
+    vec2 TextureUV = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u,
+            w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
+    
+    // if (p.meshId == 3) {
+    //     mat.baseColor = X;
+    //     return;
+    // }
+    const TextureHandles handle = s_TextureHandles[p.meshId];
+    if (int64_t(handle.albedoHandle) != 0) {
+        mat.baseColor = texture(handle.albedoHandle, TextureUV).rgb;
+    } else {
+        mat.baseColor = handle.baseColor;
     }
-    ivec2 tsize = textureSize(handle.albedo, 0);
-    tsize.x = min(int(uv.x * float(tsize.x)), tsize.x - 1);
-    tsize.y = min(int(uv.y * float(tsize.y)), tsize.y - 1);
-    return texture(handle.albedo, uv).rgb;
+    mat.baseColor = pow(mat.baseColor, vec3(2.2));
+    
+    if (int64_t(handle.normalHandle) != 0) {
+        vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
+        T = normalize(T);
+        T = normalize(T - dot(T, N) * N);
+        vec3 B = cross(N, T); // Right-handed
+        mat3 TBN = mat3(T, B, N);
+        vec3 n = texture(handle.normalHandle, TextureUV).xyz * 2.0 - 1.0;
+        N = normalize(TBN * n);
+    } 
+    N = normalize(N);
+    state.N = N;    
+    
+    if (int64_t(handle.roughnessHandle) != 0) {
+        mat.roughness = texture(handle.roughnessHandle, TextureUV).r;
+    } else {
+        mat.roughness = handle.roughness;
+    }
+    
+    if (int64_t(handle.metallicHandle) != 0) {
+        mat.metallic = texture(handle.metallicHandle, TextureUV).r;
+    } else {
+        mat.metallic = handle.metallic;
+    }
+
+    mat.subsurface = handle.subsurface;
+    mat.specular = handle.specular;
+    mat.specTint = handle.specTint;
+    mat.specTrans = handle.specTrans;
+
+    mat.ior = handle.ior;
+    mat.clearcoat = handle.clearcoat;
+    mat.clearcoatGloss = handle.clearcoatGloss;
+    mat.anisotropic = handle.anisotropic;
+    mat.sheenTint = handle.sheenTint;
+    mat.sheen = handle.sheen;
+    mat.ax = handle.ax;
+    mat.ay = handle.ay;
+    
+    // CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); // Done in cpu side
+
+    state.material = mat;
 }
 
-void RetrieveMaterial(out State state, out Material mat, int meshId, vec2 uv) {
-    // TextureHandles handle = s_TextureHandles[meshId];
-    // if (int64_t(handle.normal) != 0) {
-    //     vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
-    //     // float handedness = p.v[0].tangent.w;
-    //     T = normalize(T);
-    //     T = normalize(T - dot(T, N) * N);
-    //     vec3 B = cross(N, T); // Right-handed
-    //     mat3 TBN = mat3(T, B, N);
-    //     vec3 n = texture(handle.normal, uv).xyz * 2.0 - 1.0; // Normal from normal map
-    //     N = normalize(TBN * n);
-
-    //     state.N = N;
-    // }
-    // if (int64_t(handle.albedo) != 0) {
-    //     mat.baseColor = texture(handle.albedo, uv).rgb;
-    // }
-}
-
-#define MAX_TRACING_DEPTH 5
+#define MAX_PATHTRACE_DEPTH 6
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput
     State state = InitState();
-    for (int depth = 0; depth < MAX_TRACING_DEPTH; ++depth) {
+    for (int depth = 0; depth < MAX_PATHTRACE_DEPTH; ++depth) {
         HitInfo info = InitHitInfo();
         RayTrace(ray, info);
         if (!info.hit) {
@@ -77,64 +105,55 @@ vec3 PathTrace(Ray ray) {
         }
 
         PrimitiveDesc p = s_bPrimitives[info.globalPrimtiveId];
-        float u = info.uv.x;
-        float v = info.uv.y;
-        float w = 1.0 - u - v;
-        vec3 N = w * p.v[0].normal + u * p.v[1].normal + v * p.v[2].normal;
-        N = normalize(N);
-
-        vec2 uv = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u,
-            w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
-
-        // Retrieve normal from normal map if there is
-        int meshId = p.meshId;
-
-#ifdef SAMPLE_TEXTURE
-        TextureHandles handle = s_TextureHandles[meshId];
-        if (int64_t(handle.normal) != 0) {
-            vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
-            // float handedness = p.v[0].tangent.w;
-            T = normalize(T);
-            T = normalize(T - dot(T, N) * N);
-            vec3 B = cross(N, T); // Right-handed
-            mat3 TBN = mat3(T, B, N);
-            ivec2 tsize = textureSize(handle.normal, 0);
-            tsize.x = int(uv.x * float(tsize.x));
-            tsize.y = int(uv.y * float(tsize.y));
-            vec3 n = texture(handle.normal, uv).xyz * 2.0 - 1.0;
-            N = normalize(TBN * n);
+        RetrievePrimInfo(state, p, info.uv);
+        {
+            // L = state.material.baseColor;
+            // break;
         }
-        state.baseColor = GetAlbedo(uv, meshId);
-#endif
-
-        N = dot(N, ray.direction) < 0.0 ? N : -N; // flip normal if inside the object
-        state.N = N;
+        state.cosTheta = dot(state.N, -ray.direction);
         
-        vec3 hitPos = ray.origin + info.t * ray.direction; 
-        state.pos = hitPos;     
-
-        // L += beta * SampleEmissive();
-        L += beta * SampleDirectLight(state, ray);
+        L += beta * SampleDirectLight(state, ray); 
 
         float pdf = 0.0;
         vec3 wi;
         vec3 wo = -ray.direction;
-        // vec3 f = DisneyDiffuse(state, wo, wi, N, pdf);
-        vec3 f = DisneySpecular(state, wo, wi, N, pdf);
-        // vec3 f = DisneyClearcoat(state, wo, wi, N, pdf);
-        // vec3 f = DisneyGlass(state, wo, wi, N, pdf);
+        // seperate component test
+        {
+            // DotProducts dp;
+            // mat3 tbn = ConstructTBN(state.N);
+            // vec3 V = WorldToLocal(-ray.direction, tbn); 
+            // vec3 L = SampleCosineHemisphere();
+            // vec3 H = normalize(L + V);
+            // SetDotProducts(L, V, H, Y, dp);
+            // float pdf = 0.0;
+            // vec3 f = eval_diffuse(state, dp, V, L, H, pdf);
+            // vec3 wi = LocalToWorld(L, tbn);
+            // if (pdf > 0.0) {
+            //     beta *= f * abs(dp.LdotN) / pdf;
+            // } else {
+            //     break;
+            // }
 
-        if (pdf > 0.0) {
-            beta *= f / pdf;
-            state.pdf = pdf;
-        } else {
+            // ray.direction = normalize(wi);
+            // ray.origin = state.pos + EPS * wi;
+            // continue;
+        }
+
+        {
+            // vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf);
+            vec3 Lworld;
+            float pdf;
+            vec3 f = Sample(state, -ray.direction, Lworld, pdf);
+            if (pdf > 0.0) {
+                beta *= f / pdf;
+            } else {
+                break;
+            }
+            ray.direction = Lworld;
+            ray.origin = state.pos + EPS * Lworld;
             continue;
         }
 
-        ray.direction = normalize(wi);
-        ray.origin = hitPos + EPS * wi;
-        state.cosTheta = dot(ray.direction, N);
-        state.eta = dot(ray.direction, N) < 0.0 ? (1.0 / 1.5) : 1.5;
     }
 
     return L;

@@ -1,8 +1,12 @@
 #pragma once
-#include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 
+#include <memory>
+#include <glm/common.hpp>
+
 namespace Aho {
+	class RenderPass;
+
 	class DeferredShadingPipeline : public RenderPipeline {
 	public:
 		DeferredShadingPipeline() { Initialize(); }

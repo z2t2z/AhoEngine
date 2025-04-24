@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Runtime/Function/Renderer/Material.h"
-#include "Runtime/Resource/Asset/Asset.h"
+#include "Runtime/Core/Math/Math.h"
 #include "Ray.h"
 #include "BBox.h"
 
 namespace Aho {
-
 	class BVHi;
 	class PrimitiveCompliment;
 
@@ -39,7 +38,7 @@ namespace Aho {
 		bool IntersectNearest(const Ray& ray, float& t) const;
 		Vertex GetVertex(int num) const { return m_Vertices[num]; }
 		Vertex& GetVertex(int num) { return m_Vertices[num]; }
-		int GetId() const { return m_Id; } // this id is for transform only
+		int GetId() const { return m_Id; } 
 		void SetID(int id) { m_Id = id; }
 		int GetPrimId() const { return m_PrimId; } // this id is for transform only
 		void SetMaterialMask(MaterialMaskEnum mask) { m_MaterialMask = mask; }
@@ -47,9 +46,9 @@ namespace Aho {
 	private:
 		BBox m_BBox;
 		Vertex m_Vertices[3];
-		int m_MeshId;		// which submesh it belongs to
-		int m_Id{ -1 };		
-		int m_PrimId{ -1 }; 
+		int m_MeshId;		// which submesh it belongs to. MeshId is a global id
+		int m_Id{ -1 };		// In tlas bvh, 
+		int m_PrimId{ -1 }; // In bvh primtives array(both blas, tlas), the order would change during tree construction. This is the origin order of this primitive
 		MaterialMaskEnum m_MaterialMask{ MaterialMaskEnum::Empty };
 		
 	};

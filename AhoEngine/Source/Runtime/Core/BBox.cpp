@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "BBox.h"
+#include "Ray.h"
 
 namespace Aho {
 	BBox BBox::Merge(const BBox& lhs, const BBox& rhs) {

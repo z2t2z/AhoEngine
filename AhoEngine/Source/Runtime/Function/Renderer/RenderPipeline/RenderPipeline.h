@@ -1,11 +1,15 @@
 #pragma once
 
-#include "Runtime/Core/BVH.h"
-#include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
-#include "Runtime/Function/Camera/CameraManager.h"
 #include <vector>
+#include <memory>
 
 namespace Aho {
+	class RenderPass;
+	class RenderData;
+	class Framebuffer;
+	class Texture;
+	enum class RenderPassType;
+
 	enum class RenderDataType {
 		Empty = 0,
 		SceneData,
@@ -14,7 +18,6 @@ namespace Aho {
 		UnitCube,
 		UnitCircle
 	};
-
 	enum class RenderPipelineType {
 		None = 0,
 		RPL_PathTracing,
@@ -37,7 +40,6 @@ namespace Aho {
 		static std::vector<std::shared_ptr<RenderData>> m_SceneData;	
 		static std::vector<std::shared_ptr<RenderData>> m_DebugData;
 		static std::vector<std::shared_ptr<RenderData>> m_EmptyVao;
-
 		static std::vector<std::shared_ptr<RenderData>> m_UnitCircle;
 	};
 
@@ -46,54 +48,23 @@ namespace Aho {
 		RenderPipeline() = default;
 		~RenderPipeline() = default;
 		virtual void Initialize() = 0;
-
-		virtual void Execute() {
-			for (const auto& task : m_RenderTasks) {
-				RenderCommand::PushDebugGroup(task.pass->GetPassDebugName());
-				task.pass->Execute(RenderTask::GetRenderData(task.dataType));
-				RenderCommand::PopDebugGroup();
-			}
-		}
-
-		virtual RenderPass* GetRenderPass(RenderPassType type) {
-			for (const auto& task : m_RenderTasks) {
-				if (task.pass->GetRenderPassType() == type) {
-					return task.pass;
-				}
-			}
-			return nullptr;
-		}
-
+		virtual void Execute();
+		virtual RenderPass* GetRenderPass(RenderPassType type);
 		virtual RenderPipelineType GetType() { return m_Type; }
 		virtual Texture* GetRenderResult() { return m_RenderResult; }
-		virtual void SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo) {
-			auto pass = GetRenderPass(type);
-			pass->SetRenderTarget(fbo);
-			m_RenderResult = pass->GetTextureBuffer(TexType::Result);
-		}
-
-		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height) {
-			bool resized = false;
-			for (auto& task : m_RenderTasks) {
-				resized |= task.pass->GetRenderTarget()->Resize(width, height);
-			}
-			return resized;
-		}
-
+		virtual void SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo);
+		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height);
 		virtual void RegisterRenderPass(RenderPass* renderPass, RenderDataType type) {
 			m_RenderTasks.emplace_back(renderPass, type);
 		}
 		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
 		virtual void SetInput(Texture* tex) { m_Input = tex; }
-
 	protected:
 		Texture* m_RenderResult{ nullptr };
 		Texture* m_Input{ nullptr };
-
 	protected:
 		std::vector<RenderTask> m_RenderTasks;
 		RenderPipelineType m_Type = RenderPipelineType::RPL_Default;
-
 	};
 
 } // namespace Aho

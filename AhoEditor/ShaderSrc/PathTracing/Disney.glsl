@@ -1,42 +1,37 @@
 #ifndef DISNEY_GLSL
 #define DISNEY_GLSL
 
-#include "./Math.glsl"
-#include "./Sampling.glsl"
-#include "./Random.glsl"
-#include "./DataStructs.glsl"
-
-#include "./Sampling/GGXSampling.glsl"
+#include "Math.glsl"
+#include "Sampling.glsl"
+#include "Random.glsl"
+#include "DataStructs.glsl"
+#include "Sampling/GGXSampling.glsl"
 
 /*
     Mostly based on homework1 of https://cseweb.ucsd.edu/~tzli/cse272/wi2024/
 */
-// Return pow(1 - u, 5)
-float SchlickFresnel(float u) {
-    float m = clamp(1.0 - u, 0.0, 1.0);
-    float m2 = m * m;
-    return m2 * m2 * m; // pow(m,5)
-}
 
 /* ========== Diffuse + Subsurface ========== */
 vec3 _DisneyDiffuse(const State state, const DotProducts dp, vec3 V, vec3 L, vec3 N, out float pdf) {
     pdf = 0.0;
     pdf = CosineHemispherePDF(L);
-
-    float Fd90 = 0.5 + 2 * state.roughness * Sqr(dp.LdotH);
-    return state.baseColor * InvPI * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.LdotN)) 
-                                   * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.VdotN))
-                                   * abs(dp.LdotN);
+    Material mat = state.material;
+    float Fd90 = 0.5 + 2 * mat.roughness * Sqr(dp.LdotH);
+    return mat.baseColor * InvPI * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.LdotN)) 
+                                   * (1.0 + (Fd90 - 1.0) * SchlickFresnel(dp.VdotN));
 }
 vec3 _DisneySubsurface(State state, DotProducts dp, vec3 V, vec3 L, vec3 N) {
-    float Fss90 = state.roughness * Sqr(dp.LdotH);
+    Material mat = state.material;
+    float Fss90 = mat.roughness * Sqr(dp.LdotH);
     float FssL = 1.0 + (Fss90 - 1.0) * SchlickFresnel(dp.LdotN);
     float FssV = 1.0 + (Fss90 - 1.0) * SchlickFresnel(dp.VdotN);
     float tmp = 1.0 / (abs(dp.LdotN) + abs(dp.VdotN)) - 0.5;
-    return state.baseColor * 1.25 * InvPI * (FssL * FssV * tmp + 0.5) * abs(dp.LdotN);
+    return mat.baseColor * 1.25 * InvPI * (FssL * FssV * tmp + 0.5) * abs(dp.LdotN);
 }
 // Diffuse + Subsurface + Sheen
 vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
+    Material mat = state.material;
+
     mat3 tbn = ConstructTBN(N);
     V = WorldToLocal(V, tbn);
     L = SampleCosineHemisphere();
@@ -47,13 +42,19 @@ vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
 
     vec3 BaseDiffuse = _DisneyDiffuse(state, dp, V, L, Y, pdf);
     vec3 Subsurface = _DisneySubsurface(state, dp, V, L, Y);
+
+    float FL = SchlickFresnel(dp.LdotN);
+    float FV = SchlickFresnel(dp.VdotN);
+    float RR = 2 * mat.roughness * Sqr(dp.LdotH);
+    float RetroReflect = RR * (FL + FV + FL * FV * (RR - 1.0));
     
-    float lum = Luminance(state.baseColor);
-    vec3 Ctint = lum > 0.0 ? state.baseColor / lum : vec3(1.0);
-    vec3 Csheen = (1.0 - state.sheenTint) + state.sheenTint * Ctint;
-    vec3 fsheen = Csheen * (SchlickFresnel(abs(dp.LdotH))) * abs(dp.LdotN);
+    float lum = Luminance(mat.baseColor);
+    vec3 Ctint = lum > 0.0 ? mat.baseColor / lum : vec3(1.0);
+    vec3 Csheen = (1.0 - mat.sheenTint) + mat.sheenTint * Ctint;
+    vec3 Fsheen = Csheen * (SchlickFresnel(abs(dp.LdotH))) * abs(dp.LdotN);
     
-    vec3 f = (1.0 - state.subsurface) * BaseDiffuse + Subsurface * state.subsurface;// + fsheen;
+    vec3 f = (1.0 - mat.subsurface) * BaseDiffuse + Subsurface * mat.subsurface + Fsheen
+    + mat.baseColor * InvPI * RetroReflect;
 
     L = LocalToWorld(L, tbn);
     return f * abs(dp.LdotN);
@@ -64,14 +65,14 @@ vec3 DisneyDiffuse(State state, vec3 V, out vec3 L, vec3 N, out float pdf) {
 float _DisneySpecularEval(State state, vec3 V, vec3 L, vec3 H, vec3 N) {
     // vec3 Fm = state.baseColor * (1 - state.baseColor) * SchlickFresnel(dot(L, H));
     // float Fm = mix(0.04, 1.0, SchlickFresnel(VdotH));
-    float Dm = D_GGX(H, state.ax, state.ay);
-    float Gm = G1(V, state.ax, state.ay) * G1(L, state.ax, state.ay);
+    float Dm = D_GGX(H, state.material.ax, state.material.ay);
+    float Gm = G1(V, state.material.ax, state.material.ay) * G1(L, state.material.ax, state.material.ay);
     return Dm * Gm / (4.0 * dot(V, N));
 }
 vec3 DisneySpecular(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) {
     mat3 tbn = ConstructTBN(N);
     V = normalize(WorldToLocal(V, tbn));
-    vec3 H = SampleGGXVNDF(V, state.ax, state.ay, rand(), rand());
+    vec3 H = SampleGGXVNDF(V, state.material.ax, state.material.ay, rand(), rand());
     L = reflect(-V, H);
 
     DotProducts dp;
@@ -80,7 +81,7 @@ vec3 DisneySpecular(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) {
     float Fm = mix(0.04, 1.0, SchlickFresnel(dp.VdotH));
     vec3 f = vec3(Fm) * _DisneySpecularEval(state, V, L, H, Y);
 
-    pdf = GGXVNDFLPdf(V, H, L, state.ax, state.ay);
+    pdf = GGXVNDFLPdf(V, H, L, state.material.ax, state.material.ay);
 
     L = LocalToWorld(L, tbn);
     return f * abs(L.y);
@@ -124,7 +125,7 @@ vec3 DisneyClearcoat(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) 
     mat3 tbn = ConstructTBN(N);
     V = normalize(WorldToLocal(V, tbn));
 
-    float alpha = (1.0 - state.clearcoatGloss) * 0.1 + state.clearcoatGloss * 0.001;
+    float alpha = (1.0 - state.material.clearcoatGloss) * 0.1 + state.material.clearcoatGloss * 0.001;
     vec3 H = SampleGTR1(alpha, rand(), rand());
     L = reflect(-V, H);
     vec3 brdf = _DisneyClearcoatEval(state, V, L, H, N, alpha, pdf);
@@ -135,8 +136,8 @@ vec3 DisneyClearcoat(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) 
 
 /* ========== Glass ========== */
 vec3 _RefractionEval(State state, vec3 V, vec3 L, vec3 H, vec3 N, out float pdf) {
-    float D = D_GGX(H, state.ax, state.ay);
-    float G = G1(V, state.ax, state.ay) * G1(L, state.ax, state.ay);
+    float D = D_GGX(H, state.material.ax, state.material.ay);
+    float G = G1(V, state.material.ax, state.material.ay) * G1(L, state.material.ax, state.material.ay);
     float VdotN = dot(V, N);
     float VdotH = dot(V, H);
     float LdotH = dot(L, H);
@@ -144,7 +145,7 @@ vec3 _RefractionEval(State state, vec3 V, vec3 L, vec3 H, vec3 N, out float pdf)
 
     float jacobian = abs(LdotH) / denom;
     pdf = G * max(0.0, VdotH) * D * jacobian / V.y;
-    return pow(state.baseColor, vec3(0.5)) * D * G * abs(VdotH) * jacobian * Sqr(state.eta) / abs(L.y * V.y);
+    return pow(state.material.baseColor, vec3(0.5)) * D * G * abs(VdotH) * jacobian * Sqr(state.eta) / abs(L.y * V.y);
 }
 vec3 _DisneyGlassEval(State state, bool Reflect, vec3 V, vec3 L, vec3 H, vec3 N, float F, out float pdf) {
     pdf = 0.0;
@@ -152,7 +153,7 @@ vec3 _DisneyGlassEval(State state, bool Reflect, vec3 V, vec3 L, vec3 H, vec3 N,
     vec3 f;
     if (Reflect) {
         f = vec3(F) * _DisneySpecularEval(state, V, L, H, N);
-        pdf = GGXVNDFLPdf(V, H, L, state.ax, state.ay);
+        pdf = GGXVNDFLPdf(V, H, L, state.material.ax, state.material.ay);
         pdf /= F;
     } else {
         f = vec3(1.0 - F) * _RefractionEval(state, V, L, H, N, pdf);
@@ -164,7 +165,7 @@ vec3 DisneyGlass(State state, vec3 V, in out vec3 L, vec3 N, out float pdf) {
     mat3 tbn = ConstructTBN(N);
     V = normalize(WorldToLocal(V, tbn));
 
-    vec3 H = SampleGGXVNDF(V, state.ax, state.ay, rand(), rand());
+    vec3 H = SampleGGXVNDF(V, state.material.ax, state.material.ay, rand(), rand());
 
     float F = DielectricFresnel(abs(dot(V, H)), state.eta);
     float VdotH = dot(V, H);

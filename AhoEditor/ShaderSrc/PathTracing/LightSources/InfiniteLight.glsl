@@ -84,6 +84,7 @@ vec2 BinarySearch(float value) {
     int x = clamp(lower, 0, envMapResInt.x - 1);
     return vec2(x, y) / envMapRes;
 }
+const vec3 uniformSky = vec3(0.529f, 0.808f, 0.922f);
 
 // Sample environment light
 vec3 SampleIBL(out float pdf, out vec3 sampleDir) {
@@ -122,7 +123,6 @@ vec4 EvalEnvMap(const vec3 dir) {
     return vec4(EnvIntensity * L, pdf);
 }
 
-const vec3 uniformSky = vec3(0.529f, 0.808f, 0.922f);
 vec4 SampleInfiniteLight(const Ray ray) {
     if (u_EnvMap.EnvSize.x == 0 || u_EnvMap.EnvSize.y == 0) {
         return vec4(EnvIntensity * uniformSky, 1.0f);

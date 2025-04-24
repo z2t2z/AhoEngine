@@ -28,19 +28,19 @@ namespace Aho {
 		while (m_Running) {
 			float currTime = (float)glfwGetTime();
 			float deltaTime = currTime - m_LastFrameTime;
-			if (deltaTime < g_SingleFrameTime) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(long long(ceil(g_SingleFrameTime - deltaTime))));
-				deltaTime = g_SingleFrameTime;
-			}
+			//if (deltaTime < g_SingleFrameTime) {
+			//	std::this_thread::sleep_for(std::chrono::milliseconds(long long(ceil(g_SingleFrameTime - deltaTime))));
+			//	deltaTime = g_SingleFrameTime;
+			//}
 			m_LastFrameTime = (float)glfwGetTime();
 			// Calculate FPS
-			m_AccumulatedTime += deltaTime;
-			m_FPS += 1;
-			if (m_AccumulatedTime >= 1.0f) {
+			//m_AccumulatedTime += deltaTime;
+			//m_FPS += 1;
+			//if (m_AccumulatedTime >= 1.0f) {
 				//AHO_CORE_TRACE("{}", m_FPS);
-				m_FPS = 0;
-				m_AccumulatedTime = 0.0f;
-			}
+				//m_FPS = 0;
+				//m_AccumulatedTime = 0.0f;
+			//}
 
 			for (auto layer : m_LayerStack) {
 				layer->OnUpdate(deltaTime);

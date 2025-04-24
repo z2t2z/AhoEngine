@@ -49,6 +49,10 @@ namespace Aho {
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
+		if (glfwInit() == GLFW_TRUE && glfwRawMouseMotionSupported()) {
+			glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		}
+
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 

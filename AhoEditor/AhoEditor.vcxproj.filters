@@ -45,6 +45,7 @@
     <ClInclude Include="Source\FileExplorer.h" />
     <ClInclude Include="Source\PropertiesPanel.h" />
     <ClInclude Include="Source\Viewport.h" />
+    <ClInclude Include="Source\DebugPenal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -68,5 +69,6 @@
     <ClCompile Include="Source\FileExplorer.cpp" />
     <ClCompile Include="Source\PropertiesPanel.cpp" />
     <ClCompile Include="Source\Viewport.cpp" />
+    <ClCompile Include="Source\DebugPenal.cpp" />
   </ItemGroup>
 </Project>

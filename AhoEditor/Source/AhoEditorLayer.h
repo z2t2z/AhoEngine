@@ -4,6 +4,7 @@
 #include "HierarchicalPenal.h"
 #include "PropertiesPanel.h"
 #include "Viewport.h"
+#include "DebugPenal.h"
 
 namespace Aho {
 	class AhoEditorLayer : public Layer {
@@ -15,9 +16,6 @@ namespace Aho {
 		virtual void OnUpdate(float deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
-	private:
-		void AddEnvMap(const Texture* texture);
-		void DrawCircle(const ImVec2& center, float radius);
 	private:
 		ContentBrowser m_ContentBrowser;
 		PropertiesPanel m_PropertiesPanel;
@@ -37,8 +35,6 @@ namespace Aho {
 		std::shared_ptr<CameraManager> m_CameraManager;
 	private:
 		Ray m_Ray;
-	private:
-		void TempSunDirControl(); // temporary
-		void TempBVHControl();
+		DebugPenal m_DbgPenal;
 	};
 }

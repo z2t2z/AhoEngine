@@ -18,8 +18,8 @@ namespace Aho {
 
 	void PathTracingPipeline::Initialize() {
 		// TODO: Move these and check them in bvh
-		constexpr int64_t MAX_MESH		= 1'280'000;
-		constexpr int64_t MAX_TLAS_NODE = 1'280'000;
+		constexpr int64_t MAX_MESH		= 1'280;
+		constexpr int64_t MAX_TLAS_NODE = 1'280;
 		constexpr int64_t MAX_BLAS_NODE = 1'280'000;
 		constexpr int64_t MAX_PRIMITIVE = 1'280'000;
 
@@ -48,7 +48,7 @@ namespace Aho {
 		size_t primsOffset = 0;
 		int i = 0;
 		std::vector<OffsetInfo> info = tlas.GetOffsetMap();
-		for (const PrimitiveDesc& blasPrim : tlas.GetPrimsArr()) {
+		for (const PrimitiveDesc& blasPrim : tlas.GetPrimsArr()) { // Every primitive is a BLAS bvh tree
 			const BVHi* blas = tlas.GetBLAS(blasPrim.GetPrimId());
 			AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
 			AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
@@ -93,11 +93,11 @@ namespace Aho {
 		// Accumulate in compute shader
 		pass->AddRenderCommand(
 			[this](const std::vector<std::shared_ptr<RenderData>>& _, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				static int g = 32;
+				static int g = 16;
 				shader->Bind();
 				renderTarget->BindAt(0, 0);
 
-				shader->SetInt("u_Frame", m_Frame++);
+				shader->SetInt("u_Frame", m_Frame);
 				shader->SetIvec2("u_Resolution", m_Resolution);
 				shader->SetIvec2("u_TileSize", m_TileSize);
 				shader->SetIvec2("u_TileNum", m_TileNum);
@@ -123,10 +123,10 @@ namespace Aho {
 
 				uint32_t width = renderTarget->GetSpecification().Width;
 				uint32_t height = renderTarget->GetSpecification().Height;
-				uint32_t workGroupCountX = (width + m_TileSize.x - 1) / m_TileSize.x;
-				uint32_t workGroupCountY = (height + m_TileSize.y - 1) / m_TileSize.y;
-				//uint32_t workGroupCountX = (width + g - 1) / g;
-				//uint32_t workGroupCountY = (height + g - 1) / g;
+				//uint32_t workGroupCountX = (width + m_TileSize.x - 1) / m_TileSize.x;
+				//uint32_t workGroupCountY = (height + m_TileSize.y - 1) / m_TileSize.y;
+				uint32_t workGroupCountX = (width + g - 1) / g;
+				uint32_t workGroupCountY = (height + g - 1) / g;
 				shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
 
 				renderTarget->Unbind();

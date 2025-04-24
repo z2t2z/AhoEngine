@@ -44,7 +44,14 @@ namespace Aho {
 			m_DepthTex->Invalidate();
 			auto target = Utils::GetGLParam(m_DepthTex->GetSpecification().target);
 			auto id = m_DepthTex->GetTextureID();
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target, id, 0);
+			auto xx = Utils::GetGLParam(m_DepthTex->GetSpecification().dataFormat) == GL_DEPTH_COMPONENT ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT;
+			glFramebufferTexture2D(GL_FRAMEBUFFER, xx, target, id, 0);
+
+			GLenum err = glGetError();
+			if (err != GL_NO_ERROR) {
+				AHO_CORE_ASSERT(false);
+			}
+
 		}
 
 		// if has color attachments, invalidate them

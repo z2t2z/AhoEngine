@@ -1,5 +1,7 @@
 ﻿#include "Ahopch.h"
 #include "Math.h"
+#include "Runtime/Core/Primitive.h"
+#include "Runtime/Core/Ray.h"
 #include "Runtime/Core/BVH.h"
 
 namespace Aho {

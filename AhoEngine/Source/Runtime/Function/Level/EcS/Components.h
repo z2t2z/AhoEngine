@@ -7,6 +7,7 @@
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
 #include "Runtime/Function/SkeletonViewer.h"
+#include "Runtime/Function/Renderer/DisneyPrincipled.h"
 #include "Runtime/Core/BVH.h"
 #include <string>
 
@@ -27,15 +28,6 @@ namespace Aho {
 		}
 	};
 
-	//struct BVHComponent {
-	//	std::vector<BVHi> bvhs;
-	//	BVHComponent() = default;
-	//	BVHComponent(const BVHComponent&) = default;
-	//	BVHComponent(const std::vector<BVHi>& bvhs)
-	//		: bvhs(bvhs) {
-	//	}
-	//};
-
 	struct BVHComponent {
 		std::vector<BVHi*> bvhs;
 		BVHComponent() = default;
@@ -44,21 +36,6 @@ namespace Aho {
 			: bvhs(bvhs) {
 		}
 	};
-
-	//struct BVHComponent {
-	//	BVHi bvh;
-	//	BVHComponent(const std::shared_ptr<StaticMesh>& mesh)
-	//		: bvh(mesh) {
-	//	}
-	//	BVHComponent(const std::shared_ptr<MeshInfo>& mesh)
-	//		: bvh(mesh) {
-	//	}
-	//	BVHComponent() = default;
-	//	BVHComponent(const BVHComponent&) = default;
-	//	BVHComponent(const BVHi& bvh)
-	//		: bvh(bvh) {
-	//	}
-	//};
 
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
@@ -77,7 +54,6 @@ namespace Aho {
 
 	struct MaterialComponent {
 		std::shared_ptr<Material> material;
-
 		// For path tracing 
 		TextureHandles* handle{ nullptr };
 		MaterialMaskEnum* matMask{ nullptr };

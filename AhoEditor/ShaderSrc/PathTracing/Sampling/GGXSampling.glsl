@@ -31,6 +31,7 @@ float Lambda(vec3 V, float ax, float ay) {
     return (-1.0 + Tmp) / 2.0;
 }
 // Takes in V and returns the shadowing-masking function G1(V)
+// SmithG1
 float G1(vec3 V, float ax, float ay) {
     return 1.0 / (1.0 + Lambda(V, ax, ay));
 }
@@ -43,9 +44,6 @@ float VNDFHPdf(vec3 V, vec3 H, float ax, float ay) {
 }
 // PDF of sampling outgoing direction L = reflect(-V, H)
 float GGXVNDFLPdf(in vec3 V, in vec3 H, in vec3 L, float ax, float ay) {
-    if (L.y <= 0.0) {
-        return 0.0; // not sure
-    }
     float Dv = VNDFHPdf(V, H, ax, ay);
     float pdf = Dv / (4.0 * max(dot(V, H), 1e-6));
     return pdf;

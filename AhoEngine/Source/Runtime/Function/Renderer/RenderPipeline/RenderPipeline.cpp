@@ -1,9 +1,10 @@
 #include "Ahopch.h"
 #include "RenderPipeline.h"
 #include "Runtime/Core/Timer.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
 
 namespace Aho {
-
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_ScreenQuad;
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_UnitCube;
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_SceneData;	// render data is a per mesh basis
@@ -11,6 +12,36 @@ namespace Aho {
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_EmptyVao;
 	std::vector<std::shared_ptr<RenderData>> RenderTask::m_UnitCircle; // line
 
+	void RenderPipeline::Execute() {
+		for (const auto& task : m_RenderTasks) {
+			RenderCommand::PushDebugGroup(task.pass->GetPassDebugName());
+			task.pass->Execute(RenderTask::GetRenderData(task.dataType));
+			RenderCommand::PopDebugGroup();
+		}
+	}
+
+	RenderPass* RenderPipeline::GetRenderPass(RenderPassType type) {
+		for (const auto& task : m_RenderTasks) {
+			if (task.pass->GetRenderPassType() == type) {
+				return task.pass;
+			}
+		}
+		return nullptr;
+	}
+
+	void RenderPipeline::SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo) {
+		auto pass = GetRenderPass(type);
+		pass->SetRenderTarget(fbo);
+		m_RenderResult = pass->GetTextureBuffer(TexType::Result);
+	}
+
+	bool RenderPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
+		bool resized = false;
+		for (auto& task : m_RenderTasks) {
+			resized |= task.pass->GetRenderTarget()->Resize(width, height);
+		}
+		return resized;
+	}
 
 	std::shared_ptr<Framebuffer> RenderPipeline::GetRenderPassTarget(RenderPassType type) {
 		auto it = std::find_if(m_RenderTasks.begin(), m_RenderTasks.end(), 
