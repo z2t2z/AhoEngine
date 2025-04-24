@@ -8,24 +8,7 @@
 #include "../Disney.glsl"
 #include "../../UniformBufferObjects.glsl"
 
-
-vec3 SampleDirectLight(Ray ray, vec3 hitPos, vec3 N, HitInfo info, vec2 uv, int textureHandleId) {
-    vec3 lightPos = vec3(u_LightPosition[0]);
-        return vec3(0.0, 0.0, 0.0);
-    if (lightPos.y == 0.0) {
-    }
-    vec3 Ldir = normalize(lightPos - hitPos);
-    if (VisibilityTest(hitPos, lightPos)) {
-        float NdotL = max(0.0, dot(N, Ldir));
-        float attenuation = length(lightPos - hitPos);
-        attenuation *= attenuation;
-        float I = 1000.0;
-        return I * InvPI * NdotL / attenuation * vec3(1.0, 1.0, 1.0);
-    }
-    return vec3(0.0, 0.0, 0.0);
-}
-
-vec3 SampleDirectLight(const State state, const Ray ray) {
+vec3 SampleDirectLight(State state, const Ray ray) {
     float EnvPdf = 0.0;
     vec3 EnvDir = vec3(0.0);
     vec3 Ld = SampleIBL(EnvPdf, EnvDir);
@@ -43,11 +26,14 @@ vec3 SampleDirectLight(const State state, const Ray ray) {
         vec3 H = normalize(L + V);
 
         float pdf = 0.0;
+        state.cosTheta = V.y;
         vec3 f = principled_eval(state, V, H, L, pdf);
-
+        if (pdf == 0.0) {
+            return vec3(0.0);
+        }
         float misWeight = PowerHeuristicPdf(EnvPdf, pdf); // Mis weighted
         if (misWeight > 0.0) {
-            return misWeight * (f * Ld / EnvPdf);
+            return misWeight * f * Ld / EnvPdf;
         }
     }
 

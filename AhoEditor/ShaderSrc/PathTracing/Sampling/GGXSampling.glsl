@@ -45,8 +45,19 @@ float VNDFHPdf(vec3 V, vec3 H, float ax, float ay) {
 // PDF of sampling outgoing direction L = reflect(-V, H)
 float GGXVNDFLPdf(in vec3 V, in vec3 H, in vec3 L, float ax, float ay) {
     float Dv = VNDFHPdf(V, H, ax, ay);
-    float pdf = Dv / (4.0 * max(dot(V, H), 1e-6));
+    float pdf = Dv / abs(4.0 * dot(V, H));
     return pdf;
 }
+
+// @param:
+// mitusba's impl
+// m: half vector
+// cos_theta: LdotH
+// ax, ay: anisotropic parameters
+// float pdf_eval(const vec3 m, float cos_theta, float ax, float ay) {
+//     float axy = ax * ay;
+//     float denom = InvPI * axy * Sqr()
+//     float res = 1.0 / denom;
+// }
 
 #endif

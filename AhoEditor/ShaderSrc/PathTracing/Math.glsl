@@ -5,9 +5,10 @@
 const vec3 X = vec3(1.0, 0.0, 0.0);
 const vec3 Y = vec3(0.0, 1.0, 0.0);
 const vec3 Z = vec3(0.0, 0.0, 1.0);
-
+const vec3 _luminance_vec3 = vec3(0.212671, 0.715160, 0.072169);
 float Luminance(vec3 c) {
-    return 0.212671 * c.x + 0.715160 * c.y + 0.072169 * c.z;
+    // return 0.212671 * c.x + 0.715160 * c.y + 0.072169 * c.z;
+    return dot(c, _luminance_vec3);
 }
 
 float Sqr(float v) {

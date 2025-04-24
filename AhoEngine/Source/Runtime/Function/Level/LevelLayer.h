@@ -31,6 +31,7 @@ namespace Aho {
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		void UpdatePathTracingTextureHandlesSSBO();
 		bool& GetBuildBvhState() { return m_BuildBVH; }
+		TextureHandles& GetTextureHandles(int meshId) { return m_TextureHandles.at(meshId); }
 	public:
 		void AddEnvironmentMap(Texture* texture);
 	private:

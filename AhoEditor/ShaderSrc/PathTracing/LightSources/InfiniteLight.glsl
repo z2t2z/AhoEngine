@@ -100,16 +100,16 @@ vec3 SampleIBL(out float pdf, out vec3 sampleDir) {
     int v = _BinarySearchCDF2D(u, rnd2.y);
 
     vec2 uv = vec2(u, v) / vec2(width, height);
-    sampleDir = UVToDirection(uv);
 
     vec3 color = texture(u_EnvMap.EnvLight, uv).rgb;
     pdf = Luminance(color) / u_EnvMap.EnvTotalLum;
     
     float phi = uv.x * 2.0 * PI;
     float theta = uv.y * PI;
+    sampleDir = vec3(-cos(phi) * sin(theta), cos(theta), -sin(phi) * sin(theta));
 
     // https://pbr-book.org/3ed-2018/Monte_Carlo_Integration/Transforming_between_Distributions#sec:mc-transform-multiple-dimensions
-    pdf = (pdf * width * height) / (2 * PI * PI * sin(theta));
+    pdf = (pdf * width * height) / (2.0 * PI * PI * sin(theta));
     return color;
 }
 
@@ -125,7 +125,7 @@ vec4 EvalEnvMap(const vec3 dir) {
 
 vec4 SampleInfiniteLight(const Ray ray) {
     if (u_EnvMap.EnvSize.x == 0 || u_EnvMap.EnvSize.y == 0) {
-        return vec4(EnvIntensity * uniformSky, 1.0f);
+        return vec4(EnvIntensity * uniformSky, -1.0f);
     }
     return EvalEnvMap(ray.direction);
 }

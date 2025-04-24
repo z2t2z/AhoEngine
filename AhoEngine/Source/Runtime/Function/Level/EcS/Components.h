@@ -54,13 +54,12 @@ namespace Aho {
 
 	struct MaterialComponent {
 		std::shared_ptr<Material> material;
-		// For path tracing 
-		TextureHandles* handle{ nullptr };
-		MaterialMaskEnum* matMask{ nullptr };
 
+		// For path tracing 
+		int32_t meshId{ -1 };
 		MaterialComponent() = default;
-		MaterialComponent(std::shared_ptr<Material>& _material, TextureHandles* handle, MaterialMaskEnum* matMask)
-			: material(_material), handle(handle), matMask(matMask) { }
+		MaterialComponent(std::shared_ptr<Material>& _material, int32_t meshid)
+			: material(_material), meshId(meshid) { }
 		MaterialComponent(const MaterialComponent&) = default;
 	};
 

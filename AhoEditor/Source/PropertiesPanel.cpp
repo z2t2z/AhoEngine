@@ -104,6 +104,7 @@ namespace Aho {
 		ImGui::TableNextColumn();
 		ImGui::Text(TextureHandles::s_Umap.at(prop.m_Type).c_str());
 		ImGui::TableNextColumn();
+		TextureHandles& handle = m_LevelLayer->GetTextureHandles(materialComp.meshId);
 		std::visit(
 			[&](auto& value) {
 				bool valueChanged = false;
@@ -127,17 +128,13 @@ namespace Aho {
 				}
 				auto texture = TryGetDragDropTargetTexture();
 				if (texture) {
-					materialComp.handle->SetHandles(texture->GetTextureHandle(), prop.m_Type);
+					handle.SetHandles(texture->GetTextureHandle(), prop.m_Type);
 					prop = { texture, prop.m_Type };
 					textureChanged = true;
 				}
 				if (!texture && valueChanged) {
 					textureChanged = true;
-					materialComp.handle->SetValue(value, prop.m_Type);
-					//if constexpr (std::is_same_v<T, float>) {
-					//	AHO_CORE_TRACE("{}, {}", TextureHandles::s_Umap.at(prop.m_Type), value);
-					//}
-
+					handle.SetValue(value, prop.m_Type);
 				}
 			}, prop.m_Value);
 		return textureChanged;

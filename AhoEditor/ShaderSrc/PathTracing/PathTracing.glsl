@@ -34,17 +34,13 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     vec2 TextureUV = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u,
             w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
     
-    // if (p.meshId == 3) {
-    //     mat.baseColor = X;
-    //     return;
-    // }
     const TextureHandles handle = s_TextureHandles[p.meshId];
     if (int64_t(handle.albedoHandle) != 0) {
         mat.baseColor = texture(handle.albedoHandle, TextureUV).rgb;
     } else {
         mat.baseColor = handle.baseColor;
     }
-    mat.baseColor = pow(mat.baseColor, vec3(2.2));
+    // mat.baseColor = pow(mat.baseColor, vec3(2.2));
     
     if (int64_t(handle.normalHandle) != 0) {
         vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
@@ -60,8 +56,10 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     
     if (int64_t(handle.roughnessHandle) != 0) {
         mat.roughness = texture(handle.roughnessHandle, TextureUV).r;
+        CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); 
     } else {
         mat.roughness = handle.roughness;
+        // CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); // Done in cpu side
     }
     
     if (int64_t(handle.metallicHandle) != 0) {
@@ -74,7 +72,6 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     mat.specular = handle.specular;
     mat.specTint = handle.specTint;
     mat.specTrans = handle.specTrans;
-
     mat.ior = handle.ior;
     mat.clearcoat = handle.clearcoat;
     mat.clearcoatGloss = handle.clearcoatGloss;
@@ -83,13 +80,13 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     mat.sheen = handle.sheen;
     mat.ax = handle.ax;
     mat.ay = handle.ay;
-    
-    // CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); // Done in cpu side
+
 
     state.material = mat;
+    state.eta = mat.ior;
 }
 
-#define MAX_PATHTRACE_DEPTH 6
+#define MAX_PATHTRACE_DEPTH 5
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput
@@ -99,24 +96,25 @@ vec3 PathTrace(Ray ray) {
         RayTrace(ray, info);
         if (!info.hit) {
             vec4 env = SampleInfiniteLight(ray);
-            float misWeight = depth > 0 ? PowerHeuristicPdf(state.pdf, env.w) : 1.0; // Need better understanding of this
-            L += misWeight * beta * env.rgb;
+            if (env.w == -1) {
+                L += uniformSky * beta;
+            } else {
+                float misWeight = depth > 0 ? PowerHeuristicPdf(state.pdf, env.w) : 1.0; // Need better understanding of this
+                L += misWeight * beta * env.rgb;
+            }
             break;
         }
 
         PrimitiveDesc p = s_bPrimitives[info.globalPrimtiveId];
         RetrievePrimInfo(state, p, info.uv);
-        {
-            // L = state.material.baseColor;
-            // break;
-        }
-        state.cosTheta = dot(state.N, -ray.direction);
-        
+
         L += beta * SampleDirectLight(state, ray); 
+
+        state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
 
         float pdf = 0.0;
         vec3 wi;
-        vec3 wo = -ray.direction;
+        vec3 wo = -ray.direction; // notation is different from pbrt's
         // seperate component test
         {
             // DotProducts dp;
@@ -151,7 +149,6 @@ vec3 PathTrace(Ray ray) {
             }
             ray.direction = Lworld;
             ray.origin = state.pos + EPS * Lworld;
-            continue;
         }
 
     }

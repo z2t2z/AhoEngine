@@ -19,5 +19,6 @@ namespace Aho {
 	private:
 		void SunDirControl();
 		void BVHControl();
+		void GetSSBOData();
 	};
 }

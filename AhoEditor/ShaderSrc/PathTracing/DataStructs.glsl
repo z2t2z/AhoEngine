@@ -125,7 +125,6 @@ void SetDotProducts(vec3 L, vec3 V, vec3 H, vec3 N, out DotProducts dp) {
     dp.LdotV = dot(L, V);
 }
 
-// Weired bugs
 struct TextureHandles {
     layout(bindless_sampler) sampler2D albedoHandle;
     layout(bindless_sampler) sampler2D normalHandle;

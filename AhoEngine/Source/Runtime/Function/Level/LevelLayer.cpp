@@ -304,11 +304,8 @@ namespace Aho {
 			m_MatMaskEnums.emplace_back(MaterialMaskEnum());
 			MaterialMaskEnum& materialMask = m_MatMaskEnums.back();
 			materialMask = MaterialMaskEnum::All;
-			m_TextureHandles.emplace_back(TextureHandles());
-			TextureHandles& handle = m_TextureHandles.back();
 
-			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, &handle, &materialMask);
-
+			TextureHandles handle;
 			// should not be here
 			if (meshInfo->materialInfo.HasMaterial()) {
 				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
@@ -321,20 +318,18 @@ namespace Aho {
 					mat->AddMaterialProperties({ textureCached.at(path), type });
 				}
 			}
+
 			// TODO: Ugly code, find a way to iterate these
 			if (!mat->HasProperty(TexType::Albedo)) {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
 				handle.SetValue(glm::vec3(0.95), TexType::Albedo);
-				materialMask ^= MaterialMaskEnum::AlbedoMap;
 			}
 			if (!mat->HasProperty(TexType::Normal)) {
 				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
-				materialMask ^= MaterialMaskEnum::NormalMap;
 			}
 			if (!mat->HasProperty(TexType::Metallic)) {
 				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
 				handle.SetValue(0.0f, TexType::Metallic);
-				materialMask ^= MaterialMaskEnum::MetallicMap;
 			}
 			if (!mat->HasProperty(TexType::Specular)) {
 				mat->AddMaterialProperties({ 0.0f, TexType::Specular });
@@ -385,9 +380,8 @@ namespace Aho {
 				materialMask ^= MaterialMaskEnum::AOMap;
 			}
 
-			//tmp.push_back(materialMask);
-			//entityManager->AddComponent<TextureHandlesComponent>(meshEntity, &handle, &materialMask);
-
+			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
+			m_TextureHandles.push_back(handle);
 
 			renderDataAll.push_back(renderData);
 			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());

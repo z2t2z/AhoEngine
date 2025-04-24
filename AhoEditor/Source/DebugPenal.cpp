@@ -1,4 +1,6 @@
 #include "DebugPenal.h"
+#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
+#include "Runtime/Function/Renderer/DisneyPrincipled.h"
 
 namespace Aho {
 	DebugPenal::DebugPenal() {
@@ -54,7 +56,10 @@ namespace Aho {
 				alts.UpdateTLAS();
 				m_PtPipeline->UpdateSSBO(m_LevelLayer->GetCurrentLevel());
 			}
+		}
 
+		if (ImGui::Button("MagicButton")) {
+			GetSSBOData();
 		}
 
 		// BVH Intersection test
@@ -105,6 +110,12 @@ namespace Aho {
 		//}
 		//m_ShouldPickObject = false;
 		ImGui::End();
+	}
+
+	void DebugPenal::GetSSBOData() {
+		std::vector<TextureHandles> data(4);
+		SSBOManager::GetSubData<TextureHandles>(5, data, 0);
+		AHO_CORE_INFO("{}", data.size());
 	}
 
 }
