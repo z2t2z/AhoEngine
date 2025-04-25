@@ -69,61 +69,41 @@ float FresnelDielectric(vec3 L, vec3 V, vec3 H, float ior) {
 }
 
 // Mituba's implememtation
-// 定义返回类型
-struct FresnelResult {
-    float  r;            // 能量反射率
-    float  cos_theta_t;  // 带符号的折射余弦
-    float  eta_it;       // 入射→透射折射率比
-    float  eta_ti;       // 透射→入射折射率比
-};
+float fresnel(float cos_theta_i, float eta) {
+    float sinThetaTSq = eta * eta * (1.0f - cos_theta_i * cos_theta_i);
 
-// 计算菲涅尔特例的函数
-FresnelResult fresnel(float cos_theta_i, float eta) {
-    // 1. 内外部判断
-    bool outside = (cos_theta_i >= 0.0);
-    
-    // 2. η 比率
-    float rcp_eta = 1.0 / eta;
-    float eta_it  = outside ? eta     : rcp_eta;
-    float eta_ti  = outside ? rcp_eta : eta;
-    
-    // 3. Snell 定律，计算 cos²θ_t
-    float sin2_i = max(0.0, 1.0 - cos_theta_i*cos_theta_i);
-    float sin2_t = eta_ti * eta_ti * sin2_i;
-    float cos2_t = max(0.0, 1.0 - sin2_t);
-    
-    // 4. 绝对值余弦
-    float cos_i_abs = abs(cos_theta_i);
-    float cos_t_abs = sqrt(cos2_t);
-    
-    // 5. 特殊情况掩码
-    bool index_matched = (eta == 1.0);
-    bool grazing       = (cos_i_abs == 0.0);
-    bool special_case  = index_matched || grazing;
-    float r_sc         = index_matched ? 0.0 : 1.0;
-    
-    // 6. 计算 s/p 振幅反射系数
-    float a_s = (eta_it * cos_t_abs - cos_i_abs) /
-                (eta_it * cos_t_abs + cos_i_abs);
-    float a_p = (eta_it * cos_i_abs - cos_t_abs) /
-                (eta_it * cos_i_abs + cos_t_abs);
-    
-    // 7. 能量反射率
-    float r = 0.5 * (a_s*a_s + a_p*a_p);
-    if (special_case) {
-        r = r_sc;
-    }
-    
-    // 8. 带符号的折射余弦
-    float cos_t = cos_t_abs * (cos_theta_i < 0.0 ? -1.0 : 1.0);
-    
-    // 9. 返回结果
-    FresnelResult result;
-    result.r           = r;
-    result.cos_theta_t = cos_t;
-    result.eta_it      = eta_it;
-    result.eta_ti      = eta_ti;
-    return result;
+    // Total internal reflection
+    if (sinThetaTSq > 1.0)
+        return 1.0;
+
+    float cosThetaT = sqrt(max(1.0 - sinThetaTSq, 0.0));
+
+    float rs = (eta * cosThetaT - cos_theta_i) / (eta * cosThetaT + cos_theta_i);
+    float rp = (eta * cos_theta_i - cosThetaT) / (eta * cos_theta_i + cosThetaT);
+
+    return 0.5f * (rs * rs + rp * rp);
+
+    // bool outside_mask = cos_theta_i >= 0.0;
+    // float rcp_eta = 1.0 / eta;
+    // float eta_it  = outside_mask ? eta  : rcp_eta;
+    // float eta_ti  = outside_mask ? rcp_eta : eta;
+    // float cos_theta_t_sqr = 
+    //     1.0 - (eta_ti * eta_ti) * (1.0 - cos_theta_i * cos_theta_i);
+    // float cos_theta_i_abs = abs(cos_theta_i);
+    // float cos_theta_t_abs = sqrt(max(0.0, cos_theta_t_sqr));
+    // bool index_matched = (eta == 1.0);
+    // bool special_case  = index_matched || (cos_theta_i_abs == 0.0);
+    // float r_sc = index_matched ? 0.0 : 1.0;
+    // float a_s = (eta_it * cos_theta_t_abs - cos_theta_i_abs) /
+    //             (eta_it * cos_theta_t_abs + cos_theta_i_abs);
+    // float a_p = (eta_it * cos_theta_i_abs - cos_theta_t_abs) /
+    //             (eta_it * cos_theta_i_abs + cos_theta_t_abs);
+
+    // float r = 0.5 * (a_s * a_s + a_p * a_p);
+    // if (special_case) {
+    //     r = r_sc;
+    // }
+    // return r;
 }
 
 // Return pow(1 - u, 5)

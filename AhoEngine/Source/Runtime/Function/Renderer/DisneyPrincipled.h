@@ -122,13 +122,13 @@ namespace Aho {
 #ifndef  DEBUG
 			float roughness2 = roughness * roughness;
 			if (anisotropic == 0) {
-				ax = std::max(0.001f, roughness2);
+				ax = std::max(0.0001f, roughness2);
 				ay = ax;
 				return;
 			}
 			float aspect = sqrt(1.0 - 0.9 * anisotropic);
-			ax = std::max(0.001f, roughness2 / aspect);
-			ay = std::max(0.001f, roughness2 * aspect);
+			ax = std::max(0.0001f, roughness2 / aspect);
+			ay = std::max(0.0001f, roughness2 * aspect);
 #endif // ! DEBUG
 		}
 		static std::unordered_map<TexType, std::string> s_Umap;

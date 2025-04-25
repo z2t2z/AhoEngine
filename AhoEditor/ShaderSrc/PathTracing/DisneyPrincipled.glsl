@@ -14,7 +14,7 @@
 #include "Disney.glsl"
 #include "DisneyPrincipledHelpers.glsl"
 
-vec3 principled_eval(const State state, const vec3 V, const vec3 H, const vec3 L, out float pdf);
+vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out float pdf);
 
 vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     if (state.cosTheta == 0.0) {
@@ -26,7 +26,9 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     bool front_side = state.cosTheta > 0.0;
     vec3 Nworld = front_side ? state.N : -state.N; // Ensure N is always in the same hemisphere as V so that we can calculate the correct L direction
     state.eta = mat.ior;
+
     float rpc_eta = 1.0 / state.eta;
+    float eta_path = !front_side ? state.eta : rpc_eta;
 
     // TODO: Not sure about this part
     // Use eta or specular to guide reflect/transmit
@@ -48,18 +50,18 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
 
     // Local coordinates
     mat3 tbn = ConstructTBN(Nworld);
-    vec3 V = WorldToLocal(Vworld, tbn);
+    vec3 V = normalize(WorldToLocal(Vworld, tbn));
 
     // Defining main specular reflection distribution
-    vec3 H = normalize(SampleGGXVNDF(V, mat.ax, mat.ay, rand(), rand()));
+    vec3 H = roughness == 0.0 ? Y : normalize(SampleGGXVNDF(V, mat.ax, mat.ay, rand(), rand()));
 
     // Fresnel coefficient for the main specular
-    FresnelResult fresnel = fresnel(sign(state.cosTheta) * dot(V, H), state.eta);
-    float F_spec_dielectric = fresnel.r;    
+    float F_spec_dielectric = fresnel(abs(dot(V, H)), eta_path);
 
     // probability definitions
     float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
-    float prob_spec_trans   = float(has_spec_trans) * (front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric)); 
+    float prob_spec_trans   = front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric);
+    prob_spec_trans = has_spec_trans ? prob_spec_trans : 0.0; 
     float prob_diffuse      = front_side ? brdf : 0;
     // Clearcoat has 1/4 of the main specular reflection energy.
     float prob_clearcoat = float(has_clearcoat) * (front_side ? 0.25 * clearcoat : 0);
@@ -70,7 +72,6 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     prob_spec_trans *= rcp_tot_prob;
     prob_clearcoat *= rcp_tot_prob;
     prob_diffuse *= rcp_tot_prob;
-    // vec4 probs = vec4(prob_spec_reflect, prob_spec_trans, prob_clearcoat, prob_diffuse);
 
     // Sampling mask definitions
     float sample1 = rand();
@@ -99,11 +100,8 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     return f;
 }
 
-vec3 principled_eval(const State state, const vec3 V, const vec3 H, const vec3 L, out float pdf) {
+vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out float pdf) {
     pdf = 0.0;
-
-    DotProducts dp;
-    SetDotProducts(L, V, H, Y, dp);
 
     Material mat = state.material;
     float roughness   = mat.roughness;
@@ -124,15 +122,21 @@ vec3 principled_eval(const State state, const vec3 V, const vec3 H, const vec3 L
     // Refraction weight
     float bsdf = (1.0 - metallic) * specTrans;
 
-    float eta_path = front_side ? state.eta : 1.0 / state.eta;
+    float rpc_eta = 1.0 / state.eta;
+    float eta_path = !front_side ? state.eta : rpc_eta;
     
+    // H = is_reflect ? normalize(L + V) : normalize(L + V * rpc_eta);
+
+    DotProducts dp;
+    SetDotProducts(L, V, H, Y, dp);
+
     // Fresnel coefficient for the main specular
-    FresnelResult fresnel = fresnel(sign(state.cosTheta) * dp.VdotH, state.eta);
-    float F_spec_dielectric = fresnel.r;
+    float F_spec_dielectric = fresnel(abs(dp.VdotH), eta_path);
 
     // probability definitions
     float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
-    float prob_spec_trans   = float(has_spec_trans) * (front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric)); 
+    float prob_spec_trans   = front_side ? bsdf * (1.0 - F_spec_dielectric) : (1.0 - F_spec_dielectric);
+    prob_spec_trans = has_spec_trans ? prob_spec_trans : 0.0;
     float prob_diffuse      = front_side ? brdf : 0;
     // Clearcoat has 1/4 of the main specular reflection energy.
     float prob_clearcoat = float(has_clearcoat) * (front_side ? 0.25 * clearcoat : 0);

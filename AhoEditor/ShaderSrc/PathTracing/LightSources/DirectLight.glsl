@@ -16,17 +16,18 @@ vec3 SampleDirectLight(State state, const Ray ray) {
     if (EnvPdf != 0.0 && VisibilityTest(state.pos, state.pos + 1000000.0 * EnvDir)) {
         vec3 L = EnvDir;
         vec3 V = -ray.direction;
-        vec3 N = state.N;
+        state.cosTheta = dot(L, V);
+        bool front_side = state.cosTheta > 0.0;
+        vec3 N = front_side ? state.N : -state.N;
         mat3 tbn = ConstructTBN(N);
         L = WorldToLocal(L, tbn);
         V = WorldToLocal(V, tbn);
-        if (!SameHemisphere(L, V)) {
-            return vec3(0.0);
-        }
-        vec3 H = normalize(L + V);
+
+        bool is_reflect = SameHemisphere(L, V);
+        float eta_path = !front_side ? state.eta : 1.0 / state.eta;
+        vec3 H = is_reflect ? normalize(L + V) : normalize(L + V * eta_path);
 
         float pdf = 0.0;
-        state.cosTheta = V.y;
         vec3 f = principled_eval(state, V, H, L, pdf);
         if (pdf == 0.0) {
             return vec3(0.0);

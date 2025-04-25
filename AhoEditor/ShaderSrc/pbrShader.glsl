@@ -230,22 +230,47 @@ vec4 genGrid(vec3 worldPos, float scale) {
     return color;
 }
 
+vec4 Grid(vec3 fragPos3D, float scale, bool drawAxis) {
+    vec2 coord = fragPos3D.xz * scale;
+    vec2 derivative = fwidth(coord);
+    vec2 grid = abs(fract(coord - 0.5) - 0.5) / derivative;
+    float line = min(grid.x, grid.y);
+    float minimumz = min(derivative.y, 1);
+    float minimumx = min(derivative.x, 1);
+    vec4 color = vec4(0.2, 0.2, 0.2, 1.0 - min(line, 1.0));
+    // z axis
+    if(fragPos3D.x > -0.1 * minimumx && fragPos3D.x < 0.1 * minimumx)
+        color.z = 1.0;
+    // x axis
+    if(fragPos3D.z > -0.1 * minimumz && fragPos3D.z < 0.1 * minimumz)
+        color.x = 1.0;
+    return color;
+}
+
 const float camFarPlane = 1000.0;
-
-void main() {
-    float t = -v_nearP.y / (v_farP.y - v_nearP.y);
-    vec3 worldPos = v_nearP + t * (v_farP - v_nearP);
+const float camNearPlane = 0.01;
+float ComputeLinearDepth(vec3 worldPos) {
+    vec4 clip_space_pos = u_Projection * u_View * vec4(worldPos.xyz, 1.0);
+    float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
+    float linearDepth = (2.0 * camNearPlane * camFarPlane) / (camFarPlane + camNearPlane - clip_space_depth * (camFarPlane - camNearPlane)); // get linear value between 0.01 and 1000
+    return linearDepth / camFarPlane; // normalize
+}
+vec4 GridColor(vec3 worldPos, float t) {
     float fromOrigin = max(0.001, abs(u_ViewPosition.y));// / camFarPlane; // [0, 1]
-
     vec4 s = genGrid(worldPos, 1.0) * mix(1.0, 0.0, min(1.0, fromOrigin / 100));
     vec4 m = genGrid(worldPos, 0.1) * mix(1.0, 0.0, min(1.0, fromOrigin / 200));
     vec4 l = genGrid(worldPos, 0.01) * mix(1.0, 0.0, min(1.0, fromOrigin / 300));
     vec4 GridColor = (s + m + l) * float(t > 0);
-	float alphaMix = 10 * t / camFarPlane;
-	GridColor.w *= 1 - alphaMix;
-	out_Color = GridColor;
-	return;
+	// vec4 GridColor = (Grid(worldPos, 10, true) + Grid(worldPos, 1, true))* float(t > 0); 
 
+	float linearDepth = ComputeLinearDepth(worldPos);
+	float fading = max(0, (1 - linearDepth));
+	GridColor.a *= fading;
+	return GridColor;
+}
+
+
+void main() {
 	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
 	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
 
@@ -268,10 +293,11 @@ void main() {
 		
 		lum = jodieReinhardTonemap(lum);
 		lum = 7 * pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, u_SunDir, Rground);
-		out_Color = vec4(lum, 1.0);
-		if (GridColor.w > 0.9) {
-			out_Color = GridColor;
-		}
+		
+		float t = -v_nearP.y / (v_farP.y - v_nearP.y);
+		vec3 gridWorldPos = v_nearP + t * (v_farP - v_nearP);
+		
+		out_Color = t < 0.0 ? vec4(lum, 1.0) : GridColor(gridWorldPos, t);
 		return;
 	}
 
