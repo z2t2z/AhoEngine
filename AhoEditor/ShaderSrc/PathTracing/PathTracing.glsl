@@ -82,7 +82,6 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     mat.ay = handle.ay;
 
     state.material = mat;
-    state.eta = mat.ior;
 }
 
 #define MAX_PATHTRACE_DEPTH 8
@@ -111,45 +110,21 @@ vec3 PathTrace(Ray ray) {
 
         state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
 
-        float pdf = 0.0;
-        vec3 wi;
-        vec3 wo = -ray.direction; // notation is different from pbrt's
-        // seperate component test
-        {
-            // DotProducts dp;
-            // mat3 tbn = ConstructTBN(state.N);
-            // vec3 V = WorldToLocal(-ray.direction, tbn); 
-            // vec3 L = SampleCosineHemisphere();
-            // vec3 H = normalize(L + V);
-            // SetDotProducts(L, V, H, Y, dp);
-            // float pdf = 0.0;
-            // vec3 f = eval_diffuse(state, dp, V, L, H, pdf);
-            // vec3 wi = LocalToWorld(L, tbn);
-            // if (pdf > 0.0) {
-            //     beta *= f * abs(dp.LdotN) / pdf;
-            // } else {
-            //     break;
-            // }
-
-            // ray.direction = normalize(wi);
-            // ray.origin = state.pos + EPS * wi;
-            // continue;
+        // vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf);
+        vec3 Lworld;
+        float pdf;
+        vec3 f = Sample(state, -ray.direction, Lworld, pdf);
+        if (pdf > 0.0) {
+            beta *= f / pdf;
+        } else {
+            break;
         }
+        ray.direction = Lworld;
+        ray.origin = state.pos + EPS * Lworld;
 
-        {
-            // vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf);
-            vec3 Lworld;
-            float pdf;
-            vec3 f = Sample(state, -ray.direction, Lworld, pdf);
-            if (pdf > 0.0) {
-                beta *= f / pdf;
-            } else {
-                break;
-            }
-            ray.direction = Lworld;
-            ray.origin = state.pos + EPS * Lworld;
+        if (u_Frame == 1 && depth == 1) {
+            break;
         }
-
     }
 
     return L;

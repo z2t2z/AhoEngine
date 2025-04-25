@@ -24,7 +24,8 @@ float D_GGX(vec3 H, float ax, float ay) {
     float a = H.x / ax;
     float b = H.z / ay;
     float denominator = Sqr(a) + Sqr(b) + Sqr(H.y);
-    return 1.0 / (PI * ax * ay * Sqr(denominator));
+    float res = 1.0 / (PI * ax * ay * Sqr(denominator));
+    return res > 1e-20 ? res : 0.0;
 }
 float Lambda(vec3 V, float ax, float ay) {
     float Tmp = sqrt(1.0 + (Sqr(ax * V.x) + Sqr(ay * V.z)) / Sqr(V.y));

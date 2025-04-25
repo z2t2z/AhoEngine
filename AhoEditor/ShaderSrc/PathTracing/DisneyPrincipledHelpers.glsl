@@ -74,10 +74,6 @@ vec3 eval_diffuse(const State state, const DotProducts dp, const vec3 V, const v
 // cos_theta_i: cosine of the angle between the incoming light direction and the normal
 // R0: reflectance at normal incidence (F0)
 // eta: refractive index (eta = n1/n2)
-// float calc_schlick(float R0, float cos_theta_i, float eta) {
-//     float w = SchlickWeight(abs(cos_theta_i));
-//     return mix(w, 1.0, R0);
-// }
 float schlick_weight(float cos_i) {
     float m = clamp(1.0 - cos_i, 0.0, 1.0);
     float m2 = m * m;
@@ -85,18 +81,7 @@ float schlick_weight(float cos_i) {
     return m2 * m2 * m;
 }
 vec3 calc_schlick(vec3 R0, float cos_theta_i, float eta) {
-    bool outside = cos_theta_i >= 0.0;
-    float rcpEta = 1.0 / eta;
-    float eta_it = outside ? eta    : rcpEta;
-    float eta_ti = outside ? rcpEta : eta;
-
-    float cosT2 = 1.0 - (1.0 - cos_theta_i * cos_theta_i) * (eta_ti * eta_ti);
-    float cosT = sqrt(max(cosT2, 0.0));
-
-    float w = (eta_it > 1.0)
-              ? schlick_weight(abs(cos_theta_i))
-              : schlick_weight(cosT);
-
+    float w = schlick_weight(cos_theta_i);
     // return mix(vec3(w), vec3(1.0), R0);
     return mix(R0, vec3(1.0), vec3(w)); 
 }
@@ -105,24 +90,19 @@ float schlick_R0_eta(float eta) {
     return v * v;
 }
 vec3 principled_fresnel(vec3 baseColor, float lum, float bsdf, float cos_theta_i, float eta, float metallic, float specTint, float F_dielectric, bool front_side) {
-    bool outside = cos_theta_i >= 0.0;
-    float rcp_eta = 1.0 / eta;
-    float eta_it = outside ? eta : rcp_eta;
     vec3 F_schlick = vec3(0.0);
-    
     // Metallic component based on Schlick
     F_schlick += metallic * calc_schlick(baseColor, cos_theta_i, eta);
 
     // Tinted dielectric component based on Schlick.
     if (specTint > 0.0) {
         vec3 c_tint = lum > 0.0 ? baseColor / lum : vec3(1.0);
-        vec3 F0_spec_tint = c_tint * schlick_R0_eta(eta_it);
+        vec3 F0_spec_tint = c_tint * schlick_R0_eta(eta);
         F_schlick += (1.0 - metallic) * specTint * calc_schlick(F0_spec_tint, cos_theta_i, eta);
     }
 
-    vec3 F_front = (1.0 - metallic) * vec3(1.0 - specTint) * F_dielectric + F_schlick;
+    vec3 F_front = (1.0 - metallic) * (1.0 - specTint) * F_dielectric + F_schlick;
     return front_side ? F_front : vec3(bsdf * F_dielectric);
 }
-
 
 #endif

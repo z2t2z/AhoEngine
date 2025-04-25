@@ -14,7 +14,7 @@
 #include "Disney.glsl"
 #include "DisneyPrincipledHelpers.glsl"
 
-vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out float pdf);
+vec3 principled_eval(inout State state, const vec3 V, const vec3 L, out float pdf);
 
 vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     if (state.cosTheta == 0.0) {
@@ -24,11 +24,8 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
 
     Material mat = state.material;
     bool front_side = state.cosTheta > 0.0;
-    vec3 Nworld = front_side ? state.N : -state.N; // Ensure N is always in the same hemisphere as V so that we can calculate the correct L direction
-    state.eta = mat.ior;
-
-    float rpc_eta = 1.0 / state.eta;
-    float eta_path = !front_side ? state.eta : rpc_eta;
+    vec3 Nworld = front_side ? state.N : -state.N;
+    state.eta = front_side ? 1.0 / mat.ior : mat.ior;
 
     // TODO: Not sure about this part
     // Use eta or specular to guide reflect/transmit
@@ -53,10 +50,10 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     vec3 V = normalize(WorldToLocal(Vworld, tbn));
 
     // Defining main specular reflection distribution
-    vec3 H = roughness == 0.0 ? Y : normalize(SampleGGXVNDF(V, mat.ax, mat.ay, rand(), rand()));
+    vec3 H = normalize(SampleGGXVNDF(V, mat.ax, mat.ay, rand(), rand())); // V and H are in the same hemisphere
 
     // Fresnel coefficient for the main specular
-    float F_spec_dielectric = fresnel(abs(dot(V, H)), eta_path);
+    float F_spec_dielectric = fresnel(abs(dot(V, H)), state.eta);
 
     // probability definitions
     float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
@@ -89,18 +86,18 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     } else if (sample1 < prev[1]) {
         L = normalize(reflect(-V, H));
     } else if (sample1 < prev[2]) {
-        L = normalize(refract(-V, H, !front_side ? state.eta : rpc_eta));
+        L = normalize(refract(-V, H, state.eta));
     } else { // clearcoat
         L = normalize(reflect(-V, H));
     }
 
-    vec3 f = principled_eval(state, V, H, L, pdf);
+    vec3 f = principled_eval(state, V, L, pdf);
     Lworld = LocalToWorld(L, tbn);
 
     return f;
 }
 
-vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out float pdf) {
+vec3 principled_eval(inout State state, const vec3 V, const vec3 L, out float pdf) {
     pdf = 0.0;
 
     Material mat = state.material;
@@ -110,8 +107,9 @@ vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out 
     float clearcoat   = mat.clearcoat;
     
     bool front_side = state.cosTheta > 0.0;
+    state.eta = front_side ? 1.0 / mat.ior : mat.ior;
 
-    bool is_reflect = SameHemisphere(V, L);
+    bool is_reflect = V.y * L.y > 0.0;
     bool is_refract = !is_reflect;
 
     bool has_clearcoat = clearcoat > 0.0;
@@ -121,17 +119,17 @@ vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out 
     float brdf = (1.0 - metallic) * (1.0 - specTrans);
     // Refraction weight
     float bsdf = (1.0 - metallic) * specTrans;
-
-    float rpc_eta = 1.0 / state.eta;
-    float eta_path = !front_side ? state.eta : rpc_eta;
     
-    // H = is_reflect ? normalize(L + V) : normalize(L + V * rpc_eta);
+    vec3 H = is_reflect ? normalize(L + V) : normalize(L + V * state.eta);
+    if (!front_side) {
+        H = -H; // Always pointing outwards of the object
+    }
 
     DotProducts dp;
     SetDotProducts(L, V, H, Y, dp);
 
     // Fresnel coefficient for the main specular
-    float F_spec_dielectric = fresnel(abs(dp.VdotH), eta_path);
+    float F_spec_dielectric = fresnel(abs(dp.VdotH), state.eta);
 
     // probability definitions
     float prob_spec_reflect = front_side ? (1.0 - bsdf * (1.0 - F_spec_dielectric)) : F_spec_dielectric;
@@ -147,12 +145,11 @@ vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out 
     prob_clearcoat *= rcp_tot_prob;
     prob_diffuse *= rcp_tot_prob;
 
-    float G1_V = G1(V, mat.ax, mat.ay);
+    float G1_V = G1(V, mat.ax, mat.ay); // smith_g1
     float G1_L = G1(L, mat.ax, mat.ay);
     float D = D_GGX(H, mat.ax, mat.ay);
     float G = G1_V * G1_L;
-    
-    float ppdf = D * G1_V * abs(dp.VdotH) / abs(dp.VdotN);
+    float microfacet_h_pdf = G1_V * D * abs(dp.VdotH) / abs(dp.VdotN);
 
     float lum = Luminance(mat.baseColor);
 
@@ -160,20 +157,25 @@ vec3 principled_eval(const State state, const vec3 V, vec3 H, const vec3 L, out 
 
     // Reflection
     if (is_reflect && prob_spec_reflect > 0.0) {
-        vec3 F_principled = principled_fresnel(mat.baseColor, lum, bsdf, sign(state.cosTheta) * dp.VdotH, state.eta, metallic, mat.specTint, F_spec_dielectric, front_side);
-        f += F_principled * D * G / (4.0 * abs(dp.VdotN));
-        float dwh_dwo_abs = 1.0 / (4.0 * abs(dp.VdotH));
-        pdf += prob_spec_reflect * ppdf * dwh_dwo_abs;
+        vec3 F_principled = principled_fresnel(mat.baseColor, lum, bsdf, abs(dp.VdotH), state.eta, metallic, mat.specTint, F_spec_dielectric, front_side);
+        f += F_principled * D * G / (4.0 * abs(dp.VdotN) * abs(dp.LdotN)); // ????
+
+        float dwh_dwo_abs = 1.0 / (4.0 * abs(dp.LdotH));
+        // float reflect_pdf = G1_V * D * dwh_dwo_abs;
+        float reflect_pdf = microfacet_h_pdf * dwh_dwo_abs;
+        pdf += prob_spec_reflect * reflect_pdf;
     }
     
     // Transmission
     if (is_refract && prob_spec_trans > 0.0) {
-        float denom = dp.VdotH + eta_path * abs(dp.LdotH);
+        float denom = abs(dp.VdotH) + state.eta * abs(dp.LdotH);
         f += sqrt(mat.baseColor) * bsdf 
-                                * abs((1.0 - F_spec_dielectric) * D * G * eta_path
-                                * eta_path * dp.VdotH * dp.LdotH / (dp.VdotN * denom * denom)); 
-        float dwh_dwo_abs = (Sqr(eta_path) * dp.VdotH) / Sqr(abs(dp.LdotH) + eta_path * dp.VdotH);
-        pdf += prob_spec_trans * ppdf * dwh_dwo_abs;
+                                * abs((1.0 - F_spec_dielectric) * D * G * state.eta
+                                * state.eta * dp.VdotH * dp.LdotH / (dp.VdotN * denom * denom)); 
+        float dwh_dwo_abs = (Sqr(state.eta) * abs(dp.LdotH)) / Sqr(abs(dp.VdotH) + state.eta * abs(dp.LdotH));
+
+        float refract_pdf = microfacet_h_pdf * dwh_dwo_abs;
+        pdf += prob_spec_trans * refract_pdf;
     }
 
     // Diffuse, retro reflection, fake subsurface and sheen

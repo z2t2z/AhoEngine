@@ -23,12 +23,8 @@ vec3 SampleDirectLight(State state, const Ray ray) {
         L = WorldToLocal(L, tbn);
         V = WorldToLocal(V, tbn);
 
-        bool is_reflect = SameHemisphere(L, V);
-        float eta_path = !front_side ? state.eta : 1.0 / state.eta;
-        vec3 H = is_reflect ? normalize(L + V) : normalize(L + V * eta_path);
-
         float pdf = 0.0;
-        vec3 f = principled_eval(state, V, H, L, pdf);
+        vec3 f = principled_eval(state, V, L, pdf);
         if (pdf == 0.0) {
             return vec3(0.0);
         }
