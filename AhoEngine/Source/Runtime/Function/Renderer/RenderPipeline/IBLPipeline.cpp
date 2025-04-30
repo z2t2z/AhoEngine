@@ -122,6 +122,7 @@ namespace Aho {
 	std::unique_ptr<RenderPass> IBLPipeline::SetupPrefilteredPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("PrefilteredPass");
+		static uint32_t prefilteredRes = 512u;
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
@@ -138,8 +139,8 @@ namespace Aho {
 
 				uint32_t maxMipLevel = 5;
 				for (uint32_t i = 0; i < maxMipLevel; i++) {
-					uint32_t width = static_cast<uint32_t>(128 * std::pow(0.5, i));
-					uint32_t height = static_cast<uint32_t>(128 * std::pow(0.5, i));
+					uint32_t width = static_cast<uint32_t>(prefilteredRes * std::pow(0.5, i));
+					uint32_t height = static_cast<uint32_t>(prefilteredRes * std::pow(0.5, i));
 					RenderCommand::SetViewport(width, height);
 
 					// TODO: Could be wrong, did not reset depth component's size
@@ -166,12 +167,12 @@ namespace Aho {
 		pass->SetShader(shader);
 		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent; depth.type = TexType::Depth;
 		TexSpec spec;
-		spec.target = TexTarget::TextureCubemap; spec.width = spec.height = 128;
+		spec.target = TexTarget::TextureCubemap; spec.width = spec.height = prefilteredRes;
 		spec.internalFormat = TexInterFormat::RGB16F; spec.dataFormat = TexDataFormat::RGB; spec.dataType = TexDataType::Float;
 		spec.filterModeMin = TexFilterMode::LinearMipmapLinear;
 		spec.mipLevels = 5;
 		spec.type = TexType::Prefiltering;
-		FBSpec fbSpec(128, 128, { spec, depth });
+		FBSpec fbSpec(prefilteredRes, prefilteredRes, { spec, depth });
 		auto FBO = Framebuffer::Create(fbSpec);
 		pass->SetRenderTarget(FBO);
 		pass->SetRenderPassType(RenderPassType::Prefilter);

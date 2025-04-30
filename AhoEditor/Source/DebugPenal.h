@@ -17,7 +17,7 @@ namespace Aho {
 		LevelLayer* m_LevelLayer{ nullptr };
 		PathTracingPipeline* m_PtPipeline{ nullptr };
 	private:
-		void SunDirControl();
+		bool SunDirControl();
 		void BVHControl();
 		void GetSSBOData();
 	};

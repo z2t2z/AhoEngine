@@ -42,7 +42,7 @@ namespace Aho {
 		}
 		void SetRenderMode(RenderMode mode) { m_CurrentRenderMode = mode; }
 		RenderMode GetRenderMode() { return m_CurrentRenderMode; }
-		void Render();
+		void Render(float deltaTime);
 		RenderPipeline* GetPipeline(RenderPipelineType type);
 		void SetCameraDirty();
 		bool OnViewportResize(uint32_t width, uint32_t height);

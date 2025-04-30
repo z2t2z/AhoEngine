@@ -4,7 +4,7 @@
 #extension GL_ARB_gpu_shader_int64 : enable
 #extension GL_ARB_bindless_texture : enable
 
-// #define SAMPLE_TEXTURE
+#define PATH_TRACING
 #define OPT_SHADOW_TEST
 
 #include "PathTracingCommon.glsl"
@@ -40,7 +40,7 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     } else {
         mat.baseColor = handle.baseColor;
     }
-    // mat.baseColor = pow(mat.baseColor, vec3(2.2));
+    // mat.baseColor = pow(mat.baseColor, vec3(2.2)); // ??????
     
     if (int64_t(handle.normalHandle) != 0) {
         vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
@@ -84,7 +84,7 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     state.material = mat;
 }
 
-#define MAX_PATHTRACE_DEPTH 8
+#define MAX_PATHTRACE_DEPTH 6
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput

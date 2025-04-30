@@ -1,7 +1,7 @@
 #type vertex
 #version 460 core
 
-#include "UniformBufferObjects.glsl"
+#include "Common/UniformBufferObjects.glsl"
 
 out vec3 v_nearP;
 out vec3 v_farP;
@@ -30,7 +30,7 @@ void main() {
 #type fragment
 #version 460 core
 
-#include "UniformBufferObjects.glsl"
+#include "Common/UniformBufferObjects.glsl"
 
 layout(location = 0) out vec4 out_Color;
 

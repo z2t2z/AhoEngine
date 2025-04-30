@@ -16,8 +16,8 @@ void main() {
 out vec4 out_color;
 in vec2 v_TexCoords;
 
-#include "Common.glsl"
-#include "../UniformBufferObjects.glsl"
+#include "AtmosphericCommon.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 float RayleighPhaseFunc(float cosTheta) {
 	return (3.0f / (16.0f * PI)) * (1.0f + cosTheta * cosTheta);

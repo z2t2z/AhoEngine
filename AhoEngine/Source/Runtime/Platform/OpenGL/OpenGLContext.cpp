@@ -21,6 +21,8 @@ namespace Aho {
 
 	void OpenGLContext::Init() {
 		glfwMakeContextCurrent(m_WindowHandle);
+		glfwSwapInterval(1);
+
 		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		AHO_CORE_ASSERT(status, "Failed to initialize Glad!");  
 

@@ -45,7 +45,7 @@ namespace Aho {
 	}
 
 	void RenderLayer::OnUpdate(float deltaTime) {
-		m_Renderer->Render();
+		m_Renderer->Render(deltaTime);
 	}
 
 	void RenderLayer::OnImGuiRender() {

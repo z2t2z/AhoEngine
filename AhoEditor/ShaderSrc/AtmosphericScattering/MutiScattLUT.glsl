@@ -14,7 +14,7 @@ void main() {
 #type fragment
 #version 460 core
 
-#include "Common.glsl"
+#include "AtmosphericCommon.glsl"
 
 out vec4 out_color;
 in vec2 v_TexCoords;

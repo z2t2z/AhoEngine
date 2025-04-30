@@ -3,7 +3,7 @@
 
 #include "DataStructs.glsl"
 #include "Random.glsl"
-#include "../UniformBufferObjects.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 /* 
     TODO: Figure out how UE does this:

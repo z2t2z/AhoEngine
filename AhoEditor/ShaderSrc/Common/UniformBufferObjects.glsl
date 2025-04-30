@@ -16,6 +16,7 @@ layout(std140, binding = 0) uniform CameraUBO {
 const int MAX_LIGHT_CNT = 10;
 layout(std140, binding = 1) uniform LightUBO {
 	PointLight u_PointLight[MAX_LIGHT_CNT];
+	DirectionalLight u_DirLight[MAX_LIGHT_CNT];
 	mat4 u_LightPV[MAX_LIGHT_CNT];
 	vec4 u_LightPosition[MAX_LIGHT_CNT];
 	vec4 u_LightColor[MAX_LIGHT_CNT];

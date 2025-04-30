@@ -133,8 +133,29 @@ namespace Aho {
 			: color(_color) {
 		}
 		PointLightComponent(const PointLightComponent&) = default;
-		
 		static int s_PointLightCnt;
+	};
+
+	struct LightComponent {
+		glm::vec4 color{ 1.0, 1.0, 1.0, 1.0 }; // Intensity at w
+		LightComponent() = default;
+		LightComponent(glm::vec4 _color)
+			: color(_color) {
+		}
+		LightComponent(const LightComponent&) = default;
+	};
+
+	struct SkyComponent {
+		glm::vec3 Color{ 1 };
+		float Intensity{ 1 };
+		glm::vec3 Direction;
+		glm::vec3 DirectionXYZ;
+		SkyComponent() {
+			Direction = glm::vec3(45.0f, 0.0f, 0.0f);
+			float theta = glm::radians(Direction.x), phi = glm::radians(Direction.y);
+			DirectionXYZ = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+		}
+		SkyComponent(const SkyComponent&) = default;
 	};
 
 	struct TextureComponent {

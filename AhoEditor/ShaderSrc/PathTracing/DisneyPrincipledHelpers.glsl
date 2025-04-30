@@ -82,12 +82,12 @@ float schlick_weight(float cos_i) {
 }
 vec3 calc_schlick(vec3 R0, float cos_theta_i, float eta) {
     float w = schlick_weight(cos_theta_i);
-    // return mix(vec3(w), vec3(1.0), R0);
+    // return mix(vec3(w), vec3(1.0), R0); // ???
     return mix(R0, vec3(1.0), vec3(w)); 
 }
-float schlick_R0_eta(float eta) {
+float schlick_R0_eta(float eta) { 
     float v = (eta - 1.0) / (eta + 1.0);
-    return v * v;
+    return v * v; // 0.04 when eta = 1.5
 }
 vec3 principled_fresnel(vec3 baseColor, float lum, float bsdf, float cos_theta_i, float eta, float metallic, float specTint, float F_dielectric, bool front_side) {
     vec3 F_schlick = vec3(0.0);

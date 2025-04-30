@@ -1,6 +1,8 @@
 #ifndef DATA_STRUCTS_GLSL
 #define DATA_STRUCTS_GLSL
 
+#include "../Common/Material.glsl"
+
 struct BBox {
     vec3 pMin;          float _padding0;
     vec3 pMax;          float _padding1;
@@ -66,28 +68,6 @@ HitInfo InitHitInfo() {
 struct TempHitInfo {
     vec2 uv;
     float t;
-};
-
-struct Material {
-    vec3 baseColor;
-    float subsurface;
-
-    float metallic;
-    float specular;
-    float specTint;
-    float roughness;
-
-    float anisotropic;
-    float sheen;
-    float sheenTint;
-    float clearcoat;
-
-    float clearcoatGloss;
-    float specTrans;
-    float ior;
-    float ax;
-
-    float ay;
 };
 
 struct State {

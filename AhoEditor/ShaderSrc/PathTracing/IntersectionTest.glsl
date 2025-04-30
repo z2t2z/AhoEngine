@@ -2,8 +2,8 @@
 #define PT_FUNCTIONS_GLSL
 
 #include "./DataStructs.glsl"
-#include "../UniformBufferObjects.glsl"
 #include "./SSBO.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 
 bool IsLeaf(BVHNode node) {

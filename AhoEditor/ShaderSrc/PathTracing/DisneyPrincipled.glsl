@@ -1,7 +1,7 @@
 #ifndef GLSL_DISNEY_PRINCIPLED_GLSL
 #define GLSL_DISNEY_PRINCIPLED_GLSL
 
-// Reference
+// References
 // https://github.com/mitsuba-renderer/mitsuba3/blob/master/src/bsdfs/principled.cpp#L333
 // https://schuttejoe.github.io/post/disneybsdf/
 
@@ -161,7 +161,6 @@ vec3 principled_eval(inout State state, const vec3 V, const vec3 L, out float pd
         f += F_principled * D * G / (4.0 * abs(dp.VdotN) * abs(dp.LdotN)); // ????
 
         float dwh_dwo_abs = 1.0 / (4.0 * abs(dp.LdotH));
-        // float reflect_pdf = G1_V * D * dwh_dwo_abs;
         float reflect_pdf = microfacet_h_pdf * dwh_dwo_abs;
         pdf += prob_spec_reflect * reflect_pdf;
     }
@@ -185,7 +184,7 @@ vec3 principled_eval(inout State state, const vec3 V, const vec3 L, out float pd
         
         // Diffuse
         float f_diff = (1.0 - 0.5 * Fi) * (1.0 - 0.5 * Fo);
-        float Rr = 2.0 * mat.roughness * dp.LdotH * dp.LdotH;
+        float Rr = 2.0 * roughness * dp.LdotH * dp.LdotH;
 
         // Retro reflection
         float f_retro = Rr * (Fo + Fi + Fo * Fi * (Rr - 1.0f));
@@ -200,7 +199,7 @@ vec3 principled_eval(inout State state, const vec3 V, const vec3 L, out float pd
         // Sheen
         float Fd = SchlickWeight(abs(dp.LdotH));
         vec3 c_tint = lum > 0.0 ? mat.baseColor / lum : vec3(1.0);
-        vec3 c_sheen = mix(vec3(1.0), c_tint, mat.sheenTint.x);
+        vec3 c_sheen = mix(vec3(1.0), c_tint, mat.sheenTint);
 
         f += brdf * mat.sheen * (1.0 - mat.metallic) * Fd * c_sheen;
         pdf += prob_diffuse * CosineHemispherePDF(L);

@@ -48,6 +48,7 @@ namespace Aho {
 		//m_RP_Dbg->SetInput(m_RP_DeferredShading->GetRenderResult());
 	}
 
+
 	using Clock = std::chrono::steady_clock;
 	constexpr double targetFPS = 60.0;
 	constexpr auto frameSecs = std::chrono::duration<double>(1.0 / targetFPS);
@@ -55,13 +56,11 @@ namespace Aho {
 		std::chrono::duration_cast<Clock::duration>(frameSecs);
 
 	static auto s_previous = Clock::now();
-
-	void Renderer::Render() {
+	void Renderer::Render(float deltaTime) {
 		auto frameStart = Clock::now();
 		std::chrono::duration<double> dt = frameStart - s_previous;
 		m_FrameTime = dt.count();
 		s_previous = frameStart;
-		//AHO_CORE_INFO("{}", m_FrameTime); // Not working
 
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
 			m_RP_Sky->Execute();

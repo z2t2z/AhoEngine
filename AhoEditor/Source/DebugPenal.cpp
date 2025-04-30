@@ -8,27 +8,24 @@ namespace Aho {
 	}
 
 	void DebugPenal::Draw() {
-		SunDirControl();
 		BVHControl();
 	}
 
-	void DebugPenal::SunDirControl() {
-		// super strange bug
-		auto& [yaw, pitch] = m_SkyPipeline->GetSunYawPitch();
+	bool DebugPenal::SunDirControl() {
 		auto sundir = m_SkyPipeline->GetSunDir();
 		ImGui::Begin("Temp Sky Control");
-		ImGui::DragFloat("Yaw", &yaw, 0.01f, -3.14f, 3.14f);
-		ImGui::DragFloat("Pitch", &pitch, 0.01f, -3.14f, 3.14f);
 
-		static glm::vec3 sunPosition(0.0, 1.0, 0.0);
-		ImGui::DragFloat3("SunPos", &sunPosition[0], 0.01f);
+		static glm::vec3 sunRotation(45.0f, 0.0f, 0.0f);
+		bool changed = ImGui::DragFloat3("SunRotation", &sunRotation[0], 0.1f);
 
-		glm::vec3 sunDir = glm::vec3(glm::cos(pitch) * glm::sin(yaw), glm::sin(pitch), glm::sin(pitch) * glm::sin(yaw));
-		std::string text = std::to_string(sunDir.x) + " " + std::to_string(sunDir.y) + " " + std::to_string(sunDir.z);
-		ImGui::Text(text.c_str());
-		m_SkyPipeline->SetSunDir(normalize(sunPosition));
-		m_ShadingPipeline->SetSunDir(normalize(sunPosition));
+		float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
+		glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+		//std::string text = std::to_string(sunDir.x) + " " + std::to_string(sunDir.y) + " " + std::to_string(sunDir.z);
+		//ImGui::Text(text.c_str());
+		m_SkyPipeline->SetSunDir(sunDir);
+		m_ShadingPipeline->SetSunDir(sunDir);
 		ImGui::End();
+		return changed;
 	}
 
 	void DebugPenal::BVHControl() {

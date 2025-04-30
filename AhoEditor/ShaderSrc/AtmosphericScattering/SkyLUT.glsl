@@ -14,8 +14,8 @@ void main() {
 #type fragment
 #version 460 core
 
-#include "Common.glsl"
-#include "../UniformBufferObjects.glsl"
+#include "AtmosphericCommon.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 out vec4 out_color;
 in vec2 v_TexCoords;
@@ -308,8 +308,9 @@ void main() {
 
 	vec3 sunDir;
 	{
+		vec3 oriSunDir = u_DirLight[0].direction;
 		vec3 UpVector = worldPos / viewHeight;
-		float sunZenithCosAngle = dot(UpVector, u_SunDir);
+		float sunZenithCosAngle = dot(UpVector, oriSunDir);
 		sunDir = normalize(vec3(sqrt(1.0 - sunZenithCosAngle * sunZenithCosAngle), sunZenithCosAngle, 0.0));
 	}
 

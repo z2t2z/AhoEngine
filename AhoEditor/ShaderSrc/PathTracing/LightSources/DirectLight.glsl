@@ -2,11 +2,8 @@
 #define DIRECT_LIGHT_GLSL
 
 #include "InfiniteLight.glsl"
-#include "../GlobalVars.glsl"
-#include "../DataStructs.glsl"
+#include "../IntersectionTest.glsl"
 #include "../DisneyPrincipled.glsl"
-#include "../Disney.glsl"
-#include "../../UniformBufferObjects.glsl"
 
 vec3 SampleDirectLight(State state, const Ray ray) {
     float EnvPdf = 0.0;

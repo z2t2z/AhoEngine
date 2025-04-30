@@ -57,10 +57,6 @@ namespace Aho {
 
 		glm::vec3 GetSunDir() { return m_SunDir; }
 		void SetSunDir(const glm::vec3& dir) { m_SunDir = dir; }
-		std::pair<float, float>& GetSunYawPitch() { return m_SunYawPitch; }
-
-		void SetSunYawPitch(const std::pair<float, float>& p) { m_SunYawPitch = p; }
-
 		AtmosphereParameters& GetAtmosphereParams() { return m_AtmosParams; }
 
 	private:
@@ -68,8 +64,9 @@ namespace Aho {
 		std::unique_ptr<RenderPass> SetupMutiScattLutPass();
 		std::unique_ptr<RenderPass> SetupSkyViewLutPass();
 
-	private: // uniforms
-		static std::pair<float, float> m_SunYawPitch;
+	private:
+		glm::vec3 m_SunColor{ 1 };
+		float m_SunIntensity{ 1 };
 		glm::vec3 m_SunDir;
 		AtmosphereParameters m_AtmosParams;
 	

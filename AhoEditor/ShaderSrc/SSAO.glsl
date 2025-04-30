@@ -14,7 +14,7 @@ void main() {
 #type fragment
 #version 460 core
 
-#include "UniformBufferObjects.glsl"
+#include "Common/UniformBufferObjects.glsl"
 
 out float out_color;
 in vec2 v_TexCoords;

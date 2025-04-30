@@ -8,7 +8,6 @@
 
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
-	std::pair<float, float> RenderSkyPipeline::m_SunYawPitch{ 0.0, 3.14 * 45.0 / 180.0 };
 
 	RenderSkyPipeline::RenderSkyPipeline() {
 		Initialize();
@@ -17,11 +16,6 @@ namespace Aho {
 	void RenderSkyPipeline::Initialize() {
 		m_Type = RenderPipelineType::RPL_RenderSky;
 		
-		//m_SunYawPitch = std::make_pair(0.0f, 0.45f);
-		float yaw = m_SunYawPitch.first, pitch = m_SunYawPitch.second;
-		m_SunDir = glm::vec3(glm::cos(pitch) * glm::cos(yaw), glm::sin(pitch), glm::cos(pitch) * glm::sin(yaw));
-		AHO_CORE_INFO("{}, {}, {}", m_SunDir.x, m_SunDir.y, m_SunDir.z);
-
 		m_AtmosParams.TopRadius		= 6460.0f;
 		m_AtmosParams.BottomRadius	= 6360.0f;
 
@@ -31,12 +25,6 @@ namespace Aho {
 
 		m_MutiScattLutPass->RegisterTextureBuffer({ m_TransmittanceLutPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
 		m_SkyViewLutPass->RegisterTextureBuffer({ m_TransmittanceLutPass->GetTextureBuffer(TexType::Result), TexType::TransmittanceLUT });
-		{
-			//static std::shared_ptr<Texture2D> translut = Texture2D::Create((g_CurrentPath / "Test" / "transmittancelut.hdr").string());
-			//m_MutiScattLutPass->RegisterTextureBuffer({ translut.get(), TexType::TransmittanceLUT });
-			//m_SkyViewLutPass->RegisterTextureBuffer({ translut.get(), TexType::TransmittanceLUT });
-		}
-
 
 		m_SkyViewLutPass->RegisterTextureBuffer({ m_MutiScattLutPass->GetTextureBuffer(TexType::Result), TexType::MultiScattLUT });
 

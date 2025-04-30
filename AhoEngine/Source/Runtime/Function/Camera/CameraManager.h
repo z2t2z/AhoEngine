@@ -33,9 +33,10 @@ namespace Aho {
         std::shared_ptr<Camera> GetMainEditorCamera() { AHO_CORE_ASSERT(!m_Cameras.empty()); return m_Cameras[0]; }
         float& GetSensitivity() { return m_Sensitivity; }
         float& GetSpeed() { return m_Speed; }
+        bool IsDirty() const { return m_Dirty; }
     private:
         void ApplyMomentum(float& oldValue, float& newValue, float deltaTime);
-    
+        bool m_Dirty{ true };
     private:
         float m_LastYaw{ 0.0f };
         float m_LastForward{ 0.0f };

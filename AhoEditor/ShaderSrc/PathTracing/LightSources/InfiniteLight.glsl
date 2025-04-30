@@ -4,7 +4,6 @@
 #define OPT_IMAGE_LIGHT
 
 #include "../Math.glsl"
-#include "../IntersectionTest.glsl"
 
 struct EnvironmentMap {
     sampler2D EnvLight;

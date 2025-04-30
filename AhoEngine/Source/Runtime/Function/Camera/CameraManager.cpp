@@ -7,6 +7,7 @@ namespace Aho {
         auto [mouseX, mouseY] = Input::GetMousePosition();
         // Do nothing if first click because last mouse position is trash data
         if (firstClick) {
+            m_LastRight = m_LastForward = 0.0f;
             std::swap(mouseX, m_LastMouseX);
             std::swap(mouseY, m_LastMouseY);
             return false;
@@ -23,6 +24,7 @@ namespace Aho {
             float yawDelta = delta.x * cam->GetRotationSpeed();
 
             if (std::max(abs(pitchDelta), abs(yawDelta)) > 0.22f) {
+                m_Dirty = false;
                 return false;
             }
 
@@ -46,6 +48,7 @@ namespace Aho {
         cam->MoveForward(forward);
         cam->MoveRight(right);
 
+        m_Dirty = true;
         return true;
 	}
 

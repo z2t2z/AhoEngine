@@ -5,8 +5,9 @@ layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoords;
 
 out vec2 v_TexCoords;
+out float v_Intensity;
 
-#include "./UniformBufferObjects.glsl"
+#include "Common/UniformBufferObjects.glsl"
 
 const mat4 RotateMatrix0 = mat4(1.0f);
 const mat4 RotateMatrix2 = mat4(
@@ -47,6 +48,7 @@ mat4 ConstructModelMatrix(PointLight light) {
 
 void main() {
 	PointLight light = u_PointLight[0];
+	v_Intensity = 0.0;
 	mat4 model = ConstructModelMatrix(light);
 	gl_Position = u_Projection * u_View * model * vec4(a_Position, 1.0f);
 	v_TexCoords = a_TexCoords;
@@ -57,7 +59,8 @@ void main() {
 layout(location = 0) out vec4 out_Color;
 
 in vec2 v_TexCoords;
+in float v_Intensity;
 
 void main() {
-	out_Color = vec4(1.0, 1.0, 1.0, 1.0); // Yellow
+	out_Color = vec4(1.0, 1.0, 1.0, v_Intensity > 0 ? 1.0 : 0.0); 
 }

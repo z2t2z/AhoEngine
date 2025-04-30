@@ -41,6 +41,12 @@ namespace Aho {
 		m_CurrentLevel = std::make_shared<Level>();
 		m_Levels.push_back(m_CurrentLevel);
 
+		// Adding sky by default
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+		auto skyEntity = entityManager->CreateEntity("Sky");
+		entityManager->AddComponent<SkyComponent>(skyEntity);
+		entityManager->AddComponent<RootComponent>(skyEntity);
+
 		//JPH::RegisterTypes();
 		//JPH::Factory::sInstance = new JPH::Factory();
 		//JPH::RegisterDefaultAllocator();
@@ -201,7 +207,7 @@ namespace Aho {
 	// TODO: Maybe put this inside render layer
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		{
+		if (m_CameraManager->IsDirty()) {
 			CameraUBO camUBO;
 			camUBO.u_View = cam->GetView();
 			camUBO.u_Projection = cam->GetProjection();
@@ -214,25 +220,40 @@ namespace Aho {
 
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
-			LightUBO lightUBO;
-			auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
-			view.each(
-				[&](auto entity, auto& pc, auto& tc) {
-					int index = pc.index;
-					if (pc.castShadow) {
-						float nearPlane = 0.1f, farPlane = 100.0f;
-						glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-						auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
-						lightUBO.u_LightPV[index] = lightMat;
-						tc.GetTranslation().y = 20.0f;
-					}
-					lightUBO.u_PointLight[index] = PointLight(glm::vec4(glm::vec3(tc.GetTranslation()), 10.0f), glm::vec4(pc.color.x, pc.color.y, pc.color.z, 10.0));
+			//LightUBO lightUBO;
+			//auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
+			//view.each(
+			//	[&](auto entity, auto& pc, auto& tc) {
+			//		int index = pc.index;
+			//		if (pc.castShadow) {
+			//			float nearPlane = 0.1f, farPlane = 100.0f;
+			//			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+			//			auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
+			//			lightUBO.u_LightPV[index] = lightMat;
+			//			tc.GetTranslation().y = 20.0f;
+			//		}
+			//		lightUBO.u_PointLight[index] = PointLight(glm::vec4(glm::vec3(tc.GetTranslation()), 10.0f), glm::vec4(pc.color.x, pc.color.y, pc.color.z, 10.0));
 
-					lightUBO.u_Info[index].x = 1; // Flag: enabled or not
-					lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
-					lightUBO.u_LightColor[index] = pc.color;
+			//		lightUBO.u_Info[index].x = 1; // Flag: enabled or not
+			//		lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
+			//		lightUBO.u_LightColor[index] = pc.color;
+			//	});
+			LightUBO* light = new LightUBO();
+			auto view = entityManager->GetView<SkyComponent>();
+			view.each(
+				[&](auto entity, auto& sky) {
+					float nearPlane = 0.1f, farPlane = 100.0f;
+					glm::mat4 proj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
+					static constexpr float s_sceneRadius = 10.0f;
+					auto dir = sky.DirectionXYZ;
+					auto lightMat = proj * glm::lookAt(dir * s_sceneRadius, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+					auto col = sky.Color;
+					float intensity = sky.Intensity;
+					light->u_DirLight[0] = DirectionalLight(lightMat, dir, col, intensity);
 				});
-			UBOManager::UpdateUBOData<LightUBO>(1, lightUBO);
+
+			UBOManager::UpdateUBOData<LightUBO>(1, *light);
+			delete light;
 		}
 
 		{

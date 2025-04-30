@@ -1,16 +1,17 @@
 #ifndef LIGHT_STRUCT_GLSL
 #define LIGHT_STRUCT_GLSL
 
-// Note: should be aligned with C++ code
-
 struct PointLight {
 	vec4 position; // world space, radius in w
 	vec4 color;    // RGB, intensity in W
 };
 
 struct DirectionalLight {
-	vec4 direction; // world space
-	vec4 color;     // RGB, intensity in w
+	vec3 direction; // world space
+	float _padding;
+	vec3 color;     
+	float intensity;
+	mat4 lightProjView; // light projection view matrix
 };
 
 struct SpotLight {

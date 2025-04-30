@@ -20,6 +20,7 @@ namespace Aho {
 		m_Renderer = renderer;
 	}
 	
+	// TODO: Need reflction
 	void PropertiesPanel::Draw(const Entity& selectedEntity) {
 		ImGui::Begin(ICON_FA_GEAR " Properties Panel");
 		if (!selectedEntity.Valid()) {
@@ -77,6 +78,21 @@ namespace Aho {
 				ImGui::ColorPicker3("Color Picker", glm::value_ptr(pc.color));
 			}
 		}
+
+		if (entityManager->HasComponent<SkyComponent>(selectedEntity)) {
+			auto& sky = entityManager->GetComponent<SkyComponent>(selectedEntity);
+
+			bool changed = ImGui::DragFloat3("SunRotation", &sky.Direction[0], 0.1f);
+			float theta = glm::radians(sky.Direction.x), phi = glm::radians(sky.Direction.y);
+			sky.DirectionXYZ = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+
+			ImGui::DragFloat("Intensity", &sky.Intensity, 0.1f);
+			//if (changed) {
+			//	m_SkyPipeline->SetSunDir(sunDir);
+			//	m_ShadingPipeline->SetSunDir(sunDir);
+			//}
+		}
+
 
 		if (entityManager->HasComponent<EnvComponent>(selectedEntity)) {
 			auto& pc = entityManager->GetComponent<EnvComponent>(selectedEntity);

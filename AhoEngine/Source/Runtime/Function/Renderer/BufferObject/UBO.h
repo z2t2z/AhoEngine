@@ -56,8 +56,20 @@ namespace Aho {
 		PointLight() = default;
 		PointLight(const glm::vec4& pos, const glm::vec4& col) : position(pos), color(col) {}
 	};
+	struct alignas(16) DirectionalLight {
+		glm::vec3 direction; // world space, radius in w
+		float _padding;
+		glm::vec3 color{ 1 };    // RGB, intensity in w
+		float intensity{ 0.0 };
+		glm::mat4 lightProjView{ 1 };
+		DirectionalLight() = default;
+		DirectionalLight(const glm::mat4& mat, const glm::vec3& dir, const glm::vec3& col = glm::vec3(1.0), float intensity = 1.0) 
+			: lightProjView(mat), direction(dir), color(col), intensity(intensity) {}
+	};
+
 	struct alignas(16) LightUBO {
 		PointLight u_PointLight[MAX_LIGHT_CNT];
+		DirectionalLight u_DirLight[MAX_LIGHT_CNT];
 		glm::mat4 u_LightPV[MAX_LIGHT_CNT];
 		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
 		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
