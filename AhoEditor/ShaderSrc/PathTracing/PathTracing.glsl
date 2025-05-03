@@ -84,7 +84,7 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     state.material = mat;
 }
 
-#define MAX_PATHTRACE_DEPTH 6
+#define MAX_PATHTRACE_DEPTH 4
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput

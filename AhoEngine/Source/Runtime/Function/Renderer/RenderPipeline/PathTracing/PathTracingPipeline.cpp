@@ -18,8 +18,8 @@ namespace Aho {
 
 	void PathTracingPipeline::Initialize() {
 		// TODO: Move these and check them in bvh
-		constexpr int64_t MAX_MESH		= 1'280;
-		constexpr int64_t MAX_TLAS_NODE = 1'280;
+		constexpr int64_t MAX_MESH		= 128'000;
+		constexpr int64_t MAX_TLAS_NODE = 128'000;
 		constexpr int64_t MAX_BLAS_NODE = 1'280'000;
 		constexpr int64_t MAX_PRIMITIVE = 1'280'000;
 

@@ -105,20 +105,23 @@ const float camFarPlane = 1000.0;
 const float camNearPlane = 0.01;
 float ComputeLinearDepth(vec3 worldPos) {
     vec4 clip_space_pos = u_Projection * u_View * vec4(worldPos.xyz, 1.0);
-    float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
-    float linearDepth = (2.0 * camNearPlane * camFarPlane) / (camFarPlane + camNearPlane - clip_space_depth * (camFarPlane - camNearPlane)); // get linear value between 0.01 and 1000
-    return linearDepth / camFarPlane; // normalize
+	return clip_space_pos.w;
+    // float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
+    // float linearDepth = (2.0 * camNearPlane * camFarPlane) / (camFarPlane + camNearPlane - clip_space_depth * (camFarPlane - camNearPlane)); // get linear value between 0.01 and 1000
+    // return linearDepth / camFarPlane; // normalize
 }
 vec4 GridColor(vec3 worldPos, float t) {
     float fromOrigin = max(0.001, abs(u_ViewPosition.y));// / camFarPlane; // [0, 1]
     vec4 s = genGrid(worldPos, 1.0) * mix(1.0, 0.0, min(1.0, fromOrigin / 100));
+	s.a = 0.0;
     vec4 m = genGrid(worldPos, 0.1) * mix(1.0, 0.0, min(1.0, fromOrigin / 200));
     vec4 l = genGrid(worldPos, 0.01) * mix(1.0, 0.0, min(1.0, fromOrigin / 300));
     vec4 GridColor = (s + m + l) * float(t > 0);
 	// vec4 GridColor = (Grid(worldPos, 10, true) + Grid(worldPos, 1, true))* float(t > 0); 
 
 	float linearDepth = ComputeLinearDepth(worldPos);
-	float fading = max(0, (1 - linearDepth));
+	float r = max(0.0, 1 - linearDepth / 800);
+	float fading = r * r * r;
 	GridColor.a *= fading;
 	return GridColor;
 }

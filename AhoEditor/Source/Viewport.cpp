@@ -12,16 +12,6 @@ namespace Aho {
 
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
 
-	enum class ButtonType {
-		None = 0,
-		Selection,
-		Scale,
-		Translation,
-		Rotation
-	};
-
-	static ButtonType g_SelectedButton = ButtonType::None;
-
 	static const float g_ToolBarIconSize = 22.0f;
 
 	Viewport::Viewport() {
@@ -37,10 +27,10 @@ namespace Aho {
 		auto path = fs::current_path();
 		m_LightIcon = Texture2D::Create((path / "Asset" / "light-bulb.png").string());
 		m_AddIcon = Texture2D::Create((path / "Asset" / "plusicon.png").string());
-		m_CursorIcon = Texture2D::Create((path / "Asset" / "Icons" / "cursor.png").string());
-		m_TranslationIcon = Texture2D::Create((path / "Asset" / "Icons" / "translation.png").string());
-		m_RotationIcon = Texture2D::Create((path / "Asset" / "Icons" / "rotate.png").string());
-		m_ScaleIcon = Texture2D::Create((path / "Asset" / "Icons" / "scale.png").string());
+		//m_CursorIcon = Texture2D::Create((path / "Asset" / "Icons" / "cursor.png").string());
+		//m_TranslationIcon = Texture2D::Create((path / "Asset" / "Icons" / "translation.png").string());
+		//m_RotationIcon = Texture2D::Create((path / "Asset" / "Icons" / "rotate.png").string());
+		//m_ScaleIcon = Texture2D::Create((path / "Asset" / "Icons" / "scale.png").string());
 	}
 	
 	void Viewport::Draw() {
@@ -105,7 +95,6 @@ namespace Aho {
 
 	void Viewport::DrawToolBarAddObjectBtn() {
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
-		//ImGui::SetNextWindowSize(ImVec2{0.0f, 0.0f});
 		ImGui::Begin("Overlay", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
 		ImGui::PopStyleVar();
 
@@ -263,58 +252,83 @@ namespace Aho {
 	}
 
 	void Viewport::DrawManipulationToolBar() {
+		static float windowPadding[2] = { 11.5f, 3.31 };
+		static float windowBorderSize = 0.1f;
+		static float windowRounding = 20.0f;
+		static float windowMinSize[2] = {0.0, 0.0};
+		static float btnSize[2] = { 25.0f, 25.0f };
+		static float btn0Align[2] = { 2, 0 };
+		static float frameRounding = 3.0f;
+		auto _Debug = [&]() -> void {
+			ImGui::Begin("_Debug");
+			ImGui::DragFloat2("_padding", &windowPadding[0], 0.01, 0.0);
+			ImGui::DragFloat("_border size", &windowBorderSize, 0.01, 0.0);
+			ImGui::DragFloat("_rounding", &windowRounding, 0.01, 0.0);
+			ImGui::DragFloat2("_minSize", &windowMinSize[0], 0.01, 0.0);
+			ImGui::DragFloat2("_btnSize", &btnSize[0], 0.01, 0.0);
+			ImGui::DragFloat("_frameRounding", &frameRounding, 0.01, 0.0);
+
+			ImGui::DragFloat2("_btn0Align", &btn0Align[0], 0.01, 0.0);
+
+			ImGui::End();
+		};
+		//_Debug();
+
+		static ImVec4 activeBtnColor = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+
+		struct UI_Button {
+			UI_Button(const std::string& name, bool active, ImGuizmo::OPERATION oper)
+				: name(name), active(active), oper(oper) { }
+			std::string name;
+			bool active;
+			ImGuizmo::OPERATION oper;
+		};
+		static std::vector<UI_Button> uiBtns = { 
+			UI_Button(ICON_FA_ARROW_POINTER, true, ImGuizmo::OPERATION::NONE),
+			UI_Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, ImGuizmo::OPERATION::TRANSLATE),
+			UI_Button(ICON_FA_ROTATE, false, ImGuizmo::OPERATION::ROTATE),
+			UI_Button(ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, false, ImGuizmo::OPERATION::SCALE),
+		};
+		static size_t activeBtnIdx = 0;
+
 		// Draws a translucent tool bar
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.f, 0.f));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.5f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(windowPadding[0], windowPadding[1]));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, windowBorderSize);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, windowRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(windowMinSize[0], windowMinSize[1]));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 20.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0.f, 0.f));
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f, 0.5f, 0.5f, 0.2f));
-		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse/* | ImGuiWindowFlags_NoMove*/);
+
+		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
+
 		ImGuiStyle& style = ImGui::GetStyle();
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		if (ImGui::ImageButton("selectionMode", (ImTextureID)m_CursorIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
-			ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Selection ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
-			g_SelectedButton = ButtonType::Selection;
-			g_Operation = ImGuizmo::OPERATION::NONE;
-			m_ShouldPickObject = false;
-			s_IsClickingEventBlocked = true;
-		}
-		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
 		auto& io = ImGui::GetIO();
 		ImGui::PushFont(io.Fonts->Fonts[2]);
-		if (ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
-			g_SelectedButton = ButtonType::Translation;
-			g_Operation = ImGuizmo::OPERATION::TRANSLATE;
-			m_ShouldPickObject = false;
-			s_IsClickingEventBlocked = true;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(btn0Align[0], btn0Align[1]));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, frameRounding);
+
+		for (size_t i = 0; i < uiBtns.size(); i++) {
+			auto& btn = uiBtns[i];
+			activeBtnColor.w = (activeBtnIdx == i) ? 1.0f : 0.0f;
+			ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
+			ImGui::SameLine();
+			if (ImGui::Button(btn.name.c_str(), ImVec2{btnSize[0], btnSize[1]})) {
+				if (activeBtnIdx != i) {
+					activeBtnIdx = i;
+				}
+				g_Operation = btn.oper;
+				m_ShouldPickObject = false;
+				s_IsClickingEventBlocked = true;
+			}
+			ImGui::PopStyleColor();
 		}
+
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
 		ImGui::PopFont();
-		//if (ImGui::ImageButton("translationMode", (ImTextureID)m_TranslationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize },
-		//	ImVec2(0, 0), ImVec2(1, 1),
-		//	g_SelectedButton == ButtonType::Translation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
-		//	g_SelectedButton = ButtonType::Translation;
-		//	g_Operation = ImGuizmo::OPERATION::TRANSLATE;
-		//	m_ShouldPickObject = false;
-		//	s_IsClickingEventBlocked = true;
-		//}
-		ImGui::SameLine();
-		if (ImGui::ImageButton("rotationMode", (ImTextureID)m_RotationIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Rotation ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
-			g_SelectedButton = ButtonType::Rotation;
-			g_Operation = ImGuizmo::OPERATION::ROTATE;
-			m_ShouldPickObject = false;
-			s_IsClickingEventBlocked = true;
-		}
-		ImGui::SameLine();
-		if (ImGui::ImageButton("scaleMode", (ImTextureID)m_ScaleIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize ,g_ToolBarIconSize }, ImVec2(0, 0), ImVec2(1, 1),
-			g_SelectedButton == ButtonType::Scale ? ImVec4{ 0.529f, 0.808f, 0.922f, 0.8f } : ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f })) {
-			g_SelectedButton = ButtonType::Scale;
-			g_Operation = ImGuizmo::OPERATION::SCALE;
-			m_ShouldPickObject = false;
-			s_IsClickingEventBlocked = true;
-		}
+
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(4);
 		ImGui::End();

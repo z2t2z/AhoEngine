@@ -220,24 +220,6 @@ namespace Aho {
 
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
-			//LightUBO lightUBO;
-			//auto view = entityManager->GetView<PointLightComponent, TransformComponent>();
-			//view.each(
-			//	[&](auto entity, auto& pc, auto& tc) {
-			//		int index = pc.index;
-			//		if (pc.castShadow) {
-			//			float nearPlane = 0.1f, farPlane = 100.0f;
-			//			glm::mat4 proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-			//			auto lightMat = proj * glm::lookAt(glm::vec3(tc.GetTranslation()), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Only support one light that can cast shadow now
-			//			lightUBO.u_LightPV[index] = lightMat;
-			//			tc.GetTranslation().y = 20.0f;
-			//		}
-			//		lightUBO.u_PointLight[index] = PointLight(glm::vec4(glm::vec3(tc.GetTranslation()), 10.0f), glm::vec4(pc.color.x, pc.color.y, pc.color.z, 10.0));
-
-			//		lightUBO.u_Info[index].x = 1; // Flag: enabled or not
-			//		lightUBO.u_LightPosition[index] = glm::vec4(tc.GetTranslation(), 1.0f);
-			//		lightUBO.u_LightColor[index] = pc.color;
-			//	});
 			LightUBO* light = new LightUBO();
 			auto view = entityManager->GetView<SkyComponent>();
 			view.each(

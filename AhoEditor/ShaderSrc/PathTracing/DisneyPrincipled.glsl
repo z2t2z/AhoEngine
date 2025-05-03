@@ -82,7 +82,6 @@ vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf) {
     // TODO: use remap to reduce extra rand
     if (sample1 < prev[0]) {
         L = SampleCosineHemisphere();
-        H = normalize(L + V);
     } else if (sample1 < prev[1]) {
         L = normalize(reflect(-V, H));
     } else if (sample1 < prev[2]) {

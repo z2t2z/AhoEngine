@@ -35,11 +35,7 @@ namespace Aho {
 		int m_MouseX, m_MouseY;
 	private:
 		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_CursorIcon{ nullptr };
 		std::shared_ptr<Texture2D> m_AddIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_TranslationIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_RotationIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_ScaleIcon{ nullptr };
 	private:
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Camera> m_EditorCamera;

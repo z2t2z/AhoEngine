@@ -89,6 +89,7 @@ State InitState() {
     return state;
 }
 
+// TODO: No need
 struct DotProducts {
     float LdotH;
     float LdotN;
