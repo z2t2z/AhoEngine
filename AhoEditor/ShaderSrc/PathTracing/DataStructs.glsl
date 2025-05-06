@@ -72,7 +72,6 @@ struct TempHitInfo {
 
 struct State {
     float cosTheta;
-    float pdf;
     float eta;
     vec3 N;
     vec3 pos;
@@ -81,7 +80,6 @@ struct State {
 
 State InitState() {
     State state;
-    state.pdf = 1.0;
     state.eta = 1.5;
     state.cosTheta = 1.0;
     state.N = vec3(0.0, 1.0, 0.0);
@@ -115,6 +113,9 @@ struct TextureHandles {
 
     vec3 baseColor;
     float subsurface;
+
+    vec3 emissive;
+    float emissiveScale;
 
     float metallic;
     float specular;

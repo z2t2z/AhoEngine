@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/PathTracing/PathTracingPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/RenderSkyPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/DeferredShadingPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/IBLPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/PostprocessPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/DebugVisualPipeline.h"
+#include "RenderPipeline/RenderPipeline.h"
+#include "RenderPipeline/PathTracing/PathTracingPipeline.h"
+#include "RenderPipeline/RenderSkyPipeline.h"
+#include "RenderPipeline/DeferredShadingPipeline.h"
+#include "RenderPipeline/IBLPipeline.h"
+#include "RenderPipeline/PostprocessPipeline.h"
+#include "RenderPipeline/DebugVisualPipeline.h"
 
 #include <memory>
 #include <typeindex>

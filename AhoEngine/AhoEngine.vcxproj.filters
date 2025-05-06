@@ -1687,6 +1687,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">

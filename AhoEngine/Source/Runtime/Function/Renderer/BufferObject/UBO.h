@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glad/glad.h>
 
 namespace Aho {
@@ -31,6 +32,12 @@ namespace Aho {
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
 
+		//void GetSubData(T& data, size_t offset) {
+		//	glBindBuffer(GL_UNIFORM_BUFFER, m_BufferID);
+		//	glGetBufferSubData(GL_UNIFORM_BUFFER, offset * sizeof(T), data.size() * sizeof(T), data.data());
+
+		//}
+
         uint32_t GetBindingPoint() const { return m_BindingPoint; }
 
     private:
@@ -49,7 +56,7 @@ namespace Aho {
 		glm::vec4 u_ViewPosition{ 0.0f };
 	};
 
-	constexpr int MAX_LIGHT_CNT = 10;
+	constexpr int MAX_LIGHT_CNT = 5;
 	struct alignas(16) PointLight {
 		glm::vec4 position; // world space, radius in w
 		glm::vec4 color;    // RGB, intensity in w
@@ -66,21 +73,27 @@ namespace Aho {
 		DirectionalLight(const glm::mat4& mat, const glm::vec3& dir, const glm::vec3& col = glm::vec3(1.0), float intensity = 1.0) 
 			: lightProjView(mat), direction(dir), color(col), intensity(intensity) {}
 	};
+	struct alignas(16) GPU_AreaLight {
+		glm::vec4 position{ 0.0f };
+		glm::vec4 normal{ 0.0f, 1.0f, 0.0f, 0.0f};
+		glm::mat4 transform{ 1.0f };
+		glm::vec4 color{ 1.0f };
+		glm::vec4 params{ 0.0f };
+		GPU_AreaLight() = default;
+		GPU_AreaLight(const glm::mat4& transform, const glm::vec3& color, float intensity, float width, float height)
+			: transform(transform), color(glm::vec4(color, intensity)), params(glm::vec4(0.0f, width, height, 0.0f)) {
+			position = glm::vec4(glm::vec3(transform[3]), 1.0f);
+			glm::mat3 normalMatrix3x3 = glm::transpose(glm::inverse(glm::mat3(transform)));
+			normal = glm::normalize(glm::vec4(normalMatrix3x3 * glm::vec3(0.0f, 1.0f, 0.0f), 0.0f));
+		}
+	};
 
 	struct alignas(16) LightUBO {
 		PointLight u_PointLight[MAX_LIGHT_CNT];
 		DirectionalLight u_DirLight[MAX_LIGHT_CNT];
-		glm::mat4 u_LightPV[MAX_LIGHT_CNT];
-		glm::vec4 u_LightPosition[MAX_LIGHT_CNT];
-		glm::vec4 u_LightColor[MAX_LIGHT_CNT];
-		glm::ivec4 u_Info[MAX_LIGHT_CNT]; // Enabled status; Light type; ...
-		LightUBO() {
-			for (int i = 0; i < MAX_LIGHT_CNT; i++) {
-				u_LightPosition[i] = u_LightColor[i] = glm::vec4(0.0f);
-				u_LightPosition[i].w = 1.0f;
-				u_Info[i] = glm::ivec4(0);
-			}
-		}
+		GPU_AreaLight u_AreaLight[MAX_LIGHT_CNT];
+		glm::uvec4 u_LightCount{ 0u }; // Point, directional, spot, area
+		LightUBO() = default;
 	};
 
 	constexpr int SAMPLES_CNT = 64;

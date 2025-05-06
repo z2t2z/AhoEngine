@@ -24,4 +24,12 @@ struct SpotLight {
 	float falloff;    // 1.0 / (1.0 + a * d + b * d^2)
 };
 
+struct AreaLight {
+	vec4 position; 	// world space, radius in w
+	vec4 normal; 	// world space 
+	mat4 transform; // local to world space
+	vec4 color;     // RGB, intensity in w
+	vec4 param; 	// shape, param0, param1, param2
+};
+
 #endif

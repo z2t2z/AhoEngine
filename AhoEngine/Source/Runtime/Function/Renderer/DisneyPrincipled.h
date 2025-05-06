@@ -20,6 +20,9 @@ namespace Aho {
 		glm::vec3 baseColor{ 1 };
 		float subsurface{ 0 };
 
+		glm::vec3 emissive{ 0.0 };
+		float emissiveScale{ 0.0f };
+
 		float metallic{ 0.1 };
 		float specular{ 0 };
 		float specTint{ 0 };
@@ -32,7 +35,7 @@ namespace Aho {
 
 		float clearcoatGloss{ 0 };
 		float specTrans{ 0 };
-		float ior{ 0 };
+		float ior{ 1.5 };
 		float alpha_x;
 
 		float alpha_y;
@@ -69,13 +72,23 @@ namespace Aho {
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec3>) {
-				baseColor = v;
+				switch (type) {
+				case TexType::Albedo:
+					baseColor = v;
+					break;
+				case TexType::Emissive:
+					emissive = v;
+					break;
+				}
 				return;
 			}
 			else {
 				switch (type) {
 				case TexType::Subsurface:
 					subsurface = v;
+					break;
+				case TexType::EmissiveScale:
+					emissiveScale = v;
 					break;
 				case TexType::Metallic:
 					metallic = v;

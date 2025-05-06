@@ -250,6 +250,7 @@ bool AnyHit(Ray ray, const float tNearest) {
     return false;
 }
 
+// Return true if there is no occlusion between from and to
 bool VisibilityTest(vec3 from, vec3 to) {
 #ifndef OPT_SHADOW_TEST
     return true;

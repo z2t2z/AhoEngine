@@ -184,6 +184,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />

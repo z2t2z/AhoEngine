@@ -93,6 +93,35 @@ namespace Aho {
 			//}
 		}
 
+		if (entityManager->HasComponent<LightComponent>(selectedEntity)) {
+			auto lightComp = entityManager->GetComponent<LightComponent>(selectedEntity);
+			auto light = lightComp.light;
+
+			switch (light->GetType()) {
+				case LightType::Area: {
+					ImGui::DragFloat("Intensity", &light->GetIntensity(), 0.1f, 0.0f, 1000.0f);
+					break;
+				}
+				case LightType::Point: {
+					AHO_CORE_ASSERT(false); // Should not happen
+					break;
+				}
+				case LightType::Directional: {
+					AHO_CORE_ASSERT(false);
+					break;
+				}
+				case LightType::Spot: {
+					AHO_CORE_ASSERT(false);
+					break;
+				}
+				default: {
+					AHO_CORE_ASSERT(false);
+					break;
+				}
+			}
+									 
+		}
+
 
 		if (entityManager->HasComponent<EnvComponent>(selectedEntity)) {
 			auto& pc = entityManager->GetComponent<EnvComponent>(selectedEntity);
@@ -110,7 +139,6 @@ namespace Aho {
 				}
 			}
 		}
-
 		ImGui::End();
 	}
 
@@ -129,8 +157,10 @@ namespace Aho {
 					ImGui::Image((ImTextureID)value->GetTextureID(), s_ImageSize);
 				}
 				else if constexpr (std::is_same_v<T, glm::vec3>) {
-					if (prop.m_Type == TexType::Albedo) {
-						valueChanged |= ImGui::ColorPicker3("Color Picker", glm::value_ptr(value));
+					if (prop.m_Type != TexType::Normal) {
+						std::string displayName = "ColorPicker";
+						displayName += (prop.m_Type == TexType::Albedo ? "baseColor" : "emissive");
+						valueChanged |= ImGui::ColorPicker3(displayName.c_str(), glm::value_ptr(value));
 					}
 					else {
 						ImGui::Text("Empty");
@@ -140,6 +170,8 @@ namespace Aho {
 					std::string displayname = "##" + TextureHandles::s_Umap.at(prop.m_Type);
 					float lo = prop.m_Type == TexType::ior ? 1.001 : 0.0;
 					float up = prop.m_Type == TexType::ior ? 2.5 : 1.0;
+					lo = prop.m_Type == TexType::EmissiveScale ? 0.0f : lo;
+					up = prop.m_Type == TexType::EmissiveScale ? 1000.0f : up;
 					valueChanged |= ImGui::DragFloat(displayname.c_str(), &value, 0.01f, lo, up);
 				}
 				auto texture = TryGetDragDropTargetTexture();

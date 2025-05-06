@@ -6,6 +6,7 @@
 
 #define PATH_TRACING
 #define OPT_SHADOW_TEST
+#define OPT_INFINITE_LIGHT
 
 #include "PathTracingCommon.glsl"
 #include "GlobalVars.glsl"
@@ -67,7 +68,8 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     } else {
         mat.metallic = handle.metallic;
     }
-
+    mat.emissive = handle.emissive;
+    mat.emissiveScale = handle.emissiveScale;
     mat.subsurface = handle.subsurface;
     mat.specular = handle.specular;
     mat.specTint = handle.specTint;
@@ -84,21 +86,25 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     state.material = mat;
 }
 
-#define MAX_PATHTRACE_DEPTH 4
+#define MAX_PATHTRACE_DEPTH 16
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput
+    float pdf = 1.0;        // pdf of the last sample
     State state = InitState();
     for (int depth = 0; depth < MAX_PATHTRACE_DEPTH; ++depth) {
         HitInfo info = InitHitInfo();
         RayTrace(ray, info);
+
+        // Evaluete infinite light for escaped ray
         if (!info.hit) {
-            vec4 env = SampleInfiniteLight(ray);
-            if (env.w == -1) {
-                L += uniformSky * beta;
+            vec4 Le_pdf = SampleInfiniteLight(ray);
+            vec3 Le = Le_pdf.rgb;
+            if (Le_pdf.a == -1 || depth == 0) {
+                L += beta * Le;
             } else {
-                float misWeight = depth > 0 ? PowerHeuristicPdf(state.pdf, env.w) : 1.0; // Need better understanding of this
-                L += misWeight * beta * env.rgb;
+                float misWeight = PowerHeuristicPdf(pdf, Le_pdf.a); // Need better understanding of this
+                L += misWeight * beta * Le;
             }
             break;
         }
@@ -106,15 +112,29 @@ vec3 PathTrace(Ray ray) {
         PrimitiveDesc p = s_bPrimitives[info.globalPrimtiveId];
         RetrievePrimInfo(state, p, info.uv);
 
+        // Evaluate emission from surface hit by ray
+        if (state.material.emissiveScale > 0.0) {
+            vec3 Le = state.material.emissive * state.material.emissiveScale;
+            if (depth == 0) {
+                L += beta * Le;
+            } else {
+                // float tpdf = 1.0; 
+                // float pdf2 = pdf * pdf;
+                // float tpdf2 = tpdf * tpdf;
+                // float denom = (tpdf2 + pdf2);
+                // L += (tpdf / denom) * beta * Le / tpdf + (pdf / denom) * Le / pdf;
+            }
+        }
+        
         L += beta * SampleDirectLight(state, ray); 
 
         state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
 
-        // vec3 Sample(inout State state, vec3 Vworld, out vec3 Lworld, out float pdf);
         vec3 Lworld;
-        float pdf;
-        vec3 f = Sample(state, -ray.direction, Lworld, pdf);
-        if (pdf > 0.0) {
+        float tpdf;
+        vec3 f = Sample(state, -ray.direction, Lworld, tpdf);
+        if (tpdf > 0.0) {
+            pdf = tpdf;
             beta *= f / pdf;
         } else {
             break;
@@ -122,9 +142,8 @@ vec3 PathTrace(Ray ray) {
         ray.direction = Lworld;
         ray.origin = state.pos + EPS * Lworld;
 
-        if (u_Frame == 1 && depth == 1) {
-            break;
-        }
+        // TODO: Russian roulette
+
     }
 
     return L;

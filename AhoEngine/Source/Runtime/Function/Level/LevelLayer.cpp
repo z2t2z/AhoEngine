@@ -1,5 +1,7 @@
 #include "Ahopch.h"
+
 #include "LevelLayer.h"
+#include "Level.h"
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Core/Timer.h"
 #include "Runtime/Resource/Asset/Animation/Animator.h"
@@ -7,7 +9,6 @@
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Gameplay/IK.h"
 #include "Runtime/Core/BVH.h"
-#include "Level.h"
 #include "Runtime/Function/SkeletonViewer.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
@@ -220,22 +221,56 @@ namespace Aho {
 
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
-			LightUBO* light = new LightUBO();
-			auto view = entityManager->GetView<SkyComponent>();
-			view.each(
-				[&](auto entity, auto& sky) {
-					float nearPlane = 0.1f, farPlane = 100.0f;
-					glm::mat4 proj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
-					static constexpr float s_sceneRadius = 10.0f;
-					auto dir = sky.DirectionXYZ;
-					auto lightMat = proj * glm::lookAt(dir * s_sceneRadius, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-					auto col = sky.Color;
-					float intensity = sky.Intensity;
-					light->u_DirLight[0] = DirectionalLight(lightMat, dir, col, intensity);
-				});
-
-			UBOManager::UpdateUBOData<LightUBO>(1, *light);
-			delete light;
+			LightUBO* lightubo = new LightUBO();
+			{
+				auto view = entityManager->GetView<SkyComponent>();
+				view.each(
+					[&](auto entity, auto& sky) {
+						lightubo->u_LightCount.x += 1;
+						float nearPlane = 0.1f, farPlane = 100.0f;
+						glm::mat4 proj = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, nearPlane, farPlane);
+						static constexpr float s_sceneRadius = 10.0f;
+						auto dir = sky.DirectionXYZ;
+						auto lightMat = proj * glm::lookAt(dir * s_sceneRadius, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+						auto col = sky.Color;
+						float intensity = sky.Intensity;
+						lightubo->u_DirLight[0] = DirectionalLight(lightMat, dir, col, intensity);
+					});
+			}
+			{
+				auto view = entityManager->GetView<LightComponent, TransformComponent>();
+				int areaLightCount = 0;
+				view.each(
+					[&](auto entity, auto& lc, auto& tc) {
+						std::shared_ptr<Light> light = lc.light;
+						switch (light->GetType()) {
+							case LightType::Area: {
+								lightubo->u_LightCount.w += 1;
+								auto area = static_cast<AreaLight*>(light.get()); // Needs better way
+								lightubo->u_AreaLight[areaLightCount++] = GPU_AreaLight(tc.GetTransform(), light->GetColor(), light->GetIntensity(), area->GetWidth(), area->GetHeight());
+								break;
+							}
+							case LightType::Point: {
+								AHO_CORE_ASSERT(false); // Should not happen
+								break;
+							}
+							case LightType::Directional: {
+								AHO_CORE_ASSERT(false);
+								break;
+							}
+							case LightType::Spot: {
+								AHO_CORE_ASSERT(false);
+								break;
+							}
+							default: {
+								AHO_CORE_ASSERT(false);
+								break;
+							}
+						}
+					});
+			}
+			UBOManager::UpdateUBOData<LightUBO>(1, *lightubo);
+			delete lightubo;
 		}
 
 		{
@@ -275,6 +310,152 @@ namespace Aho {
 		}
 	}
 
+	void LevelLayer::AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light) {
+		auto entityManager = m_CurrentLevel->GetEntityManager();
+
+		Entity gameObject = entityManager->CreateEntity(name); // TODO: give it a proper name
+		entityManager->AddComponent<RootComponent>(gameObject);
+		TransformParam* param = new TransformParam();
+		entityManager->AddComponent<TransformComponent>(gameObject, param);
+		if (light) {
+			entityManager->AddComponent<LightComponent>(gameObject, light);
+		}
+		std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		renderDataAll.reserve(asset->size());
+		int index = 0;
+
+		for (const auto& meshInfo : *asset) {
+			std::shared_ptr<VertexArray> vao;
+			vao.reset(VertexArray::Create());
+			vao->Init(meshInfo);
+			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+			renderData->SetVAOs(vao);
+			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
+			entityManager->AddComponent<TransformComponent>(meshEntity, param);
+			entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
+
+			renderData->SetTransformParam(param);
+			std::shared_ptr<Material> mat = std::make_shared<Material>();
+			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
+			renderData->SetEntityID(entityID);
+			renderData->SetMaterial(mat);
+
+			m_MatMaskEnums.emplace_back(MaterialMaskEnum());
+			MaterialMaskEnum& materialMask = m_MatMaskEnums.back();
+			materialMask = MaterialMaskEnum::All;
+
+			TextureHandles handle;
+			// should not be here
+			if (meshInfo->materialInfo.HasMaterial()) {
+				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
+					if (!textureCached.contains(path)) {
+						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+						tex->SetTexType(type);
+						handle.SetHandles(tex->GetTextureHandle(), type);
+						textureCached[path] = tex;
+					}
+					mat->AddMaterialProperties({ textureCached.at(path), type });
+				}
+			}
+
+			// TODO: Ugly code, find a way to iterate these
+			if (!mat->HasProperty(TexType::Albedo)) {
+				mat->AddMaterialProperties({ glm::vec3(1.0f), TexType::Albedo });
+				handle.SetValue(glm::vec3(1.0f), TexType::Albedo);
+			}
+			glm::vec3 color(0.0f);
+			float intensity = 0.0f;
+			if (light) {
+				color = light->GetColor();
+				intensity = light->GetIntensity();
+			}
+			if (!mat->HasProperty(TexType::Emissive)) {
+				mat->AddMaterialProperties({ color, TexType::Emissive });
+				handle.SetValue(color, TexType::Emissive);
+			}
+			if (!mat->HasProperty(TexType::EmissiveScale)) {
+				mat->AddMaterialProperties({ intensity, TexType::EmissiveScale });
+				handle.SetValue(intensity, TexType::EmissiveScale);
+			}
+			if (!mat->HasProperty(TexType::Normal)) {
+				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
+			}
+			if (!mat->HasProperty(TexType::Metallic)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+				handle.SetValue(0.0f, TexType::Metallic);
+			}
+			if (!mat->HasProperty(TexType::Specular)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Specular });
+				handle.SetValue(0.0f, TexType::Specular);
+			}
+			if (!mat->HasProperty(TexType::Roughness)) {
+				mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
+				handle.SetValue(0.5f, TexType::Roughness);
+			}
+			if (!mat->HasProperty(TexType::Subsurface)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
+				handle.SetValue(0.0f, TexType::Subsurface);
+			}
+			if (!mat->HasProperty(TexType::SpecTint)) {
+				mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
+				handle.SetValue(0.0f, TexType::SpecTint);
+			}
+			if (!mat->HasProperty(TexType::Anisotropic)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
+				handle.SetValue(0.0f, TexType::Anisotropic);
+			}
+			if (!mat->HasProperty(TexType::Sheen)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
+				handle.SetValue(0.0f, TexType::Sheen);
+			}
+			if (!mat->HasProperty(TexType::SheenTint)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
+				handle.SetValue(0.0f, TexType::SheenTint);
+			}
+			if (!mat->HasProperty(TexType::Clearcoat)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
+				handle.SetValue(0.0f, TexType::Clearcoat);
+			}
+			if (!mat->HasProperty(TexType::ClearcoatGloss)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
+				handle.SetValue(0.0f, TexType::ClearcoatGloss);
+			}
+			if (!mat->HasProperty(TexType::SpecTrans)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
+				handle.SetValue(0.0f, TexType::SpecTrans);
+			}
+			if (!mat->HasProperty(TexType::ior)) {
+				mat->AddMaterialProperties({ 1.5f, TexType::ior });
+				handle.SetValue(1.5f, TexType::ior);
+			}
+			if (!mat->HasProperty(TexType::AO)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::AO });
+				materialMask ^= MaterialMaskEnum::AOMap;
+			}
+			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
+			m_TextureHandles.push_back(handle);
+			renderDataAll.push_back(renderData);
+			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
+		}
+
+		if (m_BuildBVH || light) {
+			ScopedTimer timer("Build BVH");
+			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
+			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+			for (const auto& info : *asset) {
+				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++);
+				bvhComp.bvhs.push_back(bvhi);
+				tlasBvh.AddBLASPrimtive(bvhi);
+			}
+			tlasBvh.UpdateTLAS();
+			PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
+			ptpl->UpdateSSBO(m_CurrentLevel);
+		}
+
+		UpdatePathTracingTextureHandlesSSBO();
+		UploadRenderDataEventTrigger(renderDataAll);
+	}
 
 	// Needs refactoring
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
@@ -298,6 +479,8 @@ namespace Aho {
 			renderData->SetVAOs(vao);
 			auto meshEntity = entityManager->CreateEntity(asset->GetName() + "_" + std::to_string(index++));
 			entityManager->AddComponent<TransformComponent>(meshEntity, param);
+			entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
+
 			renderData->SetTransformParam(param);
 			std::shared_ptr<Material> mat = std::make_shared<Material>();
 			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
@@ -326,6 +509,14 @@ namespace Aho {
 			if (!mat->HasProperty(TexType::Albedo)) {
 				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
 				handle.SetValue(glm::vec3(0.95), TexType::Albedo);
+			}
+			if (!mat->HasProperty(TexType::Emissive)) {
+				mat->AddMaterialProperties({ glm::vec3(0.0), TexType::Emissive });
+				handle.SetValue(glm::vec3(0.0), TexType::Emissive);
+			}
+			if (!mat->HasProperty(TexType::EmissiveScale)) {
+				mat->AddMaterialProperties({ 0.0f, TexType::EmissiveScale });
+				handle.SetValue(0.0f, TexType::EmissiveScale);
 			}
 			if (!mat->HasProperty(TexType::Normal)) {
 				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });

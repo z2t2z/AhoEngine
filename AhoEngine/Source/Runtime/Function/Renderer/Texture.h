@@ -34,6 +34,9 @@ namespace Aho {
 		
 		// Disney principled
 		Albedo,
+		Emissive,
+		EmissiveScale,
+
 		Subsurface,
 		Metallic,
 		Specular,

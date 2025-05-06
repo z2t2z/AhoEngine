@@ -83,7 +83,7 @@ float schlick_weight(float cos_i) {
 vec3 calc_schlick(vec3 R0, float cos_theta_i, float eta) {
     float w = schlick_weight(cos_theta_i);
     // return mix(vec3(w), vec3(1.0), R0); // ???
-    return mix(R0, vec3(1.0), vec3(w)); 
+    return mix(R0, vec3(1.0), w); 
 }
 float schlick_R0_eta(float eta) { 
     float v = (eta - 1.0) / (eta + 1.0);
@@ -102,7 +102,8 @@ vec3 principled_fresnel(vec3 baseColor, float lum, float bsdf, float cos_theta_i
     }
 
     vec3 F_front = (1.0 - metallic) * (1.0 - specTint) * F_dielectric + F_schlick;
-    return front_side ? F_front : vec3(bsdf * F_dielectric);
+    return F_front;
+    // return front_side ? F_front : vec3(bsdf * F_dielectric); // TODO: Wrong result when high metallic, need to check
 }
 
 #endif

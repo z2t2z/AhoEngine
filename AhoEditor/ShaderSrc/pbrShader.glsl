@@ -113,7 +113,7 @@ float ComputeLinearDepth(vec3 worldPos) {
 vec4 GridColor(vec3 worldPos, float t) {
     float fromOrigin = max(0.001, abs(u_ViewPosition.y));// / camFarPlane; // [0, 1]
     vec4 s = genGrid(worldPos, 1.0) * mix(1.0, 0.0, min(1.0, fromOrigin / 100));
-	s.a = 0.0;
+	// s.a = 0.0;
     vec4 m = genGrid(worldPos, 0.1) * mix(1.0, 0.0, min(1.0, fromOrigin / 200));
     vec4 l = genGrid(worldPos, 0.01) * mix(1.0, 0.0, min(1.0, fromOrigin / 300));
     vec4 GridColor = (s + m + l) * float(t > 0);

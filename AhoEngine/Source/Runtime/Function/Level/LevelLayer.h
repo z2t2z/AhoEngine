@@ -14,6 +14,7 @@ namespace Aho {
 	class Level;
 	class StaticMesh;
 	class SkeletalMesh;
+	class Light;
 	enum MaterialMaskEnum;
 
 	class LevelLayer : public Layer {
@@ -32,6 +33,7 @@ namespace Aho {
 		void UpdatePathTracingTextureHandlesSSBO();
 		bool& GetBuildBvhState() { return m_BuildBVH; }
 		TextureHandles& GetTextureHandles(int meshId) { return m_TextureHandles.at(meshId); }
+		void AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light = nullptr);
 	public:
 		void AddEnvironmentMap(Texture* texture);
 	private:

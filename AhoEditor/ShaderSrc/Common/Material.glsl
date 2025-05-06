@@ -7,6 +7,9 @@
         vec3 baseColor;
         float subsurface;
 
+		vec3 emissive;
+		float emissiveScale;
+
         float metallic;
         float specular;
         float specTint;

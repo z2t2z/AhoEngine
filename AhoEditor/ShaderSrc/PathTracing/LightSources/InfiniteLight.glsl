@@ -123,10 +123,14 @@ vec4 EvalEnvMap(const vec3 dir) {
 }
 
 vec4 SampleInfiniteLight(const Ray ray) {
+#ifdef OPT_INFINITE_LIGHT
     if (u_EnvMap.EnvSize.x == 0 || u_EnvMap.EnvSize.y == 0) {
         return vec4(EnvIntensity * uniformSky, -1.0f);
     }
     return EvalEnvMap(ray.direction);
+#else
+    return vec4(0.0, 0.0, 0.0, 1.0);
+#endif
 }
 
 #endif

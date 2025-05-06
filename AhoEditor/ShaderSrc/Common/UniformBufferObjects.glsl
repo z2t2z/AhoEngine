@@ -13,14 +13,12 @@ layout(std140, binding = 0) uniform CameraUBO {
 };
 
 // TODO: support multiple light types 
-const int MAX_LIGHT_CNT = 10;
+const int MAX_LIGHT_CNT = 5;
 layout(std140, binding = 1) uniform LightUBO {
 	PointLight u_PointLight[MAX_LIGHT_CNT];
 	DirectionalLight u_DirLight[MAX_LIGHT_CNT];
-	mat4 u_LightPV[MAX_LIGHT_CNT];
-	vec4 u_LightPosition[MAX_LIGHT_CNT];
-	vec4 u_LightColor[MAX_LIGHT_CNT];
-	ivec4 u_Info[MAX_LIGHT_CNT]; // Enabled status; Light type; ...
+	AreaLight u_AreaLight[MAX_LIGHT_CNT];
+	uvec4 u_LightCount; // Point, directional, spot, area
 };
 
 // For ssao pass
@@ -36,5 +34,6 @@ const int MAX_BONES_CNT = 200;
 layout(std140, binding = 3) uniform AnimationUBO {
 	mat4 u_BoneMatrices[MAX_BONES_CNT];
 };
+
 
 #endif

@@ -110,8 +110,15 @@ namespace Aho {
 		static bool showFileExplorer = false;
 		if (ImGui::BeginPopup("popup_menu")) {
 			if (ImGui::MenuItem("Point Light")) {
-				std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::PointLight);
+				std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::Point);
 				m_EventManager->PushBack(e);
+			}
+			if (ImGui::MenuItem("Area Light")) {
+				// TODO
+				namespace fs = std::filesystem;
+				auto path = fs::current_path() / "Asset" / "Basic";
+				auto recMesh = AssetCreator::MeshAssetCreater((path / "2x2Square.obj").string());
+				m_LevelLayer->AddStaticMeshToScene(recMesh, "Area Light", std::make_shared<AreaLight>());
 			}
 			if (ImGui::MenuItem("Distant Light")) {
 				// TODO
@@ -267,9 +274,7 @@ namespace Aho {
 			ImGui::DragFloat2("_minSize", &windowMinSize[0], 0.01, 0.0);
 			ImGui::DragFloat2("_btnSize", &btnSize[0], 0.01, 0.0);
 			ImGui::DragFloat("_frameRounding", &frameRounding, 0.01, 0.0);
-
 			ImGui::DragFloat2("_btn0Align", &btn0Align[0], 0.01, 0.0);
-
 			ImGui::End();
 		};
 		//_Debug();
@@ -277,17 +282,17 @@ namespace Aho {
 		static ImVec4 activeBtnColor = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
 
 		struct UI_Button {
-			UI_Button(const std::string& name, bool active, ImGuizmo::OPERATION oper)
-				: name(name), active(active), oper(oper) { }
+			UI_Button(const std::string& name, const ImGuizmo::OPERATION& oper)
+				: name(name), oper(oper) { }
 			std::string name;
-			bool active;
 			ImGuizmo::OPERATION oper;
 		};
-		static std::vector<UI_Button> uiBtns = { 
-			UI_Button(ICON_FA_ARROW_POINTER, true, ImGuizmo::OPERATION::NONE),
-			UI_Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, ImGuizmo::OPERATION::TRANSLATE),
-			UI_Button(ICON_FA_ROTATE, false, ImGuizmo::OPERATION::ROTATE),
-			UI_Button(ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, false, ImGuizmo::OPERATION::SCALE),
+		
+		const static std::vector<UI_Button> uiBtns = { 
+			UI_Button(ICON_FA_ARROW_POINTER, ImGuizmo::OPERATION::NONE),
+			UI_Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ImGuizmo::OPERATION::TRANSLATE),
+			UI_Button(ICON_FA_ROTATE, ImGuizmo::OPERATION::ROTATE),
+			UI_Button(ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER, ImGuizmo::OPERATION::SCALE),
 		};
 		static size_t activeBtnIdx = 0;
 
@@ -315,9 +320,7 @@ namespace Aho {
 			ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
 			ImGui::SameLine();
 			if (ImGui::Button(btn.name.c_str(), ImVec2{btnSize[0], btnSize[1]})) {
-				if (activeBtnIdx != i) {
-					activeBtnIdx = i;
-				}
+				activeBtnIdx = i;
 				g_Operation = btn.oper;
 				m_ShouldPickObject = false;
 				s_IsClickingEventBlocked = true;

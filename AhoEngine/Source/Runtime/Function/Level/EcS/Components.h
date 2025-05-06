@@ -2,12 +2,13 @@
 
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Camera/RuntimeCamera.h"
-#include "Runtime/Resource/Asset/MeshAsset.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
-#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
-#include "Runtime/Resource/Asset/Animation/Animation.h"
 #include "Runtime/Function/SkeletonViewer.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
+#include "Runtime/Function/Renderer/Lights.h"
+#include "Runtime/Resource/Asset/MeshAsset.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
+#include "Runtime/Resource/Asset/Animation/Animation.h"
 #include "Runtime/Core/BVH.h"
 #include <string>
 
@@ -37,6 +38,15 @@ namespace Aho {
 		}
 	};
 
+	struct MeshComponent {
+		std::shared_ptr<RenderData> renderData;
+		MeshComponent() = default;
+		MeshComponent(const MeshComponent&) = default;
+		MeshComponent(const std::shared_ptr<RenderData>& renderData)
+			: renderData(renderData) {
+		}
+	};
+
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
 		TransformComponent(const TransformComponent&) = default;
@@ -54,7 +64,6 @@ namespace Aho {
 
 	struct MaterialComponent {
 		std::shared_ptr<Material> material;
-
 		// For path tracing 
 		int32_t meshId{ -1 };
 		MaterialComponent() = default;
@@ -137,10 +146,10 @@ namespace Aho {
 	};
 
 	struct LightComponent {
-		glm::vec4 color{ 1.0, 1.0, 1.0, 1.0 }; // Intensity at w
+		std::shared_ptr<Light> light;
 		LightComponent() = default;
-		LightComponent(glm::vec4 _color)
-			: color(_color) {
+		LightComponent(const std::shared_ptr<Light>& light)
+			: light(light) {
 		}
 		LightComponent(const LightComponent&) = default;
 	};

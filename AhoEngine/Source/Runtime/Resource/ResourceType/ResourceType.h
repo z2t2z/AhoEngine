@@ -6,14 +6,6 @@
 #include <vector>
 
 namespace Aho {
-	enum class LightType {
-		None = 0,
-		PointLight,
-		DirectionalLight,
-		RecLight,
-		SpotLgiht
-	};
-
 	constexpr int MAX_BONES = 4;
 	struct VertexSkeletal {
 		glm::vec3 position;
