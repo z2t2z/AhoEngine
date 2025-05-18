@@ -81,7 +81,6 @@ namespace Aho {
 		}
 		std::shared_ptr<Event> GetFront() { return m_EventQueue.front(); }
 		void PushBack(std::shared_ptr<Event> e) { m_EventQueue.push_back(e); }
-		int GetQueueSize() { return m_EventQueue.size(); }
 	private:
 		std::deque<std::shared_ptr<Event>> m_EventQueue;
 	};

@@ -15,7 +15,6 @@ namespace Aho {
 	class StaticMesh;
 	class SkeletalMesh;
 	class Light;
-	enum MaterialMaskEnum;
 
 	class LevelLayer : public Layer {
 	public:
@@ -63,6 +62,5 @@ namespace Aho {
 	private:
 		inline static int s_globalSubMeshId{ 0 };
 		std::vector<TextureHandles> m_TextureHandles;
-		std::vector<MaterialMaskEnum> m_MatMaskEnums;
 	};
 } // namespace Aho

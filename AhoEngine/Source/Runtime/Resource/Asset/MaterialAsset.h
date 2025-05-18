@@ -1,16 +1,47 @@
 #pragma once
 
 #include "Asset.h"
-#include "Runtime/Function/Renderer/Material.h"
+
+#include <variant>
+#include <memory>
+#include <glm/glm.hpp>
 
 namespace Aho {
-	//class MaterialAsset : public Asset {
-	//public:
-	//	MaterialAsset(const std::string& filePath, std::shared_ptr<Material> _Material) : Asset(filePath), m_Material(_Material) {}
-	//	std::shared_ptr<Material> GetMaterial() const { return m_Material; }
-	//	void SetMaterial(std::shared_ptr<Material> material) { m_Material = material; }
-	//	void SetMaterial(std::shared_ptr<Material>&& material) { m_Material = std::move(material); }
-	//private:
-	//	std::shared_ptr<Material> m_Material;
-	//};
+    class TextureAsset;
+	enum class TextureUsage;
+
+    class MaterialAsset : public Asset {
+    public:
+		struct MatAssetDescriptor {
+			MatAssetDescriptor() = default;
+			// --- Base Color ---
+			glm::vec3 baseColor = { 1.0f,1.0f,1.0f };
+			std::shared_ptr<TextureAsset> baseColorTex = nullptr;
+
+			std::shared_ptr<TextureAsset> normalTex = nullptr;
+			// --- Metallic (scalar) ---
+			float metallic = 0.0f;
+			std::shared_ptr<TextureAsset> metallicTex = nullptr;
+
+			// --- Roughness (scalar) ---
+			float roughness = 1.0f;
+			std::shared_ptr<TextureAsset> roughnessTex = nullptr;
+
+			// --- Ambient Occlusion (scalar) ---
+			float ao = 0.0f;
+			std::shared_ptr<TextureAsset> aoTex = nullptr;
+
+			// --- Emissive Color ---
+			glm::vec3 emissive = { 0.0f,0.0f,0.0f };
+			std::shared_ptr<TextureAsset> emissiveTex = nullptr;
+		};
+        MaterialAsset() = default;
+		MaterialAsset(const std::string& path, const std::vector<std::pair<TextureUsage, std::string>>& paths);
+        MaterialAsset(const MatAssetDescriptor& desc)
+            : m_Desc(desc) {
+        }
+        const MatAssetDescriptor& GetMatAssetDescriptor() const { return m_Desc; }
+    private:
+        MatAssetDescriptor m_Desc;
+    };
 }

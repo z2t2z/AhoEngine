@@ -2,72 +2,16 @@
 
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/Math/Math.h"
+//#include "Texture.h"
 
-#include "Texture.h"
 #include <memory>
 #include <variant>
 #include <glm/glm.hpp>
 
 namespace Aho {
 	class Shader;
-
-	enum MaterialMaskEnum {
-		Empty		 = 0,
-		AlbedoMap	 = 1 << 0,
-		NormalMap	 = 1 << 1,
-		RoughnessMap = 1 << 2,
-		MetallicMap  = 1 << 3,
-		AOMap		 = 1 << 4,
-		All          = AlbedoMap | NormalMap | RoughnessMap | MetallicMap | AOMap
-	};
-
-	enum BxDFFlags {
-		Unset = 0,
-		Reflection = 1 << 0,
-		Transmission = 1 << 1,
-		Diffuse = 1 << 2,
-		Glossy = 1 << 3,
-		Specular = 1 << 4,
-		DiffuseReflection = Diffuse | Reflection,
-		DiffuseTransmission = Diffuse | Transmission,
-		GlossyReflection = Glossy | Reflection,
-		GlossyTransmission = Glossy | Transmission,
-		SpecularReflection = Specular | Reflection,
-		SpecularTransmission = Specular | Transmission,
-		BxDFAll = Diffuse | Glossy | Specular | Reflection | Transmission
-	};
-
-	inline MaterialMaskEnum operator|(MaterialMaskEnum a, MaterialMaskEnum b) {
-		return static_cast<MaterialMaskEnum>(static_cast<int>(a) | static_cast<int>(b));
-	}
-
-	inline MaterialMaskEnum operator&(MaterialMaskEnum a, MaterialMaskEnum b) {
-		return static_cast<MaterialMaskEnum>(static_cast<int>(a) & static_cast<int>(b));
-	}
-
-	inline MaterialMaskEnum operator^(MaterialMaskEnum a, MaterialMaskEnum b) {
-		return static_cast<MaterialMaskEnum>(static_cast<int>(a) ^ static_cast<int>(b));
-	}
-
-	inline MaterialMaskEnum operator~(MaterialMaskEnum a) {
-		return static_cast<MaterialMaskEnum>(~static_cast<int>(a));
-	}
-
-	inline MaterialMaskEnum& operator|=(MaterialMaskEnum& a, MaterialMaskEnum b) {
-		a = a | b;
-		return a;
-	}
-
-	inline MaterialMaskEnum& operator&=(MaterialMaskEnum& a, MaterialMaskEnum b) {
-		a = a & b;
-		return a;
-	}
-
-	inline MaterialMaskEnum& operator^=(MaterialMaskEnum& a, MaterialMaskEnum b) {
-		a = a ^ b;
-		return a;
-	}
-
+	class Texture2D;
+	enum class TexType;
 
 	struct MaterialProperty {
 		using Value = std::variant<std::shared_ptr<Texture2D>, glm::vec3, float>;
@@ -93,5 +37,88 @@ namespace Aho {
 	private:
 		void ClearState(const std::shared_ptr<Shader>& shader);
 		std::vector<MaterialProperty> m_Properties;
+	};
+
+	class MaterialAsset;
+	class _Texture;
+	// New material system, directly using the shader
+	class _Material {
+	public:
+		_Material() = default;
+		~_Material() = default;
+		_Material(const std::shared_ptr<MaterialAsset>& matAsset);
+		struct MatDescriptor {
+			MatDescriptor() = default;
+			// --- Base Color ---
+			glm::vec3 baseColor			= {1.0f,1.0f,1.0f};
+			_Texture* baseColorTex		= nullptr;
+			bool useBaseColorTex		= false;
+
+			// -- - Normal Map ---
+			_Texture* normalMap			= nullptr;
+			bool useNormalMap			= false;
+
+			// --- Metallic (scalar) ---
+			float metallic				= 0.0f;
+			_Texture* metallicTex		= nullptr;
+			bool useMetallicTex			= false;
+
+			// --- Roughness (scalar) ---
+			float roughness				= 1.0f;
+			_Texture* roughnessTex		= nullptr;
+			bool useRoughnessTex		= false;
+
+			// --- Ambient Occlusion (scalar) ---
+			float ao					= 0.0f;
+			_Texture* aoTex				= nullptr;
+			bool useAoTex				= false;
+
+			// --- Emissive Color ---
+			glm::vec3 emissive			= {0.0f,0.0f,0.0f};
+			_Texture* emissiveTex		= nullptr;
+			bool useEmissiveTex			= false;
+		};
+		void SetBaseColor(const glm::vec3& c) {
+			m_Desc.baseColor = c;
+			m_Desc.useBaseColorTex = false;
+		}
+		void SetBaseColor(const std::shared_ptr<_Texture>& tex) {
+			m_Desc.baseColorTex = tex.get();
+			m_Desc.useBaseColorTex = true;
+		}
+		void SetNormalMap(const std::shared_ptr<_Texture>& tex) {
+			m_Desc.normalMap = tex.get();
+			m_Desc.useNormalMap = true;
+		}
+		void SetMetallic(float m) {
+			m_Desc.metallic = m;
+			m_Desc.useMetallicTex = false;
+		}
+		void SetMetallic(const std::shared_ptr<_Texture>& tex) {
+			m_Desc.metallicTex = tex.get();
+			m_Desc.useMetallicTex = true;
+		}
+		
+		void SetRoughness(float r) {
+			m_Desc.roughness = r;
+			m_Desc.useRoughnessTex = false;
+		}
+		void SetRoughness(const std::shared_ptr<_Texture>& tex) {
+			m_Desc.roughnessTex = tex.get();
+			m_Desc.useRoughnessTex = true;
+		}
+
+		void SetAo(float ao) {
+			m_Desc.ao = ao;
+			m_Desc.useAoTex = false;
+		}
+		void SetAo(const std::shared_ptr<_Texture>& tex) {
+			m_Desc.aoTex = tex.get();
+			m_Desc.useAoTex = true;
+		}
+		static void ApplyToShader(Shader* shader, const _Material& mat, uint32_t& bindingPoint);
+		MatDescriptor GetMatDescriptor() const { return m_Desc; }
+	private:
+		MatDescriptor m_Desc;
 	};
 }

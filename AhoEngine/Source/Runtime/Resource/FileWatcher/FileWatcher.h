@@ -1,113 +1,69 @@
 #pragma once
 
 #include "Runtime/Core/Events/Event.h"
-#include "Runtime/Core/SingletonBase.h"
-#include "FileChangedEvent.h"
+
 #include <filesystem>
 #include <unordered_map>
+#include <functional>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 namespace Aho {
+    class FileWatcher {
+    public:
+        using Callback = std::function<void(const std::string&)>;
 
-    // TODO: supports multi-thread
-    // upd: hard to support mt currently since opengl natively doesn't support it
-    class FileWatcher : public SingletonBase<FileWatcher> {
-        friend class SingletonBase<FileWatcher>;
-	public:
-        ~FileWatcher() = default;
+        FileWatcher(std::chrono::duration<int, std::milli> interval = std::chrono::milliseconds(500))
+            : watchInterval(interval), running(false) {
+        }
 
-        template <typename T>
-        void AddFileToWatch_mt(const std::filesystem::path& filePath, const std::shared_ptr<T>& file) {
-            if (m_Files.contains(filePath)) {
+        ~FileWatcher() {
+            Stop();
+        }
+
+        // Watch a file path with a callback on change
+        void WatchFile(const std::string& path, Callback cb) {
+            auto time = std::filesystem::last_write_time(path);
+            files[path] = { time, cb };
+        }
+
+        // Start watching in background thread
+        void Start() {
+            if (running) {
                 return;
             }
-
-            std::lock_guard<std::mutex> lock(m_Mutex);
-            m_Files[filePath] = std::make_shared<FileRecord<T>>(file, std::filesystem::last_write_time(filePath));
-        }
-
-        template <typename T>
-        void AddFileToWatch(const std::filesystem::path& filePath, const std::shared_ptr<T>& file) {
-            if (m_Files.contains(filePath)) {
-                return;
-            }
-
-            m_Files[filePath] = std::make_shared<FileRecord<T>>(file, std::filesystem::last_write_time(filePath));
-        }
-
-        void StartWatching() {
-            m_Running = true;
-            m_WatchThread = std::thread(&FileWatcher::PollFiles_mt, this);
-        }
-        
-        void StopWatching_mt() {
-            m_Running = false;
-            if (m_WatchThread.joinable()) {
-                m_WatchThread.join();
-            }
-        }
-
-        void PollFiles_mt() {
-            static int64_t sleepTimeLag = 3; // check files every 3 seconds
-            while (m_Running) {
-                std::this_thread::sleep_for(std::chrono::seconds(sleepTimeLag));
-                std::lock_guard<std::mutex> lock(m_Mutex);
-
-                for (auto& [filePath, fileRecord] : m_Files) {
-                    auto newModifiedTime = std::filesystem::last_write_time(filePath);
-                    if (fileRecord->lastWriteTime != newModifiedTime) {
-                        fileRecord->Reload(filePath);
-                        fileRecord->lastWriteTime = newModifiedTime;
+            running = true;
+            watcherThread = 
+                std::thread([this]() {
+                    while (running) {
+                        for (auto& [path, info] : files) {
+                            auto current = std::filesystem::last_write_time(path);
+                            if (current != info.lastWrite) {
+                                info.lastWrite = current;
+                                info.callback(path);
+                            }
+                        }
+                        std::this_thread::sleep_for(watchInterval);
                     }
-                }
-
-            }
+                });
         }
 
-        // in seconds
-        void PollFiles(float deltaTime) {
-            m_AccuTime += deltaTime;
-            if (m_AccuTime > 3.0f) {
-                m_AccuTime = 0.0f;
-                for (auto& [filePath, fileRecord] : m_Files) {
-                    auto newModifiedTime = std::filesystem::last_write_time(filePath);
-                    if (fileRecord->lastWriteTime != newModifiedTime) {
-                        bool success = fileRecord->Reload(filePath);
-                        const char* result = success ? "successful" : "failed";
-                        AHO_CORE_INFO("Reload `{}` {}", filePath.string(), result);
-                        fileRecord->lastWriteTime = newModifiedTime;
-                    }
-                }
-            }
+        // Stop watching
+        void Stop() {
+            running = false;
+            if (watcherThread.joinable()) watcherThread.join();
         }
-
-	private:
-        FileWatcher() = default;
-        float m_AccuTime{ 0.0f };
 
     private:
-        std::thread m_WatchThread;
-        std::atomic<bool> m_Running{ false };
-        std::mutex m_Mutex;
-
-    private:
-        struct IFileRecord {
-            IFileRecord(const std::filesystem::file_time_type& time) : lastWriteTime(time) {}
-            virtual ~IFileRecord() = default;
-            virtual bool Reload(const std::filesystem::path& path) = 0;
-            std::filesystem::file_time_type lastWriteTime;
+        struct FileInfo {
+            std::filesystem::file_time_type lastWrite;
+            Callback callback;
         };
 
-        template <typename T>
-        struct FileRecord : public IFileRecord {
-            FileRecord(const std::shared_ptr<T>& f, const std::filesystem::file_time_type& time) 
-                : IFileRecord(time), file(f) {}
-            std::shared_ptr<T> file;
-
-            virtual bool Reload(const std::filesystem::path& path) override {
-                return file->Reload(path);
-            }
-        };
-
-        std::unordered_map<std::filesystem::path, std::shared_ptr<IFileRecord>> m_Files;
-	};
+        std::unordered_map<std::string, FileInfo> files;
+        std::chrono::duration<int, std::milli> watchInterval;
+        std::thread watcherThread;
+        std::atomic<bool> running;
+    };
 } // namespace Aho

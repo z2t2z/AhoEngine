@@ -11,7 +11,7 @@ namespace Aho {
 		OpenGLShader(const std::string& filepath);
 		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		virtual ~OpenGLShader();
-		virtual bool Reload(const std::filesystem::path& filepath) override;
+		virtual bool Reload(const std::string& path) override;
 		virtual void Delete() const override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
@@ -29,20 +29,17 @@ namespace Aho {
 		virtual void SetMat4(const std::string& name, const glm::mat4& mat) override;
 		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
 		virtual const std::string& GetName() const override { return m_Name; }
-
 	private:
 		std::string ReadFile(const std::string& filepath);
-		void PreProcess(const std::string& source);
-		void ReplaceIncludes();
-		void CompileFromSource();
+		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
+		void ReplaceIncludes(std::unordered_map<GLenum, std::string>& src);
+		uint32_t CompileFromSource(const std::unordered_map<GLenum, std::string>& src);
 		void CreateProgram();
 	private:
 		bool m_IsCompute{ false };
 		std::string m_FilePath;
 		std::string m_Name;
 	private:
-		std::unordered_map<GLenum, std::vector<uint32_t>> m_VulkanSPIRV;
-		std::unordered_map<GLenum, std::vector<uint32_t>> m_OpenGLSPIRV;
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 	};
 

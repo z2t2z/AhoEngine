@@ -54,6 +54,8 @@ namespace Aho {
 		Noise,
 		HDR,
 		CubeMap,
+		CubeMapIrradiance,
+		CubeMapSkybox,
 		Position,
 		Depth,
 		LightDepth,
@@ -69,6 +71,7 @@ namespace Aho {
 		PathTracingAccumulate,
 		Result	// The final result texture of a render pass
 	};
+
 
 	// Texture specification
 	struct TexSpec {

@@ -5,6 +5,9 @@
 #include <memory>
 
 namespace Aho {
+	template<typename... E>
+	inline constexpr entt::exclude_t<E...> Exclude{};
+
 	class Entity {
 	public:
 		Entity() = default;

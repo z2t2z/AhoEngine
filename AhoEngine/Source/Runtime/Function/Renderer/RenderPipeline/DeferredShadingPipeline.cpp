@@ -4,6 +4,8 @@
 #include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 
+#include "Runtime/Resource/Asset/AssetManager.h"
+
 namespace Aho {
 
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
@@ -58,6 +60,13 @@ namespace Aho {
 		auto shader = m_ShadingPass->GetShader();
 		shader->Bind();
 		shader->SetBool("u_SampleEnvLight", false);
+	}
+
+	void DeferredShadingPipeline::SetIBLLuts(const IBLLuts& luts) {
+		m_ShadingPass->RegisterTextureBuffer({ luts.cubemap, TexType::CubeMap });
+		m_ShadingPass->RegisterTextureBuffer({ luts.brdfLut, TexType::BRDFLUT });
+		m_ShadingPass->RegisterTextureBuffer({ luts.irradianceLut, TexType::Irradiance });
+		m_ShadingPass->RegisterTextureBuffer({ luts.prefilteringLut, TexType::Prefiltering });
 	}
 
 	std::unique_ptr<RenderPass> DeferredShadingPipeline::SetupShadowMapPass() {
@@ -224,7 +233,15 @@ namespace Aho {
 			});
 
 		std::string FileName = (g_CurrentPath / "ShaderSrc" / "pbrShader.glsl").string();
-		auto shader = Shader::Create(FileName);
+		//auto shader = Shader::Create(FileName);
+
+		// Test!!
+		static AssetManager* s_AssetManager = new AssetManager();
+		auto& em = g_RuntimeGlobalCtx.m_EntityManager;
+
+		auto shaderAsset = s_AssetManager->_LoadAsset<ShaderAsset>(g_RuntimeGlobalCtx.m_EntityManager, ShaderOptions((g_CurrentPath / "ShaderSrc" / "pbrShader.glsl").string()));
+		auto shader = shaderAsset->GetShader();
+
 		AHO_CORE_ASSERT(shader->IsCompiled());
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("ShadingPass");
 		pass->SetShader(shader);

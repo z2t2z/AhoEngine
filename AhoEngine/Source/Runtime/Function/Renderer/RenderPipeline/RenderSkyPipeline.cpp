@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "SkyAtmosphericPipeline.h"
 
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
@@ -34,6 +35,7 @@ namespace Aho {
 
 		m_RenderResult = m_SkyViewLutPass->GetTextureBuffer(TexType::Result);
 	}
+
 
 	std::unique_ptr<RenderPass> RenderSkyPipeline::SetupTransmittanceLUTPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();

@@ -13,10 +13,8 @@
 #include "Runtime/Core/Math/Math.h"
 #include "Runtime/Core/Timer.h"
 
-#include "Runtime/Resource/Asset/AssetManagerEditor.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Resource/ResourceType/ResourceType.h"
-#include "Runtime/Resource/Model/Model.h"
 #include "Runtime/Resource/FileWatcher/FileWatcher.h"
 #include "Runtime/Resource/ResourceLayer.h"
 
@@ -26,7 +24,7 @@
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/Framebuffer.h"
 #include "Runtime/Function/Renderer/Shader.h"
-#include "Runtime/Function/Renderer/VertexArrayr.h"
+#include "Runtime/Function/Renderer/VertexArray.h"
 #include "Runtime/Function/Renderer/RendererAPI.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/RenderLayer.h"

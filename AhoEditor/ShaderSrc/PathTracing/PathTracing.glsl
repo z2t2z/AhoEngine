@@ -41,7 +41,7 @@ void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     } else {
         mat.baseColor = handle.baseColor;
     }
-    // mat.baseColor = pow(mat.baseColor, vec3(2.2)); // ??????
+    mat.baseColor = pow(mat.baseColor, vec3(2.2));
     
     if (int64_t(handle.normalHandle) != 0) {
         vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;

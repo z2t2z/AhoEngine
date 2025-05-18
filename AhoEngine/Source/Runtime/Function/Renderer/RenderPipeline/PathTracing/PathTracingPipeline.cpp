@@ -1,7 +1,7 @@
 #include "Ahopch.h"
 #include "PathTracingPipeline.h"
 #include "Runtime/Function/Level/Level.h"
-#include "Runtime/Core/BVH.h"
+#include "Runtime/Core/Geometry/BVH.h"
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"

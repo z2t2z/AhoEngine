@@ -3,7 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Material.h"
-#include "VertexArrayr.h"
+#include "VertexArray.h"
 #include "Framebuffer.h"
 #include <memory>
 #include <unordered_map>

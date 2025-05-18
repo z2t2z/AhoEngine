@@ -22,54 +22,46 @@ namespace Aho {
 		if (source.empty()) {
 			return;
 		}
-		PreProcess(source);
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
 		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
 		auto lastDot = filepath.rfind('.');
 		auto count = (lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash);
-
 		m_Name = filepath.substr(lastSlash, count);
 
-		ReplaceIncludes();
-		CompileFromSource();
+		std::unordered_map<GLenum, std::string> src = PreProcess(source);
+		ReplaceIncludes(src);
+		uint32_t id = CompileFromSource(src);
+		if (id) {
+			m_Compiled = true;
+			m_ShaderID = id;
+			m_OpenGLSourceCode = src;
+		}
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc) {
-		m_Name = name;
-		m_OpenGLSourceCode[GL_VERTEX_SHADER] = vertexSrc;
-		m_OpenGLSourceCode[GL_FRAGMENT_SHADER] = fragmentSrc;
-		CompileFromSource();
+	
 	}
 
 	OpenGLShader::~OpenGLShader() {
 		glDeleteProgram(m_ShaderID);
 	}
 
-	bool OpenGLShader::Reload(const std::filesystem::path& fsfilepath) {
-		std::string filepath = fsfilepath.string();
+	bool OpenGLShader::Reload(const std::string& filepath) {
 		std::string source = ReadFile(filepath);
 		if (source.empty()) {
 			return false;
 		}
 
-		std::unordered_map<GLenum, std::string> openGLSourceCode = m_OpenGLSourceCode;
-		m_OpenGLSourceCode.clear();
-
-		PreProcess(source);
-		// Extract name from filepath
-		auto lastSlash = filepath.find_last_of("/\\");
-		lastSlash = (lastSlash == std::string::npos ? 0 : lastSlash + 1);
-		auto lastDot = filepath.rfind('.');
-		auto count = (lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash);
-
-		m_Name = filepath.substr(lastSlash, count);
-
-		ReplaceIncludes();
-		CompileFromSource();
-
-		if (m_Compiled) {
-			std::swap(openGLSourceCode, m_OpenGLSourceCode);
+		std::unordered_map<GLenum, std::string> src = PreProcess(source);
+		ReplaceIncludes(src);
+		uint32_t id = CompileFromSource(src);
+		if (id) {
+			if (m_ShaderID) {
+				glDeleteProgram(m_ShaderID);
+			}
+			m_ShaderID = id;
+			m_OpenGLSourceCode = src;
 			return true;
 		}
 
@@ -113,7 +105,8 @@ namespace Aho {
 	}
 
 	// TODO;
-	void OpenGLShader::PreProcess(const std::string& source) {
+	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source) {
+		std::unordered_map<GLenum, std::string> openGLSourceCode;
 		const char* typeToken = "#type";
 		size_t typeTokenLength = strlen(typeToken);
 		size_t pos = source.find(typeToken, 0); //Start of shader type declaration line
@@ -127,11 +120,12 @@ namespace Aho {
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol); //Start of shader code after shader type declaration line
 			AHO_CORE_ASSERT(nextLinePos != std::string::npos, "Syntax error");
 			pos = source.find(typeToken, nextLinePos); //Start of next shader type declaration line
-			m_OpenGLSourceCode[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
+			openGLSourceCode[Utils::ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
+		return openGLSourceCode;
 	}
 
-	void OpenGLShader::ReplaceIncludes() {
+	void OpenGLShader::ReplaceIncludes(std::unordered_map<GLenum, std::string>& src) {
 		namespace fs = std::filesystem;
 		std::string basePath = fs::path(m_FilePath).parent_path().string() + '/';
 		fs::path basePathfs = fs::path(m_FilePath).parent_path();
@@ -180,18 +174,18 @@ namespace Aho {
 			return processed.str();
 		};
 
-		for (auto& [shaderType, source] : m_OpenGLSourceCode) {
+		for (auto& [shaderType, source] : src) {
 			std::unordered_set<std::string> includedFiles;
 			source = processIncludesRecursion(processIncludesRecursion, source, basePath, includedFiles);
 		}
 	}
 
-	void OpenGLShader::CompileFromSource() {
+	uint32_t OpenGLShader::CompileFromSource(const std::unordered_map<GLenum, std::string>& src) {
 		bool ComputeFlag = false;
 		bool NormalFlag = false;
-		m_Compiled = false;
+		//m_Compiled = false;
 		std::vector<GLuint> shaderHandles;
-		for (const auto& [shaderType, Source] : m_OpenGLSourceCode) {
+		for (const auto& [shaderType, Source] : src) {
 			//AHO_CORE_INFO("{}", Source);
 			(shaderType == GL_COMPUTE_SHADER ? ComputeFlag : NormalFlag) = true;
 			GLuint shader = glCreateShader(shaderType);
@@ -211,7 +205,7 @@ namespace Aho {
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
 				AHO_CORE_ERROR("Shader compilation failed in path {0}.{1}", m_FilePath, infoLog.data());
-				return;
+				return 0u;
 			}
 			shaderHandles.push_back(shader);
 		}
@@ -245,54 +239,18 @@ namespace Aho {
 			}
 			AHO_CORE_ERROR("{0}", infoLog.data());
 			//AHO_CORE_ASSERT(false, "Shader link failure!");
-			return;
+			return 0u;
 		}
 		// Always detach shaders after a successful link.
 		for (const auto& handle : shaderHandles) {
 			glDeleteShader(handle);
 		}
 
-		if (m_ShaderID) {
-			glDeleteProgram(m_ShaderID);
-		}
-
-		m_ShaderID = program;
-		m_Compiled = true;
+		return program;
 	}
 
 	void OpenGLShader::CreateProgram() {
-		GLuint program = glCreateProgram();
 
-		std::vector<GLuint> shaderIDs;
-		for (auto&& [stage, spirv] : m_OpenGLSPIRV) {
-			GLuint shaderID = shaderIDs.emplace_back(glCreateShader(stage));
-			glShaderBinary(1, &shaderID, GL_SHADER_BINARY_FORMAT_SPIR_V, spirv.data(), spirv.size() * sizeof(uint32_t));
-			glSpecializeShader(shaderID, "main", 0, nullptr, nullptr);
-			glAttachShader(program, shaderID);
-		}
-
-		glLinkProgram(program);
-
-		GLint isLinked;
-		glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-		if (isLinked == GL_FALSE) {
-			GLint maxLength;
-			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
-			std::vector<GLchar> infoLog(maxLength);
-			if (maxLength) {
-				glGetProgramInfoLog(program, maxLength, &maxLength, infoLog.data());
-			}
-			AHO_CORE_ERROR("Shader linking failed ({0}):\n{1}", m_FilePath, infoLog.data());
-			glDeleteProgram(program);
-			for (auto id : shaderIDs) {
-				glDeleteShader(id);
-			}
-		}
-		for (auto id : shaderIDs) {
-			glDetachShader(program, id);
-			glDeleteShader(id);
-		}
-		m_ShaderID = program;
 	}
 
 	void OpenGLShader::SetBool(const std::string& name, bool value) {

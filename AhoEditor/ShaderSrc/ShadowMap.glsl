@@ -10,7 +10,7 @@ layout(location = 3) in vec3 a_Tangent;
 layout(location = 4) in vec4 a_BoneWeights;
 layout(location = 5) in ivec4 a_BoneID;
 
-uniform bool u_IsInstanced;
+// uniform bool u_IsInstanced;
 uniform int u_BoneOffset;
 uniform mat4 u_Model;
 

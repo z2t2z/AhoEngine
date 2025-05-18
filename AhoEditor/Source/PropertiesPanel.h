@@ -1,11 +1,18 @@
 #pragma once
 
-#include "IamAho.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
+#include <memory>
 
 namespace Aho {
+	class LevelLayer;
+	class Renderer;
+	class Entity;
+	class Texture2D;
+	struct MaterialComponent;
+	struct MaterialProperty;
+
 	class PropertiesPanel {
 	public:
 		PropertiesPanel();

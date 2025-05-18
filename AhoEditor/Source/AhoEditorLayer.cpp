@@ -61,8 +61,8 @@ namespace Aho {
 		}
 
 		m_DeltaTime = deltaTime;
-		auto& watcher = FileWatcher::getInstance();
-		watcher.PollFiles(deltaTime);
+		//auto& watcher = FileWatcher::getInstance();
+		//watcher.PollFiles(deltaTime);
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {

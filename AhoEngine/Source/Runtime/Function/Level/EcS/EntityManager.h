@@ -2,7 +2,7 @@
 
 #include "Entity.h"
 #include "Components.h"
-#include <entt.hpp>
+
 #include <mutex>
 
 namespace Aho {
@@ -35,13 +35,21 @@ namespace Aho {
 			return m_Registry.view<T...>();
 		}
 
-		Entity CreateEntity(const std::string& name = std::string()) {
+		//template<typename... Include, typename... Exclude>
+		//auto GetView(Exclude ...ex) {
+		//	return m_Registry.view<Include...>(ex...);
+		//}
+
+		// Need better impl
+		template<typename... Include, typename Filter>
+		auto GetView(Filter&& filter) {
+			return m_Registry.view<Include...>(std::forward<Filter>(filter));
+		}
+
+		Entity CreateEntity() {
 			Entity entity{ m_Registry.create() };
 			if (static_cast<uint32_t>(entity.GetEntityHandle()) == 0u) {
 				entity = m_Registry.create();
-			}
-			if (!name.empty()) {
-				auto& tag = AddComponent<TagComponent>(entity, name);
 			}
 			return entity;
 		}

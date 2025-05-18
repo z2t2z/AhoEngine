@@ -1,6 +1,9 @@
 #include "Viewport.h"
 #include "FileExplorer.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
+#include "Runtime/Resource/Asset/AssetLoadOptions.h"
+#include "Runtime/Resource/ResourceManager.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -27,10 +30,6 @@ namespace Aho {
 		auto path = fs::current_path();
 		m_LightIcon = Texture2D::Create((path / "Asset" / "light-bulb.png").string());
 		m_AddIcon = Texture2D::Create((path / "Asset" / "plusicon.png").string());
-		//m_CursorIcon = Texture2D::Create((path / "Asset" / "Icons" / "cursor.png").string());
-		//m_TranslationIcon = Texture2D::Create((path / "Asset" / "Icons" / "translation.png").string());
-		//m_RotationIcon = Texture2D::Create((path / "Asset" / "Icons" / "rotate.png").string());
-		//m_ScaleIcon = Texture2D::Create((path / "Asset" / "Icons" / "scale.png").string());
 	}
 	
 	void Viewport::Draw() {
@@ -115,10 +114,10 @@ namespace Aho {
 			}
 			if (ImGui::MenuItem("Area Light")) {
 				// TODO
-				namespace fs = std::filesystem;
-				auto path = fs::current_path() / "Asset" / "Basic";
-				auto recMesh = AssetCreator::MeshAssetCreater((path / "2x2Square.obj").string());
-				m_LevelLayer->AddStaticMeshToScene(recMesh, "Area Light", std::make_shared<AreaLight>());
+				//namespace fs = std::filesystem;
+				//auto path = fs::current_path() / "Asset" / "Basic";
+				//auto recMesh = AssetCreator::MeshAssetCreater((path / "2x2Square.obj").string());
+				//m_LevelLayer->AddStaticMeshToScene(recMesh, "Area Light", std::make_shared<AreaLight>());
 			}
 			if (ImGui::MenuItem("Distant Light")) {
 				// TODO
@@ -159,9 +158,11 @@ namespace Aho {
 				showFileExplorer = false;
 				if (file != ".") {
 					AHO_CORE_INFO("{}", file.string());
-					Texture* hdr = new OpenGLTexture2D(file.string());
+					Texture* hdr = new OpenGLTexture2D(file.string(), false);
 					hdr->SetTexType(TexType::HDR);
 					m_LevelLayer->AddEnvironmentMap(hdr);
+					auto luts = static_cast<IBLPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_IBL))->GetCurrIBLLuts();
+					static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetIBLLuts(luts);
 				}
 			}
 		}
@@ -259,13 +260,14 @@ namespace Aho {
 	}
 
 	void Viewport::DrawManipulationToolBar() {
-		static float windowPadding[2] = { 11.5f, 3.31 };
+		static float windowPadding[2] = { 13.15f, -0.01f };
 		static float windowBorderSize = 0.1f;
 		static float windowRounding = 20.0f;
 		static float windowMinSize[2] = {0.0, 0.0};
-		static float btnSize[2] = { 25.0f, 25.0f };
-		static float btn0Align[2] = { 2, 0 };
-		static float frameRounding = 3.0f;
+		static float btnSize[2] = { 25.0f, 27.5f };
+		static float btn0Align[2] = { 2.450f, 0.750f };
+		static float frameRounding = 0.0f;
+		static float sameLineParam[2] = { 0.0f, 0.0f };
 		auto _Debug = [&]() -> void {
 			ImGui::Begin("_Debug");
 			ImGui::DragFloat2("_padding", &windowPadding[0], 0.01, 0.0);
@@ -275,6 +277,7 @@ namespace Aho {
 			ImGui::DragFloat2("_btnSize", &btnSize[0], 0.01, 0.0);
 			ImGui::DragFloat("_frameRounding", &frameRounding, 0.01, 0.0);
 			ImGui::DragFloat2("_btn0Align", &btn0Align[0], 0.01, 0.0);
+			ImGui::DragFloat2("_sameLineParam", &sameLineParam[0], 0.01, -1.0, 1.0);
 			ImGui::End();
 		};
 		//_Debug();
@@ -301,10 +304,11 @@ namespace Aho {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, windowBorderSize);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, windowRounding);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(windowMinSize[0], windowMinSize[1]));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.5f, 0.5f, 0.5f, 0.2f));
 
-		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
+		ImGui::Begin("ManipulationToolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
@@ -318,7 +322,7 @@ namespace Aho {
 			auto& btn = uiBtns[i];
 			activeBtnColor.w = (activeBtnIdx == i) ? 1.0f : 0.0f;
 			ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
-			ImGui::SameLine();
+			ImGui::SameLine(sameLineParam[0], sameLineParam[1]);
 			if (ImGui::Button(btn.name.c_str(), ImVec2{btnSize[0], btnSize[1]})) {
 				activeBtnIdx = i;
 				g_Operation = btn.oper;
@@ -328,6 +332,7 @@ namespace Aho {
 			ImGui::PopStyleColor();
 		}
 
+		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopFont();
@@ -380,12 +385,13 @@ namespace Aho {
 
 		if (ImGui::BeginPopup("Load Settings")) {
 			static bool staticMesh{ true };
+			static bool buildBvh{ true };
 			std::string prompt = "Mesh Type: " + std::string(staticMesh ? "Static Mesh" : "Skeletal Mesh");
 			ImGui::Text(prompt.c_str());
 			ImGui::Separator();
 			ImGui::Checkbox("Static Mesh", &staticMesh);
 			ImGui::Separator();
-			ImGui::Checkbox("Build BVH", &m_LevelLayer->GetBuildBvhState());
+			ImGui::Checkbox("Build BVH", &buildBvh);
 			ImGui::Separator();
 
 			static glm::vec3 translation(0.0f);
@@ -398,11 +404,30 @@ namespace Aho {
 			ImGui::Separator();
 
 			if (ImGui::Button("Load") && !droppedString.empty()) {
+				std::string loadPath = droppedString;
 				glm::mat4 preTransform = ComposeTransform(translation, rotation, scale);
-				AHO_CORE_INFO("Loading asset from file : {}", droppedString);
-				std::shared_ptr<AssetImportedEvent> event = std::make_shared<AssetImportedEvent>(droppedString, !staticMesh, preTransform);
-				AHO_CORE_WARN("Pushing an AssetImportedEvent!");
-				m_EventManager->PushBack(event);
+				MeshOptions loadOptions(loadPath); loadOptions.PreTransform = preTransform; loadOptions.BuildBVH = buildBvh; loadOptions.IsSkeletalMesh = !staticMesh;
+
+				auto& ecs = g_RuntimeGlobalCtx.m_EntityManager;
+				auto resourceManager = g_RuntimeGlobalCtx.m_Resourcemanager;
+				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions);
+				std::string name = "GO_" + ms->GetName();
+				auto go = resourceManager->CreateGameObject(name);
+				auto& vaoRef = ecs->AddComponent<VertexArrayRefsComponent>(go);
+
+				// Put these in resource manager??                                             
+				auto view = ecs->GetView<MeshAssetComponent, MaterialRefComponent>(Exclude<VertexArrayComponent>); // Need testing
+				view.each(
+					[&](auto entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {
+						vaoRef.vaoRef.push_back(entity);
+						std::shared_ptr<VertexArray> vao = resourceManager->LoadVAO(mc.asset);
+						ecs->AddComponent<VertexArrayComponent>(entity, vao.get());
+						auto& matAssetComponent = ecs->GetComponent<MaterialAssetComponent>(matRefc.MaterialRefEntity);
+						ecs->AddComponent<_MaterialComponent>(entity, matAssetComponent.asset);
+						ecs->AddComponent<_TransformComponent>(entity);
+					}
+				);
+
 				ImGui::CloseCurrentPopup();
 				droppedString.clear();
 			}

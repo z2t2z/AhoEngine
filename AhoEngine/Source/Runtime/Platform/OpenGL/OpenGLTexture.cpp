@@ -79,7 +79,7 @@ namespace Aho {
 		stbi_set_flip_vertically_on_load(flipOnLoad);
 		void* data = nullptr;
 		data = isHDR ? (void*)stbi_loadf(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, 0)	
-			: (void*)stbi_load(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, grayScale);
+					 : (void*)stbi_load(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, 0);
 
 		if (!data) {
 			AHO_CORE_ERROR("Loading texture failed from path: {}", path);

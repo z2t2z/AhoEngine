@@ -6,6 +6,7 @@
 
 namespace Aho {
 	class RenderPass;
+	struct IBLLuts;
 
 	class DeferredShadingPipeline : public RenderPipeline {
 	public:
@@ -13,6 +14,7 @@ namespace Aho {
 		virtual void Initialize() override;
 		void SetSunDir(const glm::vec3& dir) { m_SunDir = dir; }
 		void SetEnvLightState(bool state);
+		void SetIBLLuts(const IBLLuts& luts);
 	private:
 		std::unique_ptr<RenderPass> SetupShadowMapPass(); // TODO: multiple shadow map passes
 		std::unique_ptr<RenderPass> SetupGBufferPass();
@@ -31,4 +33,5 @@ namespace Aho {
 		std::unique_ptr<RenderPass> m_ShadingPass;
 
 	};
+
 }

@@ -68,7 +68,7 @@ layout(location = 0) out vec4 g_Position;
 layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out vec4 g_PBR;
-layout(location = 4) out uint g_Entity;
+// layout(location = 4) out uint g_Entity;
 
 in vec3 v_FragPos;
 in vec3 v_Ndc;
@@ -96,11 +96,12 @@ uniform float u_Roughness = 0.9f;
 uniform uint u_EntityID;
 
 void main() {
-	g_Entity = u_EntityID;
+	// g_Entity = u_EntityID;
 	g_Position = vec4(v_FragPos, 1.0f);
 
 	// PBR
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_RawAlbedo;
+	g_Albedo = pow(g_Albedo, vec3(2.2f)); // gamma correction
 	g_PBR.r = u_HasMetallic ? texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
 	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : -1.0f;

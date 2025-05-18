@@ -126,18 +126,20 @@ vec4 GridColor(vec3 worldPos, float t) {
 	return GridColor;
 }
 
+#define SKY_ATMOSPHERIC
 
 void main() {
 	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
 	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
 
 	float d = texture(u_gDepth, v_TexCoords).r;
-	if (d == 1.0f) { 
+	if (d == 1.0f) {
 		vec2 uv = v_TexCoords;
 		vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
 		vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
 		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
 		
+#ifdef SKY_ATMOSPHERIC
 		const float Rground = 6360.0; 
 		vec3 worldPos = u_ViewPosition.xyz / 1000.0;
 		worldPos.y = max(0.01, worldPos.y) + Rground;
@@ -156,10 +158,15 @@ void main() {
 		vec3 gridWorldPos = v_nearP + t * (v_farP - v_nearP);
 		
 		out_Color = t < 0.0 ? vec4(lum, 1.0) : GridColor(gridWorldPos, t);
+#else
+		vec3 L = texture(u_gCubeMap, worldDir).rgb;
+		L = jodieReinhardTonemap(L);
+		L = pow(L, vec3(1.0 / 2.2)); // To linear space
+		out_Color = vec4(L, 1.0);
+#endif
 		return;
 	}
 
-	// vec3 albedo = pow(texture(u_gAlbedo, v_TexCoords).rgb, vec3(2.2f)); 	// To linear space
 	vec3 baseColor = texture(u_gAlbedo, v_TexCoords).rgb;
 	float AO = texture(u_gPBR, v_TexCoords).b;
 	if (AO == -1.0f) {
@@ -178,15 +185,16 @@ void main() {
 	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb);
 	vec3 V = normalize(viewPos - fragPos);
 	vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
-
+	// vec3
 	vec3 Lo = vec3(0.0f);
 	// Direct lighting
 	Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
-	Lo += EvalPointLight(mat, fragPos, F0, V, N);
+	// Lo += EvalPointLight(mat, fragPos, F0, V, N);
 	Lo += EvalEnvLight(mat, fragPos, F0, V, N);
 
 	vec3 Color = Lo / (Lo + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 
 	out_Color = vec4(Color, 1.0f);
+	out_Color = vec4(1.0, 1.0, 0.0, 1.0);
 }

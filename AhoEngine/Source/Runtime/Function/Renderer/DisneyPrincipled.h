@@ -5,9 +5,16 @@
 #include "Runtime/Function/Renderer/Texture.h"
 #include <unordered_map>
 
-//#define DEBUG
-
 namespace Aho {
+	struct DisneyMaterial {
+		DisneyMaterial() = default;
+		glm::vec4 baseColor{ 1.0f };
+		float subsurface{ 0.0f };
+		glm::vec4 emissive{ 0.0f };
+		float metallic{ 0.1f };
+		float roughness{ 0.0f };
+		float ao{ 0.0f };
+	};
 
 	struct alignas(16) TextureHandles {
 		uint64_t albedoHandle{ 0 };
@@ -16,7 +23,6 @@ namespace Aho {
 		uint64_t metallicHandle{ 0 };
 		uint64_t roughnessHandle{ 0 };
 
-#ifndef DEBUG
 		glm::vec3 baseColor{ 1 };
 		float subsurface{ 0 };
 
@@ -26,7 +32,7 @@ namespace Aho {
 		float metallic{ 0.1 };
 		float specular{ 0 };
 		float specTint{ 0 };
-		float roughness{ 0 };
+		float roughness{ 0.001 };
 
 		float anisotropic{ 0 };
 		float sheen{ 0 };
@@ -43,7 +49,6 @@ namespace Aho {
 		float padding0;
 		float padding1;
 		float padding2;
-#endif
 
 		void SetHandles(uint64_t handleId, TexType type) {
 			AHO_CORE_ASSERT(handleId > 0);
@@ -66,7 +71,6 @@ namespace Aho {
 
 		template<typename T>
 		void SetValue(T v, TexType type) {
-#ifndef DEBUG
 			if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
 				AHO_CORE_ASSERT(false);
 				return;
@@ -129,10 +133,8 @@ namespace Aho {
 					AHO_CORE_ASSERT(false);
 				}
 			}
-#endif
 		}
 		void CalDistParams(float anisotropic, float roughness, float& ax, float& ay) {
-#ifndef  DEBUG
 			float roughness2 = roughness * roughness;
 			if (anisotropic == 0) {
 				ax = std::max(0.0001f, roughness2);
@@ -142,7 +144,6 @@ namespace Aho {
 			float aspect = sqrt(1.0 - 0.9 * anisotropic);
 			ax = std::max(0.0001f, roughness2 / aspect);
 			ay = std::max(0.0001f, roughness2 * aspect);
-#endif // ! DEBUG
 		}
 		static std::unordered_map<TexType, std::string> s_Umap;
 	};

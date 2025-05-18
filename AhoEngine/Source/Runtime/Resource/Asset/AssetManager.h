@@ -2,98 +2,194 @@
 
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/Log/Log.h"
+#include "AssetLoadOptions.h"
 #include "Runtime/Resource/Asset/Asset.h"
-#include "Runtime/Resource/Serializer/Serializer.h"
-#include "Runtime/Resource/ResourceType/ResourceType.h"
-#include "Runtime/Resource/AssetCreator/AssetCreator.h"
-#include "Runtime/Resource/UUID/UUID.h"
-#include "json.hpp"
+#include "Runtime/Resource/Asset/MaterialAsset.h"
+#include "Runtime/Resource/Asset/TextureAsset.h"
+#include "Runtime/Resource/Asset/Mesh/MeshAsset.h"
+#include "Runtime/Resource/Asset/AssetLoaders.h"
+#include "Runtime/Function/Renderer/Shader.h"
+#include "Runtime/Resource/FileWatcher/FileWatcher.h"
+#include "Runtime/Function/Level/EcS/EntityManager.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+
 #include <fstream>
 #include <filesystem>
 #include <mutex>
 #include <thread>
-
-/* 
-	Referred to Piccolo, basically just for editor.
-	Also need a runtimeAssetManager in the far future, 
-	which is likely to have entirely different behaviors.
-*/
-
-/*
-	Definition of the base asset class in ResourceType.h 
-	We should not define asset realted to renderables, scenes, etc. in Resource layer.
-	Assets should be mantained as a DAG(or not? Since we need to load/unload in different levels in runtime).
-	In Function layer we will define renderables which consists of some base assets here,like StaticMesh and Image.
-	Basically in this layer we transform DCC files to our own asset files that can be easily used later.
-*/
-
-/*
-	AssetManager is responsible for:
-	1. Loading DCC file and convert it into our asset file (DCC -> JSON)
-	2. Loading resources from our assfile(JSON)
-*/
 
 namespace Aho {
 	class AssetManager {
 	public:
 		AssetManager() = default;
 		~AssetManager() = default;
+		AssetManager(const AssetManager&) = delete;
+		AssetManager& operator=(const AssetManager&) = delete;
+		AssetManager(AssetManager&&) = delete;
+		AssetManager& operator=(AssetManager&&) = delete;
 
-		// TODO: Maybe try std::shared_ptr<T> assetOut
+		template<typename AssetT, typename LoadOptionsT> 
+		std::shared_ptr<AssetT> _LoadAsset(const std::shared_ptr<EntityManager>& emg, const LoadOptionsT& opts) {
+			static_assert(std::is_base_of<Asset, AssetT>::value, "AssetT must derive from Asset");
+
+			if constexpr (std::is_same_v<AssetT, TextureAsset>) {
+				if (m_Assets.count(opts.path)) {
+					return std::static_pointer_cast<TextureAsset>(m_Assets.at(opts.path));
+				}
+
+				std::shared_ptr<TextureAsset> texAsset = std::make_shared<TextureAsset>(opts.path);
+				emg->AddComponent<TextureAssetComponent>(emg->CreateEntity(), texAsset);
+				m_Assets[opts.path] = texAsset;
+				return texAsset;
+			}
+
+			if constexpr (std::is_same_v<AssetT, MaterialAsset>) {
+				if (m_Assets.count(opts.path)) {
+					return std::static_pointer_cast<MaterialAsset>(m_Assets.at(opts.path));
+				}
+
+				std::shared_ptr<MaterialAsset> matAsset = std::make_shared<MaterialAsset>(opts.path);
+				emg->AddComponent<MaterialAssetComponent>(emg->CreateEntity(), matAsset);
+				m_Assets[opts.path] = matAsset;
+				return matAsset;
+			}
+
+			if constexpr (std::is_same_v<AssetT, AnimationAsset>) {
+				AHO_CORE_ASSERT(false, "Not yet implemented");
+			}
+
+			if constexpr (std::is_same_v<AssetT, MeshAsset>) {
+				if (m_Assets.count(opts.path)) {
+					return std::static_pointer_cast<MeshAsset>(m_Assets.at(opts.path));
+				}
+
+				std::vector<Mesh> meshes;
+				std::vector<MaterialPaths> mats;
+				bool success = AssetLoader::MeshLoader(opts, meshes, mats);
+				AHO_CORE_ASSERT(success && meshes.size() == mats.size());
+
+				std::vector<Entity> matEnts;
+				matEnts.reserve(mats.size());
+				for (const MaterialPaths& mat : mats) {
+					std::shared_ptr<MaterialAsset> matAsset = std::make_shared<MaterialAsset>(opts.path, mat.UsagePaths);
+					matEnts.push_back(emg->CreateEntity());
+					emg->AddComponent<MaterialAssetComponent>(matEnts.back(), matAsset);
+				}
+
+				std::shared_ptr<MeshAsset> firstMeshAsset;
+				for (size_t i = 0; i < meshes.size(); i++) {
+					std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i]);
+					if (i == 0) {
+						firstMeshAsset = meshAsset;
+					}
+					Entity meshAssetEntity = emg->CreateEntity();
+					emg->AddComponent<MeshAssetComponent>(meshAssetEntity, meshAsset);
+					emg->AddComponent<MaterialRefComponent>(meshAssetEntity, matEnts[i]);
+					if (opts.BuildBVH) {
+						// emg->AddComponent<BVHComponent>(meshAssetEntity, meshAsset->GetBVH());
+					}
+				}
+				m_Assets[opts.path] = firstMeshAsset;
+				return firstMeshAsset;
+			}
+
+			if constexpr (std::is_same_v<AssetT, ShaderAsset>) {
+				if (m_Assets.count(opts.path)) {
+					return std::static_pointer_cast<ShaderAsset>(m_Assets.at(opts.path));
+				}
+				std::shared_ptr<Shader> shader = Shader::Create(opts.path);
+				AHO_CORE_ASSERT(shader->IsCompiled());
+				m_Filewatcher.WatchFile(opts.path,
+					[this, opts](const std::string& p) { // ?
+						// Sadly opengl doesnot support mt
+						auto shaderAssset = std::static_pointer_cast<ShaderAsset>(m_Assets[opts.path]);
+						shaderAssset->MakeDirty();
+					});
+				m_Filewatcher.Start();
+				auto shaderAsset = std::make_shared<ShaderAsset>(opts.path, shader);
+				m_Assets[opts.path] = shaderAsset;
+				return shaderAsset;
+			}
+
+			return nullptr;
+		}
+
+		std::shared_ptr<Asset> LoadAsset(const std::filesystem::path& path) {
+			if (m_Assets.count(path.string())) {
+				return m_Assets.at(path.string());
+			}
+			auto ext = path.extension().string();
+			auto bext = ext;
+			for (char& c : ext) {
+				c = tolower(c);
+			}
+			static std::unordered_set<std::string> s_TextureExt = { ".dds", ".hdr", ".exr", ".png", ".jpg", ".jpeg" };
+			if (s_TextureExt.contains(ext)) {
+				std::shared_ptr<TextureAsset> texAsset = std::make_shared<TextureAsset>(path.string());
+				m_Assets[path.string()] = texAsset;
+				return texAsset;
+			}
+
+			static std::unordered_set<std::string> s_MeshExt = { ".obj", ".fbx" };
+			if (s_MeshExt.contains(ext)) {
+				//std::shared_ptr<MeshAsset> meshAsset = 
+			}
+
+			AHO_CORE_ASSERT(false);
+			return nullptr;
+		}
+
 		template<typename AssetType>
 		bool LoadAssetFromFile(const std::filesystem::path& path, AssetType& assetOut, const glm::mat4& preTransform = glm::mat4(1.0f)) {
-			if (m_AssetPaths.contains(path.string())) {
-				/* TODO : pop out a window here */
-				auto uuid = m_AssetPaths.at(path.string());
-				assetOut = *(s_AssetPools.at(uuid)); // why?
-				return true;
-			}
-			if (path.extension().string() != ".asset") {
-				if (!CreateAsset(path, assetOut, preTransform)) {
-					AHO_CORE_ERROR("Import failed at path: {}", path.string());
-				}
-				return true;
-			}
-			std::ifstream rawJson(path.string());
-			if (!rawJson) {
-				AHO_CORE_ERROR("Failed to open file: {}", path.string());
-				return false;
-			}
-			const nlohmann::json& parsedJson = nlohmann::json::parse(rawJson);
-			Serializer::Deserialize(parsedJson, assetOut);
-			return true;
+			return false;
 		}
 
-		template<typename AssetType>
-		bool SaveAsset(const std::filesystem::path& path, AssetType& assetIn) {
-			/* TODO */
-		}
 
-		template<typename T>
-		void AddAsset(const std::string& path, UUID uuid, const T& res) {
-			s_AssetPools[uuid] = res;
-			m_AssetPaths[path] = uuid;
-		}
 	private:
 		template<typename AssetType>
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut, const glm::mat4& preTransform) {
-			const auto& fileExt = path.extension().string();
-			if (fileExt == ".obj" || fileExt == ".fbx" || fileExt == ".FBX" || fileExt == ".OBJ") {
-				//if (fileExt == ".fbx" || fileExt == ".FBX") {
-					//AHO_CORE_WARN(".fbx does not use a verbose vertex format which may leads to incorrect tangent vector calculation");
-				//}
-				assetOut = *AssetCreator::MeshAssetCreater(path.string(), preTransform);
-				return true;
-			}
-			AHO_CORE_ASSERT("Not supported yet");
 			return false;
 		}
 
 		void Initialize() { /* TODO */ }
 
+		void LoadMeshAsset(const MeshOptions& loadOptions, EntityManager& emg) {
+			//// 1. Parse mesh file into raw mesh and material data
+			//std::vector<Mesh>     rawMeshes;
+			//std::vector<MaterialPaths> matPaths;
+			//bool success = AssetLoader::MeshLoader(loadOptions, rawMeshes, matPaths);
+			//if (!success) {
+			//	AHO_ASSERT(false);
+			//	return;
+			//}
+
+
+			//// 2. Create MaterialAsset entities first
+			//std::vector<entt::entity> materialEntities;
+			//materialEntities.reserve(matPaths.size());
+			//for (size_t i = 0; i < matPaths.size(); ++i) {
+			//	const auto& mat = matPaths[i];
+			//	auto matEntity = ecs.create();
+			//	ecs.emplace<MaterialAssetComponent>(matEntity, std::make_shared<MaterialAsset>(mat));
+			//	materialEntities.push_back(matEntity);
+			//}
+
+			//// 3. Create MeshAsset entities and link to MaterialAsset entities
+			//for (size_t i = 0; i < rawMeshes.size(); ++i) {
+			//	const auto& mesh = rawMeshes[i];
+			//	auto meshEntity = ecs.create();
+			//	// attach raw mesh data
+			//	ecs.emplace<MeshAssetComponent>(meshEntity, std::make_shared<MeshAsset>(mesh));
+			//	// link corresponding material
+			//	if (i < materialEntities.size()) {
+			//		ecs.emplace<MaterialRefComponent>(meshEntity, materialEntities[i]);
+			//	}
+			//}
+		}
+
 	private:
-		std::unordered_map<UUID, std::shared_ptr<StaticMesh>> s_AssetPools;
-		std::unordered_map<std::string, UUID> m_AssetPaths;
+		FileWatcher m_Filewatcher;
+		std::unordered_map<std::string, std::shared_ptr<Asset>> m_Assets;
 	};
 
 }

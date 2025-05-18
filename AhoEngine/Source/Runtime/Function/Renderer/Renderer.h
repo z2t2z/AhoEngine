@@ -8,6 +8,9 @@
 #include "RenderPipeline/PostprocessPipeline.h"
 #include "RenderPipeline/DebugVisualPipeline.h"
 
+#include "RenderPipeline/DeferredPipeline.h"
+#include "RenderPipeline/SkyAtmosphericPipeline.h"
+
 #include <memory>
 #include <typeindex>
 #include <glm/glm.hpp>
@@ -39,6 +42,8 @@ namespace Aho {
 			delete m_RP_DeferredShading;
 			delete m_RP_Postprocess;
 			delete m_RP_PathTraciing;
+			delete m_RP_Derferred;
+			delete m_RP_SkyAtmospheric;
 		}
 		void SetRenderMode(RenderMode mode) { m_CurrentRenderMode = mode; }
 		RenderMode GetRenderMode() { return m_CurrentRenderMode; }
@@ -60,6 +65,10 @@ namespace Aho {
 		PostprocessPipeline* m_RP_Postprocess;
 		PathTracingPipeline* m_RP_PathTraciing{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
+	// New System
+	private:
+		DeferredShading* m_RP_Derferred{ nullptr };
+		SkyAtmosphericPipeline* m_RP_SkyAtmospheric{ nullptr };
 	private:
 		float m_FrameTime{ 0.0 }; // In seconds
 		bool m_CameraDirty{ false };

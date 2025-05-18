@@ -1,6 +1,6 @@
 #include "Ahopch.h"
 #include "Renderer.h"
-#include "VertexArrayr.h"
+#include "VertexArray.h"
 #include "RenderCommand.h"
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
@@ -30,6 +30,12 @@ namespace Aho {
 		m_RP_PathTraciing		= new PathTracingPipeline();
 		m_RP_Postprocess		= new PostprocessPipeline();
 		m_RP_Dbg				= new DebugVisualPipeline();
+
+
+		// --- New System ---
+		m_RP_Derferred			= new DeferredShading();
+		m_RP_SkyAtmospheric		= new SkyAtmosphericPipeline();
+
 
 		auto shadingResFBO = m_RP_DeferredShading->GetRenderPassTarget(RenderPassType::Shading);
 		m_RP_Dbg->SetRenderTarget(RenderPassType::DebugVisual, shadingResFBO);
@@ -62,6 +68,11 @@ namespace Aho {
 		m_FrameTime = dt.count();
 		s_previous = frameStart;
 
+		// --- New System
+		m_RP_Derferred->Execute();
+		m_RP_SkyAtmospheric->Execute();
+
+
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
 			m_RP_Sky->Execute();
 			m_RP_DeferredShading->Execute();
@@ -77,7 +88,7 @@ namespace Aho {
 		}
 
 		auto nextFrameTime = frameStart + frameDur;
-		std::this_thread::sleep_until(nextFrameTime);
+		//std::this_thread::sleep_until(nextFrameTime);
 	}
 
 	RenderPipeline* Renderer::GetPipeline(RenderPipelineType type) {
@@ -119,6 +130,9 @@ namespace Aho {
 
 	// TODO: Fix fxaa: it is appiled to all pixels
 	uint32_t Renderer::GetRenderResultTextureID() {
+		return m_RP_Derferred->GetRenderResultTextureID();
+
+
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
 			return m_RP_Dbg->GetRenderResult()->GetTextureID();
 		}

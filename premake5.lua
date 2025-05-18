@@ -36,7 +36,7 @@ project "AhoEngine"
     location "AhoEngine"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "c++latest"
     staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -120,7 +120,7 @@ project "AhoEditor"
     location "AhoEditor"
     kind "ConsoleApp"
     language "C++"
-	cppdialect "C++20"
+	cppdialect "c++latest"
 	staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -186,7 +186,7 @@ project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "c++latest"
     staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")

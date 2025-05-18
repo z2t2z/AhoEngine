@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "ResourceLayer.h"
+#include "AssetCreator/AssetCreator.h"
 #include "ResourceType/ResourceType.h"
 
 namespace Aho {
@@ -50,7 +51,6 @@ namespace Aho {
 		else {
 			std::shared_ptr<StaticMesh> res = std::make_shared<StaticMesh>();
 			m_AssetManager->LoadAssetFromFile(path, *res, preTransform);
-			m_AssetManager->AddAsset(path, res->GetUUID(), res);
 			PackRenderData(res, false);
 		}
 		//PackEcSData(res);

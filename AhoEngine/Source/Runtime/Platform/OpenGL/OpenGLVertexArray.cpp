@@ -1,5 +1,7 @@
 #include "Ahopch.h"
 #include "OpenGLVertexArray.h"
+#include "Runtime/Core/Geometry/Mesh.h"
+
 #include <glad/glad.h>
 
 namespace Aho {
@@ -31,6 +33,48 @@ namespace Aho {
 
 	OpenGLVertexArray::~OpenGLVertexArray() {
 		glDeleteVertexArrays(1, &m_RendererID);
+	}
+
+	void OpenGLVertexArray::Init(const Mesh& mesh) {
+		std::vector<float> vertices;
+		vertices.reserve(mesh.vertexBuffer.size() * 14u);
+		for (const auto& vertex : mesh.vertexBuffer) {
+			vertices.push_back(vertex.position.x);
+			vertices.push_back(vertex.position.y);
+			vertices.push_back(vertex.position.z);
+			if (mesh.hasNormal) {
+				vertices.push_back(vertex.normal.x);
+				vertices.push_back(vertex.normal.y);
+				vertices.push_back(vertex.normal.z);
+			}
+			if (mesh.hasUVs) {
+				vertices.push_back(vertex.u);
+				vertices.push_back(vertex.v);
+				vertices.push_back(vertex.tangent.x);
+				vertices.push_back(vertex.tangent.y);
+				vertices.push_back(vertex.tangent.z);
+			}
+		}
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+		BufferLayout layout = {
+			{ ShaderDataType::Float3, "a_Position" }
+		};
+		if (mesh.hasNormal) {
+			layout.Push({ ShaderDataType::Float3, "a_Normal" });
+		}
+		if (mesh.hasUVs) {
+			layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
+			// TODO;
+			layout.Push({ ShaderDataType::Float3, "a_Tangent" });
+		}
+		vertexBuffer->SetLayout(layout);
+		AddVertexBuffer(vertexBuffer);
+
+		std::shared_ptr<IndexBuffer> indexBuffer;
+		const std::vector<uint32_t>& indices = mesh.indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
+		SetIndexBuffer(indexBuffer);
 	}
 
 	void OpenGLVertexArray::Init(const std::shared_ptr<LineInfo>& lineInfo) {

@@ -52,7 +52,7 @@ namespace Aho {
 		glm::mat4 u_ViewInv{ 0.0f };
 		glm::mat4 u_Projection{ 0.0f };
 		glm::mat4 u_ProjectionInv{ 0.0f };
-		glm::mat4 u_ViewProj{ 0.0f };
+		glm::mat4 u_ProjView{ 0.0f };
 		glm::vec4 u_ViewPosition{ 0.0f };
 	};
 

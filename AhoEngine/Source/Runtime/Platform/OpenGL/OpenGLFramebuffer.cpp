@@ -2,13 +2,19 @@
 #include "OpenGLTexture.h"
 #include "OpenGLFrameBuffer.h"
 #include "Runtime/Core/Core.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include <glm/glm.hpp>
 
 namespace Aho {
 	static const uint32_t s_MaxFramebufferSize = 8192;
 
+	OpenGLFramebuffer::OpenGLFramebuffer(const std::vector<_Texture*>& cfgs, uint32_t width, uint32_t height)
+	: m_Attachments(cfgs), m_Width(width), m_Height(height) {
+		_Resize(width, height);
+	}
+
 	OpenGLFramebuffer::OpenGLFramebuffer(const FBSpec& spec)
-		: m_Specification(spec) {
+		: m_Specification(spec), m_Width(spec.Width), m_Height(spec.Height) {
 		for (const auto& spec : m_Specification.Attachments) {
 			if (!Utils::IsDepthFormat(spec.dataFormat)) {
 				m_ColorAttachmentTex.push_back(new OpenGLTexture2D(spec));
@@ -28,6 +34,33 @@ namespace Aho {
 		for (Texture* tex : m_ColorAttachmentTex) {
 			delete tex;
 		}
+	}
+
+	void OpenGLFramebuffer::_Resize(uint32_t width, uint32_t height) {
+		if (!m_FBO) {
+			glCreateFramebuffers(1, &m_FBO);
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+		uint32_t offset = 0;
+		std::vector<uint32_t> drawBuffers;
+		for (auto& attachment : m_Attachments) {
+			attachment->Resize(width, height);
+			uint32_t fmt = (uint32_t)attachment->GetDataFmt();
+			uint32_t type;
+			if (fmt == DataFormat::Depth || fmt == DataFormat::DepthStencil) {
+				type = fmt == DataFormat::Depth ? GL_DEPTH_COMPONENT : GL_DEPTH_STENCIL_ATTACHMENT;
+			}
+			else {
+				type = GL_COLOR_ATTACHMENT0 + offset++;
+				drawBuffers.push_back(type);
+			}
+			glFramebufferTexture2D(GL_FRAMEBUFFER, type, (uint32_t)attachment->GetDim(), attachment->GetTextureID(), 0);
+		}
+		glDrawBuffers(drawBuffers.size(), drawBuffers.data());
+
+		AHO_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void OpenGLFramebuffer::Invalidate() {
@@ -69,8 +102,7 @@ namespace Aho {
 
 	void OpenGLFramebuffer::Bind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-		glDrawBuffers(static_cast<GLsizei>(m_Attchments.size()), m_Attchments.data());
-		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
+		glViewport(0, 0, m_Width, m_Height);
 	}
 
 	void OpenGLFramebuffer::Unbind() {
@@ -92,12 +124,12 @@ namespace Aho {
 			return false;
 		}
 
-		if (m_Specification.Width == width && m_Specification.Height == height) {
+		if (m_Width == width && m_Height == height) {
 			return false;
 		}
 
-		m_Specification.Width = width;
-		m_Specification.Height = height;
+		m_Width = width;
+		m_Height = height;
 		Invalidate();
 		return true;
 	}

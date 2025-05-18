@@ -8,7 +8,7 @@ layout(std140, binding = 0) uniform CameraUBO {
 	mat4 u_ViewInv;
 	mat4 u_Projection;
 	mat4 u_ProjectionInv;
-	mat4 u_ViewProj;
+	mat4 u_ProjView;
 	vec4 u_ViewPosition;
 };
 

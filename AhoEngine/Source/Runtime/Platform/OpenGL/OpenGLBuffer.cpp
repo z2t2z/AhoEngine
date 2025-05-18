@@ -36,7 +36,7 @@ namespace Aho {
 	}
 
 	// IndexBuffer //////////////////////////////////////////////////////////////
-	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)
+	OpenGLIndexBuffer::OpenGLIndexBuffer(const uint32_t* indices, uint32_t count)
 		: m_Count(count) {
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);

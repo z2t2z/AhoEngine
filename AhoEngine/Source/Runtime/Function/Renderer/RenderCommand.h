@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RendererAPI.h"
-#include "VertexArrayr.h"
+#include "VertexArray.h"
 #include "RenderData.h"
 #include "Framebuffer.h"
 #include <memory>
@@ -12,6 +12,9 @@ namespace Aho {
 	// OpenGL Dedicated
 	class RenderCommand {
 	public:
+		inline static void BindTextureUnit(uint32_t slot, uint32_t textureID) {
+			glBindTextureUnit(slot, textureID);
+		}
 		inline static void SetClearColor(const glm::vec4& color) {
 			glClearColor(color.r, color.g, color.b, color.a);
 		}
@@ -22,6 +25,9 @@ namespace Aho {
 			glLineWidth(2.5f);
 		}
 		inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, bool DrawLine = false) {
+			glDrawElements(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+		}
+		inline static void DrawIndexed(VertexArray* vertexArray, bool DrawLine = false) {
 			glDrawElements(DrawLine ? GL_LINES : GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 		}
 		inline static void DrawLine(const std::shared_ptr<VertexArray>& vertexArray) {

@@ -16,20 +16,6 @@ namespace Aho {
 	struct PrimitiveDesc;
 	struct IntersectResult;
 
-	struct alignas(16) Vertex {
-		glm::vec3 position;		float u;
-		glm::vec3 normal;		float v;
-		glm::vec3 tangent;		float _padding;
-		//glm::vec2 uv;			float _padding4; float _padding5;
-
-		//Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-		//	: position(pos), normal(normal), tangent(tangent), uv(uv) { }
-		Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-			: position(pos), normal(normal), tangent(tangent), u(uv.x), v(uv.y) {
-		}
-		Vertex() = default;
-	};
-
 	static glm::vec3 QuaternionToEuler(const glm::quat& q) {
 		glm::vec3 euler;
 
@@ -73,11 +59,22 @@ namespace Aho {
 		return q;
 	}
 
-	static glm::mat4 ComposeTransform(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale) {
-		glm::quat orientation = EulerToQuaternion(rotation.x, rotation.y, rotation.z);
-		return glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(orientation) * glm::scale(glm::mat4(1.0f), scale);
+	inline static glm::mat4 ComposeTransform(const glm::vec3& Translation, const glm::vec3& Rotation, const glm::vec3& Scale) {
+		glm::quat Orientation = EulerToQuaternion(Rotation.x, Rotation.y, Rotation.z);
+		return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Orientation) * glm::scale(glm::mat4(1.0f), Scale);
 	}
-
+	static void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale, glm::quat& Orientation) {
+		glm::vec3 Skew;
+		glm::vec4 Perspective;
+		glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
+		Rotation = glm::degrees(QuaternionToEuler(Orientation));
+	}
+	static void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale) {
+		glm::vec3 Skew;
+		glm::vec4 Perspective;
+		glm::quat Orientation;
+		glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
+	}
 	inline static float SimpleLerp(float a, float b, float t) { return a + (b - a) * t; }
 
 	inline static void Clamp(float& v, float lb, float ub) {

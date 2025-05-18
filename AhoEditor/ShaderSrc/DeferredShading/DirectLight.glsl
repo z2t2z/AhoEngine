@@ -52,35 +52,36 @@ vec3 EvalPointLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 
 // IBL
 uniform bool u_SampleEnvLight = false;
+uniform samplerCube u_gCubeMap;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gLUT;
 #define MAX_REFLECTION_LOD 4.0
 
 vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
-	vec3 L_out = vec3(0.0, 0.0, 0.0);
-	if (true) {
-        vec3 baseColor  = mat.baseColor;
-        float roughness = mat.roughness;
-        float metallic  = mat.metallic;
-        float ao        = mat.ao;
-        float VoN = dot(V, N);
-        vec3 L = reflect(-V, N);
+	vec3 L_out      = vec3(0.0, 0.0, 0.0);
+    vec3 baseColor  = mat.baseColor;
+    float roughness = mat.roughness;
+    float metallic  = mat.metallic;
+    float ao        = mat.ao;
+    float VoN       = dot(V, N);
+    vec3 L          = reflect(-V, N);
 
-		// vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
-        vec3  F = F_Schlick(F0, VoN);
-		vec3 Ks = F;
-		vec3 Kd = (1.0 - Ks) * (1.0 - metallic);
+    // vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
+    vec3  F = F_Schlick(F0, VoN);
+    vec3 Ks = F;
+    vec3 Kd = (1.0 - Ks) * (1.0 - metallic);
 
-		vec3 irradiance = texture(u_gIrradiance, N).rgb;
-		vec3 diffuse = irradiance * baseColor;
+    vec3 irradiance = texture(u_gIrradiance, N).rgb;
+    vec3 diffuse = irradiance * baseColor;
 
-		vec3 preFilter = textureLod(u_gPrefilter, L, roughness * MAX_REFLECTION_LOD).rgb;
-		vec2 brdf = texture(u_gLUT, vec2(max(VoN, 0.0), roughness)).rg;
-		vec3 specular = preFilter * (F * brdf.x + brdf.y);
-		specular = vec3(0.0);
-		L_out = (Kd * diffuse + specular) * ao;
-	}
+    vec3 preFilter = textureLod(u_gPrefilter, L, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 brdf = texture(u_gLUT, vec2(max(VoN, 0.0), roughness)).rg;
+    vec3 specular = preFilter * (F * brdf.x + brdf.y);
+
+    // return specular;
+
+    L_out = (Kd * diffuse + specular);// * ao;
     return L_out;
 }
 

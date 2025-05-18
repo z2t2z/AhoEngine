@@ -43,6 +43,7 @@ namespace Aho {
 		static std::vector<std::shared_ptr<RenderData>> m_UnitCircle;
 	};
 
+	class _Texture;
 	class RenderPipeline {
 	public:
 		RenderPipeline() = default;
@@ -52,6 +53,7 @@ namespace Aho {
 		virtual RenderPass* GetRenderPass(RenderPassType type);
 		virtual RenderPipelineType GetType() { return m_Type; }
 		virtual Texture* GetRenderResult() { return m_RenderResult; }
+		virtual uint32_t GetRenderResultTextureID() const { return m_ResultTextureID; }
 		virtual void SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo);
 		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height);
 		virtual void RegisterRenderPass(RenderPass* renderPass, RenderDataType type) {
@@ -60,6 +62,9 @@ namespace Aho {
 		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
 		virtual void SetInput(Texture* tex) { m_Input = tex; }
 	protected:
+		std::vector<std::shared_ptr<_Texture>> m_TextureBuffers;
+	protected:
+		uint32_t m_ResultTextureID{ 0 };
 		Texture* m_RenderResult{ nullptr };
 		Texture* m_Input{ nullptr };
 	protected:

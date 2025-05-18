@@ -1,11 +1,15 @@
 #pragma once
 
-#include "IamAho.h"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
 
 namespace Aho {
+	class RenderSkyPipeline;
+	class DeferredShadingPipeline;
+	class LevelLayer;
+	class PathTracingPipeline;
+
 	// For quick debug info or control
 	class DebugPenal {
 	public:

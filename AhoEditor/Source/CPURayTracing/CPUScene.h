@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Runtime/Core/BVH.h"
+#include "Runtime/Core/Geometry/BVH.h"
 #include <glm/glm.hpp>
 #include <vector>
 

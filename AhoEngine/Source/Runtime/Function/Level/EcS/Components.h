@@ -1,15 +1,20 @@
 #pragma once
 
+#include "Runtime/Core/Geometry/BVH.h"
+
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Camera/RuntimeCamera.h"
 #include "Runtime/Function/Level/EcS/Entity.h"
-#include "Runtime/Function/SkeletonViewer.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
 #include "Runtime/Function/Renderer/Lights.h"
-#include "Runtime/Resource/Asset/MeshAsset.h"
+#include "Runtime/Function/Renderer/RenderData.h"
+
+#include "Runtime/Resource/Asset/Mesh/MeshAsset.h"
+#include "Runtime/Resource/Asset/TextureAsset.h"
+#include "Runtime/Resource/Asset/MaterialAsset.h"
+
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
-#include "Runtime/Core/BVH.h"
 #include <string>
 
 namespace Aho {
@@ -75,11 +80,10 @@ namespace Aho {
 	// For path tracing 
 	struct TextureHandlesComponent {
 		TextureHandles* handle{ nullptr };
-		MaterialMaskEnum* matMask{ nullptr };
-		TextureHandlesComponent(TextureHandles* handle, MaterialMaskEnum* matMask) : handle(handle), matMask(matMask) {};
+		TextureHandlesComponent(TextureHandles* handle) 
+			: handle(handle) {};
 		TextureHandlesComponent() {
 			handle = new TextureHandles();
-			matMask = new MaterialMaskEnum();
 		}
 		TextureHandlesComponent(const TextureHandlesComponent&) = default;
 	};
@@ -125,6 +129,7 @@ namespace Aho {
 		BonesComponent(const std::vector<BoneComponent>& _bones) : bones(_bones) {}
 	};
 
+	class SkeletonViewer;
 	struct SkeletonViewerComponent {
 		std::string name;
 		SkeletonViewer* viewer;
@@ -182,5 +187,145 @@ namespace Aho {
 			envTextures.push_back(tex);
 		}
 		EnvComponent(const EnvComponent&) = default;
+	};
+
+	struct _TransformComponent {
+		glm::vec3 Translation{ 0.0f };
+		glm::vec3 Scale{ 1.0f };
+		glm::vec3 Rotation{ 0.0f };
+		_TransformComponent() = default;
+		_TransformComponent(const _TransformComponent&) = default;
+		explicit _TransformComponent(const glm::mat4& tf) {
+			DecomposeTransform(tf, Translation, Rotation, Scale);
+		}
+		glm::mat4 GetTransform() const {
+			return ComposeTransform(Translation, Rotation, Scale);
+		}
+	};
+
+	// Root of meshes
+	struct GameObjectComponent {
+		std::string name;
+		explicit GameObjectComponent(const std::string& s) : name(s) {}
+	};
+
+	// Asset Component
+	struct AssetComponent {
+		std::shared_ptr<Asset> asset;
+		explicit AssetComponent(const std::shared_ptr<Asset>& asset) : asset(asset) {}
+		AssetComponent(const AssetComponent&) = default;
+	};
+	struct MeshAssetComponent {
+		std::shared_ptr<MeshAsset> asset;
+		explicit MeshAssetComponent(const std::shared_ptr<MeshAsset>& asset) : asset(asset) {}
+		MeshAssetComponent(const MeshAssetComponent&) = default;
+	};
+	struct TextureAssetComponent {
+		std::shared_ptr<TextureAsset> asset;
+		explicit TextureAssetComponent(const std::shared_ptr<TextureAsset>& asset) : asset(asset) {}
+		TextureAssetComponent(const TextureAssetComponent&) = default;
+	};
+	struct MaterialAssetComponent {
+		std::shared_ptr<MaterialAsset> asset;
+		explicit MaterialAssetComponent(const std::shared_ptr<MaterialAsset>& asset) : asset(asset) {}
+		MaterialAssetComponent() = default;
+		MaterialAssetComponent(const MaterialAssetComponent&) = default;
+	};
+
+	struct VertexArrayRefsComponent {
+		std::vector<entt::entity> vaoRef;
+		VertexArrayRefsComponent() = default;
+	};
+	// For rendering
+	struct VertexArrayComponent {
+		VertexArray* vao;
+		VertexArrayComponent(VertexArray* vao)
+			: vao(vao) { }
+	};
+	//struct RenderableComponent {
+	//	_Material* mat{ nullptr };
+	//	VertexArray* vao{ nullptr };
+	//};
+	struct _MaterialComponent {
+		_Material mat;
+		_MaterialComponent(const _Material& mat) : mat(mat) {}
+		_MaterialComponent(const std::shared_ptr<MaterialAsset>& matAsset) 
+			: mat(matAsset) {}
+	};
+	struct MeshResourceComponent {
+		std::string name{ "MeshResourceComponent" };
+		MeshResourceComponent() = default;
+	};
+	struct AssetRefComponent {
+		Entity AssetRefEntity;
+		explicit AssetRefComponent(const Entity& AssetRefEntity) : AssetRefEntity(AssetRefEntity) {}
+		AssetRefComponent(const AssetRefComponent&) = default;
+	};
+	struct DanglingComponent {
+		bool IsDangling;
+		explicit DanglingComponent() : IsDangling(true) {}
+	};
+	struct ReferenceComponent {
+		size_t ReferenceCount;
+		explicit ReferenceComponent() : ReferenceCount(0) {}
+	};
+	struct MaterialRefComponent {
+		Entity MaterialRefEntity;
+		explicit MaterialRefComponent(const Entity& MaterialRefEntity) : MaterialRefEntity(MaterialRefEntity) {}
+		MaterialRefComponent(const MaterialRefComponent&) = default;
+	};
+
+	// Temp, consider light class
+	struct DistantLightComponent {
+		DistantLightComponent() = default;
+		glm::vec3 LightDir;
+		glm::vec3 LightAlbedo{ 1.0f };
+		float Intensity{ 1.0f };
+		bool CastShadow{ true };
+	};
+	struct AtmosphereParametersComponent {
+		AtmosphereParametersComponent() = default;
+
+		// Radius of the planet (center to ground)
+		float BottomRadius{ 6360.0f };
+		// Maximum considered atmosphere height (center to atmosphere top)
+		float TopRadius{ 6460.0f };
+
+		// Rayleigh scattering exponential distribution scale in the atmosphere
+		float RayleighDensityExpScale;
+		// Rayleigh scattering coefficients
+		glm::vec3 RayleighScattering;
+
+		// Mie scattering exponential distribution scale in the atmosphere
+		float MieDensityExpScale;
+		// Mie scattering coefficients
+		glm::vec3 MieScattering;
+		// Mie extinction coefficients
+		glm::vec3 MieExtinction;
+		// Mie absorption coefficients
+		glm::vec3 MieAbsorption;
+		// Mie phase function excentricity
+		float MiePhaseG;
+
+		// An atmosphere layer of width 'width', and whose density is defined as
+		// 'ExpTerm' * exp('ExpScale' * h) + 'LinearTerm' * h + 'ConstantTerm',
+		// clamped to [0,1], and where h is the altitude.	
+		// Refer to Bruneton's implementation of definitions.glsl for more details
+		// https://github.com/sebh/UnrealEngineSkyAtmosphere/blob/183ead5bdacc701b3b626347a680a2f3cd3d4fbd/Resources/Bruneton17/definitions.glsl
+		glm::vec3 AbsorptionExtinction;
+		float Width0;
+		float ExpTerm0;
+		float ExpScale0;
+		float LinearTerm0;
+		float ConstantTerm0;
+
+		float Width1;
+		float ExpTerm1;
+		float ExpScale1;
+		float LinearTerm1;
+		float ConstantTerm1;
+
+		// The albedo of the ground.
+		glm::vec3 GroundAlbedo{ 1.0f };
 	};
 }

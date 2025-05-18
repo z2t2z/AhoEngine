@@ -19,7 +19,6 @@ namespace Aho {
 	public:
 		IBLPipeline() { Initialize(); }
 		~IBLPipeline() {
-			// Delete everything
 		}
 		virtual void Initialize() override;
 
@@ -42,10 +41,10 @@ namespace Aho {
 						m_RP_PrecomputeIrradiance->GetTextureBuffer(TexType::Irradiance));
 
 			m_IBLLutsMap[sphericalMap] = luts;
-
 			Execute();
+			m_CurrSource = sphericalMap;
 		}
-
+		IBLLuts GetCurrIBLLuts() const { return m_IBLLutsMap.at(m_CurrSource); }
 		void AddCubeMap(Texture* cubeMap) {
 			// TODO
 			AHO_CORE_ERROR("Not supported yet!");
@@ -58,6 +57,7 @@ namespace Aho {
 		std::unique_ptr<RenderPass> m_RP_GenLUT;
 
 	private:
+		std::unique_ptr<RenderPass> SetupEquirectToCubePass();
 		std::unique_ptr<RenderPass> SetupGenCubemapFromSphericalMapPass();
 		std::unique_ptr<RenderPass> SetupPrecomputeIrradiancePass();	// Diffuse 
 		std::unique_ptr<RenderPass> SetupPrefilteredPass();				// Specular

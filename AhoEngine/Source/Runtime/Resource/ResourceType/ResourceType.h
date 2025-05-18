@@ -1,33 +1,10 @@
 #pragma once
 
 #include "Runtime/Core/Math/Math.h"
-#include "Runtime/Resource/UUID/UUID.h"
-#include "Runtime/Function/Renderer/Texture.h"
+#include "Runtime/Core/Geometry/Vertex.h"
 #include <vector>
 
 namespace Aho {
-	constexpr int MAX_BONES = 4;
-	struct VertexSkeletal {
-		glm::vec3 position;
-		glm::vec3 normal;
-		glm::vec3 tangent;
-		glm::vec2 uv;
-
-		VertexSkeletal(const glm::vec3& pos, const glm::vec3& normal, const glm::vec3& tangent, const glm::vec2& uv)
-			: position(pos), normal(normal), tangent(tangent), uv(uv) { 
-			memset(bonesID, -1, sizeof(bonesID));
-			memset(weights, 0, sizeof(weights));
-		}
-
-
-		float weights[MAX_BONES];
-		int bonesID[MAX_BONES];
-		VertexSkeletal() {
-			memset(bonesID, -1, sizeof(bonesID));
-			memset(weights, 0, sizeof(weights));
-		}
-	};
-
 	struct TransformParam {
 		glm::vec3 Translation{ 0.0f };
 		glm::vec3 Scale{ 1.0f };
@@ -70,6 +47,7 @@ namespace Aho {
 	};
 
 	// For loading only
+	enum class TexType;
 	struct MaterialInfo {
 		std::vector<std::pair<TexType, std::string>> materials;
 		MaterialInfo() = default;
