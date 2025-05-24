@@ -44,7 +44,7 @@ namespace Aho {
 	}
 
 	OpenGLShader::~OpenGLShader() {
-		glDeleteProgram(m_ShaderID);
+		Delete();
 	}
 
 	bool OpenGLShader::Reload(const std::string& filepath) {
@@ -58,7 +58,7 @@ namespace Aho {
 		uint32_t id = CompileFromSource(src);
 		if (id) {
 			if (m_ShaderID) {
-				glDeleteProgram(m_ShaderID);
+				Delete();
 			}
 			m_ShaderID = id;
 			m_OpenGLSourceCode = src;
@@ -253,7 +253,7 @@ namespace Aho {
 
 	}
 
-	void OpenGLShader::SetBool(const std::string& name, bool value) {
+	void OpenGLShader::SetBool(const std::string& name, bool value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -262,7 +262,7 @@ namespace Aho {
 		glUniform1i(location, value);
 	}
 
-	void OpenGLShader::SetUint(const std::string& name, uint32_t value) {
+	void OpenGLShader::SetUint(const std::string& name, uint32_t value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		//AHO_CORE_ASSERT(location != -1);
 		if (location == -1) {
@@ -272,7 +272,7 @@ namespace Aho {
 		glUniform1ui(location, value);
 	}
 
-	void OpenGLShader::SetInt(const std::string& name, int value) {
+	void OpenGLShader::SetInt(const std::string& name, int value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		//AHO_CORE_ASSERT(location != -1);
 		if (location == -1) {
@@ -282,7 +282,7 @@ namespace Aho {
 		glUniform1i(location, value);
 	}
 
-	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count) {
+	void OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -291,7 +291,7 @@ namespace Aho {
 		glUniform1iv(location, count, values);
 	}
 
-	void OpenGLShader::SetFloat(const std::string& name, float value) {
+	void OpenGLShader::SetFloat(const std::string& name, float value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -300,7 +300,7 @@ namespace Aho {
 		glUniform1f(location, value);
 	}
 
-	void OpenGLShader::SetVec2(const std::string& name, const glm::vec2& value) {
+	void OpenGLShader::SetVec2(const std::string& name, const glm::vec2& value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -309,7 +309,7 @@ namespace Aho {
 		glUniform2f(location, value.x, value.y);
 	}
 
-	void OpenGLShader::SetIvec2(const std::string& name, const glm::ivec2& value) {
+	void OpenGLShader::SetIvec2(const std::string& name, const glm::ivec2& value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -318,7 +318,7 @@ namespace Aho {
 		glUniform2i(location, value.x, value.y);
 	}
 
-	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) {
+	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			//AHO_CORE_ERROR("{}", name);
@@ -327,7 +327,7 @@ namespace Aho {
 		glUniform3f(location, value.x, value.y, value.z);
 	}
 
-	void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) {
+	void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			return;
@@ -336,7 +336,7 @@ namespace Aho {
 		glUniform4f(location, value.x, value.y, value.z, value.w);
 	}
 
-	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& matrix) {
+	void OpenGLShader::SetMat2(const std::string& name, const glm::mat2& matrix) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			return;
@@ -345,7 +345,7 @@ namespace Aho {
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& matrix) {
+	void OpenGLShader::SetMat3(const std::string& name, const glm::mat3& matrix) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			return;
@@ -354,7 +354,7 @@ namespace Aho {
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix) {
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
 			return;

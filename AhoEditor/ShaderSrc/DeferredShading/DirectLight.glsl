@@ -51,7 +51,7 @@ vec3 EvalPointLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 }
 
 // IBL
-uniform bool u_SampleEnvLight = false;
+uniform bool u_SampleEnvLight;
 uniform samplerCube u_gCubeMap;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;

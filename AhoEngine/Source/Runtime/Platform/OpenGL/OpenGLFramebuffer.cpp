@@ -9,7 +9,7 @@ namespace Aho {
 	static const uint32_t s_MaxFramebufferSize = 8192;
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const std::vector<_Texture*>& cfgs, uint32_t width, uint32_t height)
-	: m_Attachments(cfgs), m_Width(width), m_Height(height) {
+	: m_Attachments(cfgs) {
 		_Resize(width, height);
 	}
 
@@ -36,14 +36,18 @@ namespace Aho {
 		}
 	}
 
-	void OpenGLFramebuffer::_Resize(uint32_t width, uint32_t height) {
+	bool OpenGLFramebuffer::_Resize(uint32_t width, uint32_t height) {
 		if (!m_FBO) {
 			glCreateFramebuffers(1, &m_FBO);
 		}
+		if (m_Width == width && m_Height == height) {
+			return false;
+		}
 
+		m_Width = width; m_Height = height;
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 		uint32_t offset = 0;
-		std::vector<uint32_t> drawBuffers;
+		std::vector<uint32_t> drawBuffers; drawBuffers.reserve(m_Attachments.size());
 		for (auto& attachment : m_Attachments) {
 			attachment->Resize(width, height);
 			uint32_t fmt = (uint32_t)attachment->GetDataFmt();
@@ -55,12 +59,15 @@ namespace Aho {
 				type = GL_COLOR_ATTACHMENT0 + offset++;
 				drawBuffers.push_back(type);
 			}
-			glFramebufferTexture2D(GL_FRAMEBUFFER, type, (uint32_t)attachment->GetDim(), attachment->GetTextureID(), 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, type, attachment->GetDim(), attachment->GetTextureID(), 0);
 		}
 		glDrawBuffers(drawBuffers.size(), drawBuffers.data());
 
-		AHO_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			AHO_CORE_ASSERT(false, "Framebuffer is incomplete!");
+		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		return true;
 	}
 
 	void OpenGLFramebuffer::Invalidate() {

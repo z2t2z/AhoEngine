@@ -1,17 +1,17 @@
 #include "AhoEditorLayer.h"
 #include "FileExplorer.h"
-#include <iomanip>
-#include <entt.hpp>
-#include <filesystem>
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Core/Gui/IconsFontAwesome6.h"
+#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 
+#include <iomanip>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Runtime/Core/Gui/IconsFontAwesome6.h"
-#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
-
+#include <entt.hpp>
+#include <filesystem>
 namespace Aho {
 	namespace fs = std::filesystem;
 
@@ -36,6 +36,9 @@ namespace Aho {
 		m_DbgPenal.m_PtPipeline			= static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
 		m_DbgPenal.m_ShadingPipeline	= static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading));
 		m_DbgPenal.m_SkyPipeline		= static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
+
+		m_EditorCamEntity = g_RuntimeGlobalCtx.m_EntityManager->CreateEntity();
+		g_RuntimeGlobalCtx.m_EntityManager->AddComponent<EditorCamaraComponent>(m_EditorCamEntity);
 	}
 	
 	void AhoEditorLayer::OnDetach() {
@@ -53,6 +56,8 @@ namespace Aho {
 			bool changed = m_CameraManager->Update(deltaTime, firstClick);
 			if (changed) {
 				m_Renderer->SetCameraDirty();
+				auto& cmp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<EditorCamaraComponent>(m_EditorCamEntity);
+				cmp.Dirty = true;
 			}
 		}
 		else if (m_CursorLocked) {

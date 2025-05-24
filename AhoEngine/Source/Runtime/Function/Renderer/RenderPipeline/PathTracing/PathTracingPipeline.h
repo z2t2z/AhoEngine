@@ -1,35 +1,22 @@
 #pragma once
 
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "IBL.h"
 
 namespace Aho {
-
-	class Level;
-
 	class PathTracingPipeline : public RenderPipeline {
 	public:
 		PathTracingPipeline();
+		~PathTracingPipeline() = default;
 		virtual void Initialize() override;
-		void UpdateSSBO(const std::shared_ptr<Level>& currlevel);
-		void ClearAccumulateData();
-		void SetEnvMap(Texture* texture);
-		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height) override;
-		IBL* GetIBL() const { return m_IBL; }
+		virtual void Execute() override;
+		virtual bool Resize(uint32_t width, uint32_t height) const override;
+		void ClearAccumulateData() {}
+		void SetEnvMap(Texture* texture) {}
 	private:
-		std::unique_ptr<RenderPass> SetupGBufferPass();
-		std::unique_ptr<RenderPass> SetupAccumulatePass();
+		std::unique_ptr<RenderPassBase> m_AccumulatePass;
+		std::unique_ptr<RenderPassBase> m_PresentPass;
 	private:
-		std::unique_ptr<RenderPass> m_AccumulatePass;
-		std::unique_ptr<RenderPass> m_PresentPass;
-		std::unique_ptr<RenderPass> m_GbufferPass;
-	private:
-		glm::ivec2 m_TileSize{ 8, 8 };
-		glm::ivec2 m_TileNum;
-		glm::ivec2 m_Resolution;
-	private:
-		IBL* m_IBL{ nullptr };
-		uint32_t m_Frame;
+		uint32_t m_Frame{ 1 };
 	};
-
 }

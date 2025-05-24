@@ -123,7 +123,7 @@ vec4 GridColor(vec3 worldPos, float t) {
 	return GridColor;
 }
 
-// #define SKY_ATMOSPHERIC
+#define SKY_ATMOSPHERIC
 
 void main() {
 	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
@@ -135,14 +135,22 @@ void main() {
 		vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
 		vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
 		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
-		
+
+#ifdef ENBALE_IBL				
+		out_Color = vec4(texture(u_gCubeMap, worldDir).rgb, 1.0);
+		return;
+#endif
+
+
 #ifdef SKY_ATMOSPHERIC
 		const float Rground = 6360.0; 
 		vec3 worldPos = u_ViewPosition.xyz / 1000.0;
 		worldPos.y = max(0.01, worldPos.y) + Rground;
 
 		vec2 sampleUV;
-		vec3 sunDir = u_DirLight[0].direction;
+		// vec3 sunDir = u_DirLight[0].direction;
+		vec3 sunDir = u_SunDir;
+
 		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
 		vec3 lum = texture(u_SkyviewLUT, sampleUV).rgb;
 		lum = pow(lum, vec3(1.3));
@@ -165,9 +173,10 @@ void main() {
 	}
 
 	vec3 baseColor = texture(u_gAlbedo, v_TexCoords).rgb;
+	baseColor = pow(baseColor, vec3(2.2f)); // gamma correction
 	out_Color = vec4(baseColor, 1.0f);
 	return;
-	
+
 	float AO = texture(u_gPBR, v_TexCoords).b;
 	if (AO == -1.0f) {
 		AO = texture(u_gAO, v_TexCoords).r;

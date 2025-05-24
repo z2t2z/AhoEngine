@@ -9,7 +9,7 @@ namespace Aho {
 	class LevelLayer;
 	class Renderer;
 	class Entity;
-	class Texture2D;
+	class _Texture;
 	struct MaterialComponent;
 	struct MaterialProperty;
 
@@ -22,7 +22,7 @@ namespace Aho {
 		bool DrawSingleMaterialProperty(MaterialComponent& materialComp, MaterialProperty& prop);
 		bool DrawMaterialProperties(MaterialComponent& materialComp);
 	private:
-		std::shared_ptr<Texture2D> TryGetDragDropTargetTexture();
+		std::shared_ptr<_Texture> TryGetDragDropTargetTexture();
 	private:
 		LevelLayer* m_LevelLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };

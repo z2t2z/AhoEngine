@@ -6,9 +6,16 @@ layout(location = 1) in vec2 a_TexCoords;
 
 out vec2 v_TexCoords;
 
+const vec3 gridPlane[6] = vec3[](
+    vec3(1, 1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+    vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0)
+);
+
 void main() {
-    gl_Position = vec4(a_Position, 1.0f);
-    v_TexCoords = a_TexCoords;
+    vec3 p = gridPlane[gl_VertexID].xyz;
+    gl_Position = vec4(p, 1.0);
+	float x = p.x, y = p.y;
+	v_TexCoords = (vec2(x, y) * 0.5) + 0.5;
 }
 
 #type fragment

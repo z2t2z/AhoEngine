@@ -13,6 +13,7 @@ namespace Aho {
 		~DeferredShading() = default;
 		virtual void Initialize() override;
 		virtual void Execute() override;
+		virtual bool Resize(uint32_t width, uint32_t height) const override;
 	private:
 		std::unique_ptr<RenderPassBase> m_ShadowMapPass;
 		std::unique_ptr<RenderPassBase> m_GBufferPass;

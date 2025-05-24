@@ -15,7 +15,10 @@ namespace Aho {
 		//_Texture& operator=(_Texture&&) noexcept;
 		_Texture(const _Texture&) = delete;
 		_Texture& operator=(const _Texture&) = delete;
-
+		void BindTextureImage(uint32_t pos) const; // For compute shader
+		void ClearTextureData(const void* data) const {
+			glClearTexImage(m_TextureID, 0, m_DataFmt, m_DataType, data);
+		}
 		bool Resize(uint32_t width, uint32_t height);
 		void SetUsage(const TextureUsage usage) { m_Usage = usage; }
 		uint64_t GetTextureHandle()	 { 

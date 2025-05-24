@@ -32,7 +32,7 @@ namespace Aho {
 	public:
 		PrimitiveDesc() = default;
 		// BLAS Constructor
-		PrimitiveDesc(const Vertex& v0, const Vertex& v1, const Vertex& v2, int id, int meshId = -1)
+		PrimitiveDesc(const Vertex& v0, const Vertex& v1, const Vertex& v2, int id, int meshId)
 			: m_PrimId(id), m_MeshId(meshId) {
 			m_Vertices[0] = v0;
 			m_Vertices[1] = v1;
@@ -59,7 +59,6 @@ namespace Aho {
 		int GetId() const { return m_Id; } 
 		void SetID(int id) { m_Id = id; }
 		int GetPrimId() const { return m_PrimId; } // this id is for transform only
-
 	private:
 		BBox m_BBox;
 		Vertex m_Vertices[3];

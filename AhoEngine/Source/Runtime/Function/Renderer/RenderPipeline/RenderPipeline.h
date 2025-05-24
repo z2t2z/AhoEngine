@@ -53,18 +53,26 @@ namespace Aho {
 		virtual RenderPass* GetRenderPass(RenderPassType type);
 		virtual RenderPipelineType GetType() { return m_Type; }
 		virtual Texture* GetRenderResult() { return m_RenderResult; }
-		virtual uint32_t GetRenderResultTextureID() const { return m_ResultTextureID; }
+		virtual uint32_t GetRenderResultTextureID() const;
 		virtual void SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo);
 		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height);
+		virtual bool Resize(uint32_t width, uint32_t height) const { return false; }
 		virtual void RegisterRenderPass(RenderPass* renderPass, RenderDataType type) {
 			m_RenderTasks.emplace_back(renderPass, type);
 		}
 		virtual std::shared_ptr<Framebuffer> GetRenderPassTarget(RenderPassType type);
 		virtual void SetInput(Texture* tex) { m_Input = tex; }
+		virtual _Texture* GetTextureBufferByIndex(size_t idx) const {
+			if (idx < m_TextureBuffers.size()) {
+				return m_TextureBuffers[idx].get();
+			}
+			return nullptr;
+		}
 	protected:
 		std::vector<std::shared_ptr<_Texture>> m_TextureBuffers;
 	protected:
 		uint32_t m_ResultTextureID{ 0 };
+		_Texture* m_Result{ nullptr };
 		Texture* m_RenderResult{ nullptr };
 		Texture* m_Input{ nullptr };
 	protected:

@@ -2,7 +2,7 @@
 #include "DisneyPrincipled.h"
 
 namespace Aho {
-	std::unordered_map<TexType, std::string> TextureHandles::s_Umap = {
+	std::unordered_map<TexType, std::string> MaterialDescriptor::s_Umap = {
 		{TexType::Albedo, "Base color"},
 		{TexType::Emissive, "Emissive"},
 		{TexType::EmissiveScale, "Emissive Intensity"},

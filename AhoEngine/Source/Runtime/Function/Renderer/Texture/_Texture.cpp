@@ -13,8 +13,6 @@ namespace Aho {
 	_Texture::_Texture(const TextureConfig& cfg) {
 		m_Usage		  = cfg.Usage;
 		m_Label		  = cfg.Label;
-		//m_Height	  = cfg.Height;
-		//m_Width		  = cfg.Width;
 		m_Dim		  = cfg.Dim;
 		m_DataFmt	  = cfg.DataFmt;
 		m_DataType	  = cfg.DataType;
@@ -38,12 +36,15 @@ namespace Aho {
 	}
 
 	_Texture::~_Texture() {
-		glDeleteTextures(1, &m_TextureID);
 		if (m_Handle) {
-			// TODO
+			glMakeTextureHandleNonResidentARB(m_Handle);
 		}
+		glDeleteTextures(1, &m_TextureID);
 	}
 
+	void _Texture::BindTextureImage(uint32_t pos) const {
+		glBindImageTexture(pos, m_TextureID, 0, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, GL_WRITE_ONLY, m_InternalFmt);
+	}
 
 	// TODO: imutable storage
 	bool _Texture::Resize(uint32_t width, uint32_t height) {
@@ -79,6 +80,9 @@ namespace Aho {
 
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (m_Dim == GL_TEXTURE_CUBE_MAP) {
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		}
 		glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, m_MipLevels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 		glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -220,6 +224,7 @@ namespace Aho {
 
 		if (!data) {
 			AHO_CORE_ERROR("Failed to load texture from `{}`", texAsset->GetPath());
+			AHO_CORE_ASSERT(false);
 			return;
 		}
 
@@ -274,9 +279,12 @@ namespace Aho {
 
 		stbi_image_free(data);
 
-		m_TextureID = textureID;
-		m_Height	= height;
-		m_Width		= width;
+		m_TextureID		= textureID;
+		m_Height		= height;
+		m_Width			= width;
+		m_DataFmt		= (DataFormat)dataFormat;
+		m_InternalFmt	= (InternalFormat)internalFormat;
+		m_DataType		= isHDR ? DataType::Float : DataType::UByte;
 	}
 
 }

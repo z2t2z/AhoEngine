@@ -7,6 +7,7 @@
 #include "DebugPenal.h"
 
 namespace Aho {
+	class Entity;
 	class AhoEditorLayer : public Layer {
 	public:
 		AhoEditorLayer(LevelLayer* levellayer, ResourceLayer* resourceLayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
@@ -21,6 +22,7 @@ namespace Aho {
 		PropertiesPanel m_PropertiesPanel;
 		HierachicalPanel m_HierachicalPanel;
 		Viewport m_Viewport;
+		Entity m_EditorCamEntity;
 	private:
 		bool m_PickingPass{ false };
 		bool m_CursorLocked{ false };

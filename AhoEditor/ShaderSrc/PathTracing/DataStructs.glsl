@@ -23,8 +23,8 @@ struct BVHNode {
     int firstPrimsIdx;       
     int primsCnt;            
     int axis;   // not used
-    int meshId;
-    int offset;
+    int meshId; // not used
+    int offset; // not used
 };
 
 struct Vertex {
@@ -37,9 +37,9 @@ struct PrimitiveDesc {
     BBox bbox;
     Vertex v[3];
     int meshId; 
-    int id;
-    int primId;
-    int materialMask; // not used
+    int id;             // not used
+    int primId;         // not used
+    int materialMask;   // not used
 };
 
 struct Ray {
@@ -133,10 +133,9 @@ struct TextureHandles {
     float ax;
 
     float ay;
+    float ao; // Not used
     float padding0;
     float padding1;
-    float padding2;
 };
-
 
 #endif

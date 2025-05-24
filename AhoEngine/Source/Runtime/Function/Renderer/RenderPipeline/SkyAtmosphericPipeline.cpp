@@ -30,6 +30,7 @@ namespace Aho {
 
 			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("SkyTransmittanceLUT");
 			texCfg.InternalFmt = InternalFormat::RGBA16F;
+			texCfg.DataType = DataType::Float;
 			texCfg.Width = 256; texCfg.Height = 64;
 
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
@@ -53,6 +54,9 @@ namespace Aho {
 							self.BindRegisteredTextureBuffers(slot);
 							
 							RenderCommand::DrawArray();
+
+							shader->Unbind();
+							self.GetRenderTarget()->Unbind();
 						}
 					);
 				};
@@ -90,12 +94,15 @@ namespace Aho {
 							self.BindRegisteredTextureBuffers(slot);
 							
 							RenderCommand::DrawArray();
+
+							shader->Unbind();
+							self.GetRenderTarget()->Unbind();
 						}
 					);
 				};
 			m_MutiScattLutPass = std::make_unique<RenderPassBase>();
 			m_MutiScattLutPass->Setup(cfg);
-			m_MutiScattLutPass->RegisterTextureBuffer(m_TextureBuffers[0]->GetTextureID(), "u_TransmittanceLUT");
+			m_MutiScattLutPass->RegisterTextureBuffer(m_TextureBuffers[0].get(), "u_TransmittanceLUT");
 		}
 
 		// --- SkyView Pass ---
@@ -130,13 +137,16 @@ namespace Aho {
 							self.BindRegisteredTextureBuffers(slot);
 
 							RenderCommand::DrawArray();
+
+							shader->Unbind();
+							self.GetRenderTarget()->Unbind();
 						}
 					);
 				};
 			m_SkyViewLutPass = std::make_unique<RenderPassBase>();
 			m_SkyViewLutPass->Setup(cfg);
-			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[0]->GetTextureID(), "u_TransmittanceLUT");
-			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[1]->GetTextureID(), "u_MultiScattLUT");
+			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[0].get(), "u_TransmittanceLUT");
+			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[1].get(), "u_MultiScattLUT");
 		}
 	}
 

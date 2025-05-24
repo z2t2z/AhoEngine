@@ -16,6 +16,7 @@ namespace Aho {
 		virtual void Unbind() override;
 		virtual void BindAt(uint32_t pos, uint32_t colorAttachmentId) override;  // temp, this is for compute shader
 		virtual bool Resize(uint32_t width, uint32_t height) override;
+		virtual bool _Resize(uint32_t width, uint32_t height) override;
 		virtual void EnableAttachments(uint32_t start, uint32_t cnt) override;
 		virtual void BindCubeMap(Texture* tex, int faceIndex, int attachmentID, int mipLevel) override;
 		virtual const std::vector<Texture*>& GetTextureAttachments() override;
@@ -34,7 +35,6 @@ namespace Aho {
 		}
 		virtual const FBSpec& GetSpecification() const override { return m_Specification; }
 	private:
-		void _Resize(uint32_t width, uint32_t height);
 		void Invalidate() override;
 		void InvalidateColorAttachment();
 	private:

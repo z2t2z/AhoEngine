@@ -6,6 +6,7 @@
 #include <ImGuizmo.h>
 
 namespace Aho {
+	class _Texture;
 	class Viewport {
 	public:
 		Viewport();
@@ -34,8 +35,8 @@ namespace Aho {
 		uint32_t m_ViewportWidth, m_ViewportHeight;
 		int m_MouseX, m_MouseY;
 	private:
-		std::shared_ptr<Texture2D> m_LightIcon{ nullptr };
-		std::shared_ptr<Texture2D> m_AddIcon{ nullptr };
+		_Texture* m_LightIcon{ nullptr };
+		_Texture* m_AddIcon{ nullptr };
 	private:
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Camera> m_EditorCamera;

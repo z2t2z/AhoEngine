@@ -22,6 +22,7 @@ namespace Aho {
 		virtual void BindAt(uint32_t pos, uint32_t colorAttachmentId) = 0;
 		virtual void Invalidate() = 0;
 		virtual bool Resize(uint32_t width, uint32_t height) = 0;
+		virtual bool _Resize(uint32_t width, uint32_t height) = 0;
 		virtual Texture* GetDepthTexture() = 0;
 		virtual Texture* GetTextureAttachment(int index) = 0;
 		virtual Texture* GetTexture(TexType type) = 0;

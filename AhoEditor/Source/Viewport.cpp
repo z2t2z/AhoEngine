@@ -4,7 +4,9 @@
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/ResourceManager.h"
-
+#include "Runtime/Resource/Asset/TextureAsset.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
+#include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -21,15 +23,24 @@ namespace Aho {
 	}
 
 	void Viewport::Initialize(Renderer* renderer, LevelLayer* levelLayer, ResourceLayer* resourceLayer, EventManager* manager, const std::shared_ptr<Camera>& camera) {
-		m_Renderer = renderer;
-		m_LevelLayer = levelLayer;
+		m_Renderer		= renderer;
+		m_LevelLayer	= levelLayer;
 		m_ResourceLayer = resourceLayer;
-		m_EventManager = manager;
-		m_EditorCamera = camera;
+		m_EventManager	= manager;
+		m_EditorCamera	= camera;
 
-		auto path = fs::current_path();
-		m_LightIcon = Texture2D::Create((path / "Asset" / "light-bulb.png").string());
-		m_AddIcon = Texture2D::Create((path / "Asset" / "plusicon.png").string());
+		auto path		= fs::current_path();
+		auto ecs		= g_RuntimeGlobalCtx.m_EntityManager;
+		{
+			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "light-bulb.png").string()));
+			std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
+			m_LightIcon = tex.get();
+		}
+		{
+			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "plusicon.png").string()));
+			std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
+			m_AddIcon = tex.get();
+		}
 	}
 	
 	void Viewport::Draw() {
@@ -57,7 +68,6 @@ namespace Aho {
 
 		// TODO: Should be able to select any render result of any passes
 		uint32_t renderResult = m_Renderer->GetRenderResultTextureID();
-		//renderResult = m_Renderer->GetPipeline(RenderPipelineType::RPL_DebugVisual)->GetRenderResult()->GetTextureID();
 		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
@@ -158,11 +168,11 @@ namespace Aho {
 				showFileExplorer = false;
 				if (file != ".") {
 					AHO_CORE_INFO("{}", file.string());
-					Texture* hdr = new OpenGLTexture2D(file.string(), false);
-					hdr->SetTexType(TexType::HDR);
-					m_LevelLayer->AddEnvironmentMap(hdr);
-					auto luts = static_cast<IBLPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_IBL))->GetCurrIBLLuts();
-					static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetIBLLuts(luts);
+					auto resManager = g_RuntimeGlobalCtx.m_Resourcemanager;
+					auto assetManager = g_RuntimeGlobalCtx.m_AssetManager;
+					auto textureAsset = assetManager->_LoadAsset<TextureAsset>(g_RuntimeGlobalCtx.m_EntityManager, TextureOptions(file.string()));
+					Entity IBLEntity = resManager->LoadIBL(textureAsset);
+					g_RuntimeGlobalCtx.m_IBLManager->SetActiveIBL(IBLEntity);
 				}
 			}
 		}

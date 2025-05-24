@@ -312,7 +312,8 @@ void main() {
 
 	vec3 sunDir;
 	{
-		vec3 oriSunDir = u_DirLight[0].direction;
+		// vec3 oriSunDir = u_DirLight[0].direction;
+		vec3 oriSunDir = u_SunDir;
 		vec3 UpVector = worldPos / viewHeight;
 		float sunZenithCosAngle = dot(UpVector, oriSunDir);
 		sunDir = normalize(vec3(sqrt(1.0 - sunZenithCosAngle * sunZenithCosAngle), sunZenithCosAngle, 0.0));

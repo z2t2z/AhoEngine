@@ -15,6 +15,7 @@ namespace Aho {
 		void SetSunDir(const glm::vec3& dir) { m_SunDir = dir; }
 		void SetEnvLightState(bool state);
 		void SetIBLLuts(const IBLLuts& luts);
+		virtual void Execute() override {}
 	private:
 		std::unique_ptr<RenderPass> SetupShadowMapPass(); // TODO: multiple shadow map passes
 		std::unique_ptr<RenderPass> SetupGBufferPass();

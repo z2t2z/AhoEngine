@@ -6,17 +6,7 @@
 #include <unordered_map>
 
 namespace Aho {
-	struct DisneyMaterial {
-		DisneyMaterial() = default;
-		glm::vec4 baseColor{ 1.0f };
-		float subsurface{ 0.0f };
-		glm::vec4 emissive{ 0.0f };
-		float metallic{ 0.1f };
-		float roughness{ 0.0f };
-		float ao{ 0.0f };
-	};
-
-	struct alignas(16) TextureHandles {
+	struct alignas(16) MaterialDescriptor {
 		uint64_t albedoHandle{ 0 };
 		uint64_t normalHandle{ 0 };
 
@@ -45,10 +35,9 @@ namespace Aho {
 		float alpha_x;
 
 		float alpha_y;
-		//glm::vec3 _padding;
+		float ao{ 0.0f };
 		float padding0;
 		float padding1;
-		float padding2;
 
 		void SetHandles(uint64_t handleId, TexType type) {
 			AHO_CORE_ASSERT(handleId > 0);

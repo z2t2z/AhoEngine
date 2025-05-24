@@ -116,7 +116,7 @@ float EnvIntensity = 1.0f;
 vec4 EvalEnvMap(const vec3 dir) {
     float theta = acos(dir.y);
     vec2 uv = vec2(0.5f + atan(dir.z, dir.x) * Inv2PI, theta * InvPI);
-    vec3 L = texture(u_EnvLight, uv).rgb;
+    vec3 L = texture(u_EnvMap.EnvLight, uv).rgb;
     float pdf = Luminance(L) / u_EnvMap.EnvTotalLum;
     pdf = (pdf * u_EnvMap.EnvSize.x * u_EnvMap.EnvSize.y) / (2.0f * PI * PI * sin(theta));
     return vec4(EnvIntensity * L, pdf);

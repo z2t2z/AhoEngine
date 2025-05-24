@@ -1,25 +1,28 @@
 #include "Ahopch.h"
 #include "PathTracingPipeline.h"
-#include "Runtime/Function/Level/Level.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Geometry/BVH.h"
-#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
-#include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/DisneyPrincipled.h"
+#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
+#include "Runtime/Function/Level/EcS/Components.h"
+#include "Runtime/Function/Level/EcS/EntityManager.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
+#include "Runtime/Function/Renderer/Texture/TextureUsage.h"
+#include "Runtime/Function/Renderer/Texture/TextureConfig.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
+#include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
-#include <memory>
-#include <execution>
+#include "Runtime/Core/Timer.h"
 
 namespace Aho {
-	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
-
 	PathTracingPipeline::PathTracingPipeline() {
 		Initialize();
-		m_Frame = 1u;
 	}
 
 	void PathTracingPipeline::Initialize() {
-		// TODO: Move these and check them in bvh
-		constexpr int64_t MAX_MESH		= 128'000;
-		constexpr int64_t MAX_TLAS_NODE = 128'000;
+		constexpr int64_t MAX_MESH		= 1'280'0;
+		constexpr int64_t MAX_TLAS_NODE = 1'280'000;
 		constexpr int64_t MAX_BLAS_NODE = 1'280'000;
 		constexpr int64_t MAX_PRIMITIVE = 1'280'000;
 
@@ -28,243 +31,169 @@ namespace Aho {
 		SSBOManager::RegisterSSBO<BVHNodei>(2, MAX_BLAS_NODE, true);
 		SSBOManager::RegisterSSBO<PrimitiveDesc>(3, MAX_PRIMITIVE, true);
 		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
-		SSBOManager::RegisterSSBO<TextureHandles>(5, MAX_MESH, true);
+		SSBOManager::RegisterSSBO<MaterialDescriptor>(5, MAX_MESH, true);
 
-		m_AccumulatePass = SetupAccumulatePass();
 
-		m_AccumulatePass->RegisterTextureBuffer({ m_AccumulatePass->GetTextureBuffer(TexType::PathTracingAccumulate), TexType::PathTracingAccumulate });
+		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing";
 
-		RegisterRenderPass(m_AccumulatePass.get(), RenderDataType::ScreenQuad);
-		m_RenderResult = m_AccumulatePass->GetTextureBuffer(TexType::Result);
-	}
+		// --- Accumulate pass ---
+		{
+			RenderPassConfig cfg;
+			cfg.passName = "Path Tracing Accumulate Pass";
+			cfg.shaderPath = (shaderPathRoot / "PathTracing.glsl").string();
 
-	void PathTracingPipeline::UpdateSSBO(const std::shared_ptr<Level>& currLevel) {
-		const auto& tlas = currLevel->GetTLAS();
-		SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas.GetNodesArr());
-		SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas.GetPrimsArr());
-		SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas.GetOffsetMap());
+			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("PathTracingAccumulate");
+			texCfg.InternalFmt = InternalFormat::RGBA32F;
+			texCfg.DataType = DataType::Float;
+			texCfg.Width = 1280; texCfg.Height = 720;
+			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
+			m_TextureBuffers.push_back(res);
+			cfg.textureAttachments.push_back(res.get());
 
-		size_t nodesOffset = 0;
-		size_t primsOffset = 0;
-		int i = 0;
-		std::vector<OffsetInfo> info = tlas.GetOffsetMap();
-		for (const PrimitiveDesc& blasPrim : tlas.GetPrimsArr()) { // Every primitive is a BLAS bvh tree
-			const BVHi* blas = tlas.GetBLAS(blasPrim.GetPrimId());
-			AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
-			AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+			cfg.func =
+				[&](RenderPassBase& self) {
+					auto shader = self.GetShader();
+					shader->Bind();
 
-			SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
-			SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					auto camView = ecs->GetView<EditorCamaraComponent>();
+					bool Reaccumulate = false;
+					camView.each(
+						[&](auto cam, EditorCamaraComponent& cmp) { 
+							if (cmp.Dirty) {
+								cmp.Dirty = false;
+								Reaccumulate = true;
+							}
+						});
+					auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+					if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
+						auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
+						iblComp.IBL->Bind(shader);
+					}
 
-			nodesOffset += blas->GetNodeCount();
-			primsOffset += blas->GetPrimsCount();
-			i += 1;
+					bool BVHDirty = false;
+					auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+					view.each(
+						[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+							int meshID = bvh.bvh->GetMeshId();
+							if (bvh.Dirty) {
+								bvh.Dirty = false;
+								{
+									ScopedTimer timer("ApplyTransform");
+									//bvh.bvh->ApplyTransform(transform.GetTransform());
+								}
+								Reaccumulate = true;
+								BVHDirty = true;
+							}
+							if (material.Dirty) {
+								material.Dirty = false;
+								Reaccumulate = true;
+								SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
+							}
+						}
+					);
+					// No need to update every blas everytime but for now it's fine
+					if (BVHDirty) {
+						auto sceneView = ecs->GetView<SceneBVHComponent>();
+						AHO_CORE_ASSERT(sceneView.size() <= 1);
+						sceneView.each(
+							[&](auto entity, SceneBVHComponent& sceneBvh) {
+								sceneBvh.bvh->UpdateTLAS();
+								const auto& tlas = sceneBvh.bvh;
+								SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
+								SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
+								SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
+
+								size_t nodesOffset = 0;
+								size_t primsOffset = 0;
+								int i = 0;
+								const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
+								for (const PrimitiveDesc& blasPrim : tlas->GetPrimsArr()) { // Every primitive is a BLAS bvh tree
+									const BVHi* blas = tlas->GetBLAS(blasPrim.GetPrimId());
+									AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
+									AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+
+									SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
+									SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+
+									nodesOffset += blas->GetNodeCount();
+									primsOffset += blas->GetPrimsCount();
+									i += 1;
+								}
+							}
+						);
+					}
+
+					auto textureTarget = self.GetTextureAttachmentByIndex(0);
+					if (Reaccumulate) {
+						static constexpr float clearData[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+						m_Frame = 1;
+						textureTarget->ClearTextureData(clearData);
+					}
+					textureTarget->BindTextureImage(0);
+					shader->SetInt("u_Frame", m_Frame);
+					static int group = 16;
+					uint32_t width = textureTarget->GetWidth();
+					uint32_t height = textureTarget->GetHeight();
+					uint32_t workGroupCountX = (width + group - 1) / group;
+					uint32_t workGroupCountY = (height + group - 1) / group;
+					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
+					shader->Unbind();
+				};
+			m_AccumulatePass = std::make_unique<RenderPassBase>();
+			m_AccumulatePass->Setup(cfg);
+		}
+
+		// --- Present Pass ---
+		{
+			RenderPassConfig cfg;
+			cfg.passName = "Path Tracing Present Pass";
+			cfg.shaderPath = (shaderPathRoot / "Present.glsl").string();
+
+			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("PathTracingPresent"));
+			m_TextureBuffers.push_back(res);
+			cfg.textureAttachments.push_back(res.get());
+
+			cfg.func =
+				[&](RenderPassBase& self) {
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					auto shader = self.GetShader();
+					shader->Bind();
+					self.GetRenderTarget()->Bind();
+					RenderCommand::Clear(ClearFlags::Color_Buffer);
+
+					// Uniforms
+					shader->SetInt("u_Frame", m_Frame++);
+
+					// Texture uniforms
+					uint32_t slot = 0;
+					self.BindRegisteredTextureBuffers(slot);
+					
+					// Draw screen quad
+					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
+					RenderCommand::DrawArray();
+
+					shader->Unbind();
+					self.GetRenderTarget()->Unbind();
+				};
+			m_PresentPass = std::make_unique<RenderPassBase>();
+			m_PresentPass->Setup(cfg);
+			m_PresentPass->RegisterTextureBuffer(m_AccumulatePass->GetTextureAttachmentByIndex(0), "u_PathTracingAccumulate");
+			m_ResultTextureID = res->GetTextureID();
+			m_Result = res.get();
 		}
 	}
 
-	void PathTracingPipeline::ClearAccumulateData() {
-		m_Frame = 1u;
-		static constexpr float clearData[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		m_AccumulatePass->GetRenderTarget()->GetTexture(TexType::PathTracingAccumulate)->ClearTexImage(clearData);
+	void PathTracingPipeline::Execute() {
+		m_AccumulatePass->Execute();
+		m_PresentPass->Execute();
 	}
 
-	static Texture* s_EnvMap = nullptr;
-	void PathTracingPipeline::SetEnvMap(Texture* texture) {
-		s_EnvMap = texture;
-		m_IBL = new IBL(texture);
-	}
-
-	bool PathTracingPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
-		bool resized = false;
-		for (auto& task : m_RenderTasks) {
-			resized |= task.pass->GetRenderTarget()->Resize(width, height);
-		}
-		if (resized) {
-			m_Frame = 1u;
-			m_TileNum = glm::ivec2((width + m_TileSize.x - 1) / m_TileSize.x, 
-									(height + m_TileSize.y - 1) / m_TileSize.y);
-		}
+	bool PathTracingPipeline::Resize(uint32_t width, uint32_t height) const {
+		bool resized = m_AccumulatePass->Resize(width, height);
+		resized |= m_PresentPass->Resize(width, height);
 		return resized;
 	}
 
-	constexpr uint32_t g_EnvMapBindingPoint = 0;
-	std::unique_ptr<RenderPass> PathTracingPipeline::SetupAccumulatePass() {
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("PathTracingPass");
-		// Accumulate in compute shader
-		pass->AddRenderCommand(
-			[this](const std::vector<std::shared_ptr<RenderData>>& _, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				static int g = 16;
-				shader->Bind();
-				renderTarget->BindAt(0, 0);
-
-				shader->SetInt("u_Frame", m_Frame);
-				shader->SetIvec2("u_Resolution", m_Resolution);
-				shader->SetIvec2("u_TileSize", m_TileSize);
-				shader->SetIvec2("u_TileNum", m_TileNum);
-
-				if (s_EnvMap) {
-					shader->SetInt("u_EnvLight", g_EnvMapBindingPoint);
-					s_EnvMap->Bind(g_EnvMapBindingPoint);
-				}
-
-				if (m_IBL) {
-					shader->SetInt("u_EnvMap.EnvLight", g_EnvMapBindingPoint + 1);
-					shader->SetInt("u_EnvMap.Env1DCDF", g_EnvMapBindingPoint + 2);
-					shader->SetInt("u_EnvMap.Env2DCDF", g_EnvMapBindingPoint + 3);
-					shader->SetInt("u_EnvMap.Env2DCDF_Reference", g_EnvMapBindingPoint + 4);
-
-					m_IBL->BindEnvMap(g_EnvMapBindingPoint + 1);
-					m_IBL->Bind1DCDF(g_EnvMapBindingPoint + 2);
-					m_IBL->Bind2DCDF(g_EnvMapBindingPoint + 3);
-					m_IBL->Bind2DCDFReference(g_EnvMapBindingPoint + 4);
-					shader->SetIvec2("u_EnvMap.EnvSize", glm::ivec2(m_IBL->GetSize()));
-					shader->SetFloat("u_EnvMap.EnvTotalLum", m_IBL->GetTotLuminance());
-				}
-
-				uint32_t width = renderTarget->GetSpecification().Width;
-				uint32_t height = renderTarget->GetSpecification().Height;
-				//uint32_t workGroupCountX = (width + m_TileSize.x - 1) / m_TileSize.x;
-				//uint32_t workGroupCountY = (height + m_TileSize.y - 1) / m_TileSize.y;
-				uint32_t workGroupCountX = (width + g - 1) / g;
-				uint32_t workGroupCountY = (height + g - 1) / g;
-				shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
-
-				renderTarget->Unbind();
-				shader->Unbind();
-			});
-
-		// Present in fragment shader
-		pass->AddRenderCommand(
-			[this](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				shader->Bind();
-				renderTarget->EnableAttachments(1);
-				RenderCommand::Clear(ClearFlags::Color_Buffer);
-
-				shader->SetInt("u_Frame", m_Frame++);
-
-				uint32_t texOffset = 0u;
-				for (const auto& texBuffer : textureBuffers) {
-					shader->SetInt(TextureBuffer::GetTexBufferUniformName(texBuffer.m_Type), texOffset);
-					texBuffer.m_Texture->Bind(texOffset++);
-				}
-
-				for (const auto& data : renderData) {
-					data->Bind(shader, texOffset);
-					RenderCommand::DrawIndexed(data->GetVAO());
-					data->Unbind();
-				}
-				renderTarget->Unbind();
-				shader->Unbind();
-			});
-
-		auto accumulateShader = Shader::Create((g_CurrentPath / "ShaderSrc" / "PathTracing" / "PathTracing.glsl").string());
-		AHO_CORE_ASSERT(accumulateShader->IsCompiled());
-		pass->AddShader(accumulateShader);
-
-		auto preSentShader = Shader::Create((g_CurrentPath / "ShaderSrc" / "PathTracing" / "Present.glsl").string());
-		AHO_CORE_ASSERT(preSentShader->IsCompiled());
-		pass->AddShader(preSentShader);
-
-
-		TexSpec colorAttachment;
-		colorAttachment.debugName = "pathTracerResult";
-		colorAttachment.internalFormat = TexInterFormat::RGBA32F;
-		colorAttachment.dataFormat = TexDataFormat::RGBA;
-		colorAttachment.dataType = TexDataType::Float;
-		colorAttachment.filterModeMin = TexFilterMode::Nearest;
-		colorAttachment.filterModeMag = TexFilterMode::Nearest;
-		colorAttachment.type = TexType::Result;
-
-		TexSpec colorAttachmentAccumulate(colorAttachment);
-		colorAttachmentAccumulate.type = TexType::PathTracingAccumulate;
-		colorAttachmentAccumulate.debugName = "pathTracerAccumulate";
-
-		FBSpec fbSpec(1280u, 720u, { colorAttachmentAccumulate, colorAttachment });
-
-		auto fbo = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::PathTracing);
-		return pass;
-	}
-
-	std::unique_ptr<RenderPass> PathTracingPipeline::SetupGBufferPass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				shader->Bind();
-				renderTarget->Bind();
-				RenderCommand::Clear(ClearFlags::Color_Buffer | ClearFlags::Depth_Buffer);
-
-				for (const auto& data : renderData) {
-					if (!data->ShouldBeRendered()) {
-						continue;
-					}
-					data->Bind(shader);
-
-					shader->SetUint("u_EntityID", data->GetEntityID());
-					if (RendererGlobalState::g_SelectedEntityID == data->GetEntityID()) {
-						RendererGlobalState::g_SelectedData = data;
-					}
-
-					if (data->IsInstanced()) {
-						shader->SetBool("u_IsInstanced", true);
-						RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount());
-						shader->SetBool("u_IsInstanced", false);
-					}
-					else {
-						RenderCommand::DrawIndexed(data->GetVAO());
-					}
-					data->Unbind();
-				}
-
-				renderTarget->Unbind();
-				shader->Unbind();
-			});
-
-		auto shader = Shader::Create((g_CurrentPath / "ShaderSrc" / "SSAO_GeoPass.glsl").string());
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("GbufferPass");
-		AHO_CORE_ASSERT(shader->IsCompiled());
-		pass->SetShader(shader);
-		pass->SetRenderCommand(std::move(cmdBuffer));
-		TexSpec depth; depth.internalFormat = TexInterFormat::Depth24; depth.dataFormat = TexDataFormat::DepthComponent; depth.type = TexType::Depth; depth.debugName = "depth";
-
-		TexSpec positionAttachment;
-		positionAttachment.debugName = "position";
-		positionAttachment.internalFormat = TexInterFormat::RGBA16F;
-		positionAttachment.dataFormat = TexDataFormat::RGBA;
-		positionAttachment.dataType = TexDataType::Float;
-		positionAttachment.filterModeMin = TexFilterMode::Nearest;
-		positionAttachment.filterModeMag = TexFilterMode::Nearest;
-		positionAttachment.type = TexType::Position;
-
-		TexSpec normalAttachment = positionAttachment;
-		normalAttachment.debugName = "normal";
-		normalAttachment.wrapModeS = TexWrapMode::None;
-		normalAttachment.type = TexType::Normal;
-
-		TexSpec albedoAttachment;
-		albedoAttachment.debugName = "albedo";
-		albedoAttachment.type = TexType::Albedo;
-
-		TexSpec entityAttachment;
-		entityAttachment.debugName = "entity";
-		entityAttachment.internalFormat = TexInterFormat::UINT;
-		entityAttachment.dataFormat = TexDataFormat::UINT;
-		entityAttachment.dataType = TexDataType::UnsignedInt;
-		entityAttachment.type = TexType::Entity;
-
-		TexSpec pbrAttachment = positionAttachment;
-		pbrAttachment.debugName = "pbr";
-		pbrAttachment.internalFormat = TexInterFormat::RGBA16F; pbrAttachment.dataFormat = TexDataFormat::RGBA; // Don't use rbga8 cause it will be normalized!
-		pbrAttachment.dataType = TexDataType::Float;
-		pbrAttachment.type = TexType::PBR;
-
-		FBSpec fbSpec(1280u, 720u, { positionAttachment, normalAttachment, albedoAttachment, pbrAttachment, entityAttachment, depth });
-
-		auto fbo = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::SSAOGeo);
-		return pass;
-	}
 
 }

@@ -56,7 +56,7 @@ namespace Aho {
 			depthConfig.Usage = TextureUsage::Depth;
 			depthConfig.Label = label;
 			depthConfig.Width = 1600;
-			depthConfig.Height = 900;
+			depthConfig.Height = 1600;
 			depthConfig.GenMips = false;
 			depthConfig.Dim = TextureDim::Texture2D;
 			depthConfig.InternalFmt = InternalFormat::Depth24Stencil8;
@@ -71,12 +71,26 @@ namespace Aho {
 			colorConfig.Label = label;
 			colorConfig.Width = 1600;
 			colorConfig.Height = 900;
-			colorConfig.GenMips = true;
+			colorConfig.GenMips = false;
 			colorConfig.Dim = TextureDim::Texture2D;
 			colorConfig.InternalFmt = InternalFormat::RGBA8;
 			colorConfig.DataFmt = DataFormat::RGBA;
 			colorConfig.DataType = DataType::UByte;
 			return colorConfig;
+		}
+
+		static TextureConfig GetCubeMapTextureConfig(const std::string& label = "Cubemap") {
+			TextureConfig cubemapConfig;
+			cubemapConfig.Usage = TextureUsage::IBL_CubeMap;
+			cubemapConfig.Label = label;
+			cubemapConfig.Width = 512;
+			cubemapConfig.Height = 512;
+			cubemapConfig.GenMips = false;
+			cubemapConfig.Dim = TextureDim::CubeMap;
+			cubemapConfig.InternalFmt = InternalFormat::RGBA16F;
+			cubemapConfig.DataFmt = DataFormat::RGBA;
+			cubemapConfig.DataType = DataType::Float;
+			return cubemapConfig;
 		}
 	};
 	

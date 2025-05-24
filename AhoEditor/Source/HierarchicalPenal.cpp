@@ -1,5 +1,6 @@
 #include "HierarchicalPenal.h"
 #include "IamAho.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 
 namespace Aho {
@@ -88,51 +89,53 @@ namespace Aho {
 		static uint32_t m_PickPixelData{ UINT_MAX };
 
 		ImGui::Begin(ICON_FA_TREE " Hierarchy");
-		auto scene = m_LevelLayer->GetCurrentLevel();
-		if (!scene) {
-			ImGui::End();
-			return selectedEntity;
-		}
+		//auto scene = m_LevelLayer->GetCurrentLevel();
+		//if (!scene) {
+		//	ImGui::End();
+		//	return selectedEntity;
+		//}
 
-		auto entityManager = scene->GetEntityManager();
-		auto view = scene->GetEntityManager()->GetView<TagComponent, RootComponent>();
-		view.each([&](auto entity, TagComponent& tag, RootComponent& root) {
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-			if (ImGui::TreeNodeEx(tag.Tag.c_str(), flags)) {
-				if (ImGui::IsItemClicked()) {
-					selectedEntity = entity;
-					m_PickPixelData = static_cast<uint32_t>(entity);
-					RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
-				}
-
-				for (const auto& subEntity : entityManager->GetComponent<RootComponent>(entity).entities) {
-					std::string tag = (entityManager->HasComponent<TagComponent>(Entity(subEntity)) ?
-													entityManager->GetComponent<TagComponent>(Entity(subEntity)).Tag : "Untitled");
-
-					if (ImGui::TreeNodeEx(tag.c_str(), flags)) {
-						if (ImGui::IsItemClicked()) {
-							selectedEntity = subEntity;
-							m_PickPixelData = static_cast<uint32_t>(subEntity);
-							RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
-						}
-
-						// If has skeleton
-						if (entityManager->HasComponent<SkeletalComponent>(selectedEntity)) {
-							const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(selectedEntity);
-							//DrawNode(skeletalComponent.root);
-						}
-						ImGui::TreePop();
+		//auto entityManager = scene->GetEntityManager();
+		auto entityManager = g_RuntimeGlobalCtx.m_EntityManager;
+		//auto view = entityManager->GetView<TagComponent, RootComponent>();
+		auto view = entityManager->GetView<GameObjectComponent>();
+		view.each(
+			[&](auto entity, GameObjectComponent& go) {
+				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+				if (ImGui::TreeNodeEx(go.name.c_str(), flags)) {
+					if (ImGui::IsItemClicked()) {
+						selectedEntity = entity;
+						m_PickPixelData = static_cast<uint32_t>(entity);
 					}
-				}
 
-				// If has skeleton
-				if (entityManager->HasComponent<SkeletalComponent>(selectedEntity)) {
-					const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(selectedEntity);
-					//DrawNode(skeletalComponent.root);
-				}
+					//for (const auto& subEntity : entityManager->GetComponent<RootComponent>(entity).entities) {
+					//	std::string tag = (entityManager->HasComponent<TagComponent>(Entity(subEntity)) ?
+					//									entityManager->GetComponent<TagComponent>(Entity(subEntity)).Tag : "Untitled");
 
-				ImGui::TreePop();
-			}
+					//	if (ImGui::TreeNodeEx(tag.c_str(), flags)) {
+					//		if (ImGui::IsItemClicked()) {
+					//			selectedEntity = subEntity;
+					//			m_PickPixelData = static_cast<uint32_t>(subEntity);
+					//			RendererGlobalState::g_SelectedEntityID = m_PickPixelData;
+					//		}
+
+					//		// If has skeleton
+					//		if (entityManager->HasComponent<SkeletalComponent>(selectedEntity)) {
+					//			const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(selectedEntity);
+					//			//DrawNode(skeletalComponent.root);
+					//		}
+					//		ImGui::TreePop();
+					//	}
+					//}
+
+					// If has skeleton
+					//if (entityManager->HasComponent<SkeletalComponent>(selectedEntity)) {
+						//const auto& skeletalComponent = entityManager->GetComponent<SkeletalComponent>(selectedEntity);
+						//DrawNode(skeletalComponent.root);
+					//}
+
+					ImGui::TreePop();
+				}
 
 			});
 		ImGui::End();

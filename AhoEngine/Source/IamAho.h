@@ -20,10 +20,11 @@
 
 #include "Runtime/Function/Renderer/Buffer.h"
 #include "Runtime/Function/Renderer/Texture.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Function/Renderer/Material.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/Framebuffer.h"
-#include "Runtime/Function/Renderer/Shader.h"
+#include "Runtime/Function/Renderer/Shader/Shader.h"
 #include "Runtime/Function/Renderer/VertexArray.h"
 #include "Runtime/Function/Renderer/RendererAPI.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"

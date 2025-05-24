@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Runtime/Core/Geometry/BVH.h"
+#include "Runtime/Core/Geometry/Mesh.h"
 
 #include "Runtime/Function/Camera/Camera.h"
 #include "Runtime/Function/Camera/RuntimeCamera.h"
@@ -8,10 +9,13 @@
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
 #include "Runtime/Function/Renderer/Lights.h"
 #include "Runtime/Function/Renderer/RenderData.h"
+#include "Runtime/Function/Renderer/IBL/IBL.h"
+#include "Runtime/Function/Renderer/Texture.h"
 
 #include "Runtime/Resource/Asset/Mesh/MeshAsset.h"
 #include "Runtime/Resource/Asset/TextureAsset.h"
 #include "Runtime/Resource/Asset/MaterialAsset.h"
+#include "Runtime/Resource/Asset/ShaderAsset.h"
 
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Resource/Asset/Animation/Animation.h"
@@ -75,17 +79,6 @@ namespace Aho {
 		MaterialComponent(std::shared_ptr<Material>& _material, int32_t meshid)
 			: material(_material), meshId(meshid) { }
 		MaterialComponent(const MaterialComponent&) = default;
-	};
-
-	// For path tracing 
-	struct TextureHandlesComponent {
-		TextureHandles* handle{ nullptr };
-		TextureHandlesComponent(TextureHandles* handle) 
-			: handle(handle) {};
-		TextureHandlesComponent() {
-			handle = new TextureHandles();
-		}
-		TextureHandlesComponent(const TextureHandlesComponent&) = default;
 	};
 
 	struct AnimatorComponent {
@@ -231,24 +224,25 @@ namespace Aho {
 		MaterialAssetComponent() = default;
 		MaterialAssetComponent(const MaterialAssetComponent&) = default;
 	};
+	struct ShaderAssetComponent {
+		std::shared_ptr<ShaderAsset> asset;
+		explicit ShaderAssetComponent(const std::shared_ptr<ShaderAsset>& asset) : asset(asset) {}
+		ShaderAssetComponent(const ShaderAssetComponent&) = default;
+	};
 
 	struct VertexArrayRefsComponent {
 		std::vector<entt::entity> vaoRef;
 		VertexArrayRefsComponent() = default;
 	};
-	// For rendering
 	struct VertexArrayComponent {
 		VertexArray* vao;
-		VertexArrayComponent(VertexArray* vao)
+		explicit VertexArrayComponent(VertexArray* vao)
 			: vao(vao) { }
 	};
-	//struct RenderableComponent {
-	//	_Material* mat{ nullptr };
-	//	VertexArray* vao{ nullptr };
-	//};
 	struct _MaterialComponent {
 		_Material mat;
-		_MaterialComponent(const _Material& mat) : mat(mat) {}
+		bool Dirty = true;
+		explicit _MaterialComponent(const _Material& mat) : mat(mat) {}
 		_MaterialComponent(const std::shared_ptr<MaterialAsset>& matAsset) 
 			: mat(matAsset) {}
 	};
@@ -261,20 +255,44 @@ namespace Aho {
 		explicit AssetRefComponent(const Entity& AssetRefEntity) : AssetRefEntity(AssetRefEntity) {}
 		AssetRefComponent(const AssetRefComponent&) = default;
 	};
-	struct DanglingComponent {
-		bool IsDangling;
-		explicit DanglingComponent() : IsDangling(true) {}
-	};
-	struct ReferenceComponent {
-		size_t ReferenceCount;
-		explicit ReferenceComponent() : ReferenceCount(0) {}
-	};
 	struct MaterialRefComponent {
 		Entity MaterialRefEntity;
 		explicit MaterialRefComponent(const Entity& MaterialRefEntity) : MaterialRefEntity(MaterialRefEntity) {}
 		MaterialRefComponent(const MaterialRefComponent&) = default;
 	};
+	struct SceneBVHComponent {
+		std::unique_ptr<BVHi> bvh{ nullptr };
+		SceneBVHComponent() {
+			bvh = std::make_unique<BVHi>(); // Scene TLAS BVH
+		}
+	};
+	struct EditorCamaraComponent {
+		bool Dirty{ true };
+		EditorCamaraComponent() = default;
+	};
 
+	struct _BVHComponent {
+		bool Dirty = true;
+		std::unique_ptr<BVHi> bvh{ nullptr };
+		static std::vector<int> s_FreeIds;
+		static int s_Id;
+		explicit _BVHComponent(const Mesh& mesh) {
+			int id = -1;
+			if (!s_FreeIds.empty()) {
+				id = s_FreeIds.back();
+				s_FreeIds.pop_back();
+			}
+			else {
+				id = s_Id++;
+			}
+			bvh = std::make_unique<BVHi>(mesh, id);
+		}
+		~_BVHComponent() {
+			if (bvh) {
+				s_FreeIds.push_back(bvh->GetMeshId());
+			}
+		}
+	};
 	// Temp, consider light class
 	struct DistantLightComponent {
 		DistantLightComponent() = default;
@@ -283,6 +301,18 @@ namespace Aho {
 		float Intensity{ 1.0f };
 		bool CastShadow{ true };
 	};
+
+	//struct IBLComponent;
+	struct IBLComponent {
+		std::unique_ptr<IBL> IBL{ nullptr };
+		_Texture* EnvTexture{ nullptr }; // rectangular
+		std::unique_ptr<_Texture> EnvTextureSkyBox{ nullptr };
+		std::unique_ptr<_Texture> PreFilter{ nullptr };
+		std::unique_ptr<_Texture> Irradiance{ nullptr };
+		static std::unique_ptr<_Texture> BRDFLUT;
+		IBLComponent() = default;
+	};
+
 	struct AtmosphereParametersComponent {
 		AtmosphereParametersComponent() = default;
 

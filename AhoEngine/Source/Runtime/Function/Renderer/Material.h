@@ -1,8 +1,8 @@
 #pragma once
 
+#include "DisneyPrincipled.h"
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/Math/Math.h"
-//#include "Texture.h"
 
 #include <memory>
 #include <variant>
@@ -47,10 +47,9 @@ namespace Aho {
 		_Material() = default;
 		~_Material() = default;
 		_Material(const std::shared_ptr<MaterialAsset>& matAsset);
-		struct MatDescriptor {
-			MatDescriptor() = default;
+		struct MaterialTextureDescriptor {
+			MaterialTextureDescriptor() = default;
 			// --- Base Color ---
-			glm::vec3 baseColor			= {1.0f,1.0f,1.0f};
 			_Texture* baseColorTex		= nullptr;
 			bool useBaseColorTex		= false;
 
@@ -59,66 +58,63 @@ namespace Aho {
 			bool useNormalMap			= false;
 
 			// --- Metallic (scalar) ---
-			float metallic				= 0.0f;
 			_Texture* metallicTex		= nullptr;
 			bool useMetallicTex			= false;
 
 			// --- Roughness (scalar) ---
-			float roughness				= 1.0f;
 			_Texture* roughnessTex		= nullptr;
 			bool useRoughnessTex		= false;
 
 			// --- Ambient Occlusion (scalar) ---
-			float ao					= 0.0f;
 			_Texture* aoTex				= nullptr;
 			bool useAoTex				= false;
 
 			// --- Emissive Color ---
-			glm::vec3 emissive			= {0.0f,0.0f,0.0f};
 			_Texture* emissiveTex		= nullptr;
 			bool useEmissiveTex			= false;
 		};
 		void SetBaseColor(const glm::vec3& c) {
-			m_Desc.baseColor = c;
-			m_Desc.useBaseColorTex = false;
+			m_ParamDesc.baseColor = c;
+			m_TextureDesc.useBaseColorTex = false;
 		}
 		void SetBaseColor(const std::shared_ptr<_Texture>& tex) {
-			m_Desc.baseColorTex = tex.get();
-			m_Desc.useBaseColorTex = true;
+			m_TextureDesc.baseColorTex = tex.get();
+			m_TextureDesc.useBaseColorTex = true;
 		}
 		void SetNormalMap(const std::shared_ptr<_Texture>& tex) {
-			m_Desc.normalMap = tex.get();
-			m_Desc.useNormalMap = true;
+			m_TextureDesc.normalMap = tex.get();
+			m_TextureDesc.useNormalMap = true;
 		}
 		void SetMetallic(float m) {
-			m_Desc.metallic = m;
-			m_Desc.useMetallicTex = false;
+			m_ParamDesc.metallic = m;
+			m_TextureDesc.useMetallicTex = false;
 		}
 		void SetMetallic(const std::shared_ptr<_Texture>& tex) {
-			m_Desc.metallicTex = tex.get();
-			m_Desc.useMetallicTex = true;
+			m_TextureDesc.metallicTex = tex.get();
+			m_TextureDesc.useMetallicTex = true;
 		}
 		
 		void SetRoughness(float r) {
-			m_Desc.roughness = r;
-			m_Desc.useRoughnessTex = false;
+			m_ParamDesc.roughness = r;
+			m_TextureDesc.useRoughnessTex = false;
 		}
 		void SetRoughness(const std::shared_ptr<_Texture>& tex) {
-			m_Desc.roughnessTex = tex.get();
-			m_Desc.useRoughnessTex = true;
+			m_TextureDesc.roughnessTex = tex.get();
+			m_TextureDesc.useRoughnessTex = true;
 		}
 
 		void SetAo(float ao) {
-			m_Desc.ao = ao;
-			m_Desc.useAoTex = false;
+			m_ParamDesc.ao = ao;
+			m_TextureDesc.useAoTex = false;
 		}
 		void SetAo(const std::shared_ptr<_Texture>& tex) {
-			m_Desc.aoTex = tex.get();
-			m_Desc.useAoTex = true;
+			m_TextureDesc.aoTex = tex.get();
+			m_TextureDesc.useAoTex = true;
 		}
-		static void ApplyToShader(Shader* shader, const _Material& mat, uint32_t& bindingPoint);
-		MatDescriptor GetMatDescriptor() const { return m_Desc; }
+		void ApplyToShader(Shader* shader, uint32_t& bindingPoint) const;
+		MaterialDescriptor GetMatDescriptor() const { return m_ParamDesc; }
 	private:
-		MatDescriptor m_Desc;
+		MaterialDescriptor m_ParamDesc;
+		MaterialTextureDescriptor m_TextureDesc;
 	};
 }

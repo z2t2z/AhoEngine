@@ -5,6 +5,8 @@
 
 namespace Aho {
 	enum class TextureUsage;
+	enum class ShaderFeature : uint32_t;
+	enum class ShaderUsage;
 
 	struct AssetLoadOptions {
 		std::string path;
@@ -15,7 +17,7 @@ namespace Aho {
 
 	struct TextureOptions : AssetLoadOptions {
 		bool flipUV = false;
-		bool genMipmaps = true;
+		bool genMipmaps = false;
 		TextureOptions(const std::string& p) : AssetLoadOptions(p) {}
 		TextureOptions& setFlipUV(bool f) { flipUV = f; return *this; }
 	};
@@ -24,12 +26,14 @@ namespace Aho {
 		glm::mat4 PreTransform = glm::mat4(1.0f);
 		int LoadFlags = 1 | 2 | 8 | 32 | 262144 | 32768;
 		bool IsSkeletalMesh{ false };
-		bool BuildBVH{ false };
+		bool BuildBVH{ true };
 		MeshOptions(const std::string& p) : AssetLoadOptions(p) {}
 		MeshOptions& setPreTransform(const glm::mat4& m) { PreTransform = m; return *this; }
 	};
 
 	struct ShaderOptions : AssetLoadOptions {
+		ShaderFeature features;
+		ShaderUsage usage;
 		ShaderOptions(const std::string& p) : AssetLoadOptions(p, true) {}
 	};
 

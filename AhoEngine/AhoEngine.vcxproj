@@ -150,6 +150,7 @@
     <ClInclude Include="Source\Runtime\Core\Events\Event.h" />
     <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h" />
     <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h" />
+    <ClInclude Include="Source\Runtime\Core\Geometry\BVHNode.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\Mesh.h" />
     <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h" />
     <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderContext\RenderContext.h" />
@@ -201,14 +203,16 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\BxDFs.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBL.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\Shader.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderFeatures.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureConfig.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureUsage.h" />
@@ -233,6 +237,7 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\Mesh\MeshAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\SceneAsset.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\ShaderAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h" />
     <ClInclude Include="Source\Runtime\Resource\AssetCreator\AssetCreator.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\Vertex.h" />
@@ -691,6 +696,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\DisneyPrincipled.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />
@@ -701,7 +707,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBL.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PostprocessPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp" />
@@ -709,7 +715,8 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\Shader.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture\_Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArray.cpp" />
@@ -728,7 +735,9 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\AssetLoaders.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManager.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\MaterialAsset.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceManager.cpp" />

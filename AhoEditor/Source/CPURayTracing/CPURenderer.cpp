@@ -40,8 +40,8 @@ namespace Aho {
 		//m_TexSpec.GenerateMips = false;
 		m_TexSpec.dataFormat = TexDataFormat::RGBA;
 		m_TexSpec.internalFormat = TexInterFormat::RGBA32F;
-		m_FinalImage = Texture2D::Create(m_TexSpec);
-		m_Noise = Texture2D::Create(m_TexSpec);
+		//m_FinalImage = Texture2D::Create(m_TexSpec);
+		//m_Noise = Texture2D::Create(m_TexSpec);
 		std::filesystem::path currentPath = std::filesystem::current_path();
 		std::string path = currentPath.string() + "\\ShaderSrc\\compute.glsl";
 		m_ComputeShader = Shader::Create(path);
@@ -61,10 +61,10 @@ namespace Aho {
 		m_TexSpec.height = height;
 		m_TexSpec.dataFormat = TexDataFormat::RGBA;
 		m_TexSpec.internalFormat = TexInterFormat::RGBA32F;
-		m_FinalImage = Texture2D::Create(m_TexSpec);
-		m_Noise = Texture2D::Create(m_TexSpec);
+		//m_FinalImage = Texture2D::Create(m_TexSpec);
+		//m_Noise = Texture2D::Create(m_TexSpec);
 		Utils::FillRandom(m_Random, width * height * 3);
-		m_Noise->SetData(m_Random.data(), m_Random.size());
+		//m_Noise->SetData(m_Random.data(), m_Random.size());
 
 		delete[] m_ImageData;
 		m_ImageData = new uint32_t[width * height];
@@ -120,7 +120,7 @@ namespace Aho {
 		m_ComputeShader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
 		auto data = m_SSBO->GetData();
 
-		m_FinalImage->SetData(data, width * height * 4);
+		//m_FinalImage->SetData(data, width * height * 4);
 		
 #else
 		if (m_FrameIndex == 1) {

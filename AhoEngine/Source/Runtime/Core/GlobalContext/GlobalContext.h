@@ -13,6 +13,7 @@ namespace Aho {
     class LevelManager;
     class AssetManager;     // Manage resources from disk
     class ResourceManager;  // Manage runtime resources
+    class IBLManager;
 
     class RuntimeGlobalContext {
     public:
@@ -30,6 +31,7 @@ namespace Aho {
         std::shared_ptr<WindowSystem>       m_WindowSystem;
         std::shared_ptr<EntityManager>      m_EntityManager;
         std::shared_ptr<ResourceManager>    m_Resourcemanager;
+        std::shared_ptr<IBLManager>         m_IBLManager;
     };
 
     extern RuntimeGlobalContext g_RuntimeGlobalCtx;

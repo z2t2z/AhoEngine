@@ -2,16 +2,18 @@
 
 #include "Runtime/Core/Core.h"
 #include "Runtime/Core/Log/Log.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "AssetLoadOptions.h"
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Runtime/Resource/Asset/MaterialAsset.h"
 #include "Runtime/Resource/Asset/TextureAsset.h"
+#include "Runtime/Resource/Asset/ShaderAsset.h"
 #include "Runtime/Resource/Asset/Mesh/MeshAsset.h"
 #include "Runtime/Resource/Asset/AssetLoaders.h"
-#include "Runtime/Function/Renderer/Shader.h"
 #include "Runtime/Resource/FileWatcher/FileWatcher.h"
+#include "Runtime/Function/Renderer/Shader/Shader.h"
 #include "Runtime/Function/Level/EcS/EntityManager.h"
-#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Function/Renderer/Shader/ShaderVariantManager.h"
 
 #include <fstream>
 #include <filesystem>
@@ -19,6 +21,7 @@
 #include <thread>
 
 namespace Aho {
+	class Mesh;
 	class AssetManager {
 	public:
 		AssetManager() = default;
@@ -59,56 +62,11 @@ namespace Aho {
 			}
 
 			if constexpr (std::is_same_v<AssetT, MeshAsset>) {
-				if (m_Assets.count(opts.path)) {
-					return std::static_pointer_cast<MeshAsset>(m_Assets.at(opts.path));
-				}
-
-				std::vector<Mesh> meshes;
-				std::vector<MaterialPaths> mats;
-				bool success = AssetLoader::MeshLoader(opts, meshes, mats);
-				AHO_CORE_ASSERT(success && meshes.size() == mats.size());
-
-				std::vector<Entity> matEnts;
-				matEnts.reserve(mats.size());
-				for (const MaterialPaths& mat : mats) {
-					std::shared_ptr<MaterialAsset> matAsset = std::make_shared<MaterialAsset>(opts.path, mat.UsagePaths);
-					matEnts.push_back(emg->CreateEntity());
-					emg->AddComponent<MaterialAssetComponent>(matEnts.back(), matAsset);
-				}
-
-				std::shared_ptr<MeshAsset> firstMeshAsset;
-				for (size_t i = 0; i < meshes.size(); i++) {
-					std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i]);
-					if (i == 0) {
-						firstMeshAsset = meshAsset;
-					}
-					Entity meshAssetEntity = emg->CreateEntity();
-					emg->AddComponent<MeshAssetComponent>(meshAssetEntity, meshAsset);
-					emg->AddComponent<MaterialRefComponent>(meshAssetEntity, matEnts[i]);
-					if (opts.BuildBVH) {
-						// emg->AddComponent<BVHComponent>(meshAssetEntity, meshAsset->GetBVH());
-					}
-				}
-				m_Assets[opts.path] = firstMeshAsset;
-				return firstMeshAsset;
+				return _LoadMeshAsset(emg, opts);
 			}
 
 			if constexpr (std::is_same_v<AssetT, ShaderAsset>) {
-				if (m_Assets.count(opts.path)) {
-					return std::static_pointer_cast<ShaderAsset>(m_Assets.at(opts.path));
-				}
-				std::shared_ptr<Shader> shader = Shader::Create(opts.path);
-				AHO_CORE_ASSERT(shader->IsCompiled());
-				m_Filewatcher.WatchFile(opts.path,
-					[this, opts](const std::string& p) { // ?
-						// Sadly opengl doesnot support mt
-						auto shaderAssset = std::static_pointer_cast<ShaderAsset>(m_Assets[opts.path]);
-						shaderAssset->MakeDirty();
-					});
-				m_Filewatcher.Start();
-				auto shaderAsset = std::make_shared<ShaderAsset>(opts.path, shader);
-				m_Assets[opts.path] = shaderAsset;
-				return shaderAsset;
+				return _LoadShaderAsset(g_RuntimeGlobalCtx.m_EntityManager, opts);
 			}
 
 			return nullptr;
@@ -144,6 +102,9 @@ namespace Aho {
 			return false;
 		}
 
+	private:
+		std::shared_ptr<MeshAsset> _LoadMeshAsset(const std::shared_ptr<EntityManager>& emg, const MeshOptions& opts);
+		std::shared_ptr<ShaderAsset> _LoadShaderAsset(const std::shared_ptr<EntityManager>& emg, const ShaderOptions& opts);
 
 	private:
 		template<typename AssetType>

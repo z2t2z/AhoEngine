@@ -8,6 +8,7 @@ namespace Aho {
         m_BBox = blas->GetBBox();
         m_MeshId = blas->GetMeshId();
         m_PrimId = primId;
+        AHO_CORE_ASSERT(m_PrimId == m_MeshId);
     }
 
     void PrimitiveDesc::ApplyTransform(const glm::mat4& transform, const PrimitiveCompliment& pc) {

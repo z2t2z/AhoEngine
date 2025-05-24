@@ -1,12 +1,18 @@
 #include "Ahopch.h"
 #include "IBLPipeline.h"
+#include "Runtime/Function/Level/EcS/Components.h"
+#include "Runtime/Function/Level/EcS/EntityManager.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
+#include "Runtime/Function/Renderer/Texture/TextureUsage.h"
+#include "Runtime/Function/Renderer/Texture/TextureConfig.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 	static std::filesystem::path g_ShaderPath = std::filesystem::current_path() / "ShaderSrc";
-
 	static glm::mat4 g_Projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-
 	static glm::mat4 g_Views[] = {
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
@@ -261,4 +267,69 @@ namespace Aho {
 		return pass;
 	}
 
+
+
+	void _IBLPipeline::Initialize() {
+		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "IBL";
+
+		// --- Generate cubemap from equirectangular map --- 
+		{
+			RenderPassConfig cfg;
+			cfg.passName = "Generate Cubemap From Equirectangular Map Pass";
+			cfg.shaderPath = (shaderPathRoot / "EquirectToCube.glsl").string();
+
+			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("PathTracingPresent"));
+			m_TextureBuffers.push_back(res);
+			cfg.textureAttachments.push_back(res.get());
+
+			cfg.func =
+				[&](RenderPassBase& self) {
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					auto shader = self.GetShader();
+					shader->Bind();
+
+					auto view = ecs->GetView<IBLComponent>();
+					_Texture* cubeMap = nullptr;
+					_Texture* equiRec = nullptr;
+					view.each(
+						[&](auto _, IBLComponent& iblComp) {
+							if (!iblComp.EnvTextureSkyBox) {
+								iblComp.EnvTextureSkyBox = std::make_unique<_Texture>(TextureConfig::GetCubeMapTextureConfig());
+								cubeMap = iblComp.EnvTextureSkyBox.get();
+								equiRec = iblComp.EnvTexture;
+							}
+						}
+					);
+					if (!equiRec) {
+						return;
+					}
+					// Write to cube map
+					cubeMap->BindTextureImage(0);
+
+					// Read from equirectangular map
+					RenderCommand::BindTextureUnit(0, equiRec->GetTextureID());
+					shader->SetInt("u_EquirectangularMap", 0);
+					shader->SetVec2("u_EquirectangularMapSize", { equiRec->GetWidth(), equiRec->GetHeight() });
+					shader->SetFloat("u_CubemapFaceSize", cubeMap->GetWidth());
+
+					static int group = 16;
+					uint32_t face = cubeMap->GetWidth();
+					uint32_t numGroups = (face + group - 1) / group;
+					shader->DispatchCompute(numGroups, numGroups, 6);
+
+					shader->Unbind();
+				};
+			m_RP_GenCubemapFromSphericalMap = std::make_unique<RenderPassBase>();
+			m_RP_GenCubemapFromSphericalMap->Setup(cfg);
+		}
+
+
+		{
+
+		}
+	}
+
+	void _IBLPipeline::Execute() {
+		m_RP_GenCubemapFromSphericalMap->Execute();
+	}
 }

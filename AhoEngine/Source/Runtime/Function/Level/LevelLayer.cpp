@@ -44,15 +44,13 @@ namespace Aho {
 		m_Levels.push_back(m_CurrentLevel);
 
 		// Adding sky by default
-		//auto entityManager = m_CurrentLevel->GetEntityManager();
-
 		auto entityManager = g_RuntimeGlobalCtx.m_EntityManager;
 		auto skyEntity = entityManager->CreateEntity();
 		entityManager->AddComponent<GameObjectComponent>(skyEntity, "Sky Atmosphere");
 		entityManager->AddComponent<SkyComponent>(skyEntity);
 		entityManager->AddComponent<RootComponent>(skyEntity);
 		{
-			static glm::vec3 sunRotation(45.0f, 0.0f, 0.0f);
+			glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
 			float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
 			glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
 			entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
@@ -69,7 +67,6 @@ namespace Aho {
 	}
 
 	void LevelLayer::OnUpdate(float deltaTime) {
-		// UpdatePhysics();
 		UpdateAnimation(deltaTime);
 		UpdataUBOData();
 	}
@@ -105,7 +102,7 @@ namespace Aho {
 	}
 
 	void LevelLayer::UpdatePathTracingTextureHandlesSSBO() {
-		SSBOManager::UpdateSSBOData<TextureHandles>(5, m_TextureHandles);
+		SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, m_TextureHandles);
 	}
 
 	void LevelLayer::AddEnvironmentMap(Texture* texture) {
@@ -324,347 +321,335 @@ namespace Aho {
 	}
 
 	void LevelLayer::AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light) {
-		auto entityManager = m_CurrentLevel->GetEntityManager();
+		//auto entityManager = m_CurrentLevel->GetEntityManager();
 
-		//Entity gameObject = entityManager->CreateEntity(name); // TODO: give it a proper name
-		Entity gameObject = entityManager->CreateEntity(); // TODO: give it a proper name
-		entityManager->AddComponent<RootComponent>(gameObject);
-		TransformParam* param = new TransformParam();
-		entityManager->AddComponent<TransformComponent>(gameObject, param);
-		if (light) {
-			entityManager->AddComponent<LightComponent>(gameObject, light);
-		}
-		std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
-		renderDataAll.reserve(asset->size());
-		int index = 0;
+		////Entity gameObject = entityManager->CreateEntity(name); // TODO: give it a proper name
+		//Entity gameObject = entityManager->CreateEntity(); // TODO: give it a proper name
+		//entityManager->AddComponent<RootComponent>(gameObject);
+		//TransformParam* param = new TransformParam();
+		//entityManager->AddComponent<TransformComponent>(gameObject, param);
+		//if (light) {
+		//	entityManager->AddComponent<LightComponent>(gameObject, light);
+		//}
+		//std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		//std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		//renderDataAll.reserve(asset->size());
+		//int index = 0;
 
-		for (const auto& meshInfo : *asset) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity();
-			entityManager->AddComponent<TransformComponent>(meshEntity, param);
-			entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
+		//for (const auto& meshInfo : *asset) {
+		//	std::shared_ptr<VertexArray> vao;
+		//	vao.reset(VertexArray::Create());
+		//	vao->Init(meshInfo);
+		//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+		//	renderData->SetVAOs(vao);
+		//	auto meshEntity = entityManager->CreateEntity();
+		//	entityManager->AddComponent<TransformComponent>(meshEntity, param);
+		//	entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
 
-			renderData->SetTransformParam(param);
-			std::shared_ptr<Material> mat = std::make_shared<Material>();
-			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
-			renderData->SetEntityID(entityID);
-			renderData->SetMaterial(mat);
+		//	renderData->SetTransformParam(param);
+		//	std::shared_ptr<Material> mat = std::make_shared<Material>();
+		//	uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
+		//	renderData->SetEntityID(entityID);
+		//	renderData->SetMaterial(mat);
 
-			TextureHandles handle;
-			// should not be here
-			if (meshInfo->materialInfo.HasMaterial()) {
-				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
-					if (!textureCached.contains(path)) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
-						tex->SetTexType(type);
-						handle.SetHandles(tex->GetTextureHandle(), type);
-						textureCached[path] = tex;
-					}
-					mat->AddMaterialProperties({ textureCached.at(path), type });
-				}
-			}
+		//	MaterialDescriptor handle;
+		//	// should not be here
+		//	if (meshInfo->materialInfo.HasMaterial()) {
+		//		for (const auto& [type, path] : meshInfo->materialInfo.materials) {
+		//			if (!textureCached.contains(path)) {
+		//				std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+		//				tex->SetTexType(type);
+		//				handle.SetHandles(tex->GetTextureHandle(), type);
+		//				textureCached[path] = tex;
+		//			}
+		//			mat->AddMaterialProperties({ textureCached.at(path), type });
+		//		}
+		//	}
 
-			// TODO: Ugly code, find a way to iterate these
-			if (!mat->HasProperty(TexType::Albedo)) {
-				mat->AddMaterialProperties({ glm::vec3(1.0f), TexType::Albedo });
-				handle.SetValue(glm::vec3(1.0f), TexType::Albedo);
-			}
-			glm::vec3 color(0.0f);
-			float intensity = 0.0f;
-			if (light) {
-				color = light->GetColor();
-				intensity = light->GetIntensity();
-			}
-			if (!mat->HasProperty(TexType::Emissive)) {
-				mat->AddMaterialProperties({ color, TexType::Emissive });
-				handle.SetValue(color, TexType::Emissive);
-			}
-			if (!mat->HasProperty(TexType::EmissiveScale)) {
-				mat->AddMaterialProperties({ intensity, TexType::EmissiveScale });
-				handle.SetValue(intensity, TexType::EmissiveScale);
-			}
-			if (!mat->HasProperty(TexType::Normal)) {
-				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
-			}
-			if (!mat->HasProperty(TexType::Metallic)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
-				handle.SetValue(0.0f, TexType::Metallic);
-			}
-			if (!mat->HasProperty(TexType::Specular)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Specular });
-				handle.SetValue(0.0f, TexType::Specular);
-			}
-			if (!mat->HasProperty(TexType::Roughness)) {
-				mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
-				handle.SetValue(0.5f, TexType::Roughness);
-			}
-			if (!mat->HasProperty(TexType::Subsurface)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
-				handle.SetValue(0.0f, TexType::Subsurface);
-			}
-			if (!mat->HasProperty(TexType::SpecTint)) {
-				mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
-				handle.SetValue(0.0f, TexType::SpecTint);
-			}
-			if (!mat->HasProperty(TexType::Anisotropic)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
-				handle.SetValue(0.0f, TexType::Anisotropic);
-			}
-			if (!mat->HasProperty(TexType::Sheen)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
-				handle.SetValue(0.0f, TexType::Sheen);
-			}
-			if (!mat->HasProperty(TexType::SheenTint)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
-				handle.SetValue(0.0f, TexType::SheenTint);
-			}
-			if (!mat->HasProperty(TexType::Clearcoat)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
-				handle.SetValue(0.0f, TexType::Clearcoat);
-			}
-			if (!mat->HasProperty(TexType::ClearcoatGloss)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
-				handle.SetValue(0.0f, TexType::ClearcoatGloss);
-			}
-			if (!mat->HasProperty(TexType::SpecTrans)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
-				handle.SetValue(0.0f, TexType::SpecTrans);
-			}
-			if (!mat->HasProperty(TexType::ior)) {
-				mat->AddMaterialProperties({ 1.5f, TexType::ior });
-				handle.SetValue(1.5f, TexType::ior);
-			}
-			if (!mat->HasProperty(TexType::AO)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::AO });
-			}
-			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
-			m_TextureHandles.push_back(handle);
-			renderDataAll.push_back(renderData);
-			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
-		}
+		//	// TODO: Ugly code, find a way to iterate these
+		//	if (!mat->HasProperty(TexType::Albedo)) {
+		//		mat->AddMaterialProperties({ glm::vec3(1.0f), TexType::Albedo });
+		//		handle.SetValue(glm::vec3(1.0f), TexType::Albedo);
+		//	}
+		//	glm::vec3 color(0.0f);
+		//	float intensity = 0.0f;
+		//	if (light) {
+		//		color = light->GetColor();
+		//		intensity = light->GetIntensity();
+		//	}
+		//	if (!mat->HasProperty(TexType::Emissive)) {
+		//		mat->AddMaterialProperties({ color, TexType::Emissive });
+		//		handle.SetValue(color, TexType::Emissive);
+		//	}
+		//	if (!mat->HasProperty(TexType::EmissiveScale)) {
+		//		mat->AddMaterialProperties({ intensity, TexType::EmissiveScale });
+		//		handle.SetValue(intensity, TexType::EmissiveScale);
+		//	}
+		//	if (!mat->HasProperty(TexType::Normal)) {
+		//		mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
+		//	}
+		//	if (!mat->HasProperty(TexType::Metallic)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+		//		handle.SetValue(0.0f, TexType::Metallic);
+		//	}
+		//	if (!mat->HasProperty(TexType::Specular)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Specular });
+		//		handle.SetValue(0.0f, TexType::Specular);
+		//	}
+		//	if (!mat->HasProperty(TexType::Roughness)) {
+		//		mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
+		//		handle.SetValue(0.5f, TexType::Roughness);
+		//	}
+		//	if (!mat->HasProperty(TexType::Subsurface)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
+		//		handle.SetValue(0.0f, TexType::Subsurface);
+		//	}
+		//	if (!mat->HasProperty(TexType::SpecTint)) {
+		//		mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
+		//		handle.SetValue(0.0f, TexType::SpecTint);
+		//	}
+		//	if (!mat->HasProperty(TexType::Anisotropic)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
+		//		handle.SetValue(0.0f, TexType::Anisotropic);
+		//	}
+		//	if (!mat->HasProperty(TexType::Sheen)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
+		//		handle.SetValue(0.0f, TexType::Sheen);
+		//	}
+		//	if (!mat->HasProperty(TexType::SheenTint)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
+		//		handle.SetValue(0.0f, TexType::SheenTint);
+		//	}
+		//	if (!mat->HasProperty(TexType::Clearcoat)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
+		//		handle.SetValue(0.0f, TexType::Clearcoat);
+		//	}
+		//	if (!mat->HasProperty(TexType::ClearcoatGloss)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
+		//		handle.SetValue(0.0f, TexType::ClearcoatGloss);
+		//	}
+		//	if (!mat->HasProperty(TexType::SpecTrans)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
+		//		handle.SetValue(0.0f, TexType::SpecTrans);
+		//	}
+		//	if (!mat->HasProperty(TexType::ior)) {
+		//		mat->AddMaterialProperties({ 1.5f, TexType::ior });
+		//		handle.SetValue(1.5f, TexType::ior);
+		//	}
+		//	if (!mat->HasProperty(TexType::AO)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::AO });
+		//	}
+		//	auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
+		//	m_TextureHandles.push_back(handle);
+		//	renderDataAll.push_back(renderData);
+		//	entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
+		//}
 
-		if (m_BuildBVH || light) {
-			ScopedTimer timer("Build BVH");
-			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
-			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
-			for (const auto& info : *asset) {
-				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++);
-				bvhComp.bvhs.push_back(bvhi);
-				tlasBvh.AddBLASPrimtive(bvhi);
-			}
-			tlasBvh.UpdateTLAS();
-			PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
-			ptpl->UpdateSSBO(m_CurrentLevel);
-		}
+		//if (m_BuildBVH || light) {
+		//	ScopedTimer timer("Build BVH");
+		//	BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
+		//	BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+		//	for (const auto& info : *asset) {
+		//		BVHi* bvhi = new BVHi(info, s_globalSubMeshId++);
+		//		bvhComp.bvhs.push_back(bvhi);
+		//		tlasBvh.AddBLASPrimtive(bvhi);
+		//	}
+		//	tlasBvh.UpdateTLAS();
+		//	//PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
+		//	//ptpl->UpdateSSBO(m_CurrentLevel);
+		//}
 
-		UpdatePathTracingTextureHandlesSSBO();
-		UploadRenderDataEventTrigger(renderDataAll);
+		//UpdatePathTracingTextureHandlesSSBO();
+		//UploadRenderDataEventTrigger(renderDataAll);
 	}
 
 	// Needs refactoring
 	void LevelLayer::LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset) {
-		auto entityManager = m_CurrentLevel->GetEntityManager();
+		//auto entityManager = m_CurrentLevel->GetEntityManager();
 
-		Entity gameObject(entityManager->CreateEntity()); // TODO: give it a proper name
-		entityManager->AddComponent<RootComponent>(gameObject);
-		TransformParam* param = new TransformParam();
-		entityManager->AddComponent<TransformComponent>(gameObject, param);
+		//Entity gameObject(entityManager->CreateEntity()); // TODO: give it a proper name
+		//entityManager->AddComponent<RootComponent>(gameObject);
+		//TransformParam* param = new TransformParam();
+		//entityManager->AddComponent<TransformComponent>(gameObject, param);
 
-		std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
-		renderDataAll.reserve(asset->size());
-		int index = 0;
+		//std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		//std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		//renderDataAll.reserve(asset->size());
+		//int index = 0;
 
-		for (const auto& meshInfo : *asset) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(meshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			auto meshEntity = entityManager->CreateEntity();
-			entityManager->AddComponent<TransformComponent>(meshEntity, param);
-			entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
+		//for (const auto& meshInfo : *asset) {
+		//	std::shared_ptr<VertexArray> vao;
+		//	vao.reset(VertexArray::Create());
+		//	vao->Init(meshInfo);
+		//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+		//	renderData->SetVAOs(vao);
+		//	auto meshEntity = entityManager->CreateEntity();
+		//	entityManager->AddComponent<TransformComponent>(meshEntity, param);
+		//	entityManager->AddComponent<MeshComponent>(meshEntity, renderData);
 
-			renderData->SetTransformParam(param);
-			std::shared_ptr<Material> mat = std::make_shared<Material>();
-			uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
-			renderData->SetEntityID(entityID);
-			renderData->SetMaterial(mat);
+		//	renderData->SetTransformParam(param);
+		//	std::shared_ptr<Material> mat = std::make_shared<Material>();
+		//	uint32_t entityID = (uint32_t)meshEntity.GetEntityHandle();
+		//	renderData->SetEntityID(entityID);
+		//	renderData->SetMaterial(mat);
 
-			TextureHandles handle;
-			// should not be here
-			if (meshInfo->materialInfo.HasMaterial()) {
-				for (const auto& [type, path] : meshInfo->materialInfo.materials) {
-					if (!textureCached.contains(path)) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
-						tex->SetTexType(type);
-						handle.SetHandles(tex->GetTextureHandle(), type);
-						textureCached[path] = tex;
-					}
-					mat->AddMaterialProperties({ textureCached.at(path), type });
-				}
-			}
+		//	MaterialDescriptor handle;
+		//	// should not be here
+		//	if (meshInfo->materialInfo.HasMaterial()) {
+		//		for (const auto& [type, path] : meshInfo->materialInfo.materials) {
+		//			if (!textureCached.contains(path)) {
+		//				std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+		//				tex->SetTexType(type);
+		//				handle.SetHandles(tex->GetTextureHandle(), type);
+		//				textureCached[path] = tex;
+		//			}
+		//			mat->AddMaterialProperties({ textureCached.at(path), type });
+		//		}
+		//	}
 
-			// TODO: Ugly code, find a way to iterate these
-			if (!mat->HasProperty(TexType::Albedo)) {
-				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
-				handle.SetValue(glm::vec3(0.95), TexType::Albedo);
-			}
-			if (!mat->HasProperty(TexType::Emissive)) {
-				mat->AddMaterialProperties({ glm::vec3(0.0), TexType::Emissive });
-				handle.SetValue(glm::vec3(0.0), TexType::Emissive);
-			}
-			if (!mat->HasProperty(TexType::EmissiveScale)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::EmissiveScale });
-				handle.SetValue(0.0f, TexType::EmissiveScale);
-			}
-			if (!mat->HasProperty(TexType::Normal)) {
-				mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
-			}
-			if (!mat->HasProperty(TexType::Metallic)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
-				handle.SetValue(0.0f, TexType::Metallic);
-			}
-			if (!mat->HasProperty(TexType::Specular)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Specular });
-				handle.SetValue(0.0f, TexType::Specular);
-			}
-			if (!mat->HasProperty(TexType::Roughness)) {
-				mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
-				handle.SetValue(0.5f, TexType::Roughness);
-			}
-			if (!mat->HasProperty(TexType::Subsurface)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
-				handle.SetValue(0.0f, TexType::Subsurface);
-			}
-			if (!mat->HasProperty(TexType::SpecTint)) {
-				mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
-				handle.SetValue(0.0f, TexType::SpecTint);
-			}
-			if (!mat->HasProperty(TexType::Anisotropic)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
-				handle.SetValue(0.0f, TexType::Anisotropic);
-			}
-			if (!mat->HasProperty(TexType::Sheen)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
-				handle.SetValue(0.0f, TexType::Sheen);
-			}
-			if (!mat->HasProperty(TexType::SheenTint)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
-				handle.SetValue(0.0f, TexType::SheenTint);
-			}
-			if (!mat->HasProperty(TexType::Clearcoat)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
-				handle.SetValue(0.0f, TexType::Clearcoat);
-			}
-			if (!mat->HasProperty(TexType::ClearcoatGloss)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
-				handle.SetValue(0.0f, TexType::ClearcoatGloss);
-			}
-			if (!mat->HasProperty(TexType::SpecTrans)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
-				handle.SetValue(0.0f, TexType::SpecTrans);
-			}
-			if (!mat->HasProperty(TexType::ior)) {
-				mat->AddMaterialProperties({ 1.5f, TexType::ior });
-				handle.SetValue(1.5f, TexType::ior);
-			}
-			if (!mat->HasProperty(TexType::AO)) {
-				mat->AddMaterialProperties({ 0.0f, TexType::AO });
-			}
+		//	// TODO: Ugly code, find a way to iterate these
+		//	if (!mat->HasProperty(TexType::Albedo)) {
+		//		mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
+		//		handle.SetValue(glm::vec3(0.95), TexType::Albedo);
+		//	}
+		//	if (!mat->HasProperty(TexType::Emissive)) {
+		//		mat->AddMaterialProperties({ glm::vec3(0.0), TexType::Emissive });
+		//		handle.SetValue(glm::vec3(0.0), TexType::Emissive);
+		//	}
+		//	if (!mat->HasProperty(TexType::EmissiveScale)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::EmissiveScale });
+		//		handle.SetValue(0.0f, TexType::EmissiveScale);
+		//	}
+		//	if (!mat->HasProperty(TexType::Normal)) {
+		//		mat->AddMaterialProperties({ glm::vec3(0.0f), TexType::Normal });
+		//	}
+		//	if (!mat->HasProperty(TexType::Metallic)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Metallic });
+		//		handle.SetValue(0.0f, TexType::Metallic);
+		//	}
+		//	if (!mat->HasProperty(TexType::Specular)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Specular });
+		//		handle.SetValue(0.0f, TexType::Specular);
+		//	}
+		//	if (!mat->HasProperty(TexType::Roughness)) {
+		//		mat->AddMaterialProperties({ 0.5f, TexType::Roughness });
+		//		handle.SetValue(0.5f, TexType::Roughness);
+		//	}
+		//	if (!mat->HasProperty(TexType::Subsurface)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Subsurface });
+		//		handle.SetValue(0.0f, TexType::Subsurface);
+		//	}
+		//	if (!mat->HasProperty(TexType::SpecTint)) {
+		//		mat->AddMaterialProperties({ 0.00f, TexType::SpecTint });
+		//		handle.SetValue(0.0f, TexType::SpecTint);
+		//	}
+		//	if (!mat->HasProperty(TexType::Anisotropic)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Anisotropic });
+		//		handle.SetValue(0.0f, TexType::Anisotropic);
+		//	}
+		//	if (!mat->HasProperty(TexType::Sheen)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Sheen });
+		//		handle.SetValue(0.0f, TexType::Sheen);
+		//	}
+		//	if (!mat->HasProperty(TexType::SheenTint)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::SheenTint });
+		//		handle.SetValue(0.0f, TexType::SheenTint);
+		//	}
+		//	if (!mat->HasProperty(TexType::Clearcoat)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::Clearcoat });
+		//		handle.SetValue(0.0f, TexType::Clearcoat);
+		//	}
+		//	if (!mat->HasProperty(TexType::ClearcoatGloss)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::ClearcoatGloss });
+		//		handle.SetValue(0.0f, TexType::ClearcoatGloss);
+		//	}
+		//	if (!mat->HasProperty(TexType::SpecTrans)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::SpecTrans });
+		//		handle.SetValue(0.0f, TexType::SpecTrans);
+		//	}
+		//	if (!mat->HasProperty(TexType::ior)) {
+		//		mat->AddMaterialProperties({ 1.5f, TexType::ior });
+		//		handle.SetValue(1.5f, TexType::ior);
+		//	}
+		//	if (!mat->HasProperty(TexType::AO)) {
+		//		mat->AddMaterialProperties({ 0.0f, TexType::AO });
+		//	}
 
-			auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
-			m_TextureHandles.push_back(handle);
+		//	auto& materialComp = entityManager->AddComponent<MaterialComponent>(meshEntity, mat, (int32_t)m_TextureHandles.size());
+		//	m_TextureHandles.push_back(handle);
 
-			renderDataAll.push_back(renderData);
-			entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
-		}
+		//	renderDataAll.push_back(renderData);
+		//	entityManager->GetComponent<RootComponent>(gameObject).entities.push_back(meshEntity.GetEntityHandle());
+		//}
 
-		if (m_BuildBVH) {
-			ScopedTimer timer("Build BVH");
-			BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
-			BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
-			for (const auto& info : *asset) {
-				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, m_MatMaskEnums[s_globalSubMeshId - 1]); // bad
-				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId++]); // bad
-				BVHi* bvhi = new BVHi(info, s_globalSubMeshId++); 
-				//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
-				//s_globalSubMeshId += 1;
+		//if (m_BuildBVH) {
+		//	ScopedTimer timer("Build BVH");
+		//	BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
+		//	BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
+		//	for (const auto& info : *asset) {
+		//		//BVHi* bvhi = new BVHi(info, s_globalSubMeshId++, m_MatMaskEnums[s_globalSubMeshId - 1]); // bad
+		//		//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId++]); // bad
+		//		BVHi* bvhi = new BVHi(info, s_globalSubMeshId++); 
+		//		//BVHi* bvhi = new BVHi(info, s_globalSubMeshId, m_MatMaskEnums[s_globalSubMeshId]); // good
+		//		//s_globalSubMeshId += 1;
 
-				bvhComp.bvhs.push_back(bvhi);
-				tlasBvh.AddBLASPrimtive(bvhi);
-			}
-			tlasBvh.UpdateTLAS();
-			PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
-			ptpl->UpdateSSBO(m_CurrentLevel);
-			//std::thread(
-			//	[this, gameObject, asset, entityManager]() {
-			//		ScopedTimer timer("Build BVH(thread)");
-			//		BVHi& tlasBvh = m_CurrentLevel->GetTLAS();
-			//		BVHComponent& bvhComp = entityManager->AddComponent<BVHComponent>(gameObject);
-			//		for (const auto& info : *asset) {
-			//			auto bvhi = new BVHi(info, s_MeshCnt);
-			//			bvhComp.bvhs.push_back(bvhi);
-			//			tlasBvh.AddBLASNode(*bvhi);
-			//		}
-			//		tlasBvh.UpdateTLAS();
-			//	}).detach();
-		}
+		//		bvhComp.bvhs.push_back(bvhi);
+		//		tlasBvh.AddBLASPrimtive(bvhi);
+		//	}
+		//	tlasBvh.UpdateTLAS();
+		//	PathTracingPipeline* ptpl = static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing));
+		//	//ptpl->UpdateSSBO(m_CurrentLevel);
+		//}
 
-		UpdatePathTracingTextureHandlesSSBO();
-		//asset.reset();
-		UploadRenderDataEventTrigger(renderDataAll);
+		//UpdatePathTracingTextureHandlesSSBO();
+		////asset.reset();
+		//UploadRenderDataEventTrigger(renderDataAll);
 	}
 
 	// Assume skeletal mesh is a whole mesh
 	void LevelLayer::LoadSkeletalMeshAsset(std::shared_ptr<SkeletalMesh> asset) {
-		auto entityManager = m_CurrentLevel->GetEntityManager();
+		//auto entityManager = m_CurrentLevel->GetEntityManager();
 
-		Entity gameObject(entityManager->CreateEntity()); // TODO: give it a proper name
-		entityManager->AddComponent<RootComponent>(gameObject);
-		TransformParam* param = new TransformParam();
-		entityManager->AddComponent<TransformComponent>(gameObject, param);
-		auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
+		//Entity gameObject(entityManager->CreateEntity()); // TODO: give it a proper name
+		//entityManager->AddComponent<RootComponent>(gameObject);
+		//TransformParam* param = new TransformParam();
+		//entityManager->AddComponent<TransformComponent>(gameObject, param);
+		//auto& skeletalComponent = entityManager->AddComponent<SkeletalComponent>(gameObject, asset->GetRoot(), m_SkeletalMeshBoneOffset);
 
-		m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
-		uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
-		std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
-		renderDataAll.reserve(asset->size());
-		int index = 0;
-		for (const auto& skMeshInfo : *asset) {
-			std::shared_ptr<VertexArray> vao;
-			vao.reset(VertexArray::Create());
-			vao->Init(skMeshInfo);
-			std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-			renderData->SetVAOs(vao);
-			std::shared_ptr<Material> mat = std::make_shared<Material>();
-			renderData->SetEntityID(entityID);
-			renderData->GetBoneOffset() = skeletalComponent.offset;
-			renderData->SetMaterial(mat);
-			if (skMeshInfo->materialInfo.HasMaterial()) {
-				for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
-					if (!textureCached.contains(path)) {
-						std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
-						tex->SetTexType(type);
-						textureCached[path] = tex;
-					}
-					mat->AddMaterialProperties({ textureCached.at(path), type });
-				}
-			}
-			if (!mat->HasProperty(TexType::Albedo)) {
-				mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
-			}
-			renderData->SetTransformParam(param);
-			renderDataAll.push_back(renderData);
-		}
-		
-		asset.reset();
-		UploadRenderDataEventTrigger(renderDataAll);
+		//m_SkeletalMeshBoneOffset += asset->GetBoneCnt();
+		//uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
+		//std::vector<std::shared_ptr<RenderData>> renderDataAll;
+		//std::unordered_map<std::string, std::shared_ptr<Texture2D>> textureCached;
+		//renderDataAll.reserve(asset->size());
+		//int index = 0;
+		//for (const auto& skMeshInfo : *asset) {
+		//	std::shared_ptr<VertexArray> vao;
+		//	vao.reset(VertexArray::Create());
+		//	vao->Init(skMeshInfo);
+		//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+		//	renderData->SetVAOs(vao);
+		//	std::shared_ptr<Material> mat = std::make_shared<Material>();
+		//	renderData->SetEntityID(entityID);
+		//	renderData->GetBoneOffset() = skeletalComponent.offset;
+		//	renderData->SetMaterial(mat);
+		//	if (skMeshInfo->materialInfo.HasMaterial()) {
+		//		for (const auto& [type, path] : skMeshInfo->materialInfo.materials) {
+		//			if (!textureCached.contains(path)) {
+		//				std::shared_ptr<Texture2D> tex = Texture2D::Create(path);
+		//				tex->SetTexType(type);
+		//				textureCached[path] = tex;
+		//			}
+		//			mat->AddMaterialProperties({ textureCached.at(path), type });
+		//		}
+		//	}
+		//	if (!mat->HasProperty(TexType::Albedo)) {
+		//		mat->AddMaterialProperties({ glm::vec3(0.95f), TexType::Albedo });
+		//	}
+		//	renderData->SetTransformParam(param);
+		//	renderDataAll.push_back(renderData);
+		//}
+		//
+		//asset.reset();
+		//UploadRenderDataEventTrigger(renderDataAll);
 	}
 } // namespace Aho

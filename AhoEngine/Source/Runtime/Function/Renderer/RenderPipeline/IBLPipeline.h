@@ -18,8 +18,7 @@ namespace Aho {
 	class IBLPipeline : public RenderPipeline {
 	public:
 		IBLPipeline() { Initialize(); }
-		~IBLPipeline() {
-		}
+		~IBLPipeline() = default;
 		virtual void Initialize() override;
 
 		const std::unordered_map<Texture*, IBLLuts>& GetIBLLutsMap() { return m_IBLLutsMap; }
@@ -67,5 +66,20 @@ namespace Aho {
 		// TODO: Implement a textureRef
 		Texture* m_CurrSource{ nullptr };
 		std::unordered_map<Texture*, IBLLuts> m_IBLLutsMap;
+	};
+
+
+	class RenderPassBase;
+	class _IBLPipeline : public RenderPipeline {
+	public:
+		_IBLPipeline() { Initialize(); }
+		~_IBLPipeline() = default;
+		virtual void Initialize() override;
+		virtual void Execute() override;
+	private:
+		std::unique_ptr<RenderPassBase> m_RP_GenCubemapFromSphericalMap;
+		std::unique_ptr<RenderPassBase> m_RP_PrecomputeIrradiance;		// Diffuse 
+		std::unique_ptr<RenderPassBase> m_RP_Prefiltering;				// Specular
+		std::unique_ptr<RenderPassBase> m_RP_GenLUT;
 	};
 }

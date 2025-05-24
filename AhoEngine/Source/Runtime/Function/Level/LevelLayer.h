@@ -6,7 +6,7 @@
 #include <future>
 
 namespace Aho {
-	struct alignas(16) TextureHandles;
+	struct alignas(16) MaterialDescriptor;
 	class Texture;
 	class RenderLayer;
 	class ResourceLayer;
@@ -31,7 +31,7 @@ namespace Aho {
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
 		void UpdatePathTracingTextureHandlesSSBO();
 		bool& GetBuildBvhState() { return m_BuildBVH; }
-		TextureHandles& GetTextureHandles(int meshId) { return m_TextureHandles.at(meshId); }
+		MaterialDescriptor& GetMaterialDescriptor(int meshId) { return m_TextureHandles.at(meshId); }
 		void AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light = nullptr);
 	public:
 		void AddEnvironmentMap(Texture* texture);
@@ -61,6 +61,6 @@ namespace Aho {
 	// temporary
 	private:
 		inline static int s_globalSubMeshId{ 0 };
-		std::vector<TextureHandles> m_TextureHandles;
+		std::vector<MaterialDescriptor> m_TextureHandles;
 	};
 } // namespace Aho

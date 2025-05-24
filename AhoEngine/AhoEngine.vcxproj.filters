@@ -312,7 +312,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBL.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h">
@@ -333,7 +333,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RendererAPI.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\Shader.h">
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\Shader.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
@@ -1685,6 +1685,11 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureConfig.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.h" />
+    <ClInclude Include="Source\Runtime\Core\Geometry\BVHNode.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderFeatures.h" />
+    <ClInclude Include="Source\Runtime\Resource\Asset\ShaderAsset.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1783,7 +1788,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\IBL.cpp">
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBL.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp">
@@ -1804,7 +1809,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RendererAPI.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\Shader.cpp">
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\Shader.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp">
@@ -1876,5 +1881,9 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\MaterialAsset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
+    <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
   </ItemGroup>
 </Project>

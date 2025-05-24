@@ -1,4 +1,8 @@
 #include "ContentBrowser.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Resource/Asset/AssetLoadOptions.h"
+#include "Runtime/Resource/Asset/TextureAsset.h"
+#include "Runtime/Resource/ResourceManager.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include <filesystem>
 
@@ -12,7 +16,11 @@ namespace Aho {
 		m_FolderPath = fs::current_path();
 		m_AssetPath = m_FolderPath / "Asset";
 		m_CurrentPath = m_AssetPath;
-		m_BackIcon = Texture2D::Create((m_FolderPath / "Asset" / "Icons" / "back.png").string());
+
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((m_FolderPath / "Asset" / "Icons" / "back.png").string()));
+		std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
+		m_BackIcon = tex.get();
 	}
 
 	void ContentBrowser::Draw() {

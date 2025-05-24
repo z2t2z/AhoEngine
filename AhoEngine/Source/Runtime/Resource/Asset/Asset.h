@@ -48,14 +48,6 @@ namespace Aho {
 		bool m_Dirty{ true };
 	};
 
-	class ShaderAsset : public Asset {
-	public:
-		ShaderAsset(const std::string& path, const std::shared_ptr<Shader>& shader);
-		virtual bool Load() override;
-		std::shared_ptr<Shader> GetShader() const { return m_Shader; }
-	private:
-		std::shared_ptr<Shader> m_Shader;
-	};
 	
 	class StaticMesh : public Asset {
 	public:

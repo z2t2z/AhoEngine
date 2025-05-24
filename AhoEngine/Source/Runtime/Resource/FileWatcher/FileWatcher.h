@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Runtime/Core/Events/Event.h"
-
 #include <filesystem>
 #include <unordered_map>
 #include <functional>

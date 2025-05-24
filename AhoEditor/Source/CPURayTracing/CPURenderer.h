@@ -1,6 +1,5 @@
 #pragma once
 #include "IamAho.h"
-
 #include "CPUScene.h"
 #include <memory>
 #include <unordered_map>
@@ -18,7 +17,7 @@ namespace Aho {
 		void OnResize(uint32_t width, uint32_t height);
 		void Render(const CPUScene& scene);
 
-		std::shared_ptr<Texture2D> GetFinalImage() const { return m_FinalImage; }
+		std::shared_ptr<_Texture> GetFinalImage() const { return m_FinalImage; }
 
 		void ResetFrameIndex() { m_FrameIndex = 1; }
 		Settings& GetSettings() { return m_Settings; }
@@ -45,8 +44,8 @@ namespace Aho {
 		/*  Temporary! */
 
 		TexSpec m_TexSpec;
-		std::shared_ptr<Texture2D> m_FinalImage;
-		std::shared_ptr<Texture2D> m_Noise;
+		std::shared_ptr<_Texture> m_FinalImage;
+		std::shared_ptr<_Texture> m_Noise;
 		Settings m_Settings;
 		std::vector<uint32_t> m_ImageHorizontalIter, m_ImageVerticalIter; // multi-threading
 		std::vector<float> m_Random;

@@ -1,6 +1,7 @@
 #include "Ahopch.h"
 #include "RenderPipeline.h"
 #include "Runtime/Core/Timer.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
 
@@ -29,12 +30,17 @@ namespace Aho {
 		return nullptr;
 	}
 
+	uint32_t RenderPipeline::GetRenderResultTextureID() const {
+		return m_Result->GetTextureID();
+	}
+
 	void RenderPipeline::SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo) {
 		auto pass = GetRenderPass(type);
 		pass->SetRenderTarget(fbo);
 		m_RenderResult = pass->GetTextureBuffer(TexType::Result);
 	}
 
+	// delete this
 	bool RenderPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
 		bool resized = false;
 		for (auto& task : m_RenderTasks) {
