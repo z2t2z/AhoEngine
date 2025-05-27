@@ -59,6 +59,7 @@ namespace Aho {
 		int GetId() const { return m_Id; } 
 		void SetID(int id) { m_Id = id; }
 		int GetPrimId() const { return m_PrimId; } // this id is for transform only
+		int GetMeshId() const { return m_MeshId; }
 	private:
 		BBox m_BBox;
 		Vertex m_Vertices[3];

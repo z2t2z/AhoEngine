@@ -42,9 +42,16 @@ namespace Aho {
 		m_OffsetMap.clear();
 		s_NodeOffset = 0;
 		s_PrimOffset = 0;
-		for (PrimitiveDesc& blasPrim : m_Primitives) {
-			const BVHi* blas = m_BLAS[blasPrim.GetPrimId()];
-			m_OffsetMap.emplace_back(blas->GetMeshId(), s_NodeOffset, s_PrimOffset);
+		//for (PrimitiveDesc& blasPrim : m_Primitives) {
+		//	const BVHi* blas = m_BLAS[blasPrim.GetPrimId()];
+		//	m_OffsetMap.emplace_back(blas->GetMeshId(), s_NodeOffset, s_PrimOffset);
+		//	s_NodeOffset += blas->GetNodeCount();
+		//	s_PrimOffset += blas->GetPrimsCount();
+		//}
+		for (size_t i = 0; i < m_BLAS.size(); i++) {
+			const BVHi* blas = m_BLAS[i];
+			AHO_CORE_ASSERT(blas->GetMeshId() == i);
+			m_OffsetMap.emplace_back(i, s_NodeOffset, s_PrimOffset);
 			s_NodeOffset += blas->GetNodeCount();
 			s_PrimOffset += blas->GetPrimsCount();
 		}
@@ -54,6 +61,19 @@ namespace Aho {
 		AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
 		m_Primitives.emplace_back(blas, m_BLAS.size());
 		m_BLAS.push_back(const_cast<BVHi*>(blas));
+	}
+
+	const BVHi* BVHi::GetBLAS(int id) const {
+		AHO_CORE_ASSERT(id >= 0 && id < m_BLAS.size());
+		AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
+		return m_BLAS.at(id);
+		for (auto& p : m_BLAS) {
+			if (id == p->GetMeshId()) {
+				return p;
+			}
+		}
+		AHO_CORE_ASSERT(false);
+		return nullptr;
 	}
 
 	bool BVHi::IntersectNearest_recursion(const Ray& ray, int root) {
@@ -149,8 +169,8 @@ namespace Aho {
 			m_PrimitiveComp.emplace_back(v0, v1, v2);
 		}
 
-		m_Nodes.reserve(m_Primitives.size());
-		AHO_CORE_TRACE("Mesh primitive count: {}", m_Primitives.size());
+		m_Nodes.reserve(m_Primitives.size() * 5);
+		//AHO_CORE_TRACE("Mesh primitive count: {}", m_Primitives.size());
 		m_Root = BuildTreeRecursion(0, m_Primitives.size());
 		m_Nodes.shrink_to_fit();
 

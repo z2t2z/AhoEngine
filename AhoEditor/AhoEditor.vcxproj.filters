@@ -60,6 +60,7 @@
     <ClInclude Include="Source\Viewport.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\EditorUI\ImGuiHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">

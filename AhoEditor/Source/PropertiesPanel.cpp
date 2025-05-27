@@ -1,7 +1,8 @@
 #include "PropertiesPanel.h"
 #include "IamAho.h"
-#include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "HierarchicalPenal.h"
+#include "EditorUI/ImGuiHelpers.h"
+#include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 
 #include <glm/glm.hpp>
@@ -29,49 +30,23 @@ namespace Aho {
 			return;
 		}
 
-		return; // TODO!
-
 		ImGuiIO& io = ImGui::GetIO();
-		auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-		auto& Tagc = entityManager->GetComponent<TagComponent>(selectedEntity);
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(selectedEntity);
 
 		ImFont* boldFont = io.Fonts->Fonts[0];
 		ImGui::PushFont(boldFont);
-		ImGui::Text(Tagc.Tag.c_str());
+		ImGui::Text(goComp.name.c_str());
 		ImGui::PopFont();
 
-		if (entityManager->HasComponent<TransformComponent>(selectedEntity)) {
-			ImGui::Separator();
-			ImGui::PushFont(io.Fonts->Fonts[1]);
-			bool opened = ImGui::CollapsingHeader("Transform");
-			ImGui::PopFont();
-			if (opened) {
-				ImGui::Separator();
-				auto& tc = entityManager->GetComponent<TransformComponent>(selectedEntity);
-				auto& translation = tc.GetTranslation();
-				auto& scale = tc.GetScale();
-				auto& rotation = tc.GetRotation();
-				tc.dirty |= DrawVec3Control("Translation", translation);
-				tc.dirty |= DrawVec3Control("Scale", scale, 1.0f);
-				tc.dirty |= DrawVec3Control("Rotation", rotation);
-			}
-		}
+		DrawComponents<_TransformComponent, _MaterialComponent>(ecs, selectedEntity);
+		ImGui::End();
+		return; 
 
-		if (entityManager->HasComponent<MaterialComponent>(selectedEntity)) {
-			ImGui::Separator();
-			ImGui::PushFont(io.Fonts->Fonts[1]);
-			bool opened = ImGui::CollapsingHeader("Material");
-			ImGui::PopFont();
-			if (opened) {
-				bool textureChanged = DrawMaterialProperties(entityManager->GetComponent<MaterialComponent>(selectedEntity));
-				if (textureChanged) {
-					m_LevelLayer->UpdatePathTracingTextureHandlesSSBO();
-				}
-			}
-		}
+		// Delete the following codes
 
-		if (entityManager->HasComponent<PointLightComponent>(selectedEntity)) {
-			auto& pc = entityManager->GetComponent<PointLightComponent>(selectedEntity);
+		if (ecs->HasComponent<PointLightComponent>(selectedEntity)) {
+			auto& pc = ecs->GetComponent<PointLightComponent>(selectedEntity);
 			ImGui::Separator();
 			ImGui::PushFont(io.Fonts->Fonts[1]);
 			bool opened = ImGui::CollapsingHeader("Light Settings");
@@ -82,8 +57,8 @@ namespace Aho {
 			}
 		}
 
-		if (entityManager->HasComponent<SkyComponent>(selectedEntity)) {
-			auto& sky = entityManager->GetComponent<SkyComponent>(selectedEntity);
+		if (ecs->HasComponent<SkyComponent>(selectedEntity)) {
+			auto& sky = ecs->GetComponent<SkyComponent>(selectedEntity);
 
 			bool changed = ImGui::DragFloat3("SunRotation", &sky.Direction[0], 0.1f);
 			float theta = glm::radians(sky.Direction.x), phi = glm::radians(sky.Direction.y);
@@ -92,38 +67,9 @@ namespace Aho {
 			ImGui::DragFloat("Intensity", &sky.Intensity, 0.1f);
 		}
 
-		if (entityManager->HasComponent<LightComponent>(selectedEntity)) {
-			auto lightComp = entityManager->GetComponent<LightComponent>(selectedEntity);
-			auto light = lightComp.light;
 
-			switch (light->GetType()) {
-				case LightType::Area: {
-					ImGui::DragFloat("Intensity", &light->GetIntensity(), 0.1f, 0.0f, 1000.0f);
-					break;
-				}
-				case LightType::Point: {
-					AHO_CORE_ASSERT(false); // Should not happen
-					break;
-				}
-				case LightType::Directional: {
-					AHO_CORE_ASSERT(false);
-					break;
-				}
-				case LightType::Spot: {
-					AHO_CORE_ASSERT(false);
-					break;
-				}
-				default: {
-					AHO_CORE_ASSERT(false);
-					break;
-				}
-			}
-									 
-		}
-
-
-		if (entityManager->HasComponent<EnvComponent>(selectedEntity)) {
-			auto& pc = entityManager->GetComponent<EnvComponent>(selectedEntity);
+		if (ecs->HasComponent<EnvComponent>(selectedEntity)) {
+			auto& pc = ecs->GetComponent<EnvComponent>(selectedEntity);
 			ImGui::Separator();
 			ImGui::PushFont(io.Fonts->Fonts[1]);
 			bool opened = ImGui::CollapsingHeader("Enviornment Textures(HDR)");

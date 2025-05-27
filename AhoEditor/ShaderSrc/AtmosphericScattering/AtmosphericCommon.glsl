@@ -1,7 +1,13 @@
 #ifndef ATMOSPHERIC_COMMON_GLSL
 #define ATMOSPHERIC_COMMON_GLSL
 
+#ifndef CONSTANT_PI
+#define CONSTANT_PI
 const float PI = 3.14159265358979323846;
+const float TwoPI = 2 * PI;
+const float InvPI = 0.31830988618379067154;
+#endif
+
 const int SAMPLE_CNT = 24;
 const int SAMPLE_CNT_TRANSMITTANCE = 40;
 

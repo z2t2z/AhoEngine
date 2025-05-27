@@ -13,21 +13,17 @@ bool IsLeaf(BVHNode node) {
 bool IntersectBbox(Ray ray, BBox bbox, inout float tEnter) {
     tEnter = -FLT_MAX;
     float tExit = FLT_MAX;
-
     for (int i = 0; i < 3; ++i) {
         if (ray.direction[i] != 0.0f) {
             float tMin = (bbox.pMin[i] - ray.origin[i]) / ray.direction[i];
             float tMax = (bbox.pMax[i] - ray.origin[i]) / ray.direction[i];
-
             if (tMin > tMax) {
                 float t = tMax;
                 tMax = tMin;
                 tMin = t;
             }
-
             tEnter = max(tEnter, tMin);
             tExit = min(tExit, tMax);
-
             if (tEnter > tExit || tExit < 0.0f) {
                 // tEnter = -FLT_MAX;
                 return false;
@@ -38,7 +34,6 @@ bool IntersectBbox(Ray ray, BBox bbox, inout float tEnter) {
             return false; // Ray is parallel and outside the slab
         }
     }
-
     return true; 
 }
 
@@ -77,7 +72,6 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout TempHitInfo tinfo) {
 void RayTracePrimitive(Ray ray, int id, inout HitInfo info) {
     int nodeOffset = s_OffsetInfo[id].nodeOffset;
     int primOffset = s_OffsetInfo[id].primtiveOffset;
-
     int stk[BLAS_STACK_DEPTH];
     int ptr = -1;
     stk[++ptr] = 0;
@@ -153,24 +147,19 @@ bool _AnyHit(Ray ray, int id, const float tNearest) {
     int nodeOffset = s_OffsetInfo[id].nodeOffset;
     int primOffset = s_OffsetInfo[id].primtiveOffset;
     int meshId = s_bNodes[nodeOffset].meshId;
-
     int stk[BLAS_STACK_DEPTH];
     int ptr = -1;
     stk[++ptr] = 0;
-
     while (ptr >= 0 && ptr < BLAS_STACK_DEPTH) {
         int u = stk[ptr--] + nodeOffset;
-
         BVHNode bNode = s_bNodes[u];
         float t;
         if (!IntersectBbox(ray, bNode.bbox, t)) {
             continue;
         }
-
         if (t > tNearest) {
             continue;
         }
-
         if (IsLeaf(bNode)) {
             // Check all primitives this node contains
             int i = bNode.firstPrimsIdx;
@@ -202,7 +191,6 @@ bool AnyHit(Ray ray, const float tNearest) {
     stk[++ptr] = 0;
     while (ptr >= 0 && ptr < TLAS_STACK_DEPTH) {
         int u = stk[ptr--];
-
         BVHNode tNode = s_tNodes[u];
         float t;
         if (!IntersectBbox(ray, tNode.bbox, t)) {
@@ -211,10 +199,9 @@ bool AnyHit(Ray ray, const float tNearest) {
         if (t > tNearest) {
             continue;
         }
-
         if (IsLeaf(tNode)) {
             PrimitiveDesc p = s_tPrimitives[tNode.firstPrimsIdx];
-            if (_AnyHit(ray, p.id, tNearest)) {
+            if (_AnyHit(ray, p.meshId, tNearest)) {
                 return true;
             }
         } else {

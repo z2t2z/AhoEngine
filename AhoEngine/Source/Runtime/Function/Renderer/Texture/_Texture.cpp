@@ -17,8 +17,8 @@ namespace Aho {
 		m_DataFmt	  = cfg.DataFmt;
 		m_DataType	  = cfg.DataType;
 		m_InternalFmt = cfg.InternalFmt;
-		m_MipLevels	  = cfg.GenMips ? 1 : -1;
-
+		m_GenMips     = cfg.GenMips;
+		m_IsHDR		  = m_DataType == DataType::Float && (m_InternalFmt == InternalFormat::RGB16F || m_InternalFmt == InternalFormat::RGBA16F);
 		Resize(cfg.Width, cfg.Height);
 	}
 
@@ -42,8 +42,20 @@ namespace Aho {
 		glDeleteTextures(1, &m_TextureID);
 	}
 
-	void _Texture::BindTextureImage(uint32_t pos) const {
-		glBindImageTexture(pos, m_TextureID, 0, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, GL_WRITE_ONLY, m_InternalFmt);
+	void _Texture::BindTextureImage(uint32_t pos, uint32_t mipLevel) const {
+		glBindImageTexture(pos, m_TextureID, mipLevel, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, GL_WRITE_ONLY, m_InternalFmt);
+	}
+
+	void _Texture::GenMipMap() {
+		if (!m_GenMips) {
+			m_GenMips = true;
+		}
+		m_MipLevels = (int)std::log2(std::max(m_Width, m_Height)) + 1;
+		glBindTexture(m_Dim, m_TextureID);
+		glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glGenerateMipmap(m_Dim);
+		glBindTexture(m_Dim, 0);
 	}
 
 	// TODO: imutable storage
@@ -72,11 +84,11 @@ namespace Aho {
 			glTexImage2D(m_Dim, 0, m_InternalFmt, m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
 		}
 
-		if (m_MipLevels != -1) {
-			int maxDim = std::max(m_Width, m_Height);
-			m_MipLevels = 1 + static_cast<int>(std::floor(std::log2(maxDim)));
-			glGenerateMipmap(GL_TEXTURE_2D);
-		}
+		//if (m_MipLevels != -1) {
+		//	int maxDim = std::max(m_Width, m_Height);
+		//	m_MipLevels = 1 + static_cast<int>(std::floor(std::log2(maxDim)));
+		//	glGenerateMipmap(GL_TEXTURE_2D);
+		//}
 
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -85,10 +97,13 @@ namespace Aho {
 		}
 		glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, m_MipLevels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 		glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+		if (m_GenMips) {
+			GenMipMap();
+		}
 		return true;
 	}
 
+	// TODO: Fill other member properties
 	void _Texture::GliLoader(const std::shared_ptr<TextureAsset>& texAsset) {
 		gli::texture Texture = gli::load(texAsset->GetPath());
 		if (Texture.empty()) {
@@ -211,7 +226,7 @@ namespace Aho {
 	void _Texture::STBImageLoader(const std::shared_ptr<TextureAsset>& texAsset) {
 		static const std::vector<std::string> HDRextensions = { ".hdr", ".exr" }; // TODO: .exr not supported yet
 		auto path = texAsset->GetPath();
-		bool isHDR = std::ranges::any_of(HDRextensions, 
+		m_IsHDR = std::ranges::any_of(HDRextensions,
 			[&path](const std::string& ext) {
 				return path.find(ext) != std::string::npos;
 			});
@@ -219,7 +234,7 @@ namespace Aho {
 		stbi_set_flip_vertically_on_load(texAsset->FilpUV());
 		void* data = nullptr;
 		int width, height, nrChannels;
-		data = isHDR ? (void*)stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0)
+		data = m_IsHDR ? (void*)stbi_loadf(path.c_str(), &width, &height, &nrChannels, 0)
 			         : (void*)stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
 		if (!data) {
@@ -230,7 +245,7 @@ namespace Aho {
 
 		GLenum internalFormat;
 		GLenum dataFormat;
-		if (isHDR) {
+		if (m_IsHDR) {
 			if (nrChannels == 3) {
 				internalFormat = GL_RGB16F;
 				dataFormat = GL_RGB;
@@ -268,7 +283,7 @@ namespace Aho {
 		GLuint textureID;
 		glGenTextures(1, &textureID);
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, isHDR ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, m_IsHDR ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
 		
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -284,7 +299,7 @@ namespace Aho {
 		m_Width			= width;
 		m_DataFmt		= (DataFormat)dataFormat;
 		m_InternalFmt	= (InternalFormat)internalFormat;
-		m_DataType		= isHDR ? DataType::Float : DataType::UByte;
+		m_DataType		= m_IsHDR ? DataType::Float : DataType::UByte;
 	}
 
 }

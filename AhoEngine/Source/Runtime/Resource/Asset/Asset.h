@@ -33,6 +33,9 @@ namespace Aho {
 				m_Name = m_Name.substr(0, pos);
 			}
 		}
+		Asset(const std::string& path, const std::string& name) 
+			: m_Path(path), m_Name(name) {
+		}
 		virtual ~Asset() = default;
 		virtual bool Load() { return true; };
 		void MakeDirty() { m_Dirty = true; }

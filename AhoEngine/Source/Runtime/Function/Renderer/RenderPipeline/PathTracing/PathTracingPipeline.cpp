@@ -80,7 +80,7 @@ namespace Aho {
 								bvh.Dirty = false;
 								{
 									ScopedTimer timer("ApplyTransform");
-									//bvh.bvh->ApplyTransform(transform.GetTransform());
+									bvh.bvh->ApplyTransform(transform.GetTransform());
 								}
 								Reaccumulate = true;
 								BVHDirty = true;
@@ -106,19 +106,15 @@ namespace Aho {
 
 								size_t nodesOffset = 0;
 								size_t primsOffset = 0;
-								int i = 0;
 								const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
-								for (const PrimitiveDesc& blasPrim : tlas->GetPrimsArr()) { // Every primitive is a BLAS bvh tree
-									const BVHi* blas = tlas->GetBLAS(blasPrim.GetPrimId());
+								for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
+									const BVHi* blas = tlas->GetBLAS(i);
 									AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
 									AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
-
 									SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
 									SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
-
 									nodesOffset += blas->GetNodeCount();
 									primsOffset += blas->GetPrimsCount();
-									i += 1;
 								}
 							}
 						);
@@ -150,7 +146,11 @@ namespace Aho {
 			cfg.passName = "Path Tracing Present Pass";
 			cfg.shaderPath = (shaderPathRoot / "Present.glsl").string();
 
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("PathTracingPresent"));
+			auto texCfg = TextureConfig::GetColorTextureConfig("PathTracingPresent");
+			texCfg.InternalFmt = InternalFormat::RGBA16F; // Use HDR format for shading result
+			texCfg.DataFmt = DataFormat::RGBA;
+			texCfg.DataType = DataType::Float;
+			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			m_TextureBuffers.push_back(res);
 			cfg.textureAttachments.push_back(res.get());
 

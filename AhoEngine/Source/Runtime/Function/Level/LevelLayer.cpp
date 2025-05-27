@@ -48,15 +48,15 @@ namespace Aho {
 		auto skyEntity = entityManager->CreateEntity();
 		entityManager->AddComponent<GameObjectComponent>(skyEntity, "Sky Atmosphere");
 		entityManager->AddComponent<SkyComponent>(skyEntity);
-		entityManager->AddComponent<RootComponent>(skyEntity);
-		{
-			glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
-			float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
-			glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
-			entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
-			auto& atc = entityManager->AddComponent<DistantLightComponent>(skyEntity);
-			atc.LightDir = sunDir;
-		}
+		//entityManager->AddComponent<RootComponent>(skyEntity);
+		//{
+		//	glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
+		//	float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
+		//	glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+		//	entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
+		//	auto& atc = entityManager->AddComponent<DistantLightComponent>(skyEntity);
+		//	atc.LightDir = sunDir;
+		//}
 
 		//JPH::RegisterTypes();
 		//JPH::Factory::sInstance = new JPH::Factory();
@@ -218,7 +218,7 @@ namespace Aho {
 	// TODO: Maybe put this inside render layer
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		if (m_CameraManager->IsDirty()) {
+		if (m_CameraManager->IsDirty() || true) {
 			CameraUBO camUBO;
 			camUBO.u_View = cam->GetView();
 			camUBO.u_Projection = cam->GetProjection();

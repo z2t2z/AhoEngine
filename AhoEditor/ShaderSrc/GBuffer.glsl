@@ -51,7 +51,7 @@ void main() {
 	// Normals are in world space
 	mat3 v_NormalMatrix = transpose(inverse(mat3(finalModelMat)));
 
-	v_FragPos = PosViewSpace.xyz;
+	v_FragPos = (finalModelMat * vec4(a_Position, 1.0f)).xyz;
 	gl_Position = u_Projection * PosViewSpace;
 	v_TexCoords = a_TexCoords;
 	v_Normal = v_NormalMatrix * a_Normal;
@@ -64,10 +64,10 @@ void main() {
 #type fragment
 #version 460 core
 
-layout(location = 0) out vec4 g_Position;
+layout(location = 0) out vec3 g_Position;
 layout(location = 1) out vec3 g_Normal;
 layout(location = 2) out vec3 g_Albedo;
-layout(location = 3) out vec4 g_PBR;
+layout(location = 3) out vec3 g_PBR;
 
 in vec3 v_FragPos;
 in vec3 v_Ndc;
@@ -76,45 +76,44 @@ in vec3 v_Normal;
 in vec3 v_Tangent;
 in vec2 v_TexCoords;
 
-uniform bool u_HasAlbedo;
-uniform bool u_HasNormal;
-uniform bool u_HasMetallic;
-uniform bool u_HasRoughness;
-uniform bool u_HasAO;
+uniform bool u_HasAlbedo= false;
+uniform bool u_HasNormal= false;
+uniform bool u_HasMetallic= false;
+uniform bool u_HasRoughness= false;
+uniform bool u_HasAO = false;
 
 uniform sampler2D u_AlbedoMap;
 uniform sampler2D u_NormalMap;
-uniform sampler2D u_MetalicMap;
+uniform sampler2D u_MetallicMap;
 uniform sampler2D u_RoughnessMap;
 uniform sampler2D u_AOMap;
 
 uniform vec3 u_Albedo = vec3(1.0);
-uniform float u_Metalic = 0.05f;
-uniform float u_Roughness = 0.9f;
+uniform float u_Metallic = 0.95f;
+uniform float u_Roughness = 0.0f;
 
 uniform uint u_EntityID;
 
 void main() {
-	g_Position = vec4(v_FragPos, 1.0f);
+	g_Position = v_FragPos;
 
 	// PBR
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_Albedo;
-	g_Albedo = pow(g_Albedo, vec3(2.2f)); // gamma correction
-	g_PBR.r = u_HasMetallic ? texture(u_MetalicMap, v_TexCoords).r : u_Metalic;
+	g_PBR.r = u_HasMetallic ? texture(u_MetallicMap, v_TexCoords).r : u_Metallic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
-	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : -1.0f;
+	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : 0.0f;
 
+	vec3 normal = normalize(v_Normal);
 	if (!u_HasNormal) {
-		g_Normal = normalize(v_Normal);
+		g_Normal = normal;
 	} else {
-		vec3 T = v_Tangent;
-		vec3 N = v_Normal;
+		vec3 T = normalize(v_Tangent);
+		vec3 N = normal;
 		T = normalize(T - dot(T, N) * N);
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
 		vec3 normalMap = texture(u_NormalMap, vec2(v_TexCoords.x, v_TexCoords.y)).rgb;
-		// normalMap.y = 1.0 - normalMap.y;
-		normalMap = normalMap * 2.0f - 1.0f;
+		normalMap = normalize(normalMap * 2.0f - 1.0f); // rgb8
 		g_Normal = normalize(TBN * normalMap);
 	}
 }

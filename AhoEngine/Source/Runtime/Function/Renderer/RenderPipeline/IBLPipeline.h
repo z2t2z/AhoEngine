@@ -80,6 +80,6 @@ namespace Aho {
 		std::unique_ptr<RenderPassBase> m_RP_GenCubemapFromSphericalMap;
 		std::unique_ptr<RenderPassBase> m_RP_PrecomputeIrradiance;		// Diffuse 
 		std::unique_ptr<RenderPassBase> m_RP_Prefiltering;				// Specular
-		std::unique_ptr<RenderPassBase> m_RP_GenLUT;
+		std::unique_ptr<RenderPassBase> m_RP_BRDFLUT;
 	};
 }

@@ -40,19 +40,19 @@ namespace Aho {
 		m_RP_PathTracing = new PathTracingPipeline();
 		m_RP_IBLPipeline = new _IBLPipeline();
 
-		auto shadingResFBO = m_RP_DeferredShading->GetRenderPassTarget(RenderPassType::Shading);
-		m_RP_Dbg->SetRenderTarget(RenderPassType::DebugVisual, shadingResFBO);
+		//auto shadingResFBO = m_RP_DeferredShading->GetRenderPassTarget(RenderPassType::Shading);
+		//m_RP_Dbg->SetRenderTarget(RenderPassType::DebugVisual, shadingResFBO);
 
 		// Register buffers from ibl
-		auto rp_deferred = m_RP_DeferredShading->GetRenderPass(RenderPassType::Shading);
-		rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
-		rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::BRDFLUT), TexType::BRDFLUT });
-		rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefiltering), TexType::Prefiltering });
+		//auto rp_deferred = m_RP_DeferredShading->GetRenderPass(RenderPassType::Shading);
+		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
+		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::BRDFLUT), TexType::BRDFLUT });
+		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefiltering), TexType::Prefiltering });
 
 		// Register buffers from skyview
-		rp_deferred->RegisterTextureBuffer({ m_RP_Sky->GetRenderResult(), TexType::SkyViewLUT });
+		//rp_deferred->RegisterTextureBuffer({ m_RP_Sky->GetRenderResult(), TexType::SkyViewLUT });
 
-		m_RP_Postprocess->SetInput(m_RP_DeferredShading->GetRenderResult());
+		//m_RP_Postprocess->SetInput(m_RP_DeferredShading->GetRenderResult());
 
 		//m_RP_Dbg->SetInput(m_RP_DeferredShading->GetRenderResult());
 	}

@@ -199,6 +199,8 @@ namespace Aho {
 	// Root of meshes
 	struct GameObjectComponent {
 		std::string name;
+		Entity parent;
+		std::vector<Entity> children;
 		explicit GameObjectComponent(const std::string& s) : name(s) {}
 	};
 
@@ -307,9 +309,13 @@ namespace Aho {
 		std::unique_ptr<IBL> IBL{ nullptr };
 		_Texture* EnvTexture{ nullptr }; // rectangular
 		std::unique_ptr<_Texture> EnvTextureSkyBox{ nullptr };
-		std::unique_ptr<_Texture> PreFilter{ nullptr };
+		std::unique_ptr<_Texture> Prefilter{ nullptr };
 		std::unique_ptr<_Texture> Irradiance{ nullptr };
 		static std::unique_ptr<_Texture> BRDFLUT;
+		int PrefilterBaseRes = 512;
+		int SkyboxBaseRes = 512;
+		int IrradianceRes = 64;
+		int BRDFRes;
 		IBLComponent() = default;
 	};
 

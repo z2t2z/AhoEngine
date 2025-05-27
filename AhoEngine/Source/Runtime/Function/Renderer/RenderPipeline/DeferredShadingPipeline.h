@@ -10,7 +10,7 @@ namespace Aho {
 
 	class DeferredShadingPipeline : public RenderPipeline {
 	public:
-		DeferredShadingPipeline() { Initialize(); }
+		DeferredShadingPipeline() { /*Initialize();*/ }
 		virtual void Initialize() override;
 		void SetSunDir(const glm::vec3& dir) { m_SunDir = dir; }
 		void SetEnvLightState(bool state);

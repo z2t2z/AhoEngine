@@ -13,16 +13,16 @@ namespace Aho {
 		uint64_t metallicHandle{ 0 };
 		uint64_t roughnessHandle{ 0 };
 
-		glm::vec3 baseColor{ 1 };
+		glm::vec3 baseColor{ 0.0, 0.0, 1.0 };
 		float subsurface{ 0 };
 
 		glm::vec3 emissive{ 0.0 };
 		float emissiveScale{ 0.0f };
 
-		float metallic{ 0.1 };
+		float metallic{ 0.9 };
 		float specular{ 0 };
 		float specTint{ 0 };
-		float roughness{ 0.001 };
+		float roughness{ 0.1 };
 
 		float anisotropic{ 0 };
 		float sheen{ 0 };

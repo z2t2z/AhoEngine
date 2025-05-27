@@ -11,7 +11,7 @@ namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
 	RenderSkyPipeline::RenderSkyPipeline() {
-		Initialize();
+		//Initialize();
 	}
 
 	void RenderSkyPipeline::Initialize() {

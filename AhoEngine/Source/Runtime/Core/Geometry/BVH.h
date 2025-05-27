@@ -30,27 +30,14 @@ namespace Aho {
 		bool Intersect(const Ray& ray);
 		void ApplyTransform(const glm::mat4& transform);
 		void UpdateTLAS();
-		int GetRoot() const {
-			AHO_CORE_ASSERT(m_Root == 0);
-			return m_Root;
-		}
+		int GetRoot() const { AHO_CORE_ASSERT(m_Root == 0); return m_Root; }
 		int GetMeshId() const { return m_MeshId; }
-		BBox GetBBox() const {
-			AHO_CORE_ASSERT(m_Root == 0);
-			return m_Nodes[m_Root].GetBBox();
-		}
+		BBox GetBBox() const { AHO_CORE_ASSERT(m_Root == 0); return m_Nodes[m_Root].GetBBox(); }
 		void AddBLASPrimtive(const BVHi* blas);
 		const std::vector<BVHNodei>& GetNodesArr() const { return m_Nodes; }
 		const std::vector<PrimitiveDesc>& GetPrimsArr() const { return m_Primitives; }
-		const std::vector<OffsetInfo>& GetOffsetMap() const {
-			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
-			return m_OffsetMap;
-		}
-		const BVHi* GetBLAS(int id) const {
-			AHO_CORE_ASSERT(id >= 0 && id < m_BLAS.size());
-			AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS);
-			return m_BLAS[id];
-		}
+		const std::vector<OffsetInfo>& GetOffsetMap() const { AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS); return m_OffsetMap; }
+		const BVHi* GetBLAS(int id) const;
 	private:
 		bool IntersectNearest_recursion(const Ray& ray, int root);
 		bool IntersectNearest_loop(const Ray& ray, float& t);

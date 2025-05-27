@@ -10,8 +10,8 @@ namespace Aho {
 	}
 
 	void DebugPenal::Draw() {
-		BVHControl();
-		SunDirControl();
+		//BVHControl();
+		//SunDirControl();
 	}
 
 	bool DebugPenal::SunDirControl() {
@@ -36,14 +36,21 @@ namespace Aho {
 	}
 
 	void DebugPenal::BVHControl() {
-		return;
 		ImGui::Begin("Temp bvh control");
+		if (ImGui::Button("Get SSBO Data")) {
+			GetSSBOData();
+		}
 		ImGui::End();
 	}
 
 	void DebugPenal::GetSSBOData() {
-		std::vector<MaterialDescriptor> data(4);
-		SSBOManager::GetSubData<MaterialDescriptor>(5, data, 0);
+		std::vector<BVHNodei> data(47213);
+		SSBOManager::GetSubData<BVHNodei>(2, data, 0);
+
+		std::vector<PrimitiveDesc> data1(51267);
+		SSBOManager::GetSubData<PrimitiveDesc>(3, data1, 0);
+
+
 		AHO_CORE_INFO("{}", data.size());
 	}
 

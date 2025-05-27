@@ -43,8 +43,8 @@ struct PrimitiveDesc {
 };
 
 struct Ray {
-    vec3 origin;		float _padding0;
-    vec3 direction;	    float _padding1;
+    vec3 origin;
+    vec3 direction;
 };
 
 struct HitInfo {

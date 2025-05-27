@@ -162,14 +162,23 @@ namespace Aho {
 			shader->SetVec3("u_Albedo", m_ParamDesc.baseColor);
 		}
 
-		if (m_TextureDesc.useMetallicTex) {
-			shader->SetBool("u_HasMetalic", true);
-			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.metallicTex->GetTextureID());
-			shader->SetInt("u_MetalicMap", bindingPoint++);
+		if (m_TextureDesc.useNormalMap) {
+			shader->SetBool("u_HasNormal", true);
+			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.normalMap->GetTextureID());
+			shader->SetInt("u_NormalMap", bindingPoint++);
 		}
 		else {
-			shader->SetBool("u_HasMetalic", false);
-			shader->SetFloat("u_Metalic", m_ParamDesc.metallic);
+			shader->SetBool("u_HasNormal", false);
+		}
+
+		if (m_TextureDesc.useMetallicTex) {
+			shader->SetBool("u_HasMetallic", true);
+			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.metallicTex->GetTextureID());
+			shader->SetInt("u_MetallicMap", bindingPoint++);
+		}
+		else {
+			shader->SetBool("u_HasMetallic", false);
+			shader->SetFloat("u_Metallic", m_ParamDesc.metallic);
 		}
 
 		if (m_TextureDesc.useRoughnessTex) {

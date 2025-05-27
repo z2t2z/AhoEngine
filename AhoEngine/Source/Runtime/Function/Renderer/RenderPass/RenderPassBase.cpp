@@ -27,10 +27,15 @@ namespace Aho {
 		m_Execute		 = std::move(config.func);
 		m_Name			 = config.passName;
 
-		AHO_CORE_ASSERT(!config.textureAttachments.empty(), "No texture attachments provided.");
-		int width = config.textureAttachments[0]->GetWidth();
-		int height = config.textureAttachments[0]->GetHeight();
-		m_Framebuffer = std::make_unique<OpenGLFramebuffer>(config.textureAttachments, width, height);
+		//AHO_CORE_ASSERT(!config.textureAttachments.empty(), "No texture attachments provided.");
+		if (!config.textureAttachments.empty()) {
+			int width = config.textureAttachments[0]->GetWidth();
+			int height = config.textureAttachments[0]->GetHeight();
+			m_Framebuffer = std::make_unique<OpenGLFramebuffer>(config.textureAttachments, width, height);
+		}
+		else {
+			AHO_CORE_WARN("No texture attachments provided.", m_Name);
+		}
 
 		if (s_DummyVAO == 0) {
 			glGenVertexArrays(1, &s_DummyVAO);

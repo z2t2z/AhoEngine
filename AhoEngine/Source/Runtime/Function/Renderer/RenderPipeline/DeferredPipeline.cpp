@@ -53,7 +53,11 @@ namespace Aho {
 			cfg.passName = "Shading Pass";
 			cfg.shaderPath = (shaderPathRoot / "Shading.glsl").string();
 
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("Shading Result"));
+			auto texCfg = TextureConfig::GetColorTextureConfig("Shading Result");
+			texCfg.InternalFmt = InternalFormat::RGBA16F; // Use HDR format for shading result
+			texCfg.DataFmt = DataFormat::RGBA;
+			texCfg.DataType = DataType::Float;
+			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			m_TextureBuffers.push_back(res);
 			cfg.textureAttachments.push_back(res.get());
 
@@ -79,10 +83,17 @@ namespace Aho {
 					shader->SetBool("u_SampleEnvLight", !iblView.empty());
 					iblView.each(
 						[&](auto _, const IBLComponent& iblComp) {
-							shader->SetInt("u_gCubeMap", slot);
 							if (iblComp.EnvTextureSkyBox) {
-								RenderCommand::BindTextureUnit(slot, iblComp.EnvTextureSkyBox->GetTextureID());
-								slot += 1;
+								shader->SetInt("u_gCubeMap", slot);
+								RenderCommand::BindTextureUnit(slot++, iblComp.EnvTextureSkyBox->GetTextureID());
+								shader->SetInt("u_gIrradiance", slot);
+								RenderCommand::BindTextureUnit(slot++, iblComp.Irradiance->GetTextureID());
+								shader->SetInt("u_gPrefilter", slot);
+								RenderCommand::BindTextureUnit(slot++, iblComp.Prefilter->GetTextureID());
+								shader->SetInt("u_gBRDFLUT", slot);
+								RenderCommand::BindTextureUnit(slot++, iblComp.BRDFLUT->GetTextureID());
+
+								shader->SetFloat("u_PrefilterMaxMipLevel", iblComp.Prefilter->GetMipLevels());
 							}
 						}
 					);
@@ -105,20 +116,32 @@ namespace Aho {
 			RenderPassConfig cfg;
 			cfg.passName = "G-Buffer Pass";
 			cfg.shaderPath = (shaderPathRoot / "GBuffer.glsl").string();
-
-			std::shared_ptr<_Texture> position = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("G_Position"));
+			
+			auto posTexCfg = TextureConfig::GetColorTextureConfig("G_Position");
+			posTexCfg.InternalFmt = InternalFormat::RGB16F; // Use HDR format for shading result
+			posTexCfg.DataFmt = DataFormat::RGB;
+			posTexCfg.DataType = DataType::Float;
+			std::shared_ptr<_Texture> position = std::make_shared<_Texture>(posTexCfg);
 			m_TextureBuffers.push_back(position);
 			cfg.textureAttachments.push_back(position.get());
 
-			std::shared_ptr<_Texture> normal = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("G_Normal"));
+			auto normalTexCfg = TextureConfig::GetColorTextureConfig("G_Normal");
+			normalTexCfg.InternalFmt = InternalFormat::RGB16F; // Use HDR format for shading result
+			normalTexCfg.DataFmt = DataFormat::RGB;
+			normalTexCfg.DataType = DataType::Float;
+			std::shared_ptr<_Texture> normal = std::make_shared<_Texture>(normalTexCfg);
 			m_TextureBuffers.push_back(normal);
 			cfg.textureAttachments.push_back(normal.get());
-
+			
 			std::shared_ptr<_Texture> baseColor = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("G_BaseColor"));
 			m_TextureBuffers.push_back(baseColor);
 			cfg.textureAttachments.push_back(baseColor.get());
 
-			std::shared_ptr<_Texture> pbr = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("G_PBR"));
+			auto pbrTex = TextureConfig::GetColorTextureConfig("G_PBR");
+			pbrTex.InternalFmt = InternalFormat::RGB16F; 
+			pbrTex.DataFmt = DataFormat::RGB;
+			pbrTex.DataType = DataType::Float;
+			std::shared_ptr<_Texture> pbr = std::make_shared<_Texture>(pbrTex);
 			m_TextureBuffers.push_back(pbr);
 			cfg.textureAttachments.push_back(pbr.get());
 
@@ -146,8 +169,8 @@ namespace Aho {
 					view.each(
 						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
 							vao.vao->Bind();
-							uint32_t bp = 0;
-							mat.mat.ApplyToShader(shader, bp);
+							uint32_t slot = 0;
+							mat.mat.ApplyToShader(shader, slot);
 							shader->SetMat4("u_Model", transform.GetTransform());
 							RenderCommand::DrawIndexed(vao.vao);
 							vao.vao->Unbind();

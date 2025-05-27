@@ -1,5 +1,6 @@
 #include "Viewport.h"
 #include "FileExplorer.h"
+#include "EditorUI/ImGuiHelpers.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
@@ -7,6 +8,7 @@
 #include "Runtime/Resource/Asset/TextureAsset.h"
 #include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Function/Renderer/IBL/IBLManager.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -322,18 +324,18 @@ namespace Aho {
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
-		auto& io = ImGui::GetIO();
-		ImGui::PushFont(io.Fonts->Fonts[2]);
+		//ImGui::PushStyleColor(ImGuiCol_ButtonHovered, activeBtnColor);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(btn0Align[0], btn0Align[1]));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, frameRounding);
 
+		//BeginIconFont();
 		for (size_t i = 0; i < uiBtns.size(); i++) {
 			auto& btn = uiBtns[i];
 			activeBtnColor.w = (activeBtnIdx == i) ? 1.0f : 0.0f;
 			ImGui::PushStyleColor(ImGuiCol_Button, activeBtnColor);
 			ImGui::SameLine(sameLineParam[0], sameLineParam[1]);
-			if (ImGui::Button(btn.name.c_str(), ImVec2{btnSize[0], btnSize[1]})) {
+			if (ImGui::Button(btn.name.c_str(), ImVec2{ btnSize[0], btnSize[1] })) {
 				activeBtnIdx = i;
 				g_Operation = btn.oper;
 				m_ShouldPickObject = false;
@@ -341,11 +343,11 @@ namespace Aho {
 			}
 			ImGui::PopStyleColor();
 		}
+		//EndIconFont();
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
-		ImGui::PopFont();
 
 		ImGui::PopStyleColor(3);
 		ImGui::PopStyleVar(4);
@@ -422,17 +424,19 @@ namespace Aho {
 				auto resourceManager = g_RuntimeGlobalCtx.m_Resourcemanager;
 				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions);
 				std::string name = "GO_" + ms->GetName();
-				auto go = resourceManager->CreateGameObject(name);
-				auto& vaoRef = ecs->AddComponent<VertexArrayRefsComponent>(go);
+				Entity go = resourceManager->CreateGameObject(name);
+				GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(go);
 
-				// Put these in resource manager??                                             
+				// TODO: Put these in resource manager??                                             
 				auto view = ecs->GetView<MeshAssetComponent, MaterialRefComponent>(Exclude<VertexArrayComponent>); // Need testing
 				view.each(
 					[&](auto entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {
-						vaoRef.vaoRef.push_back(entity);
+						goComp.children.push_back(entity);
+						GameObjectComponent& childGoComp = ecs->AddComponent<GameObjectComponent>(entity, mc.asset->GetName());
+						childGoComp.parent = go;
 						std::shared_ptr<VertexArray> vao = resourceManager->LoadVAO(mc.asset);
-						ecs->AddComponent<VertexArrayComponent>(entity, vao.get());
 						auto& matAssetComponent = ecs->GetComponent<MaterialAssetComponent>(matRefc.MaterialRefEntity);
+						ecs->AddComponent<VertexArrayComponent>(entity, vao.get());
 						ecs->AddComponent<_MaterialComponent>(entity, matAssetComponent.asset);
 						ecs->AddComponent<_TransformComponent>(entity);
 					}

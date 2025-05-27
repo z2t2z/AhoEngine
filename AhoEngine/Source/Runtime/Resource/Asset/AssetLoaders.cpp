@@ -143,6 +143,7 @@ namespace Aho {
 						indices.push_back(face.mIndices[j]);
 					}
 				}
+				AHO_CORE_TRACE("{}", mesh->mName.data);
 				meshes.emplace_back(vertices, indices, mesh->mName.data, hasNormal, hasUVs);
 			};
 

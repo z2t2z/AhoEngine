@@ -51,37 +51,32 @@ vec3 EvalPointLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 }
 
 // IBL
-uniform bool u_SampleEnvLight;
+uniform float u_PrefilterMaxMipLevel;
 uniform samplerCube u_gCubeMap;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
-uniform sampler2D u_gLUT;
-#define MAX_REFLECTION_LOD 4.0
+uniform sampler2D u_gBRDFLUT;
 
 vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
-	vec3 L_out      = vec3(0.0, 0.0, 0.0);
+	vec3 L_out      = vec3(0.0);
     vec3 baseColor  = mat.baseColor;
     float roughness = mat.roughness;
     float metallic  = mat.metallic;
     float ao        = mat.ao;
-    float VoN       = dot(V, N);
-    vec3 L          = reflect(-V, N);
+    float NoV = max(dot(N, V), 0.0f);
 
-    // vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
-    vec3  F = F_Schlick(F0, VoN);
-    vec3 Ks = F;
-    vec3 Kd = (1.0 - Ks) * (1.0 - metallic);
+    vec3 F = FresnelSchlick(F0, NoV); // Ks
 
-    vec3 irradiance = texture(u_gIrradiance, N).rgb;
+    vec3 irradiance = textureLod(u_gIrradiance, N, 0).rgb;
+    vec3 Kd = (1.0 - metallic) * (1.0 - F);
     vec3 diffuse = irradiance * baseColor;
 
-    vec3 preFilter = textureLod(u_gPrefilter, L, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 brdf = texture(u_gLUT, vec2(max(VoN, 0.0), roughness)).rg;
-    vec3 specular = preFilter * (F * brdf.x + brdf.y);
-
-    // return specular;
-
-    L_out = (Kd * diffuse + specular);// * ao;
+    vec3 R = 2.0 * NoV * N - V; 
+    float mipLevel = clamp(roughness * u_PrefilterMaxMipLevel, 0.0, u_PrefilterMaxMipLevel);
+    vec3 prefilteredColor = textureLod(u_gPrefilter, R, mipLevel).rgb;
+    vec2 brdf = textureLod(u_gBRDFLUT, vec2(NoV, roughness), 0).rg;
+    vec3 specular = prefilteredColor * (F0 * brdf.x + brdf.y);
+    L_out = Kd * diffuse + specular;
     return L_out;
 }
 

@@ -124,10 +124,10 @@ vec4 GridColor(vec3 worldPos, float t) {
 }
 
 #define SKY_ATMOSPHERIC
+#define ENBALE_IBL
 
 void main() {
-	vec3 fragPosVs = texture(u_gPosition, v_TexCoords).rgb; // View space
-	vec3 fragPos = (u_ViewInv * vec4(fragPosVs, 1.0f)).xyz; // To world space
+	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb; // View space
 
 	float d = texture(u_gDepth, v_TexCoords).r;
 	if (d == 1.0f) {
@@ -137,10 +137,11 @@ void main() {
 		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
 
 #ifdef ENBALE_IBL				
-		out_Color = vec4(texture(u_gCubeMap, worldDir).rgb, 1.0);
+		vec3 cubemap = texture(u_gCubeMap, worldDir).rgb;
+		cubemap = pow(cubemap, vec3(1.0 / 2.2f)); // gamma correction
+		out_Color = vec4(cubemap, 1.0f);
 		return;
 #endif
-
 
 #ifdef SKY_ATMOSPHERIC
 		const float Rground = 6360.0; 
@@ -148,7 +149,6 @@ void main() {
 		worldPos.y = max(0.01, worldPos.y) + Rground;
 
 		vec2 sampleUV;
-		// vec3 sunDir = u_DirLight[0].direction;
 		vec3 sunDir = u_SunDir;
 
 		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
@@ -174,15 +174,10 @@ void main() {
 
 	vec3 baseColor = texture(u_gAlbedo, v_TexCoords).rgb;
 	baseColor = pow(baseColor, vec3(2.2f)); // gamma correction
-	out_Color = vec4(baseColor, 1.0f);
-	return;
 
-	float AO = texture(u_gPBR, v_TexCoords).b;
-	if (AO == -1.0f) {
-		AO = texture(u_gAO, v_TexCoords).r;
-	}
 	float metallic = texture(u_gPBR, v_TexCoords).r;
 	float roughness = texture(u_gPBR, v_TexCoords).g;
+	float AO = texture(u_gPBR, v_TexCoords).b;
 
 	Material mat;
 	mat.baseColor = baseColor;
@@ -191,14 +186,17 @@ void main() {
 	mat.roughness = roughness;
 
 	vec3 viewPos = u_ViewPosition.xyz;
-	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb);
+	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb); 
 	vec3 V = normalize(viewPos - fragPos);
 	vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
-	vec3 Lo = vec3(0.1f);
+	vec3 Lo = vec3(0.0f);
 	// Direct lighting
 	// Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
 	// Lo += EvalPointLight(mat, fragPos, F0, V, N);
-	// Lo += EvalEnvLight(mat, fragPos, F0, V, N); // TODO :: WRONG
+
+#ifdef ENBALE_IBL
+	Lo += EvalEnvLight(mat, fragPos, F0, V, N);
+#endif
 
 	vec3 Color = Lo / (Lo + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction

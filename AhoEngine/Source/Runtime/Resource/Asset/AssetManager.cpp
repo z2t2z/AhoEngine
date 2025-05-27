@@ -30,7 +30,7 @@ namespace Aho {
 
 		std::shared_ptr<MeshAsset> firstMeshAsset;
 		for (size_t i = 0; i < meshes.size(); i++) {
-			std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i]);
+			std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i].name, meshes[i]);
 			if (i == 0) {
 				firstMeshAsset = meshAsset;
 			}
@@ -42,7 +42,6 @@ namespace Aho {
 				{
 					ScopedTimer timer("Building BVH for mesh: \"" + meshAsset->GetName() + "\"");
 					const auto& bc = emg->AddComponent<_BVHComponent>(meshAssetEntity, meshAsset->GetMesh());
-					//AHO_CORE_TRACE("{}", bc.s_Id);
 					bvh = bc.bvh.get();
 				}
 				auto view = emg->GetView<SceneBVHComponent>();

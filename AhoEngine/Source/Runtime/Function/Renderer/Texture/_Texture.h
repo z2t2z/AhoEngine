@@ -15,10 +15,11 @@ namespace Aho {
 		//_Texture& operator=(_Texture&&) noexcept;
 		_Texture(const _Texture&) = delete;
 		_Texture& operator=(const _Texture&) = delete;
-		void BindTextureImage(uint32_t pos) const; // For compute shader
+		void BindTextureImage(uint32_t pos, uint32_t mipLevel = 0) const; // For compute shader
 		void ClearTextureData(const void* data) const {
 			glClearTexImage(m_TextureID, 0, m_DataFmt, m_DataType, data);
 		}
+		void GenMipMap();
 		bool Resize(uint32_t width, uint32_t height);
 		void SetUsage(const TextureUsage usage) { m_Usage = usage; }
 		uint64_t GetTextureHandle()	 { 
@@ -29,6 +30,8 @@ namespace Aho {
 			return m_Handle; 
 		}
 
+		bool IsHDR()					const { return m_IsHDR; }
+		int GetMipLevels()				const { return m_MipLevels; }
 		TextureDim GetDim()				const { return m_Dim; }
 		InternalFormat GetInternalFmt() const { return m_InternalFmt; }
 		DataFormat GetDataFmt()			const { return m_DataFmt; }
@@ -44,6 +47,8 @@ namespace Aho {
 		std::string m_Label;
 		TextureUsage m_Usage;
 
+		bool			m_IsHDR{ false };
+		bool			m_GenMips{ false };
 		uint32_t		m_Width{ 0 };
 		uint32_t		m_Height{ 0 };
 		int				m_MipLevels{ -1 };
