@@ -16,7 +16,6 @@
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Resource/ResourceType/ResourceType.h"
 #include "Runtime/Resource/FileWatcher/FileWatcher.h"
-#include "Runtime/Resource/ResourceLayer.h"
 
 #include "Runtime/Function/Renderer/Buffer.h"
 #include "Runtime/Function/Renderer/Texture.h"

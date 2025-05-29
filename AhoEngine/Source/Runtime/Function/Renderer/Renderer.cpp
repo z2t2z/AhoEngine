@@ -24,14 +24,12 @@ namespace Aho {
 		SetupUBOs();
 		RenderCommand::SetDepthTest(true);
 
-		m_RP_IBL = new IBLPipeline();
+		//m_RP_Sky = new RenderSkyPipeline();
+		//m_RP_DeferredShading = new DeferredShadingPipeline();
+		//m_RP_DeferredShading->SetSunDir(m_RP_Sky->GetSunDir());
 
-		m_RP_Sky = new RenderSkyPipeline();
-		m_RP_DeferredShading = new DeferredShadingPipeline();
-		m_RP_DeferredShading->SetSunDir(m_RP_Sky->GetSunDir());
-
-		m_RP_Postprocess = new PostprocessPipeline();
-		m_RP_Dbg = new DebugVisualPipeline();
+		//m_RP_Postprocess = new PostprocessPipeline();
+		//m_RP_Dbg = new DebugVisualPipeline();
 
 
 		// --- New System ---
@@ -39,22 +37,6 @@ namespace Aho {
 		m_RP_Derferred = new DeferredShading();
 		m_RP_PathTracing = new PathTracingPipeline();
 		m_RP_IBLPipeline = new _IBLPipeline();
-
-		//auto shadingResFBO = m_RP_DeferredShading->GetRenderPassTarget(RenderPassType::Shading);
-		//m_RP_Dbg->SetRenderTarget(RenderPassType::DebugVisual, shadingResFBO);
-
-		// Register buffers from ibl
-		//auto rp_deferred = m_RP_DeferredShading->GetRenderPass(RenderPassType::Shading);
-		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::PrecomputeIrradiance)->GetTextureBuffer(TexType::Irradiance), TexType::Irradiance });
-		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::GenLUT)->GetTextureBuffer(TexType::BRDFLUT), TexType::BRDFLUT });
-		//rp_deferred->RegisterTextureBuffer({ m_RP_IBL->GetRenderPass(RenderPassType::Prefilter)->GetTextureBuffer(TexType::Prefiltering), TexType::Prefiltering });
-
-		// Register buffers from skyview
-		//rp_deferred->RegisterTextureBuffer({ m_RP_Sky->GetRenderResult(), TexType::SkyViewLUT });
-
-		//m_RP_Postprocess->SetInput(m_RP_DeferredShading->GetRenderResult());
-
-		//m_RP_Dbg->SetInput(m_RP_DeferredShading->GetRenderResult());
 	}
 
 
@@ -71,22 +53,13 @@ namespace Aho {
 		m_FrameTime = dt.count();
 		s_previous = frameStart;
 
-		// --- New System
-		m_RP_Derferred->Execute();
-		m_RP_SkyAtmospheric->Execute();
-		m_RP_IBLPipeline->Execute();
-
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
-			m_RP_Sky->Execute();
-			m_RP_DeferredShading->Execute();
-			//m_RP_Postprocess->Execute();
-			m_RP_Dbg->Execute();
+			// --- New System
+			m_RP_IBLPipeline->Execute();
+			m_RP_SkyAtmospheric->Execute();
+			m_RP_Derferred->Execute();
 		}
 		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
-			if (m_CameraDirty) {
-				m_RP_PathTracing->ClearAccumulateData();
-				m_CameraDirty = false;
-			}
 			m_RP_PathTracing->Execute();
 		}
 
@@ -96,20 +69,20 @@ namespace Aho {
 
 	RenderPipeline* Renderer::GetPipeline(RenderPipelineType type) {
 		switch (type) {
-		case RenderPipelineType::RPL_DeferredShading:
-			return m_RP_DeferredShading;
-		case RenderPipelineType::RPL_RenderSky:
-			return m_RP_Sky;
-		case RenderPipelineType::RPL_PostProcess:
-			return m_RP_Postprocess;
-		case RenderPipelineType::RPL_PathTracing:
-			return m_RP_PathTracing;
-		case RenderPipelineType::RPL_IBL:
-			return m_RP_IBL;
-		case RenderPipelineType::RPL_DebugVisual:
-			return m_RP_Dbg;
-		default:
-			AHO_CORE_ASSERT(false);
+			case RenderPipelineType::RPL_DeferredShading:
+				return m_RP_DeferredShading;
+			case RenderPipelineType::RPL_RenderSky:
+				return m_RP_Sky;
+			case RenderPipelineType::RPL_PostProcess:
+				return m_RP_Postprocess;
+			case RenderPipelineType::RPL_PathTracing:
+				return m_RP_PathTracing;
+			case RenderPipelineType::RPL_IBL:
+				return m_RP_IBLPipeline;
+			case RenderPipelineType::RPL_DebugVisual:
+				return m_RP_Dbg;
+			default:
+				AHO_CORE_ASSERT(false);
 		}
 		AHO_CORE_ASSERT(false);
 	}
@@ -139,15 +112,11 @@ namespace Aho {
 	// TODO: Fix fxaa: it is appiled to all pixels
 	uint32_t Renderer::GetRenderResultTextureID() {
 		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
-			//return m_RP_Derferred->GetRenderResult()->GetTextureID();
 			return m_RP_Derferred->GetRenderResultTextureID();
 		}
 		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
-			//return m_RP_PathTracing->GetRenderResult()->GetTextureID();
 			return m_RP_PathTracing->GetRenderResultTextureID();
 		}
-		return m_RP_DeferredShading->GetRenderResult()->GetTextureID();
-		return m_RP_Postprocess->GetRenderResult()->GetTextureID();
 	}
 
 	void Renderer::AddRenderData(const std::shared_ptr<RenderData>& data) {

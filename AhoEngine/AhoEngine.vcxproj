@@ -143,6 +143,10 @@
     <ClInclude Include="Source\IamAho.h" />
     <ClInclude Include="Source\Runtime\Core\App\Application.h" />
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\EngineEvents.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\EventBus.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\_Event.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\BBox.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\BVH.h" />
     <ClInclude Include="Source\Runtime\Core\Core.h" />
@@ -164,6 +168,7 @@
     <ClInclude Include="Source\Runtime\Core\MortonEncoder.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\Primitive.h" />
     <ClInclude Include="Source\Runtime\Core\Geometry\Ray.h" />
+    <ClInclude Include="Source\Runtime\Core\Parallel.h" />
     <ClInclude Include="Source\Runtime\Core\SingletonBase.h" />
     <ClInclude Include="Source\Runtime\Core\Timer.h" />
     <ClInclude Include="Source\Runtime\Core\Window\Window.h" />
@@ -243,7 +248,6 @@
     <ClInclude Include="Source\Runtime\Core\Geometry\Vertex.h" />
     <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileChangedEvent.h" />
     <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileWatcher.h" />
-    <ClInclude Include="Source\Runtime\Resource\ResourceLayer.h" />
     <ClInclude Include="Source\Runtime\Resource\ResourceManager.h" />
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h" />
     <ClInclude Include="Source\Runtime\Resource\Serializer\Serializer.h" />
@@ -739,7 +743,6 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\MaterialAsset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
     <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp" />
     <ClCompile Include="Source\Runtime\Resource\ResourceManager.cpp" />
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp" />
     <ClCompile Include="Vendor\ImGuizmo\ImGuizmo.cpp" />

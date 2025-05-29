@@ -4,6 +4,7 @@
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
+#include "Runtime/Resource/ResourceManager.h"
 #include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Platform/OpenGL/OpenGLFramebuffer.h"
@@ -19,13 +20,15 @@ namespace Aho {
 	}
 
 	void RenderPassBase::Setup(RenderPassConfig& config) {
-		auto assetManger = g_RuntimeGlobalCtx.m_AssetManager;
-		auto ecs		 = g_RuntimeGlobalCtx.m_EntityManager;
-		auto shaderAsset = assetManger->_LoadAsset<ShaderAsset>(ecs, ShaderOptions(config.shaderPath));
-		m_Attachments	 = config.textureAttachments;
-		m_Shader		 = shaderAsset->GetShader().get();
-		m_Execute		 = std::move(config.func);
-		m_Name			 = config.passName;
+		auto assetManger		= g_RuntimeGlobalCtx.m_AssetManager;
+		auto ecs				= g_RuntimeGlobalCtx.m_EntityManager;
+		auto resourceManager	= g_RuntimeGlobalCtx.m_Resourcemanager;
+		auto shaderAsset		= assetManger->_LoadAsset<ShaderAsset>(ecs, ShaderOptions(config.shaderPath));
+		auto shaderResource		= resourceManager->LoadShaderResource(shaderAsset, ShaderFeature::NONE);
+		m_Attachments			= config.textureAttachments;
+		m_Shader				= shaderResource.get();
+		m_Execute				= std::move(config.func);
+		m_Name					= config.passName;
 
 		//AHO_CORE_ASSERT(!config.textureAttachments.empty(), "No texture attachments provided.");
 		if (!config.textureAttachments.empty()) {

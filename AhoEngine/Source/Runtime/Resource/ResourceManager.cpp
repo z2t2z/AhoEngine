@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "ResourceManager.h"
+#include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Resource/Asset/MaterialAsset.h"
 #include "Runtime/Resource/Asset/TextureAsset.h"
@@ -14,6 +15,7 @@
 namespace Aho {
 	void ResourceManager::Initialize() {
 		m_ShaderVariantManager = std::make_unique<ShaderVariantManager>();
+		m_ShaderVariantManager->Initialize();
 	}
 
 	// Load material here
@@ -40,8 +42,13 @@ namespace Aho {
 		return vao;
 	}
 
-	std::shared_ptr<Shader> ResourceManager::LoadShader(const std::shared_ptr<ShaderAsset>& shaderAsset) {
-		std::shared_ptr<Shader> shader = m_ShaderVariantManager->GetVariant(shaderAsset);
+	std::shared_ptr<Shader> ResourceManager::LoadShaderResource(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature) {
+		std::shared_ptr<Shader> shader = m_ShaderVariantManager->GetVariant(shaderAsset, feature);
+
+		//EngineEvents::OnShaderAssetReload.AddListener([](const std::string& path, ShaderAsset* asset) {
+		//	AHO_CORE_TRACE("Reloading shader asset from path: `{}`" + path);
+		//	asset->Load();
+		//});
 		return shader;
 	}
 

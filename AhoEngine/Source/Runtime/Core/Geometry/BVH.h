@@ -29,6 +29,7 @@ namespace Aho {
 		size_t GetPrimsCount() const { return m_Primitives.size(); }
 		bool Intersect(const Ray& ray);
 		void ApplyTransform(const glm::mat4& transform);
+		void Rebuild();
 		void UpdateTLAS();
 		int GetRoot() const { AHO_CORE_ASSERT(m_Root == 0); return m_Root; }
 		int GetMeshId() const { return m_MeshId; }

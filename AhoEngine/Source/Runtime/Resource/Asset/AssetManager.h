@@ -111,43 +111,7 @@ namespace Aho {
 		bool CreateAsset(const std::filesystem::path& path, AssetType& assetOut, const glm::mat4& preTransform) {
 			return false;
 		}
-
 		void Initialize() { /* TODO */ }
-
-		void LoadMeshAsset(const MeshOptions& loadOptions, EntityManager& emg) {
-			//// 1. Parse mesh file into raw mesh and material data
-			//std::vector<Mesh>     rawMeshes;
-			//std::vector<MaterialPaths> matPaths;
-			//bool success = AssetLoader::MeshLoader(loadOptions, rawMeshes, matPaths);
-			//if (!success) {
-			//	AHO_ASSERT(false);
-			//	return;
-			//}
-
-
-			//// 2. Create MaterialAsset entities first
-			//std::vector<entt::entity> materialEntities;
-			//materialEntities.reserve(matPaths.size());
-			//for (size_t i = 0; i < matPaths.size(); ++i) {
-			//	const auto& mat = matPaths[i];
-			//	auto matEntity = ecs.create();
-			//	ecs.emplace<MaterialAssetComponent>(matEntity, std::make_shared<MaterialAsset>(mat));
-			//	materialEntities.push_back(matEntity);
-			//}
-
-			//// 3. Create MeshAsset entities and link to MaterialAsset entities
-			//for (size_t i = 0; i < rawMeshes.size(); ++i) {
-			//	const auto& mesh = rawMeshes[i];
-			//	auto meshEntity = ecs.create();
-			//	// attach raw mesh data
-			//	ecs.emplace<MeshAssetComponent>(meshEntity, std::make_shared<MeshAsset>(mesh));
-			//	// link corresponding material
-			//	if (i < materialEntities.size()) {
-			//		ecs.emplace<MaterialRefComponent>(meshEntity, materialEntities[i]);
-			//	}
-			//}
-		}
-
 	private:
 		FileWatcher m_Filewatcher;
 		std::unordered_map<std::string, std::shared_ptr<Asset>> m_Assets;

@@ -14,6 +14,7 @@ namespace Aho {
     class AssetManager;     // Manage resources from disk
     class ResourceManager;  // Manage runtime resources
     class IBLManager;
+    class ParallelExecutor;
 
     class RuntimeGlobalContext {
     public:
@@ -22,6 +23,7 @@ namespace Aho {
         void InitializeSystems(const std::string& configFilePath);
         void ShutdownSystems();
     public:
+        std::unique_ptr<ParallelExecutor>   m_ParallelExecutor;
         std::shared_ptr<Logger>             m_Logger;
         std::shared_ptr<Renderer>           m_Renderer;
         std::shared_ptr<InputSystem>        m_InputSystem;

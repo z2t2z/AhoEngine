@@ -104,6 +104,16 @@ namespace Aho {
 		std::string m_FilePath;
 	};
 
+
+
+
+
+
+
+
+
+
+	// TODO: Delete the following after refactoring
 	class Asset;
 	class PackRenderDataEvent : public Event {
 	public:

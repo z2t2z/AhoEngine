@@ -54,6 +54,17 @@ namespace Aho {
 			return entity;
 		}
 
+		void DestroyEntity(Entity entity) {
+			AHO_CORE_ASSERT(entity.Valid(), "Invalid entity!");
+			if (HasComponent<GameObjectComponent>(entity)) {
+				auto goComp = GetComponent<GameObjectComponent>(entity);
+				for (auto child : goComp.children) {
+					DestroyEntity(child);
+				}
+			}
+			m_Registry.destroy(entity.GetEntityHandle());
+		}
+
 		bool IsEntityIDValid(uint32_t id) {
 			return m_Registry.valid(static_cast<entt::entity>(id));
 		}

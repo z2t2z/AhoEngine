@@ -12,6 +12,7 @@ namespace Aho {
 	class Shader;
 	class ShaderAsset;
 	class ShaderVariantManager;
+	enum class ShaderFeature : uint32_t;
 
 	// Responsible for loading and caching runtime resources from assets which are loaded from disk
 	class ResourceManager {
@@ -20,7 +21,9 @@ namespace Aho {
 		void Initialize();
 		std::shared_ptr<_Texture> LoadGPUTexture(const std::shared_ptr<TextureAsset>& textureAsset);
 		std::shared_ptr<VertexArray> LoadVAO(const std::shared_ptr<MeshAsset>& textureAsset);
-		std::shared_ptr<Shader> LoadShader(const std::shared_ptr<ShaderAsset>& shaderAsset);
+		std::shared_ptr<Shader> LoadShaderResource(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature);
+	public:
+		// Should not be here
 		Entity LoadIBL(std::shared_ptr<TextureAsset>& textureAsset);
 		Entity CreateGameObject(const std::string& name);
 	private:

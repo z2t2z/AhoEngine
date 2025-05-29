@@ -10,7 +10,7 @@ namespace Aho {
 	class Viewport {
 	public:
 		Viewport();
-		void Initialize(Renderer* renderer, LevelLayer* levelLayer, ResourceLayer* resourceLayer, EventManager* manager, const std::shared_ptr<Camera>& camera);
+		void Initialize(Renderer* renderer, LevelLayer* levelLayer, EventManager* manager, const std::shared_ptr<Camera>& camera);
 		void Draw();
 		bool IsCursorInViewport() {
 			return (m_MouseX >= 0 && m_MouseY >= 0 && m_MouseX < m_ViewportWidth && m_MouseY < m_ViewportHeight);
@@ -29,7 +29,6 @@ namespace Aho {
 		void TryGetDragDropTarget();
 	private:
 		Entity m_EnvEntity;
-		ResourceLayer* m_ResourceLayer{ nullptr };
 	private:
 		bool m_ShouldPickObject{ false };
 		uint32_t m_ViewportWidth, m_ViewportHeight;

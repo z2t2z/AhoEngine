@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
+#include <string>
 
 namespace Aho {
     enum class ShaderFeature : uint32_t {
-        None = 0,
-        ENABLE_INFINITE_LIGHT = 1 << 0,
-        USE_UNIFORM_INFINITE_LIGHT = 1 << 1,
-        USE_ENV_MAP_INFINITE_LIGHT = 1 << 2,
+        NONE = 0,
+        FEATURE_IBL = 1 << 0,
+        FEATURE_SKY_ATMOSPHERIC = 1 << 1,
+        //USE_ENV_MAP_INFINITE_LIGHT = 1 << 2,
     };
 
     inline ShaderFeature operator|(ShaderFeature a, ShaderFeature b) {
@@ -18,4 +18,14 @@ namespace Aho {
         return static_cast<uint32_t>(a) & static_cast<uint32_t>(b);
     }
 
+    enum class ShaderType {
+        None = 0,
+        Normal, // vertex + pixel
+        Compute
+    };
+    enum class ShaderUsage {
+        None = 0,
+        Deferred,
+        PathTracing,
+    };
 }

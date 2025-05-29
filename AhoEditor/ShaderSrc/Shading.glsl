@@ -123,8 +123,8 @@ vec4 GridColor(vec3 worldPos, float t) {
 	return GridColor;
 }
 
-#define SKY_ATMOSPHERIC
-#define ENBALE_IBL
+#define FEATURE_ENABLE_SKYATMOSPHERIC
+#define FEATURE_ENABLE_IBL
 
 void main() {
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb; // View space
@@ -136,14 +136,14 @@ void main() {
 		vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
 		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
 
-#ifdef ENBALE_IBL				
+#ifdef FEATURE_ENABLE_IBL				
 		vec3 cubemap = texture(u_gCubeMap, worldDir).rgb;
 		cubemap = pow(cubemap, vec3(1.0 / 2.2f)); // gamma correction
 		out_Color = vec4(cubemap, 1.0f);
 		return;
 #endif
 
-#ifdef SKY_ATMOSPHERIC
+#ifdef FEATURE_ENABLE_SKYATMOSPHERIC
 		const float Rground = 6360.0; 
 		vec3 worldPos = u_ViewPosition.xyz / 1000.0;
 		worldPos.y = max(0.01, worldPos.y) + Rground;
@@ -194,7 +194,7 @@ void main() {
 	// Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
 	// Lo += EvalPointLight(mat, fragPos, F0, V, N);
 
-#ifdef ENBALE_IBL
+#ifdef FEATURE_ENABLE_IBL
 	Lo += EvalEnvLight(mat, fragPos, F0, V, N);
 #endif
 

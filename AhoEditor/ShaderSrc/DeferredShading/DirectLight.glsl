@@ -27,8 +27,9 @@ vec3 EvalDirectionalLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N)
         float LoH = dot(L, H);
         float VoH = dot(V, H);
         float NoH = dot(N, H);
+        float NoV = max(VoN, 0.0001f);
 
-        vec3  F = F_Schlick(F0, VoH);
+        vec3  F = F_Schlick(F0, NoV);
         // vec3  F = FresnelSchlickRoughness(VoH, F0, roughness);
         float D = D_GGX(roughness, NoH);
         float G = G_Smith(LoN, VoN, roughness);
@@ -63,7 +64,7 @@ vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
     float roughness = mat.roughness;
     float metallic  = mat.metallic;
     float ao        = mat.ao;
-    float NoV = max(dot(N, V), 0.0f);
+    float NoV = max(dot(N, V), 0.0001f);
 
     vec3 F = FresnelSchlick(F0, NoV); // Ks
 

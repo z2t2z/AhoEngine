@@ -10,7 +10,7 @@ namespace Aho {
 	class Entity;
 	class AhoEditorLayer : public Layer {
 	public:
-		AhoEditorLayer(LevelLayer* levellayer, ResourceLayer* resourceLayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
+		AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~AhoEditorLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -31,7 +31,6 @@ namespace Aho {
 		float m_DeltaTime{ 0.0f };
 	private:
 		LevelLayer* m_LevelLayer{ nullptr }; 
-		ResourceLayer* m_ResourceLayer{ nullptr };
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;

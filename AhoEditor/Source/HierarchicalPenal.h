@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include <string>
 #include <memory>
 #include <glm/glm.hpp>
@@ -10,15 +8,12 @@
 #include <ImGuizmo.h>
 
 namespace Aho {
-	class LevelLayer;
 	class Entity;
 
 	class HierachicalPanel {
 	public:
 		HierachicalPanel() = default;
-		void Initialize(LevelLayer* m_LevelLayer);
+		void Initialize();
 		Entity Draw();
-	private:
-		LevelLayer* m_LevelLayer{ nullptr };
 	};
 }

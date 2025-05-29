@@ -1,5 +1,10 @@
 #include "Ahopch.h"
 #include "AssetManager.h"
+
+#include "Runtime/Core/Events/EngineEvents.h"
+#include "Runtime/Core/Events/MainThreadDispatcher.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Core/Parallel.h"
 #include "Runtime/Core/Timer.h"
 
 namespace Aho {
@@ -38,6 +43,7 @@ namespace Aho {
 			emg->AddComponent<MeshAssetComponent>(meshAssetEntity, meshAsset);
 			emg->AddComponent<MaterialRefComponent>(meshAssetEntity, matEnts[i]);
 			if (opts.BuildBVH) {
+				// Make these multithreaded some day
 				BVHi* bvh{ nullptr };
 				{
 					ScopedTimer timer("Building BVH for mesh: \"" + meshAsset->GetName() + "\"");
@@ -62,18 +68,21 @@ namespace Aho {
 			return std::static_pointer_cast<ShaderAsset>(m_Assets.at(opts.path));
 		}
 		auto shaderAssetEntity = emg->CreateEntity();
-		auto& shaderAssetComp = emg->AddComponent<ShaderAssetComponent>(shaderAssetEntity, std::make_shared<ShaderAsset>(opts.path, opts.features, opts.usage));
+		auto& shaderAssetComp = emg->AddComponent<ShaderAssetComponent>(shaderAssetEntity, std::make_shared<ShaderAsset>(opts.path, opts.usage));
+		auto shaderAsset = shaderAssetComp.asset;
 
-		std::shared_ptr<Shader> shader = Shader::Create(opts.path);
-		AHO_CORE_ASSERT(shader->IsCompiled());
 		m_Filewatcher.WatchFile(opts.path,
-			[this, opts](const std::string& p) { // ?
-				// Sadly opengl doesnot support mt
-				auto shaderAssset = std::static_pointer_cast<ShaderAsset>(m_Assets[opts.path]);
-				shaderAssset->MakeDirty();
+			[this, shaderAsset]() {
+				AHO_CORE_TRACE("Reloading shader asset from path: `{}`", shaderAsset->GetPath());
+				shaderAsset->Load();
+
+				MainThreadDispatcher::Get().Enqueue([shaderAsset]() {
+					// Dispatch the event on the main thread to ensure thread safety
+					EngineEvents::OnShaderAssetReload.Dispatch(shaderAsset->GetPath(), shaderAsset.get());
+				});
 			});
 		m_Filewatcher.Start();
-		auto shaderAsset = std::make_shared<ShaderAsset>(opts.path, shader);
+		
 		m_Assets[opts.path] = shaderAsset;
 		return shaderAsset;
 	}

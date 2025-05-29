@@ -402,9 +402,6 @@
     <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileWatcher.h">
       <Filter>Source\Runtime\Resource\FileWatcher</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Resource\ResourceLayer.h">
-      <Filter>Source\Runtime\Resource</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h">
       <Filter>Source\Runtime\Resource\ResourceType</Filter>
     </ClInclude>
@@ -1690,6 +1687,11 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderFeatures.h" />
     <ClInclude Include="Source\Runtime\Resource\Asset\ShaderAsset.h" />
+    <ClInclude Include="Source\Runtime\Core\Parallel.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\_Event.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\EventBus.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\EngineEvents.h" />
+    <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1859,9 +1861,6 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp">
       <Filter>Source\Runtime\Resource\FileWatcher</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Resource\ResourceLayer.cpp">
-      <Filter>Source\Runtime\Resource</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">
       <Filter>Source\Runtime\Resource\UUID</Filter>

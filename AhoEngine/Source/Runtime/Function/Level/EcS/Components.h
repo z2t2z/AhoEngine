@@ -183,6 +183,7 @@ namespace Aho {
 	};
 
 	struct _TransformComponent {
+		bool Dirty{ false };
 		glm::vec3 Translation{ 0.0f };
 		glm::vec3 Scale{ 1.0f };
 		glm::vec3 Rotation{ 0.0f };
@@ -278,9 +279,10 @@ namespace Aho {
 		std::unique_ptr<BVHi> bvh{ nullptr };
 		static std::vector<int> s_FreeIds;
 		static int s_Id;
+		// TODO: Fix this
 		explicit _BVHComponent(const Mesh& mesh) {
 			int id = -1;
-			if (!s_FreeIds.empty()) {
+			if (false && !s_FreeIds.empty()) {
 				id = s_FreeIds.back();
 				s_FreeIds.pop_back();
 			}

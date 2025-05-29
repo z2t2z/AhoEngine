@@ -1,23 +1,23 @@
 #pragma once
 #include "Asset.h"
 #include "Runtime/Function/Renderer/Shader/ShaderFeatures.h"
-
 #include <memory>
 
 namespace Aho {
-	enum class ShaderUsage;
 	class Shader;
 	class ShaderAsset : public Asset {
 	public:
-		ShaderAsset(const std::string& path, const std::shared_ptr<Shader>& shader);
-		ShaderAsset(const std::string& path, const ShaderFeature& feature, const ShaderUsage& usage);
+		ShaderAsset(const std::string& path, const ShaderUsage& usage = ShaderUsage::None);
 		virtual bool Load() override;
-		std::shared_ptr<Shader> GetShader() const { return m_Shader; }
-		ShaderFeature GetFeature() const { return m_Feature; }
 		ShaderUsage GetUsage() const { return m_Usage; }
+		std::unordered_map<uint32_t, std::string> GetSourceCode() const { return m_OpenGLSourceCode; }
 	private:
-		ShaderFeature m_Feature;
+		std::string ReadFile(const std::string& path);
+		void Preprocess(std::unordered_map<uint32_t, std::string>& umap, const std::string& src);
+		void ReplaceIncludes(std::unordered_map<uint32_t, std::string>& umap);
+	private:
 		ShaderUsage m_Usage;
-		std::shared_ptr<Shader> m_Shader;
+		ShaderType m_Type;
+		std::unordered_map<uint32_t, std::string> m_OpenGLSourceCode;
 	};
 }

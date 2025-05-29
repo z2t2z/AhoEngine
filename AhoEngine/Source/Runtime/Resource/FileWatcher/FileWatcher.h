@@ -10,7 +10,7 @@
 namespace Aho {
     class FileWatcher {
     public:
-        using Callback = std::function<void(const std::string&)>;
+        using Callback = std::function<void()>;
 
         FileWatcher(std::chrono::duration<int, std::milli> interval = std::chrono::milliseconds(500))
             : watchInterval(interval), running(false) {
@@ -39,7 +39,7 @@ namespace Aho {
                             auto current = std::filesystem::last_write_time(path);
                             if (current != info.lastWrite) {
                                 info.lastWrite = current;
-                                info.callback(path);
+                                info.callback();
                             }
                         }
                         std::this_thread::sleep_for(watchInterval);

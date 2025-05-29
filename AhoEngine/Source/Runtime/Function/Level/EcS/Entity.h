@@ -17,6 +17,7 @@ namespace Aho {
 		UUID GetAssetUUID() { return m_AssetUUID; }
 		entt::entity GetEntityHandle() const { return m_EntityHandle; }
 		bool Valid() const { return m_EntityHandle != entt::null; }
+		void SetInvalid() { m_EntityHandle = entt::null; }
 	public:
 		operator bool() const { return m_EntityHandle != entt::null; }
 		bool operator==(const Entity& other) const { return other.m_EntityHandle == m_EntityHandle; }

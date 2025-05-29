@@ -34,19 +34,22 @@ namespace Aho {
             cam->SetForwardRotation(q);
         }
 
-        float forward = m_Speed *
-            ((Input::IsKeyPressed(AHO_KEY_W) ? deltaTime : 0.0f) +
-                (Input::IsKeyPressed(AHO_KEY_S) ? -deltaTime : 0.0f));
+        float forwardInput = 0.0f;
+        if (Input::IsKeyPressed(AHO_KEY_W)) forwardInput += 1.0f;
+        if (Input::IsKeyPressed(AHO_KEY_S)) forwardInput -= 1.0f;
 
-        float right = m_Speed *
-            ((Input::IsKeyPressed(AHO_KEY_D) ? deltaTime : 0.0f) +
-                (Input::IsKeyPressed(AHO_KEY_A) ? -deltaTime : 0.0f));
+        float rightInput = 0.0f;
+        if (Input::IsKeyPressed(AHO_KEY_D)) rightInput += 1.0f;
+        if (Input::IsKeyPressed(AHO_KEY_A)) rightInput -= 1.0f;
 
-        ApplyMomentum(m_LastRight, right, deltaTime);
-        ApplyMomentum(m_LastForward, forward, deltaTime);
+        forwardInput *= m_Speed;
+        rightInput *= m_Speed;
 
-        cam->MoveForward(forward);
-        cam->MoveRight(right);
+        ApplyMomentum(m_LastRight, rightInput, deltaTime);
+        ApplyMomentum(m_LastForward, forwardInput, deltaTime);
+
+        cam->MoveForward(m_LastForward * deltaTime); 
+        cam->MoveRight(m_LastRight * deltaTime);
 
         m_Dirty = true;
         return true;

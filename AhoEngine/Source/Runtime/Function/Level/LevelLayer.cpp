@@ -14,7 +14,6 @@
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 #include "Runtime/Function/Renderer/Renderer.h"
-#include "Runtime/Resource/ResourceLayer.h"
 #include "Runtime/Function/Renderer/RenderLayer.h"
 
 #include <unordered_map>
@@ -35,8 +34,8 @@ namespace Aho {
 	static BoneNode* g_Node;
 	static BoneNode* g_Endeffector;
 	static TransformParam* g_Param;
-	LevelLayer::LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
-		: Layer("LevelLayer"), m_RenderLayer(renderLayer), m_ResourceLayer(resourceLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
+	LevelLayer::LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager)
+		: Layer("LevelLayer"), m_RenderLayer(renderLayer), m_EventManager(eventManager), m_CameraManager(cameraManager) {
 	}
 
 	void LevelLayer::OnAttach() {
@@ -46,17 +45,14 @@ namespace Aho {
 		// Adding sky by default
 		auto entityManager = g_RuntimeGlobalCtx.m_EntityManager;
 		auto skyEntity = entityManager->CreateEntity();
-		entityManager->AddComponent<GameObjectComponent>(skyEntity, "Sky Atmosphere");
-		entityManager->AddComponent<SkyComponent>(skyEntity);
-		//entityManager->AddComponent<RootComponent>(skyEntity);
-		//{
-		//	glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
-		//	float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
-		//	glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
-		//	entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
-		//	auto& atc = entityManager->AddComponent<DistantLightComponent>(skyEntity);
-		//	atc.LightDir = sunDir;
-		//}
+		{
+			glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
+			float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
+			glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+			entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
+			auto& atc = entityManager->AddComponent<DistantLightComponent>(skyEntity);
+			atc.LightDir = sunDir;
+		}
 
 		//JPH::RegisterTypes();
 		//JPH::Factory::sInstance = new JPH::Factory();
@@ -105,16 +101,6 @@ namespace Aho {
 		SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, m_TextureHandles);
 	}
 
-	void LevelLayer::AddEnvironmentMap(Texture* texture) {
-		static_cast<IBLPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_IBL))->AddSphericalMap(texture);
-		const auto& entityManager = m_CurrentLevel->GetEntityManager();
-		auto& envComponent =
-			entityManager->HasComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) ? entityManager->GetComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity()) : entityManager->AddComponent<EnvComponent>(m_CurrentLevel->GetEnvEntity());
-		envComponent.envTextures.push_back(texture);
-		static_cast<DeferredShadingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_DeferredShading))->SetEnvLightState(true);
-		static_cast<PathTracingPipeline*>(m_RenderLayer->GetRenderer()->GetPipeline(RenderPipelineType::RPL_PathTracing))->SetEnvMap(texture);
-	}
-
 	void LevelLayer::UpdateAnimation(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
@@ -160,21 +146,21 @@ namespace Aho {
 
 				// Also upload a bone render data set as debug for skeleton visualization
 				std::vector<std::shared_ptr<RenderData>> renderDataAll;
-				for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
-					std::shared_ptr<VertexArray> vao;
-					vao.reset(VertexArray::Create());
-					vao->Init(meshInfo);
-					std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-					renderData->SetVAOs(vao);
-					renderData->SetDebug();
-					renderData->SetInstanced();
-					vao->SetInstancedAmount(transformMap.size());
-					renderData->SetTransformParam(transformComponent.transformPara);
-					renderDataAll.push_back(renderData);
-				}
+				//for (const auto& meshInfo : *m_ResourceLayer->GetBone()) {
+				//	std::shared_ptr<VertexArray> vao;
+				//	vao.reset(VertexArray::Create());
+				//	vao->Init(meshInfo);
+				//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
+				//	renderData->SetVAOs(vao);
+				//	renderData->SetDebug();
+				//	renderData->SetInstanced();
+				//	vao->SetInstancedAmount(transformMap.size());
+				//	renderData->SetTransformParam(transformComponent.transformPara);
+				//	renderDataAll.push_back(renderData);
+				//}
 				UploadRenderDataEventTrigger(renderDataAll);
 			}
-			});
+		});
 
 	}
 

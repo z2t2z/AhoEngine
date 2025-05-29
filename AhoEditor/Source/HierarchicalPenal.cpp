@@ -5,27 +5,47 @@
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 
 namespace Aho {
-	void HierachicalPanel::Initialize(LevelLayer* levelLayer) {
-		m_LevelLayer = levelLayer;
+	void HierachicalPanel::Initialize() {
 	}
 
 	Entity HierachicalPanel::Draw() {
 		static Entity selectedEntity;
 		ImGui::Begin(ICON_FA_TREE " Hierarchy");
 		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-		static auto DrawHierachicalTree = 
+		auto DrawHierachicalTree = 
 			[&ecs](auto&& self, const Entity& entity) -> void {
-				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+				if (entity == selectedEntity) {
+					flags |= ImGuiTreeNodeFlags_Selected;
+				}
+
 				auto& goComp = ecs->GetComponent<GameObjectComponent>(entity);
 				std::string tag = goComp.name;
 				tag = ICON_FA_CUBE + std::string(1, ' ') + tag;
 				tag += "##" + std::to_string(uint32_t(entity.GetEntityHandle()));
-				if (ImGui::TreeNodeEx(tag.c_str(), flags)) {
-					if (ImGui::IsItemClicked()) {
-						selectedEntity = entity;
+
+				bool nodeOpened = ImGui::TreeNodeEx(tag.c_str(), flags);
+				if (ImGui::IsItemClicked()) {
+					selectedEntity = entity;
+				}
+
+				// Right-click context menu
+				if (ImGui::BeginPopupContextItem()) {
+					if (ImGui::MenuItem("Delete")) {
+						if (entity == selectedEntity)
+							selectedEntity.SetInvalid();  // reset selection if deleted
+						ecs->DestroyEntity(entity);
 					}
-					for (const Entity& child : goComp.children) {
-						self(self, child);
+					ImGui::EndPopup();
+				}
+
+				// Dfs its children
+				if (nodeOpened) {
+					if (entity.Valid()) {
+						for (const Entity& child : goComp.children) {
+							self(self, child);
+						}
 					}
 					ImGui::TreePop();
 				}
@@ -35,7 +55,6 @@ namespace Aho {
 		view.each(
 			[&](auto entity, GameObjectComponent& go) {
 				if (go.parent.Valid()) {
-					// Skip child entities
 					return;
 				}
 				DrawHierachicalTree(DrawHierachicalTree, entity);

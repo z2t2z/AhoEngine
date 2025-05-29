@@ -22,6 +22,7 @@ namespace Aho {
 		MaterialProperty(float tex, TexType type) : m_Value(tex), m_Type(type) {}
 	};
 
+	// Delete this class when the new material system is stable
 	class Material {
 	public:
 		Material() {}
@@ -41,38 +42,38 @@ namespace Aho {
 
 	class MaterialAsset;
 	class _Texture;
+	struct MaterialTextureDescriptor {
+		MaterialTextureDescriptor() = default;
+		// --- Base Color ---
+		_Texture* baseColorTex = nullptr;
+		bool useBaseColorTex = false;
+
+		// -- - Normal Map ---
+		_Texture* normalMap = nullptr;
+		bool useNormalMap = false;
+
+		// --- Metallic (scalar) ---
+		_Texture* metallicTex = nullptr;
+		bool useMetallicTex = false;
+
+		// --- Roughness (scalar) ---
+		_Texture* roughnessTex = nullptr;
+		bool useRoughnessTex = false;
+
+		// --- Ambient Occlusion (scalar) ---
+		_Texture* aoTex = nullptr;
+		bool useAoTex = false;
+
+		// --- Emissive Color ---
+		_Texture* emissiveTex = nullptr;
+		bool useEmissiveTex = false;
+	};
 	// New material system, directly using the shader
 	class _Material {
 	public:
 		_Material() = default;
 		~_Material() = default;
 		_Material(const std::shared_ptr<MaterialAsset>& matAsset);
-		struct MaterialTextureDescriptor {
-			MaterialTextureDescriptor() = default;
-			// --- Base Color ---
-			_Texture* baseColorTex		= nullptr;
-			bool useBaseColorTex		= false;
-
-			// -- - Normal Map ---
-			_Texture* normalMap			= nullptr;
-			bool useNormalMap			= false;
-
-			// --- Metallic (scalar) ---
-			_Texture* metallicTex		= nullptr;
-			bool useMetallicTex			= false;
-
-			// --- Roughness (scalar) ---
-			_Texture* roughnessTex		= nullptr;
-			bool useRoughnessTex		= false;
-
-			// --- Ambient Occlusion (scalar) ---
-			_Texture* aoTex				= nullptr;
-			bool useAoTex				= false;
-
-			// --- Emissive Color ---
-			_Texture* emissiveTex		= nullptr;
-			bool useEmissiveTex			= false;
-		};
 		void SetBaseColor(const glm::vec3& c) {
 			m_ParamDesc.baseColor = c;
 			m_TextureDesc.useBaseColorTex = false;
@@ -113,6 +114,7 @@ namespace Aho {
 		}
 		void ApplyToShader(Shader* shader, uint32_t& bindingPoint) const;
 		MaterialDescriptor& GetMatDescriptor() { return m_ParamDesc; }
+		MaterialTextureDescriptor& GetMatTextureDescriptor() { return m_TextureDesc; }
 	private:
 		MaterialDescriptor m_ParamDesc;
 		MaterialTextureDescriptor m_TextureDesc;

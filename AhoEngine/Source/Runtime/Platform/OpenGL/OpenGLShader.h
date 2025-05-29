@@ -8,13 +8,17 @@
 namespace Aho {
 	class OpenGLShader : public Shader {
 	public:
-		OpenGLShader(const std::string& filepath);
-		OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+		OpenGLShader(const std::string& filepath) {
+			AHO_CORE_ASSERT(false);
+		}
+		OpenGLShader() = default;
 		virtual ~OpenGLShader();
-		virtual bool Reload(const std::string& path) override;
+		virtual bool TryCompile(const std::unordered_map<uint32_t, std::string>& src) override;
 		virtual void Delete() const override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
+		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
+	public:
 		virtual void SetBool(const std::string& name, bool value) const override;
 		virtual void SetUint(const std::string& name, uint32_t value) const override;
 		virtual void SetInt(const std::string& name, int value) const override;
@@ -27,18 +31,10 @@ namespace Aho {
 		virtual void SetMat2(const std::string& name, const glm::mat2& mat) const override;
 		virtual void SetMat3(const std::string& name, const glm::mat3& mat) const override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& mat) const override;
-		virtual void DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const override;
-		virtual const std::string& GetName() const override { return m_Name; }
 	private:
-		std::string ReadFile(const std::string& filepath);
-		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
-		void ReplaceIncludes(std::unordered_map<GLenum, std::string>& src);
-		uint32_t CompileFromSource(const std::unordered_map<GLenum, std::string>& src);
-		void CreateProgram();
+		uint32_t TryCompileFromSource(const std::unordered_map<GLenum, std::string>& src);
 	private:
 		bool m_IsCompute{ false };
-		std::string m_FilePath;
-		std::string m_Name;
 	private:
 		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 	};

@@ -1,5 +1,6 @@
 #include "AhoEditorLayer.h"
 #include "FileExplorer.h"
+#include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
@@ -14,14 +15,10 @@
 #include <filesystem>
 namespace Aho {
 	namespace fs = std::filesystem;
-
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
 
-	glm::vec3 g_testPosition;
-
-
-	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, ResourceLayer* resourceLayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
-		: Layer("EditorLayer"), m_ResourceLayer(resourceLayer), m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
+	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
+		: Layer("EditorLayer"), m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
 	
 	}
 
@@ -29,8 +26,8 @@ namespace Aho {
 		AHO_INFO("EditorLayer on attach");
 		m_ContentBrowser.Initialize();
 		m_PropertiesPanel.Initialize(m_LevelLayer, m_Renderer);
-		m_HierachicalPanel.Initialize(m_LevelLayer);
-		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_ResourceLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
+		m_HierachicalPanel.Initialize();
+		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
 
 		m_DbgPenal.m_LevelLayer			= m_LevelLayer;
 		m_DbgPenal.m_PtPipeline			= static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
@@ -45,6 +42,8 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnUpdate(float deltaTime) {
+		MainThreadDispatcher::Get().Execute();
+
 		// Update editer camera
 		if (m_Viewport.IsCursorInViewport() && Input::IsMouseButtonPressed(AHO_MOUSE_BUTTON_RIGHT)) {
 			bool firstClick = false;
@@ -66,8 +65,6 @@ namespace Aho {
 		}
 
 		m_DeltaTime = deltaTime;
-		//auto& watcher = FileWatcher::getInstance();
-		//watcher.PollFiles(deltaTime);
 	}
 
 	void AhoEditorLayer::OnImGuiRender() {

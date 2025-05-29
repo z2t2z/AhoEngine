@@ -1,31 +1,22 @@
 #pragma once
 
+#include "ShaderFeatures.h"
 #include <string>
 #include <memory>
 #include <unordered_map>
 #include <glm/glm.hpp>
 
 namespace Aho {
-	enum class ShaderType {
-		None = 0,
-		Normal, // vertex + pixel
-		Compute
-	};
-
 	enum class DrawType {
 		Static = 0,
 		Dynamic
 	};
 
-	enum class ShaderUsage {
-		None = 0, 
-		Deferred,
-		PathTracing,
-	};
-
+	class ShaderAsset;
 	class Shader {
 	public:
 		virtual ~Shader() = default;
+		virtual bool TryCompile(const std::unordered_map<uint32_t, std::string>& src) = 0;
         virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 		virtual void Delete() const = 0;
@@ -49,11 +40,7 @@ namespace Aho {
 		virtual ShaderType GetShaderType() { return m_Type; }
 		inline uint32_t GerRendererID() { return m_ShaderID; }
 
-        virtual const std::string& GetName() const = 0;
-		virtual bool Reload(const std::string& path) = 0;
-
         static std::shared_ptr<Shader> Create(const std::filesystem::path& filepath);
-		static std::shared_ptr<Shader> Create(const std::string& name, const std::string& VertSrc, const std::string& fragSrc);
 	protected:
 		bool m_Compiled{ false };
 		ShaderType m_Type{ ShaderType::None };

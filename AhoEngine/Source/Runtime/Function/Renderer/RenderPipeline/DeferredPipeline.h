@@ -20,5 +20,6 @@ namespace Aho {
 		std::unique_ptr<RenderPassBase> m_SSAOPass;
 		std::unique_ptr<RenderPassBase> m_BlurRPass;
 		std::unique_ptr<RenderPassBase> m_ShadingPass;
+		std::unique_ptr<RenderPassBase> m_SSRPass;
 	};
 }

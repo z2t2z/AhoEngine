@@ -39,10 +39,9 @@ namespace Aho {
 		void Initialize();
 		~Renderer() {
 			AHO_CORE_INFO("~Renderer Called");
-			delete m_RP_IBL;
-			delete m_RP_Sky;
-			delete m_RP_DeferredShading;
-			delete m_RP_Postprocess;
+			//delete m_RP_Sky;
+			//delete m_RP_DeferredShading;
+			//delete m_RP_Postprocess;
 			delete m_RP_PathTracing;
 			delete m_RP_Derferred;
 			delete m_RP_SkyAtmospheric;
@@ -62,20 +61,18 @@ namespace Aho {
 	private:
 		void SetupUBOs();
 	private:
-		IBLPipeline* m_RP_IBL; // precompute pipeline, its Excute() will be called whenever an IBL source is added
 		RenderSkyPipeline* m_RP_Sky;
 		DeferredShadingPipeline* m_RP_DeferredShading;
 		PostprocessPipeline* m_RP_Postprocess;
-		//PathTracingPipeline* m_RP_PathTraciing{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
 		
 	// New System
 	public:
-		_IBLPipeline* m_RP_IBLPipeline{ nullptr };
 		DeferredShading* GetDeferredShadingPipeline() { return m_RP_Derferred; }
 		SkyAtmosphericPipeline* GetSkyAtmosphericPipeline() { return m_RP_SkyAtmospheric; }
 		PathTracingPipeline* GetPathTracingPipeline() { return m_RP_PathTracing; }
 	private:
+		_IBLPipeline* m_RP_IBLPipeline{ nullptr };
 		DeferredShading* m_RP_Derferred{ nullptr };
 		SkyAtmosphericPipeline* m_RP_SkyAtmospheric{ nullptr };
 		PathTracingPipeline* m_RP_PathTracing{ nullptr };

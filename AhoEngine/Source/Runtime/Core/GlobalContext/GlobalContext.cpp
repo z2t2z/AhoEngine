@@ -3,6 +3,7 @@
 
 #include "Runtime/Core/Log/Log.h"
 #include "Runtime/Core/Input/Input.h"
+#include "Runtime/Core/Parallel.h";
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Level/Level.h"
 #include "Runtime/Function/Level/EcS/EntityManager.h"
@@ -20,6 +21,7 @@ namespace Aho {
 		m_Renderer			= std::make_shared<Renderer>();
 		m_Renderer->Initialize();
 		m_IBLManager     	= std::make_shared<IBLManager>();
+		m_ParallelExecutor  = std::make_unique<ParallelExecutor>();
 	}
 
 	void RuntimeGlobalContext::ShutdownSystems() {

@@ -4,9 +4,10 @@
 #include "Ray.h"
 #include "Primitive.h"
 #include "BBox.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Math/Math.h"
 #include "Runtime/Core/Geometry/Mesh.h"
-
+#include "Runtime/Core/Parallel.h"
 #include "Runtime/Core/Timer.h"
 
 namespace Aho {
@@ -19,11 +20,20 @@ namespace Aho {
 		AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::BLAS);
 		AHO_CORE_ASSERT(m_PrimitiveComp.size() == m_Primitives.size());
 
-		for (size_t i = 0; i < m_Primitives.size(); i++) {
-			AHO_CORE_ASSERT(m_Primitives[i].GetPrimId() >= 0 && m_Primitives[i].GetPrimId() <= m_PrimitiveComp.size());
-			m_Primitives[i].ApplyTransform(transform, m_PrimitiveComp[m_Primitives[i].GetPrimId()]);
-		}
+		auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
+		size_t siz = m_Primitives.size();
+		g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+			[&](int64_t i) {
+				m_Primitives[i].ApplyTransform(transform, m_PrimitiveComp[m_Primitives[i].GetPrimId()]);
+			}, 1024
+		);
+		//for (size_t i = 0; i < m_Primitives.size(); i++) {
+		//	AHO_CORE_ASSERT(m_Primitives[i].GetPrimId() >= 0 && m_Primitives[i].GetPrimId() <= m_PrimitiveComp.size());
+		//	m_Primitives[i].ApplyTransform(transform, m_PrimitiveComp[m_Primitives[i].GetPrimId()]);
+		//}
+	}
 
+	void BVHi::Rebuild() {
 		m_Nodes.clear();
 		m_Root = BuildTreeRecursion(0, m_Primitives.size());
 	}

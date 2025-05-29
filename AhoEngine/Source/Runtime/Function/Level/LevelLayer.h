@@ -9,7 +9,6 @@ namespace Aho {
 	struct alignas(16) MaterialDescriptor;
 	class Texture;
 	class RenderLayer;
-	class ResourceLayer;
 	class CameraManager;
 	class Level;
 	class StaticMesh;
@@ -18,7 +17,7 @@ namespace Aho {
 
 	class LevelLayer : public Layer {
 	public:
-		LevelLayer(RenderLayer* renderLayer, ResourceLayer* resourceLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
+		LevelLayer(RenderLayer* renderLayer, EventManager* eventManager, const std::shared_ptr<CameraManager>& cameraManager);
 		virtual ~LevelLayer() = default;
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
@@ -33,8 +32,6 @@ namespace Aho {
 		bool& GetBuildBvhState() { return m_BuildBVH; }
 		MaterialDescriptor& GetMaterialDescriptor(int meshId) { return m_TextureHandles.at(meshId); }
 		void AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light = nullptr);
-	public:
-		void AddEnvironmentMap(Texture* texture);
 	private:
 		void UpdateAnimation(float deltaTime);
 		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
@@ -53,7 +50,6 @@ namespace Aho {
 	private:
 		bool m_BuildBVH{ true };
 		RenderLayer* m_RenderLayer{ nullptr };
-		ResourceLayer* m_ResourceLayer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<Level> m_CurrentLevel{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;

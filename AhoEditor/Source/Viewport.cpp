@@ -2,6 +2,7 @@
 #include "FileExplorer.h"
 #include "EditorUI/ImGuiHelpers.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Core/Parallel.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/ResourceManager.h"
@@ -24,10 +25,9 @@ namespace Aho {
 	Viewport::Viewport() {
 	}
 
-	void Viewport::Initialize(Renderer* renderer, LevelLayer* levelLayer, ResourceLayer* resourceLayer, EventManager* manager, const std::shared_ptr<Camera>& camera) {
+	void Viewport::Initialize(Renderer* renderer, LevelLayer* levelLayer, EventManager* manager, const std::shared_ptr<Camera>& camera) {
 		m_Renderer		= renderer;
 		m_LevelLayer	= levelLayer;
-		m_ResourceLayer = resourceLayer;
 		m_EventManager	= manager;
 		m_EditorCamera	= camera;
 
@@ -145,20 +145,16 @@ namespace Aho {
 				showFileExplorer = false;
 			}
 			if (ImGui::MenuItem("Cube")) {
-				std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(m_ResourceLayer->GetCube(), false);
-				m_EventManager->PushBack(e);
+
 			}
 			if (ImGui::MenuItem("Sphere")) {
-				std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(m_ResourceLayer->GetSphere(), false);
-				m_EventManager->PushBack(e);
+
 			}
 			if (ImGui::MenuItem("Plane")) {
-				std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(m_ResourceLayer->GetPlane(), false);
-				m_EventManager->PushBack(e);
+
 			}
 			if (ImGui::MenuItem("Cylinder")) {
-				std::shared_ptr<PackRenderDataEvent> e = std::make_shared<PackRenderDataEvent>(m_ResourceLayer->GetCylinder(), false);
-				m_EventManager->PushBack(e);
+
 			}
 			ImGui::EndPopup();
 		}
@@ -427,20 +423,29 @@ namespace Aho {
 				Entity go = resourceManager->CreateGameObject(name);
 				GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(go);
 
-				// TODO: Put these in resource manager??                                             
+				// TODO: Put these in resource manager??                         
+				std::vector<std::pair<Entity, std::shared_ptr<MeshAsset>>> tasks; tasks.reserve(20);
 				auto view = ecs->GetView<MeshAssetComponent, MaterialRefComponent>(Exclude<VertexArrayComponent>); // Need testing
 				view.each(
-					[&](auto entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {
+					[&](Entity entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {
 						goComp.children.push_back(entity);
 						GameObjectComponent& childGoComp = ecs->AddComponent<GameObjectComponent>(entity, mc.asset->GetName());
 						childGoComp.parent = go;
+						tasks.emplace_back(entity, mc.asset);
 						std::shared_ptr<VertexArray> vao = resourceManager->LoadVAO(mc.asset);
-						auto& matAssetComponent = ecs->GetComponent<MaterialAssetComponent>(matRefc.MaterialRefEntity);
 						ecs->AddComponent<VertexArrayComponent>(entity, vao.get());
+						auto& matAssetComponent = ecs->GetComponent<MaterialAssetComponent>(matRefc.MaterialRefEntity);
 						ecs->AddComponent<_MaterialComponent>(entity, matAssetComponent.asset);
 						ecs->AddComponent<_TransformComponent>(entity);
 					}
 				);
+
+				//size_t siz = tasks.size();
+				//g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz, 
+				//	[&](size_t i) {
+				//		auto vao = resourceManager->LoadVAO(tasks[i].second);
+				//		ecs->AddComponent<VertexArrayComponent>(tasks[i].first, vao.get());
+				//	}, 1);
 
 				ImGui::CloseCurrentPopup();
 				droppedString.clear();

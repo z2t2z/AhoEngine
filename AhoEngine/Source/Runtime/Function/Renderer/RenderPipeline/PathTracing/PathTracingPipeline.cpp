@@ -1,5 +1,7 @@
 #include "Ahopch.h"
 #include "PathTracingPipeline.h"
+#include "Runtime/Core/Parallel.h"
+#include "Runtime/Core/Timer.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Geometry/BVH.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
@@ -13,7 +15,6 @@
 #include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
-#include "Runtime/Core/Timer.h"
 
 namespace Aho {
 	PathTracingPipeline::PathTracingPipeline() {
@@ -71,29 +72,39 @@ namespace Aho {
 						iblComp.IBL->Bind(shader);
 					}
 
-					bool BVHDirty = false;
+					static bool BVHDirty = true;
 					auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+					std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
 					view.each(
 						[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
 							int meshID = bvh.bvh->GetMeshId();
-							if (bvh.Dirty) {
-								bvh.Dirty = false;
-								{
-									ScopedTimer timer("ApplyTransform");
-									bvh.bvh->ApplyTransform(transform.GetTransform());
-								}
+							if (transform.Dirty) {
+								transform.Dirty = false; // TODO: Should not be here, but in inspector panel
+								bvh.bvh->ApplyTransform(transform.GetTransform());
+								tasks.emplace_back(bvh.bvh.get());
 								Reaccumulate = true;
 								BVHDirty = true;
 							}
 							if (material.Dirty) {
-								material.Dirty = false;
+								material.Dirty = false; // TODO: Should not be here, but in inspector panel
 								Reaccumulate = true;
 								SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
 							}
 						}
 					);
+					{
+						//ScopedTimer timer("BVH update timer");
+						auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
+						size_t siz = tasks.size();
+						g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+							[tasks](int64_t i) {
+								tasks[i]->Rebuild();
+							}, 1
+						);
+					}
 					// No need to update every blas everytime but for now it's fine
 					if (BVHDirty) {
+						BVHDirty = false;
 						auto sceneView = ecs->GetView<SceneBVHComponent>();
 						AHO_CORE_ASSERT(sceneView.size() <= 1);
 						sceneView.each(

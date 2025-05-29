@@ -31,8 +31,7 @@ namespace Aho {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto view = ecs->GetView<VertexArrayComponent, _MaterialComponent, _TransformComponent>();
 					auto shader = self.GetShader();
-					auto fbo = self.GetRenderTarget();
-					fbo->Bind();
+					self.GetRenderTarget()->Bind();
 					shader->Bind();
 					view.each(
 						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
@@ -42,6 +41,8 @@ namespace Aho {
 							vao.vao->Unbind();
 						}
 					);
+					self.GetRenderTarget()->Unbind();
+					shader->Unbind();
 				};
 			m_ShadowMapPass = std::make_unique<RenderPassBase>();
 			m_ShadowMapPass->Setup(cfg);
@@ -99,6 +100,9 @@ namespace Aho {
 					);
 
 					RenderCommand::DrawArray();
+
+					shader->Unbind();
+					self.GetRenderTarget()->Unbind();
 				};
 			m_ShadingPass = std::make_unique<RenderPassBase>();
 			m_ShadingPass->Setup(cfg);
@@ -176,11 +180,54 @@ namespace Aho {
 							vao.vao->Unbind();
 						}
 					);
+					fbo->Unbind();
+					shader->Unbind();
 				};
 			m_GBufferPass = std::make_unique<RenderPassBase>();
 			m_GBufferPass->Setup(cfg);
 		}
 
+		return;
+		// --- Screen Space Reflection Pass ---
+		{
+			RenderPassConfig cfg;
+			cfg.passName = "Screen Space Reflection Pass";
+			cfg.shaderPath = (shaderPathRoot / "SSR.glsl").string();
+			cfg.func =
+				[&](RenderPassBase& self) {
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					auto view = ecs->GetView<IBLComponent>();
+					_Texture* brdf = nullptr;
+					bool Gen = false;
+					view.each(
+						[&](auto _, IBLComponent& iblComp) {
+							if (!iblComp.BRDFLUT) {
+								auto texCfg = TextureConfig::GetColorTextureConfig("BRDFLUT");
+								texCfg.Width = texCfg.Height = 256;
+								texCfg.InternalFmt = InternalFormat::RG16F;
+								texCfg.DataFmt = DataFormat::RG;
+								texCfg.DataType = DataType::Float;
+								iblComp.BRDFLUT = std::make_unique<_Texture>(texCfg);
+								brdf = iblComp.BRDFLUT.get();
+								Gen = true;
+							}
+						}
+					);
+					if (!Gen) {
+						return;
+					}
+
+					brdf->BindTextureImage(0);  // Write to BRDF LUT
+					auto shader = self.GetShader();
+					shader->Bind();
+					static int group = 16;
+					int numGroups = (brdf->GetWidth() + group - 1) / group;
+					shader->DispatchCompute(numGroups, numGroups, 6);
+					shader->Unbind();
+				};
+			m_SSRPass = std::make_unique<RenderPassBase>();
+			m_SSRPass->Setup(cfg);
+		}
 	}
 
 	void DeferredShading::Execute() {
