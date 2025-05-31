@@ -158,6 +158,7 @@
     <ClInclude Include="Source\Runtime\Core\Geometry\Mesh.h" />
     <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h" />
     <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h" />
+    <ClInclude Include="Source\Runtime\Core\IndexAllocator.h" />
     <ClInclude Include="Source\Runtime\Core\Input\Input.h" />
     <ClInclude Include="Source\Runtime\Core\Input\KeyCodes.h" />
     <ClInclude Include="Source\Runtime\Core\Input\MouseButtonCodes.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBO.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
@@ -698,6 +700,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\DisneyPrincipled.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />

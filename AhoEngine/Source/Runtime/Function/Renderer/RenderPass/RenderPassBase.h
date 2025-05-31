@@ -9,11 +9,12 @@ namespace Aho {
 	class _Texture;
 	class Framebuffer;
 	class RenderPassBase;
-	enum class TextureUsage;
+	enum class ShaderUsage;
 
 	struct RenderPassConfig {
 		std::string passName;
 		std::string shaderPath;
+		ShaderUsage usage;
 		std::vector<_Texture*> textureAttachments;
 		std::function<void(RenderPassBase&)> func;
 	};

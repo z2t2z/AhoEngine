@@ -15,6 +15,7 @@ namespace Aho {
     class ResourceManager;  // Manage runtime resources
     class IBLManager;
     class ParallelExecutor;
+    class IndexAllocator;
 
     class RuntimeGlobalContext {
     public:
@@ -34,6 +35,7 @@ namespace Aho {
         std::shared_ptr<EntityManager>      m_EntityManager;
         std::shared_ptr<ResourceManager>    m_Resourcemanager;
         std::shared_ptr<IBLManager>         m_IBLManager;
+        std::unique_ptr<IndexAllocator>     m_IndexAllocator;
     };
 
     extern RuntimeGlobalContext g_RuntimeGlobalCtx;

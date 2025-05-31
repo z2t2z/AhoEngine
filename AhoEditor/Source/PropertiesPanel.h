@@ -4,8 +4,6 @@
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "EditorUI/ImGuiHelpers.h"
 
-#include <imgui.h>
-#include <imgui_internal.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <ImGuizmo.h>
@@ -47,9 +45,9 @@ namespace Aho {
 			transform.Dirty = false;
 			if (opened) {
 				ImGui::Separator();
-				transform.Dirty |= DrawVec3Control("Translation", transform.Translation);
-				transform.Dirty |= DrawVec3Control("Scale", transform.Scale, 1.0f);
-				transform.Dirty |= DrawVec3Control("Rotation", transform.Rotation);
+				transform.Dirty |= ImGuiHelpers::DrawVec3Control("Translation", transform.Translation);
+				transform.Dirty |= ImGuiHelpers::DrawVec3Control("Scale", transform.Scale, 1.0f);
+				transform.Dirty |= ImGuiHelpers::DrawVec3Control("Rotation", transform.Rotation);
 			}
 		}
 		template<>
@@ -78,7 +76,7 @@ namespace Aho {
 
 				static ImVec2 size(64, 64); // Texture slot size
 				if (tex) {
-					ImGui::Image((ImTextureID)(tex ? tex->GetTextureID() : 0), size);
+					ImGuiHelpers::RoundedImage((ImTextureID)(tex->GetTextureID()), size, 4.0f);
 				}
 				else {
 					// Draw gray box

@@ -1,6 +1,7 @@
 #include "Ahopch.h"
 #include "GlobalContext.h"
 
+#include "Runtime/Core/IndexAllocator.h"
 #include "Runtime/Core/Log/Log.h"
 #include "Runtime/Core/Input/Input.h"
 #include "Runtime/Core/Parallel.h";
@@ -22,6 +23,7 @@ namespace Aho {
 		m_Renderer->Initialize();
 		m_IBLManager     	= std::make_shared<IBLManager>();
 		m_ParallelExecutor  = std::make_unique<ParallelExecutor>();
+		m_IndexAllocator    = std::make_unique<IndexAllocator>();
 	}
 
 	void RuntimeGlobalContext::ShutdownSystems() {

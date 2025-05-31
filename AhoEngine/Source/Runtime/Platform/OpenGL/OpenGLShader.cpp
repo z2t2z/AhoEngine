@@ -28,7 +28,9 @@ namespace Aho {
 			AHO_CORE_ERROR("Shader compilation failed for source code provided.");
 			return false;
 		}
-		glDeleteProgram(m_ShaderID);
+		if (m_ShaderID) {
+			glDeleteProgram(m_ShaderID);
+		}
 		m_Compiled = true;
 		m_ShaderID = shaderID;
 		return true;
@@ -68,7 +70,7 @@ namespace Aho {
 				}
 				// We don't need the shader anymore.
 				glDeleteShader(shader);
-				AHO_CORE_ERROR("Shader compilation failed: ", infoLog.data());
+				AHO_CORE_ERROR("OpenGLShader::Shader compilation failed:\n {}", infoLog.data());
 				return 0u;
 			}
 			shaderHandles.push_back(shader);

@@ -35,5 +35,8 @@ layout(std140, binding = 3) uniform AnimationUBO {
 	mat4 u_BoneMatrices[MAX_BONES_CNT];
 };
 
+layout(std140, binding = 5) uniform DirLight {
+	DirectionalLight u_DirectionalLight[MAX_LIGHT_CNT];
+};
 
 #endif

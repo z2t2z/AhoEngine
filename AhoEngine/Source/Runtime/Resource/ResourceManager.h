@@ -12,6 +12,7 @@ namespace Aho {
 	class Shader;
 	class ShaderAsset;
 	class ShaderVariantManager;
+	enum class ShaderUsage;
 	enum class ShaderFeature : uint32_t;
 
 	// Responsible for loading and caching runtime resources from assets which are loaded from disk

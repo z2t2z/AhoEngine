@@ -1,4 +1,5 @@
 #pragma once
+#include "UBOStructs.h"
 #include "UBO.h"
 #include <unordered_map>
 #include <memory>
@@ -17,12 +18,12 @@ namespace Aho {
         }
 
         template <typename T>
-        static void UpdateUBOData(uint32_t bindingPoint, const T& data) {
+        static void UpdateUBOData(uint32_t bindingPoint, const T& data, size_t offset = 0) {
             auto it = m_UBOs.find(bindingPoint);
             if (it != m_UBOs.end()) {
                 auto ubo = static_cast<UBO<T>*>(it->second.get());
                 if (ubo) {
-                    ubo->SetData(data);
+                    ubo->SetData(data, offset);
                 }
                 else {
                     throw std::runtime_error("UBO type mismatch for binding point " + std::to_string(bindingPoint));

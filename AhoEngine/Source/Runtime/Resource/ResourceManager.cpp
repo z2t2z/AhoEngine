@@ -43,12 +43,11 @@ namespace Aho {
 	}
 
 	std::shared_ptr<Shader> ResourceManager::LoadShaderResource(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature) {
-		std::shared_ptr<Shader> shader = m_ShaderVariantManager->GetVariant(shaderAsset, feature);
-
-		//EngineEvents::OnShaderAssetReload.AddListener([](const std::string& path, ShaderAsset* asset) {
-		//	AHO_CORE_TRACE("Reloading shader asset from path: `{}`" + path);
-		//	asset->Load();
-		//});
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		auto shaderEntity = ecs->CreateEntity();
+		std::shared_ptr<Shader> shader{ nullptr };
+		AHO_CORE_ASSERT(m_ShaderVariantManager->LoadVariant(shader, shaderAsset, feature));
+		ecs->AddComponent<ShaderResourceComponent>(shaderEntity, shaderAsset, shader, shaderAsset->GetUsage());
 		return shader;
 	}
 

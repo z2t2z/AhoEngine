@@ -32,9 +32,9 @@ namespace Aho {
 	};
 
 	struct ShaderOptions : AssetLoadOptions {
-		ShaderFeature features;
 		ShaderUsage usage;
-		ShaderOptions(const std::string& p) : AssetLoadOptions(p, true) {}
+		ShaderOptions(const std::string& p, ShaderUsage usage) 
+			: AssetLoadOptions(p, true), usage(usage) {}
 	};
 
 	struct MaterialOptions : AssetLoadOptions {

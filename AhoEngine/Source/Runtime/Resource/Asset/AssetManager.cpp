@@ -33,7 +33,9 @@ namespace Aho {
 			}
 		}
 
-		std::shared_ptr<MeshAsset> firstMeshAsset;
+		std::shared_ptr<MeshAsset> firstMeshAsset; 
+		std::vector<std::shared_ptr<BVHi>> bvhs; bvhs.reserve(meshes.size());
+		std::vector<Entity> meshAssetEntities; meshAssetEntities.reserve(meshes.size());
 		for (size_t i = 0; i < meshes.size(); i++) {
 			std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i].name, meshes[i]);
 			if (i == 0) {
@@ -43,22 +45,35 @@ namespace Aho {
 			emg->AddComponent<MeshAssetComponent>(meshAssetEntity, meshAsset);
 			emg->AddComponent<MaterialRefComponent>(meshAssetEntity, matEnts[i]);
 			if (opts.BuildBVH) {
-				// Make these multithreaded some day
-				BVHi* bvh{ nullptr };
-				{
-					ScopedTimer timer("Building BVH for mesh: \"" + meshAsset->GetName() + "\"");
-					const auto& bc = emg->AddComponent<_BVHComponent>(meshAssetEntity, meshAsset->GetMesh());
-					bvh = bc.bvh.get();
-				}
-				auto view = emg->GetView<SceneBVHComponent>();
-				AHO_CORE_ASSERT(view.size() <= 1);
+				meshAssetEntities.push_back(meshAssetEntity);
+			}
+		}
+		if (opts.BuildBVH) {
+			auto view = emg->GetView<SceneBVHComponent>();
+			AHO_CORE_ASSERT(view.size() <= 1);
+			Entity sceneBVHEntity;
+			size_t offset = 0;
+			view.each([&sceneBVHEntity, &offset](Entity entity, SceneBVHComponent& sbc) { sceneBVHEntity = entity; offset = sbc.bvh->GetPrimsCount(); });
+
+			size_t siz = meshes.size();
+			bvhs.resize(siz);
+			
+			ScopedTimer timer("Building BVH: " + opts.path);
+			g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+				[&meshes, &bvhs, offset](int64_t i) {
+					bvhs[i] = std::make_shared<BVHi>(meshes[i], i + offset);
+				}, 1);
+			
+			for (size_t i = 0; i < siz; i++) {
+				const auto& bc = emg->AddComponent<_BVHComponent>(meshAssetEntities[i], bvhs[i]);
 				view.each(
 					[&](auto entity, SceneBVHComponent& sbc) {
-						sbc.bvh->AddBLASPrimtive(bvh);
+						sbc.bvh->AddBLASPrimtive(bc.bvh.get());
 					}
 				);
 			}
 		}
+
 		m_Assets[opts.path] = firstMeshAsset;
 		return firstMeshAsset;
 	}
@@ -73,12 +88,12 @@ namespace Aho {
 
 		m_Filewatcher.WatchFile(opts.path,
 			[this, shaderAsset]() {
-				AHO_CORE_TRACE("Reloading shader asset from path: `{}`", shaderAsset->GetPath());
+				AHO_CORE_TRACE("AssetManager::Reloading shader asset from path: `{}`", shaderAsset->GetPath());
 				shaderAsset->Load();
 
 				MainThreadDispatcher::Get().Enqueue([shaderAsset]() {
 					// Dispatch the event on the main thread to ensure thread safety
-					EngineEvents::OnShaderAssetReload.Dispatch(shaderAsset->GetPath(), shaderAsset.get());
+					EngineEvents::OnShaderAssetReload.Dispatch(shaderAsset->GetPath(), shaderAsset);
 				});
 			});
 		m_Filewatcher.Start();

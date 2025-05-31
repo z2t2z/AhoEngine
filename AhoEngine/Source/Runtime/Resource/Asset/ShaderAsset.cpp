@@ -33,7 +33,7 @@ namespace Aho {
 		Preprocess(srcMap, source);
 		ReplaceIncludes(srcMap);
 		if (srcMap.empty()) {
-			AHO_CORE_ERROR("No valid shader source found in file: {0}", m_Path);
+			AHO_CORE_ERROR("ShaderAsset::No valid shader source found in file: {0}", m_Path);
 			return false;
 		}
 		m_OpenGLSourceCode = std::move(srcMap);

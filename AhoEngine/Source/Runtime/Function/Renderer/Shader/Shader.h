@@ -20,6 +20,8 @@ namespace Aho {
         virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 		virtual void Delete() const = 0;
+		virtual void SetShaderID(uint32_t id) { m_ShaderID = id; }
+		virtual uint32_t GetShaderID() const { return m_ShaderID; }
         // Uniforms
 		virtual void SetBool(const std::string& name, bool value) const = 0;
 		virtual void SetUint(const std::string& name, uint32_t value) const = 0;

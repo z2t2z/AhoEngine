@@ -42,18 +42,6 @@ namespace Aho {
 		m_CurrentLevel = std::make_shared<Level>();
 		m_Levels.push_back(m_CurrentLevel);
 
-		// Adding sky by default
-		auto entityManager = g_RuntimeGlobalCtx.m_EntityManager;
-		auto skyEntity = entityManager->CreateEntity();
-		{
-			glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
-			float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
-			glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
-			entityManager->AddComponent<AtmosphereParametersComponent>(skyEntity);
-			auto& atc = entityManager->AddComponent<DistantLightComponent>(skyEntity);
-			atc.LightDir = sunDir;
-		}
-
 		//JPH::RegisterTypes();
 		//JPH::Factory::sInstance = new JPH::Factory();
 		//JPH::RegisterDefaultAllocator();
@@ -71,24 +59,6 @@ namespace Aho {
 	}
 
 	void LevelLayer::OnEvent(Event& e) {
-		if (e.GetEventType() == EventType::PackRenderData) {
-			bool isSkeletal = ((PackRenderDataEvent*)&e)->IsSkeletalMesh();
-			auto rawData = ((PackRenderDataEvent*)&e)->GetRawData();
-			AHO_CORE_WARN("Recieving a PackRenderDataEvent!");
-			isSkeletal ? LoadSkeletalMeshAsset(static_pointer_cast<SkeletalMesh>(rawData)) : LoadStaticMeshAsset(static_pointer_cast<StaticMesh>(rawData));
-			e.SetHandled();
-		}
-		if (e.GetEventType() == EventType::AddLight) {
-			auto type = ((AddLightSourceEvent*)&e)->GetLightType();
-			AHO_CORE_WARN("Recieing a AddLightSourceEvent!");
-			AddLightSource(type);
-			e.Handled();
-		}
-		if (e.GetEventType() == EventType::AddAnimation) {
-			auto anim = ((UploadAnimationDataEvent*)&e)->GetAnimationAssetData();
-			AddAnimation(anim);
-			e.Handled();
-		}
 	}
 
 	void LevelLayer::UploadRenderDataEventTrigger(const std::vector<std::shared_ptr<RenderData>>& renderDataAll) {
@@ -215,6 +185,7 @@ namespace Aho {
 			UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 		}
 
+		return;
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
 			LightUBO* lightubo = new LightUBO();
@@ -230,7 +201,7 @@ namespace Aho {
 						auto lightMat = proj * glm::lookAt(dir * s_sceneRadius, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 						auto col = sky.Color;
 						float intensity = sky.Intensity;
-						lightubo->u_DirLight[0] = DirectionalLight(lightMat, dir, col, intensity);
+						lightubo->u_DirLight[0] = GPU_DirectionalLight(lightMat, dir, col, intensity);
 					});
 			}
 			{

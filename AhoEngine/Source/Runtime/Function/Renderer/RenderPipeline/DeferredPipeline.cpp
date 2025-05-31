@@ -1,9 +1,11 @@
 #include "Ahopch.h"
+#include "DeferredPipeline.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Core/Events/EngineEvents.h"
+#include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
-#include "DeferredPipeline.h"
-#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Level/EcS/EntityManager.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
@@ -21,6 +23,7 @@ namespace Aho {
 			RenderPassConfig cfg;
 			cfg.passName = "Shadow Map";
 			cfg.shaderPath = (shaderPathRoot / "ShadowMap.glsl").string();
+			cfg.usage = ShaderUsage::DistantLightShadowMap;
 
 			std::shared_ptr<_Texture> depth = std::make_shared<_Texture>(TextureConfig::GetDepthTextureConfig());
 			m_TextureBuffers.push_back(depth);
@@ -53,6 +56,7 @@ namespace Aho {
 			RenderPassConfig cfg;
 			cfg.passName = "Shading Pass";
 			cfg.shaderPath = (shaderPathRoot / "Shading.glsl").string();
+			cfg.usage = ShaderUsage::DeferredShading;
 
 			auto texCfg = TextureConfig::GetColorTextureConfig("Shading Result");
 			texCfg.InternalFmt = InternalFormat::RGBA16F; // Use HDR format for shading result
@@ -63,7 +67,7 @@ namespace Aho {
 			cfg.textureAttachments.push_back(res.get());
 
 			cfg.func =
-				[&](RenderPassBase& self) {
+				[](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto shader = self.GetShader();
 					shader->Bind();
@@ -72,14 +76,15 @@ namespace Aho {
 					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
 					uint32_t slot = 0;
 					self.BindRegisteredTextureBuffers(slot);
-
-					auto view = ecs->GetView<AtmosphereParametersComponent, DistantLightComponent>();
+					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
-						[&shader](auto _, const AtmosphereParametersComponent& atmosphere, const DistantLightComponent& lightCmp) {
-							shader->SetVec3("u_SunDir", lightCmp.LightDir);
+						[&shader, &slot](auto _, const AtmosphereParametersComponent& atmosphere, const LightComponent& lightCmp) {
+							const std::shared_ptr<DirectionalLight>& light = std::static_pointer_cast<DirectionalLight>(lightCmp.light);
+							shader->SetVec3("u_SunDir", light->GetDirection());
+							shader->SetInt("u_SkyviewLUT", slot);
+							RenderCommand::BindTextureUnit(slot++, atmosphere.SkyViewTextureID);
 						}
 					);
-
 					auto iblView = ecs->GetView<IBLComponent>();
 					shader->SetBool("u_SampleEnvLight", !iblView.empty());
 					iblView.each(
@@ -93,14 +98,11 @@ namespace Aho {
 								RenderCommand::BindTextureUnit(slot++, iblComp.Prefilter->GetTextureID());
 								shader->SetInt("u_gBRDFLUT", slot);
 								RenderCommand::BindTextureUnit(slot++, iblComp.BRDFLUT->GetTextureID());
-
 								shader->SetFloat("u_PrefilterMaxMipLevel", iblComp.Prefilter->GetMipLevels());
 							}
 						}
 					);
-
 					RenderCommand::DrawArray();
-
 					shader->Unbind();
 					self.GetRenderTarget()->Unbind();
 				};
@@ -120,7 +122,8 @@ namespace Aho {
 			RenderPassConfig cfg;
 			cfg.passName = "G-Buffer Pass";
 			cfg.shaderPath = (shaderPathRoot / "GBuffer.glsl").string();
-			
+			cfg.usage = ShaderUsage::GBuffer;
+
 			auto posTexCfg = TextureConfig::GetColorTextureConfig("G_Position");
 			posTexCfg.InternalFmt = InternalFormat::RGB16F; // Use HDR format for shading result
 			posTexCfg.DataFmt = DataFormat::RGB;

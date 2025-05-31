@@ -5,7 +5,7 @@
 
 namespace Aho {
     template<typename... Args>
-    class Event {
+    class _Event {
     public:
         using Listener = std::function<void(Args...)>;
 

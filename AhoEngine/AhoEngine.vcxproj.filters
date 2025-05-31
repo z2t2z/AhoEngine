@@ -1692,6 +1692,8 @@
     <ClInclude Include="Source\Runtime\Core\Events\EventBus.h" />
     <ClInclude Include="Source\Runtime\Core\Events\EngineEvents.h" />
     <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h" />
+    <ClInclude Include="Source\Runtime\Core\IndexAllocator.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1884,5 +1886,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
     <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp" />
   </ItemGroup>
 </Project>

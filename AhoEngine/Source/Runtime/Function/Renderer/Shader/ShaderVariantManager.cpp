@@ -1,60 +1,79 @@
 #include "Ahopch.h"
 #include "ShaderVariantManager.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Events/EngineEvents.h"
-#include "Runtime/Platform/OpenGL/OpenGLShader.h"
 #include "Runtime/Resource/Asset/Asset.h"
+#include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Resource/Asset/ShaderAsset.h"
+#include "Runtime/Platform/OpenGL/OpenGLShader.h"
 
 namespace Aho {
     void ShaderVariantManager::Initialize() {
-        
-    }
-
-    std::shared_ptr<Shader> ShaderVariantManager::GetVariant(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature) {
-        if (m_PathVariantCache.count(shaderAsset->GetPath())) {
-            if (m_PathVariantCache.at(shaderAsset->GetPath()).count(uint32_t(feature))) {
-                return m_PathVariantCache.at(shaderAsset->GetPath()).at(uint32_t(feature));
-			} 
-        }
-
-        std::unordered_map<uint32_t, std::string> src = shaderAsset->GetSourceCode();
-		CombineSourceCodeWithVariants(src, feature);
-
-        std::shared_ptr<Shader> shader = std::make_shared<OpenGLShader>();
-        AHO_CORE_ASSERT(shader->TryCompile(src));
-
-		// Register shader 
-        RegisterShader(shaderAsset->GetPath(), feature, shader);
-
-		return shader;
-    }
-
-    void ShaderVariantManager::RegisterShader(const std::string& path, ShaderFeature feature, const std::shared_ptr<Shader>& shader) {
-        m_PathVariantCache[path][uint32_t(feature)] = shader;
-
-        static bool listenerRegistered = false;
-        if (listenerRegistered)
-            return;
-     
-        listenerRegistered = true;
         Aho::EngineEvents::OnShaderAssetReload.AddListener(
-            [this](const std::string& path, ShaderAsset* asset) {
-				// Inform all shaders that use this asset to recompile
+            [this](const std::string& path, const std::shared_ptr<ShaderAsset>& asset) {
+                // Inform all shaders that use this asset to recompile
                 auto it = m_PathVariantCache.find(path);
                 if (it != m_PathVariantCache.end()) {
                     for (auto& [feature, shader] : it->second) {
-						std::unordered_map<uint32_t, std::string> src = asset->GetSourceCode();
-						CombineSourceCodeWithVariants(src, static_cast<ShaderFeature>(feature));
-                        bool success = shader->TryCompile(src);
+                        bool success = LoadVariant(shader, asset, (ShaderFeature)feature, false);
                         if (!success) {
-                            AHO_CORE_ERROR("Failed to recompile shader: {0}", asset->GetPath());
-                        } else {
-                            AHO_CORE_INFO("Recompiled shader: {0}", asset->GetPath());
-					    }
-					}
+                            AHO_CORE_ERROR("OnShaderAssetReload::Failed to recompile shader: {0} with feature {1}", asset->GetPath(), (uint32_t)feature);
+                            continue;
+                        }
+                        AHO_CORE_INFO("OnShaderAssetReload::Recompiled shader: {0} with feature {1}", asset->GetPath(), (uint32_t)feature);
+                    }
                 }
             }
         );
+
+        Aho::EngineEvents::OnShaderFeatureChanged.AddListener(
+            [this](ShaderUsage usage, ShaderFeature featToAdd, ShaderFeature featToDel) {
+                auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+                ecs->GetView<ShaderResourceComponent>().each(
+                    [this, usage, featToAdd, featToDel](Entity entity, ShaderResourceComponent& shaderResource) {
+                        if (shaderResource.usage == usage) {
+							ShaderFeature& feat = shaderResource.feature;
+                            if (!(feat & featToAdd)) {
+								feat |= featToAdd;
+                            }
+                            if (feat & featToDel) {
+								feat ^= featToDel;
+                            }
+                            bool success = LoadVariant(shaderResource.shader, shaderResource.shaderAsset, feat);
+                            if (!success) 
+                                AHO_CORE_ERROR("OnShaderFeatureChanged::LoadVariant failed for shader: {0} with feature: {1}", shaderResource.shaderAsset->GetPath(), uint32_t(feat));
+                            else
+                                AHO_CORE_INFO("OnShaderFeatureChanged::LoadVariant succeeded for shader: {0} with feature: {1}", shaderResource.shaderAsset->GetPath(), uint32_t(feat));
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    bool ShaderVariantManager::LoadVariant(std::shared_ptr<Shader>& shader, const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature, bool checkCache) {
+        if (checkCache && m_PathVariantCache.count(shaderAsset->GetPath())) {
+            if (m_PathVariantCache.at(shaderAsset->GetPath()).count(uint32_t(feature))) {
+                AHO_CORE_INFO("ShaderVariantManager::Find cached variant: {} with feature: {}", shaderAsset->GetName(), uint32_t(feature));
+                shader = m_PathVariantCache.at(shaderAsset->GetPath()).at(uint32_t(feature));
+                return true;
+			} 
+        }
+        if (!shader) {
+            shader = std::make_shared<OpenGLShader>();
+        }
+        std::unordered_map<uint32_t, std::string> src = shaderAsset->GetSourceCode();
+		CombineSourceCodeWithVariants(src, feature);
+        bool success = shader->TryCompile(src);
+        if (!success) {
+            AHO_CORE_ERROR("ShaderVariantManager::LoadVariant: Failed to compile shader: {} with feature: {}", shaderAsset->GetName(), uint32_t(feature));
+            return false;
+		}
+		// Register shader 
+        m_PathVariantCache[shaderAsset->GetPath()][uint32_t(feature)] = shader;
+
+        AHO_CORE_INFO("ShaderVariantManager::Created variant for `{}` with feature: {}", shaderAsset->GetName(), uint32_t(feature));
+		return true;
     }
 
     std::string ShaderVariantManager::GenerateDefineBlock(ShaderFeature features) const {
@@ -83,9 +102,5 @@ namespace Aho {
             std::string insertStr = "\n" + defineBlock + "\n";
             code.insert(lineEnd + 1, insertStr);
         }
-    }
-
-    std::string ShaderVariantManager::MakeCacheKey(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature) const {
-        return shaderAsset->GetPath() + "|" + std::to_string(static_cast<uint32_t>(feature));
     }
 }

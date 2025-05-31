@@ -127,24 +127,24 @@ namespace Aho {
 		}
 		if (desc.normalTex) {
 			m_TextureDesc.useNormalMap = true;
-			std::shared_ptr<TextureAsset> texAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.normalTex->GetPath()));
-			std::shared_ptr<_Texture> texResource = resManager->LoadGPUTexture(texAsset);
-			m_TextureDesc.normalMap = texResource.get();
-			m_ParamDesc.normalHandle = texResource->GetTextureHandle();
+			std::shared_ptr<TextureAsset> texAsset	= assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.normalTex->GetPath()));
+			std::shared_ptr<_Texture> texResource	= resManager->LoadGPUTexture(texAsset);
+			m_TextureDesc.normalMap					= texResource.get();
+			m_ParamDesc.normalHandle				= texResource->GetTextureHandle();
 		}
 		if (desc.metallicTex) {
 			m_TextureDesc.useMetallicTex = true;
-			std::shared_ptr<TextureAsset> texAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.metallicTex->GetPath()));
-			std::shared_ptr<_Texture> texResource = resManager->LoadGPUTexture(texAsset);
-			m_TextureDesc.metallicTex = texResource.get();
-			m_ParamDesc.metallicHandle = texResource->GetTextureHandle();
+			std::shared_ptr<TextureAsset> texAsset	= assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.metallicTex->GetPath()));
+			std::shared_ptr<_Texture> texResource	= resManager->LoadGPUTexture(texAsset);
+			m_TextureDesc.metallicTex				= texResource.get();
+			m_ParamDesc.metallicHandle				= texResource->GetTextureHandle();
 		}
 		if (desc.roughnessTex) {
 			m_TextureDesc.useRoughnessTex = true;
-			std::shared_ptr<TextureAsset> texAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.roughnessTex->GetPath()));
-			std::shared_ptr<_Texture> texResource = resManager->LoadGPUTexture(texAsset);
-			m_TextureDesc.roughnessTex = texResource.get();
-			m_ParamDesc.roughnessHandle = texResource->GetTextureHandle();
+			std::shared_ptr<TextureAsset> texAsset	= assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(desc.roughnessTex->GetPath()));
+			std::shared_ptr<_Texture> texResource	= resManager->LoadGPUTexture(texAsset);
+			m_TextureDesc.roughnessTex				= texResource.get();
+			m_ParamDesc.roughnessHandle				= texResource->GetTextureHandle();
 		}
 		m_ParamDesc.metallic = desc.metallic;
 		m_ParamDesc.ao = desc.ao;
@@ -156,8 +156,7 @@ namespace Aho {
 			shader->SetBool("u_HasAlbedo", true);
 			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.baseColorTex->GetTextureID());
 			shader->SetInt("u_AlbedoMap", bindingPoint++);
-		}
-		else {
+		} else {
 			shader->SetBool("u_HasAlbedo", false);
 			shader->SetVec3("u_Albedo", m_ParamDesc.baseColor);
 		}
@@ -166,8 +165,7 @@ namespace Aho {
 			shader->SetBool("u_HasNormal", true);
 			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.normalMap->GetTextureID());
 			shader->SetInt("u_NormalMap", bindingPoint++);
-		}
-		else {
+		} else {
 			shader->SetBool("u_HasNormal", false);
 		}
 
@@ -175,8 +173,7 @@ namespace Aho {
 			shader->SetBool("u_HasMetallic", true);
 			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.metallicTex->GetTextureID());
 			shader->SetInt("u_MetallicMap", bindingPoint++);
-		}
-		else {
+		} else {
 			shader->SetBool("u_HasMetallic", false);
 			shader->SetFloat("u_Metallic", m_ParamDesc.metallic);
 		}
@@ -185,8 +182,7 @@ namespace Aho {
 			shader->SetBool("u_HasRoughness", true);
 			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.roughnessTex->GetTextureID());
 			shader->SetInt("u_RoughnessMap", bindingPoint++);
-		}
-		else {
+		} else {
 			shader->SetBool("u_HasRoughness", false);
 			shader->SetFloat("u_Roughness", m_ParamDesc.roughness);
 		}
@@ -195,11 +191,39 @@ namespace Aho {
 			shader->SetBool("u_HasAO", true);
 			RenderCommand::BindTextureUnit(bindingPoint, m_TextureDesc.aoTex->GetTextureID());
 			shader->SetInt("u_AOMap", bindingPoint++);
-		}
-		else {
+		} else {
 			shader->SetBool("u_HasAO", false);
 			shader->SetFloat("u_AO", m_ParamDesc.ao);
 		}
+	}
 
+	void _Material::UpdateMaterialDescriptor() {
+		if (m_TextureDesc.useBaseColorTex) {
+			m_ParamDesc.albedoHandle = m_TextureDesc.baseColorTex->GetTextureHandle();
+		} else {
+			m_ParamDesc.albedoHandle = 0;
+			m_ParamDesc.baseColor = m_ParamDesc.baseColor;
+		}
+
+		if (m_TextureDesc.useNormalMap) {
+			m_ParamDesc.normalHandle = m_TextureDesc.normalMap->GetTextureHandle();
+		} else {
+			m_ParamDesc.normalHandle = 0;
+		}
+
+		if (m_TextureDesc.useMetallicTex) {
+			m_ParamDesc.metallicHandle = m_TextureDesc.metallicTex->GetTextureHandle();
+		} else {
+			m_ParamDesc.metallicHandle = 0;
+			m_ParamDesc.metallic = m_ParamDesc.metallic;
+		}
+
+		if (m_TextureDesc.useRoughnessTex) {
+			m_ParamDesc.roughnessHandle = m_TextureDesc.roughnessTex->GetTextureHandle();
+		} else {
+			m_ParamDesc.roughnessHandle = 0;
+			m_ParamDesc.roughness = m_ParamDesc.roughness;
+			m_ParamDesc.CalDistParams(m_ParamDesc.anisotropic, m_ParamDesc.roughness, m_ParamDesc.alpha_x, m_ParamDesc.alpha_y);
+		}
 	}
 }

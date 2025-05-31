@@ -4,6 +4,7 @@
 
 #include "stb_image.h"
 #include <gli/gli.hpp>
+#include <random>
 
 namespace Aho {
 	OpenGLTexture2D::OpenGLTexture2D(const TexSpec& specification)

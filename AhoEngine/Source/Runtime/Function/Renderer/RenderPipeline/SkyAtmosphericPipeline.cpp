@@ -2,10 +2,11 @@
 
 #include "Ahopch.h"
 #include "SkyAtmosphericPipeline.h"
-#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
 #include "DeferredPipeline.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Function/Renderer/Lights.h"
+#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Level/EcS/EntityManager.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
@@ -40,9 +41,9 @@ namespace Aho {
 			cfg.func =
 				[&](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto view = ecs->GetView<AtmosphereParametersComponent, DistantLightComponent>();
+					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
-						[&](auto entity, const AtmosphereParametersComponent& atmosphere, const DistantLightComponent& lightCmp) {
+						[&](auto entity, const AtmosphereParametersComponent& atmosphere, const LightComponent& lightCmp) {
 							auto shader = self.GetShader();
 							shader->Bind();
 							self.GetRenderTarget()->Bind();
@@ -80,9 +81,9 @@ namespace Aho {
 			cfg.func =
 				[&](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto view = ecs->GetView<AtmosphereParametersComponent, DistantLightComponent>();
+					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
-						[&](auto entity, const AtmosphereParametersComponent& atmosphere, const DistantLightComponent& lightCmp) {
+						[&](auto entity, const AtmosphereParametersComponent& atmosphere, const LightComponent& lightCmp) {
 							auto shader = self.GetShader();
 							shader->Bind();
 
@@ -119,15 +120,16 @@ namespace Aho {
 			m_TextureBuffers.push_back(res);
 			cfg.textureAttachments.push_back(res.get());
 			cfg.func =
-				[&](RenderPassBase& self) {
+				[res](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto view = ecs->GetView<AtmosphereParametersComponent, DistantLightComponent>();
+					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
-						[&](auto entity, const AtmosphereParametersComponent& atmosphere, const DistantLightComponent& lightCmp) {
+						[&](auto entity, AtmosphereParametersComponent& atmosphere, const LightComponent& lightCmp) {
 							auto shader = self.GetShader();
 							shader->Bind();
 
-							shader->SetVec3("u_SunDir", lightCmp.LightDir);
+							const std::shared_ptr<DirectionalLight>& light = std::static_pointer_cast<DirectionalLight>(lightCmp.light);
+							shader->SetVec3("u_SunDir", light->GetDirection());
 
 							self.GetRenderTarget()->Bind();
 							RenderCommand::Clear(ClearFlags::Color_Buffer);
@@ -140,6 +142,8 @@ namespace Aho {
 
 							shader->Unbind();
 							self.GetRenderTarget()->Unbind();
+
+							atmosphere.SkyViewTextureID = res->GetTextureID();
 						}
 					);
 				};

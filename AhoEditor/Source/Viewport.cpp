@@ -1,8 +1,8 @@
 #include "Viewport.h"
 #include "FileExplorer.h"
 #include "EditorUI/ImGuiHelpers.h"
-#include "Runtime/Core/GlobalContext/GlobalContext.h"
-#include "Runtime/Core/Parallel.h"
+
+#include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/ResourceManager.h"
@@ -17,9 +17,7 @@
 
 namespace Aho {
 	namespace fs = std::filesystem;
-
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
-
 	static const float g_ToolBarIconSize = 22.0f;
 
 	Viewport::Viewport() {
@@ -121,8 +119,7 @@ namespace Aho {
 		static bool showFileExplorer = false;
 		if (ImGui::BeginPopup("popup_menu")) {
 			if (ImGui::MenuItem("Point Light")) {
-				std::shared_ptr<AddLightSourceEvent> e = std::make_shared<AddLightSourceEvent>(LightType::Point);
-				m_EventManager->PushBack(e);
+
 			}
 			if (ImGui::MenuItem("Area Light")) {
 				// TODO
@@ -136,6 +133,24 @@ namespace Aho {
 			}
 			if (ImGui::MenuItem("Spot Light")) {
 				// TODO
+			}
+			if (ImGui::MenuItem("Sky Atmospheric")) {
+				auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+				auto skyEntity = ecs->CreateEntity();
+				glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
+				float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
+				glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
+				ecs->AddComponent<AtmosphereParametersComponent>(skyEntity);
+				ecs->AddComponent<GameObjectComponent>(skyEntity, "GO_Sky_Atmospheric");
+
+				LightComponent& lcomp = ecs->AddComponent<LightComponent>(skyEntity);
+				lcomp.index = g_RuntimeGlobalCtx.m_IndexAllocator->AcquireIndex<DirectionalLight>();
+				std::shared_ptr<DirectionalLight> light = std::make_shared<DirectionalLight>();
+				light->SetDirection(sunDir);
+				lcomp.light = std::move(light);
+				ecs->AddComponent<LightDirtyTagComponent>(skyEntity);
+
+				EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_SKY_ATMOSPHERIC, ShaderFeature::FEATURE_IBL);
 			}
 
 			if (ImGui::MenuItem("Environment Light")) {
@@ -166,11 +181,14 @@ namespace Aho {
 				showFileExplorer = false;
 				if (file != ".") {
 					AHO_CORE_INFO("{}", file.string());
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto resManager = g_RuntimeGlobalCtx.m_Resourcemanager;
 					auto assetManager = g_RuntimeGlobalCtx.m_AssetManager;
-					auto textureAsset = assetManager->_LoadAsset<TextureAsset>(g_RuntimeGlobalCtx.m_EntityManager, TextureOptions(file.string()));
+					auto textureAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(file.string()));
 					Entity IBLEntity = resManager->LoadIBL(textureAsset);
 					g_RuntimeGlobalCtx.m_IBLManager->SetActiveIBL(IBLEntity);
+
+					EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_IBL, ShaderFeature::FEATURE_SKY_ATMOSPHERIC);
 				}
 			}
 		}

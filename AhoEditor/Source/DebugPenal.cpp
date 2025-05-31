@@ -19,16 +19,17 @@ namespace Aho {
 		ImGui::Begin("Temp Sky Control");
 
 		auto entityManager = g_RuntimeGlobalCtx.m_EntityManager;
-		auto view = entityManager->GetView<AtmosphereParametersComponent, DistantLightComponent>();
+		auto view = entityManager->GetView<AtmosphereParametersComponent, LightComponent>();
 		bool changed = false;
 		static glm::vec3 sunDir = { 60.0f, -90.0f, 0.0f }; // In angles
 		view.each(
-			[&](auto entity, AtmosphereParametersComponent& apc, DistantLightComponent& dlc) {
+			[&](auto entity, AtmosphereParametersComponent& apc, LightComponent& dlc) {
 				changed |= ImGui::DragFloat3("SunRotation", &sunDir[0], 0.01f);
 				if (changed) {
 					float theta = glm::radians(sunDir.x);
 					float phi = glm::radians(sunDir.y);
-					dlc.LightDir = glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi));
+					std::shared_ptr<DirectionalLight> light = std::static_pointer_cast<DirectionalLight>(dlc.light);
+					light->SetDirection(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
 				}
 			});
 		ImGui::End();

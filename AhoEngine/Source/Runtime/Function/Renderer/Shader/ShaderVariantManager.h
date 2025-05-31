@@ -13,11 +13,9 @@ namespace Aho {
 	public:
 		ShaderVariantManager() = default;
 		void Initialize();
-		std::shared_ptr<Shader> GetVariant(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature);
+		bool LoadVariant(std::shared_ptr<Shader>& shader, const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature, bool checkCache = true);
 	private:
-		void RegisterShader(const std::string& path, ShaderFeature feature, const std::shared_ptr<Shader>& shader);
 		std::string GenerateDefineBlock(ShaderFeature features) const;
-		std::string MakeCacheKey(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature) const;
 		void CombineSourceCodeWithVariants(std::unordered_map<uint32_t, std::string>& src, ShaderFeature feature);
 	private:
 		std::unordered_map<std::string, std::unordered_map<uint32_t, std::shared_ptr<Shader>>> m_PathVariantCache;

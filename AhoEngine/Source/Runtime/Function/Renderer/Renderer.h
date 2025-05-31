@@ -59,7 +59,8 @@ namespace Aho {
 		virtual void AddRenderData(const std::shared_ptr<RenderData>& data);
 		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data);
 	private:
-		void SetupUBOs();
+		void SetupUBOs() const;
+		void UpdateUBOs() const;
 	private:
 		RenderSkyPipeline* m_RP_Sky;
 		DeferredShadingPipeline* m_RP_DeferredShading;

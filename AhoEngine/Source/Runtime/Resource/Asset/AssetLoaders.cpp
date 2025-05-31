@@ -75,15 +75,16 @@ namespace Aho {
 		Assimp::Importer importer;
 		// TODO: flags can be customized in load options
 		auto Flags	= options.LoadFlags;
-		Flags		= aiProcess_Triangulate
-											| aiProcess_FixInfacingNormals
-											| aiProcess_FlipUVs
-											| aiProcess_SplitLargeMeshes
-											| aiProcess_CalcTangentSpace
-											| aiProcess_OptimizeMeshes
-											| aiProcess_OptimizeGraph
-											| aiProcessPreset_TargetRealtime_Fast
-											;
+		Flags = aiProcess_Triangulate | 
+				aiProcess_FlipUVs |
+				aiProcess_GenSmoothNormals |
+				aiProcess_CalcTangentSpace |
+				aiProcess_JoinIdenticalVertices |
+				aiProcess_ImproveCacheLocality |
+				aiProcess_ValidateDataStructure |
+				aiProcess_RemoveRedundantMaterials |
+				aiProcess_FindInvalidData |
+				aiProcess_OptimizeMeshes;
 
 		const aiScene* scene = importer.ReadFile(path, Flags);
 		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode) {

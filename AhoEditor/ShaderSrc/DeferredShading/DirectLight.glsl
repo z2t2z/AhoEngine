@@ -6,31 +6,29 @@
 #include "../DeferredShading/BRDF.glsl"
 #include "../DeferredShading/Shadow.glsl"
 
+
+// ---- Directional Light ----
 vec3 EvalDirectionalLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
     vec3 baseColor = mat.baseColor;
     float roughness = mat.roughness;
     float metallic = mat.metallic;
-    float VoN = dot(V, N);
-
+    float VoN = max(0.0001, dot(V, N));
     vec3 L_out = vec3(0.0);
 	for (int i = 0; i < MAX_LIGHT_CNT; ++i) {
-        const DirectionalLight light = u_DirLight[i];
+        const DirectionalLight light = u_DirectionalLight[i];
         if (light.intensity == 0.0) {
             break;
         }
-        vec3 L = light.direction;
+        vec3 L = light.direction; // Note facing direction
         float LoN = dot(L, N);
         if (LoN < 0.0) {
             continue;
         }
         vec3 H = normalize(L + V);
-        float LoH = dot(L, H);
-        float VoH = dot(V, H);
-        float NoH = dot(N, H);
-        float NoV = max(VoN, 0.0001f);
+        float VoH = max(0.0001, dot(V, H));
+        float NoH = max(0.0001, dot(N, H));
 
-        vec3  F = F_Schlick(F0, NoV);
-        // vec3  F = FresnelSchlickRoughness(VoH, F0, roughness);
+        vec3  F = F_Schlick(F0, VoH);
         float D = D_GGX(roughness, NoH);
         float G = G_Smith(LoN, VoN, roughness);
 
@@ -42,22 +40,24 @@ vec3 EvalDirectionalLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N)
         
         vec3 L_light = light.color * light.intensity;
         
-        L_out += L_light * brdf * LoN * PCSS(vec4(pos, 1.0f), LoN, light.lightProjView);
+        L_out += L_light * brdf * LoN; // * PCSS(vec4(pos, 1.0f), LoN, light.lightProjView);
     }
     return L_out;
 }
 
+// ---- Point Light ----
 vec3 EvalPointLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
     return vec3(0.0);
 }
 
+
+// ---- Environment Light ----
 // IBL
 uniform float u_PrefilterMaxMipLevel;
 uniform samplerCube u_gCubeMap;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gBRDFLUT;
-
 vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 	vec3 L_out      = vec3(0.0);
     vec3 baseColor  = mat.baseColor;

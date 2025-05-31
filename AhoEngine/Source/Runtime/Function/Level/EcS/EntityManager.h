@@ -65,6 +65,11 @@ namespace Aho {
 			m_Registry.destroy(entity.GetEntityHandle());
 		}
 
+		template <typename T>
+		void RemoveComponent(Entity entity) {
+			m_Registry.remove<T>(entity.GetEntityHandle());
+		}
+
 		bool IsEntityIDValid(uint32_t id) {
 			return m_Registry.valid(static_cast<entt::entity>(id));
 		}

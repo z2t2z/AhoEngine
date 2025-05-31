@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Runtime/Core/Math/Math.h"
 #include "Runtime/Function/Renderer/Texture.h"
 #include "Runtime/Core/Log/Log.h"
 #include <glad/glad.h>
+
 
 namespace Aho {
 	class OpenGLTexture2D : public Texture2D {
@@ -43,7 +45,6 @@ namespace Aho {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			target, mipmaplevel, internalFormat, width, height, boarder, dataFormat, dataType, initialData
 		*/
-
 		// TODO: Just used the same enum
 
 		static GLuint GetGLParam(TexTarget param) {

@@ -1,5 +1,6 @@
 #include "Ahopch.h"
 #include "RenderPassBase.h"
+#include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
@@ -23,7 +24,7 @@ namespace Aho {
 		auto assetManger		= g_RuntimeGlobalCtx.m_AssetManager;
 		auto ecs				= g_RuntimeGlobalCtx.m_EntityManager;
 		auto resourceManager	= g_RuntimeGlobalCtx.m_Resourcemanager;
-		auto shaderAsset		= assetManger->_LoadAsset<ShaderAsset>(ecs, ShaderOptions(config.shaderPath));
+		auto shaderAsset		= assetManger->_LoadAsset<ShaderAsset>(ecs, ShaderOptions(config.shaderPath, config.usage));
 		auto shaderResource		= resourceManager->LoadShaderResource(shaderAsset, ShaderFeature::NONE);
 		m_Attachments			= config.textureAttachments;
 		m_Shader				= shaderResource.get();
@@ -43,6 +44,7 @@ namespace Aho {
 		if (s_DummyVAO == 0) {
 			glGenVertexArrays(1, &s_DummyVAO);
 		}
+
 	}
 
 	void RenderPassBase::Execute() {

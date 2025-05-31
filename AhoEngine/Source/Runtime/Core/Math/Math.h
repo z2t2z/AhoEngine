@@ -10,13 +10,24 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include <random>
+
 namespace Aho {
+	namespace Utils {
+		inline std::mt19937 rng(std::random_device{}());
+		inline std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+		// Generate a random vec3 ranging from [-1.0, 1.0]
+		inline glm::vec3 GenerateRandomVec3() {
+			return glm::vec3(dist(rng), dist(rng), dist(rng));
+		}
+	}
+
 	struct Ray;
 	class BBox;
 	struct PrimitiveDesc;
 	struct IntersectResult;
 
-	static glm::vec3 QuaternionToEuler(const glm::quat& q) {
+	inline glm::vec3 QuaternionToEuler(const glm::quat& q) {
 		glm::vec3 euler;
 
 		// Roll (x-axis rotation)
@@ -39,7 +50,7 @@ namespace Aho {
 		return euler;
 	}
 
-	static glm::quat EulerToQuaternion(float roll, float pitch, float yaw) {
+	inline glm::quat EulerToQuaternion(float roll, float pitch, float yaw) {
 		roll = glm::radians(roll);
 		pitch = glm::radians(pitch);
 		yaw = glm::radians(yaw);
@@ -63,13 +74,13 @@ namespace Aho {
 		glm::quat Orientation = EulerToQuaternion(Rotation.x, Rotation.y, Rotation.z);
 		return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Orientation) * glm::scale(glm::mat4(1.0f), Scale);
 	}
-	static void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale, glm::quat& Orientation) {
+	inline void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale, glm::quat& Orientation) {
 		glm::vec3 Skew;
 		glm::vec4 Perspective;
 		glm::decompose(transform, Scale, Orientation, Translation, Skew, Perspective);
 		Rotation = glm::degrees(QuaternionToEuler(Orientation));
 	}
-	static void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale) {
+	inline void DecomposeTransform(const glm::mat4& transform, glm::vec3& Translation, glm::vec3& Rotation, glm::vec3& Scale) {
 		glm::vec3 Skew;
 		glm::vec4 Perspective;
 		glm::quat Orientation;
@@ -86,11 +97,11 @@ namespace Aho {
 		}
 	}
 
-	bool Intersect(const Ray& ray, const BBox& aabb);
+	extern bool Intersect(const Ray& ray, const BBox& aabb);
 
-	std::optional<IntersectResult> Intersect(const Ray& ray, const PrimitiveDesc* primitive);
+	extern std::optional<IntersectResult> Intersect(const Ray& ray, const PrimitiveDesc* primitive);
 	
-	Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv);
+	extern Ray GetRayFromScreenSpace(const glm::vec2& coords, const glm::vec2& resolution, const glm::vec3& camPos, const glm::mat4& projInv, const glm::mat4& viewInv);
 
 	inline static glm::vec3 Min(const glm::vec3& a, const glm::vec3& b) {
 		return glm::vec3(

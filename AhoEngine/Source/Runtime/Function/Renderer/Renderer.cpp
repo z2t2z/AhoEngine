@@ -2,6 +2,10 @@
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "RenderCommand.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Function/Level/Ecs/Components.h"
+#include "Runtime/Function/Level/Ecs/EntityManager.h"
+
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
 
@@ -24,14 +28,6 @@ namespace Aho {
 		SetupUBOs();
 		RenderCommand::SetDepthTest(true);
 
-		//m_RP_Sky = new RenderSkyPipeline();
-		//m_RP_DeferredShading = new DeferredShadingPipeline();
-		//m_RP_DeferredShading->SetSunDir(m_RP_Sky->GetSunDir());
-
-		//m_RP_Postprocess = new PostprocessPipeline();
-		//m_RP_Dbg = new DebugVisualPipeline();
-
-
 		// --- New System ---
 		m_RP_SkyAtmospheric = new SkyAtmosphericPipeline();
 		m_RP_Derferred = new DeferredShading();
@@ -48,6 +44,8 @@ namespace Aho {
 
 	static auto s_previous = Clock::now();
 	void Renderer::Render(float deltaTime) {
+		UpdateUBOs();
+
 		auto frameStart = Clock::now();
 		std::chrono::duration<double> dt = frameStart - s_previous;
 		m_FrameTime = dt.count();
@@ -127,12 +125,29 @@ namespace Aho {
 		for (const auto& d : data) AddRenderData(d);
 	}
 
-	void Renderer::SetupUBOs() {
+	void Renderer::SetupUBOs() const {
 		UBOManager::RegisterUBO<CameraUBO>(0);
 		UBOManager::RegisterUBO<LightUBO>(1);
 		UBOManager::RegisterUBO<RandomKernelUBO>(2); RandomKernelUBO rndUBO; UBOManager::UpdateUBOData(2, rndUBO);
 		UBOManager::RegisterUBO<AnimationUBO>(3);
 		UBOManager::RegisterUBO<SkeletonUBO>(4);
+		UBOManager::RegisterUBO<GPU_DirectionalLight>(5);
 	}
 
+	void Renderer::UpdateUBOs() const {
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		ecs->GetView<LightComponent, LightDirtyTagComponent>().each(
+			[&ecs](Entity entity, const LightComponent& lcomp, const LightDirtyTagComponent& dirtyTag) {
+				const std::shared_ptr<Light>& light = lcomp.light;
+				if (light->GetType() == LightType::Directional) {
+					GPU_DirectionalLight gpuLight;
+					auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light);
+					AHO_CORE_ASSERT(dirLight);
+					FillDirectionalLightStruct(gpuLight, dirLight);
+					UBOManager::UpdateUBOData<GPU_DirectionalLight>(5, gpuLight, lcomp.index);
+					ecs->RemoveComponent<LightDirtyTagComponent>(entity);
+				}
+			}
+		);
+	}
 }

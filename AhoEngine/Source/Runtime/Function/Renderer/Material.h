@@ -113,6 +113,7 @@ namespace Aho {
 			m_TextureDesc.useAoTex = true;
 		}
 		void ApplyToShader(Shader* shader, uint32_t& bindingPoint) const;
+		void UpdateMaterialDescriptor();
 		MaterialDescriptor& GetMatDescriptor() { return m_ParamDesc; }
 		MaterialTextureDescriptor& GetMatTextureDescriptor() { return m_TextureDesc; }
 	private:

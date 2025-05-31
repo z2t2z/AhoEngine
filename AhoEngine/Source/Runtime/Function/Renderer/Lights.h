@@ -37,4 +37,17 @@ namespace Aho {
         float m_Width, m_Height;
         Shape m_Shape;
     };
+
+    class DirectionalLight : public Light {
+    public:
+        DirectionalLight()
+            : Light(LightType::Directional, glm::vec3(1.0f), 1.0f, true), m_Direction(glm::vec3(0.0f, 1.0f, 0.0f)) { }
+        glm::vec3 GetDirection() const { return m_Direction; }
+        void SetDirection(const glm::vec3& dir) { m_Direction = dir; }
+        void SetProjView(const glm::mat4& mat) { m_ProjView = mat; }
+        glm::mat4 GetProjView() const { return m_ProjView; }
+    private:
+        glm::vec3 m_Direction;
+        glm::mat4 m_ProjView;
+    };
 }

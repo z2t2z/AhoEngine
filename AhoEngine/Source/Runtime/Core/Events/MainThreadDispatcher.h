@@ -36,5 +36,4 @@ namespace Aho {
         std::mutex m_Mutex;
         std::queue<Task> m_Tasks;
     };
-
 }

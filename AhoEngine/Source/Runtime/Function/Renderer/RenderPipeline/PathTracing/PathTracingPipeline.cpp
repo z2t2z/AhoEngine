@@ -88,12 +88,12 @@ namespace Aho {
 							if (material.Dirty) {
 								material.Dirty = false; // TODO: Should not be here, but in inspector panel
 								Reaccumulate = true;
+								material.mat.UpdateMaterialDescriptor();
 								SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
 							}
 						}
 					);
 					{
-						//ScopedTimer timer("BVH update timer");
 						auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
 						size_t siz = tasks.size();
 						g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,

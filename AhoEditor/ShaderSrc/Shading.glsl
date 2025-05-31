@@ -123,12 +123,8 @@ vec4 GridColor(vec3 worldPos, float t) {
 	return GridColor;
 }
 
-#define FEATURE_ENABLE_SKYATMOSPHERIC
-#define FEATURE_ENABLE_IBL
-
 void main() {
 	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb; // View space
-
 	float d = texture(u_gDepth, v_TexCoords).r;
 	if (d == 1.0f) {
 		vec2 uv = v_TexCoords;
@@ -143,32 +139,25 @@ void main() {
 		return;
 #endif
 
+		float t = -v_nearP.y / (v_farP.y - v_nearP.y);
+		vec3 gridWorldPos = v_nearP + t * (v_farP - v_nearP);
 #ifdef FEATURE_ENABLE_SKYATMOSPHERIC
 		const float Rground = 6360.0; 
 		vec3 worldPos = u_ViewPosition.xyz / 1000.0;
 		worldPos.y = max(0.01, worldPos.y) + Rground;
-
 		vec2 sampleUV;
 		vec3 sunDir = u_SunDir;
-
 		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
 		vec3 lum = texture(u_SkyviewLUT, sampleUV).rgb;
 		lum = pow(lum, vec3(1.3));
 		lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
-		
 		lum = jodieReinhardTonemap(lum);
 		lum = 7 * pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, sunDir, Rground);
-		
-		float t = -v_nearP.y / (v_farP.y - v_nearP.y);
-		vec3 gridWorldPos = v_nearP + t * (v_farP - v_nearP);
-		
 		out_Color = t < 0.0 ? vec4(lum, 1.0) : GridColor(gridWorldPos, t);
-#else
-		float t = -v_nearP.y / (v_farP.y - v_nearP.y);
-		vec3 gridWorldPos = v_nearP + t * (v_farP - v_nearP);
-		
-		out_Color = t < 0.0 ? vec4(0.0, 0.0, 0.0, 1.0) : GridColor(gridWorldPos, t);
+		return;
 #endif
+
+		out_Color = t < 0.0 ? vec4(0.0, 0.0, 0.0, 1.0) : GridColor(gridWorldPos, t);
 		return;
 	}
 
@@ -191,7 +180,7 @@ void main() {
 	vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
 	vec3 Lo = vec3(0.0f);
 	// Direct lighting
-	// Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
+	Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
 	// Lo += EvalPointLight(mat, fragPos, F0, V, N);
 
 #ifdef FEATURE_ENABLE_IBL

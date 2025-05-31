@@ -145,6 +145,7 @@ namespace Aho {
 
 	struct LightComponent {
 		std::shared_ptr<Light> light;
+		uint32_t index;
 		LightComponent() = default;
 		LightComponent(const std::shared_ptr<Light>& light)
 			: light(light) {
@@ -172,16 +173,6 @@ namespace Aho {
 		const Texture* texture{ nullptr };
 	};
 
-	// Temporary, think about how to design light class
-	struct EnvComponent {
-		std::vector<const Texture*> envTextures;
-		EnvComponent() = default;
-		EnvComponent(const Texture* tex) {
-			envTextures.push_back(tex);
-		}
-		EnvComponent(const EnvComponent&) = default;
-	};
-
 	struct _TransformComponent {
 		bool Dirty{ false };
 		glm::vec3 Translation{ 0.0f };
@@ -195,6 +186,11 @@ namespace Aho {
 		glm::mat4 GetTransform() const {
 			return ComposeTransform(Translation, Rotation, Scale);
 		}
+	};
+
+	struct SelectedComponent {
+		Entity entity;
+		SelectedComponent() = default;
 	};
 
 	// Root of meshes
@@ -231,6 +227,17 @@ namespace Aho {
 		std::shared_ptr<ShaderAsset> asset;
 		explicit ShaderAssetComponent(const std::shared_ptr<ShaderAsset>& asset) : asset(asset) {}
 		ShaderAssetComponent(const ShaderAssetComponent&) = default;
+	};
+
+	// Resource Components
+	struct ShaderResourceComponent {
+		std::shared_ptr<ShaderAsset> shaderAsset;
+		std::shared_ptr<Shader> shader;
+		ShaderFeature feature = ShaderFeature::NONE;
+		ShaderUsage usage;
+		explicit ShaderResourceComponent(const std::shared_ptr<ShaderAsset>& shaderAsset, const std::shared_ptr<Shader>& shaderResource, ShaderUsage usage)
+			: shaderAsset(shaderAsset), shader(shaderResource), usage(usage) {}
+		ShaderResourceComponent(const ShaderResourceComponent&) = default;
 	};
 
 	struct VertexArrayRefsComponent {
@@ -276,9 +283,13 @@ namespace Aho {
 
 	struct _BVHComponent {
 		bool Dirty = true;
-		std::unique_ptr<BVHi> bvh{ nullptr };
+		std::shared_ptr<BVHi> bvh{ nullptr };
 		static std::vector<int> s_FreeIds;
 		static int s_Id;
+		explicit _BVHComponent(const std::shared_ptr<BVHi>& _bvh) {
+			bvh = _bvh;
+		}
+
 		// TODO: Fix this
 		explicit _BVHComponent(const Mesh& mesh) {
 			int id = -1;
@@ -289,7 +300,7 @@ namespace Aho {
 			else {
 				id = s_Id++;
 			}
-			bvh = std::make_unique<BVHi>(mesh, id);
+			bvh = std::make_shared<BVHi>(mesh, id);
 		}
 		~_BVHComponent() {
 			if (bvh) {
@@ -297,13 +308,10 @@ namespace Aho {
 			}
 		}
 	};
-	// Temp, consider light class
-	struct DistantLightComponent {
-		DistantLightComponent() = default;
-		glm::vec3 LightDir;
-		glm::vec3 LightAlbedo{ 1.0f };
-		float Intensity{ 1.0f };
-		bool CastShadow{ true };
+
+	struct LightDirtyTagComponent {
+		int placeholder;
+		LightDirtyTagComponent() = default;
 	};
 
 	//struct IBLComponent;
@@ -324,6 +332,7 @@ namespace Aho {
 	struct AtmosphereParametersComponent {
 		AtmosphereParametersComponent() = default;
 
+		uint32_t SkyViewTextureID{ 0 };
 		// Radius of the planet (center to ground)
 		float BottomRadius{ 6360.0f };
 		// Maximum considered atmosphere height (center to atmosphere top)
