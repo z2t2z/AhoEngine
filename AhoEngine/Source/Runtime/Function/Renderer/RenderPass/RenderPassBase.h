@@ -15,7 +15,8 @@ namespace Aho {
 		std::string passName;
 		std::string shaderPath;
 		ShaderUsage usage;
-		std::vector<_Texture*> textureAttachments;
+		std::vector<_Texture*> attachmentTargets;
+		std::vector<std::pair<std::string, _Texture*>> inputTextures;
 		std::function<void(RenderPassBase&)> func;
 	};
 
@@ -23,15 +24,19 @@ namespace Aho {
 	public:
 		using Callback = std::function<void(RenderPassBase&)>;
 		RenderPassBase() = default;
+		RenderPassBase(const RenderPassConfig& config) {
+			Setup(config);
+		}
 		~RenderPassBase();
-		void Setup(RenderPassConfig& config);
+		void Setup(RenderPassConfig config);
 		void Execute();
 		bool Resize(uint32_t width, uint32_t height) const;
 		std::string GetPassName() const { return m_Name; }
+		float GetFrameTime() const { return m_FrameTime; }
 		void SetCallback(Callback cb) { m_Execute = std::move(cb); }
 		Framebuffer* GetRenderTarget() { return m_Framebuffer.get(); }
 		void RegisterTextureBuffer(_Texture* texture, const std::string& bindingName) {
-			m_TextureBuffers.emplace_back(texture, bindingName);
+			m_InputTextures.emplace_back(bindingName, texture);
 		}
 		_Texture* GetTextureAttachmentByIndex(size_t index) {
 			AHO_CORE_ASSERT(index < m_Attachments.size());
@@ -41,7 +46,8 @@ namespace Aho {
 		Shader* GetShader() const { return m_Shader; }
 		static uint32_t s_DummyVAO;
 	protected:
-		std::vector<std::pair<_Texture*, std::string>> m_TextureBuffers; // Uniforms 
+		float m_FrameTime{ 0.0f };
+		std::vector<std::pair<std::string, _Texture*>> m_InputTextures; // Uniforms 
 		std::string m_Name;
 		Shader* m_Shader{ nullptr };
 		Callback m_Execute;

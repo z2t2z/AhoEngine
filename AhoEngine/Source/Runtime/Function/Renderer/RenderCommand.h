@@ -39,6 +39,9 @@ namespace Aho {
 		inline static void DrawArray() {
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+		inline static void DataMemoryBarrier(GLint flags) {
+			glMemoryBarrier(flags);
+		}
 		inline static void CullFace() {
 			//glEnable(GL_CULL_FACE);    
 			//glCullFace(GL_BACK);  

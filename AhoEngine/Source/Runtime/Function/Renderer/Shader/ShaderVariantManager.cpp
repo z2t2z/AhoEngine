@@ -16,11 +16,10 @@ namespace Aho {
                 if (it != m_PathVariantCache.end()) {
                     for (auto& [feature, shader] : it->second) {
                         bool success = LoadVariant(shader, asset, (ShaderFeature)feature, false);
-                        if (!success) {
-                            AHO_CORE_ERROR("OnShaderAssetReload::Failed to recompile shader: {0} with feature {1}", asset->GetPath(), (uint32_t)feature);
-                            continue;
-                        }
-                        AHO_CORE_INFO("OnShaderAssetReload::Recompiled shader: {0} with feature {1}", asset->GetPath(), (uint32_t)feature);
+                        if (!success)
+                            AHO_CORE_ERROR("OnShaderAssetReload::LoadVariant failed for shader: {0} with feature: {1}", asset->GetPath(), (uint32_t)feature);
+                        else 
+                            AHO_CORE_INFO("OnShaderAssetReload::LoadVariant succeeded for shader: {0} with feature: {1}", asset->GetPath(), (uint32_t)feature);
                     }
                 }
             }

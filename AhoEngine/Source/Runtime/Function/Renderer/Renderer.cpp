@@ -13,10 +13,6 @@
 #include <thread>
 
 namespace Aho {
-	int RendererGlobalState::g_SelectedEntityID = -1;
-	bool RendererGlobalState::g_ShowDebug = false;
-	bool RendererGlobalState::g_IsEntityIDValid = false;
-	std::shared_ptr<RenderData> RendererGlobalState::g_SelectedData = nullptr;
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
 	Renderer::Renderer() {
@@ -33,6 +29,8 @@ namespace Aho {
 		m_RP_Derferred = new DeferredShading();
 		m_RP_PathTracing = new PathTracingPipeline();
 		m_RP_IBLPipeline = new _IBLPipeline();
+
+		SetRenderMode(RenderMode::DefaultLit);
 	}
 
 
@@ -51,14 +49,8 @@ namespace Aho {
 		m_FrameTime = dt.count();
 		s_previous = frameStart;
 
-		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
-			// --- New System
-			m_RP_IBLPipeline->Execute();
-			m_RP_SkyAtmospheric->Execute();
-			m_RP_Derferred->Execute();
-		}
-		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
-			m_RP_PathTracing->Execute();
+		for (const auto& pipeline : m_ActivePipelines) {
+			pipeline->Execute();
 		}
 
 		auto nextFrameTime = frameStart + frameDur;
@@ -70,7 +62,7 @@ namespace Aho {
 			case RenderPipelineType::RPL_DeferredShading:
 				return m_RP_DeferredShading;
 			case RenderPipelineType::RPL_RenderSky:
-				return m_RP_Sky;
+				return m_RP_SkyAtmospheric;
 			case RenderPipelineType::RPL_PostProcess:
 				return m_RP_Postprocess;
 			case RenderPipelineType::RPL_PathTracing:
@@ -83,10 +75,6 @@ namespace Aho {
 				AHO_CORE_ASSERT(false);
 		}
 		AHO_CORE_ASSERT(false);
-	}
-
-	void Renderer::SetCameraDirty() {
-		m_CameraDirty = true;
 	}
 
 	bool Renderer::OnViewportResize(uint32_t width, uint32_t height) {
@@ -117,14 +105,6 @@ namespace Aho {
 		}
 	}
 
-	void Renderer::AddRenderData(const std::shared_ptr<RenderData>& data) {
-		RenderTask::m_SceneData.push_back(data);
-	}
-
-	void Renderer::AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data) {
-		for (const auto& d : data) AddRenderData(d);
-	}
-
 	void Renderer::SetupUBOs() const {
 		UBOManager::RegisterUBO<CameraUBO>(0);
 		UBOManager::RegisterUBO<LightUBO>(1);
@@ -141,8 +121,7 @@ namespace Aho {
 				const std::shared_ptr<Light>& light = lcomp.light;
 				if (light->GetType() == LightType::Directional) {
 					GPU_DirectionalLight gpuLight;
-					auto dirLight = std::dynamic_pointer_cast<DirectionalLight>(light);
-					AHO_CORE_ASSERT(dirLight);
+					auto dirLight = std::static_pointer_cast<DirectionalLight>(light);
 					FillDirectionalLightStruct(gpuLight, dirLight);
 					UBOManager::UpdateUBOData<GPU_DirectionalLight>(5, gpuLight, lcomp.index);
 					ecs->RemoveComponent<LightDirtyTagComponent>(entity);

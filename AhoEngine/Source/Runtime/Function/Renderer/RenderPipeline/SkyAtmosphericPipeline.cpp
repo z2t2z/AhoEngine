@@ -36,7 +36,7 @@ namespace Aho {
 
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			m_TextureBuffers.push_back(res);
-			cfg.textureAttachments.push_back(res.get());
+			cfg.attachmentTargets.push_back(res.get());
 
 			cfg.func =
 				[&](RenderPassBase& self) {
@@ -77,7 +77,7 @@ namespace Aho {
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 
 			m_TextureBuffers.push_back(res);
-			cfg.textureAttachments.push_back(res.get());
+			cfg.attachmentTargets.push_back(res.get());
 			cfg.func =
 				[&](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
@@ -118,7 +118,7 @@ namespace Aho {
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			
 			m_TextureBuffers.push_back(res);
-			cfg.textureAttachments.push_back(res.get());
+			cfg.attachmentTargets.push_back(res.get());
 			cfg.func =
 				[res](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;

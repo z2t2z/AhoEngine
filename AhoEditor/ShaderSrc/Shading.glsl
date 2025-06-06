@@ -149,10 +149,10 @@ void main() {
 		vec3 sunDir = u_SunDir;
 		SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
 		vec3 lum = texture(u_SkyviewLUT, sampleUV).rgb;
-		lum = pow(lum, vec3(1.3));
+		// lum = pow(lum, vec3(1.3));
 		lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
 		lum = jodieReinhardTonemap(lum);
-		lum = 7 * pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, sunDir, Rground);
+		lum = pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, sunDir, Rground);
 		out_Color = t < 0.0 ? vec4(lum, 1.0) : GridColor(gridWorldPos, t);
 		return;
 #endif
@@ -190,5 +190,6 @@ void main() {
 	vec3 Color = Lo / (Lo + vec3(1.0f));	// HDR tone mapping
 	Color = pow(Color, vec3(1.0f / 2.2f)); 	// gamma correction
 
+	// TODO: ACES tone mapping
 	out_Color = vec4(Color, 1.0f);
 }

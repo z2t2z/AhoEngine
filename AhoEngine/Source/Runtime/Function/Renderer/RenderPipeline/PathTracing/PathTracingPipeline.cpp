@@ -49,103 +49,102 @@ namespace Aho {
 			texCfg.Width = 1280; texCfg.Height = 720;
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			m_TextureBuffers.push_back(res);
-			cfg.textureAttachments.push_back(res.get());
+			cfg.attachmentTargets.push_back(res.get());
 
 			cfg.func =
 				[&](RenderPassBase& self) {
-					auto shader = self.GetShader();
-					shader->Bind();
+				auto shader = self.GetShader();
+				shader->Bind();
 
-					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto camView = ecs->GetView<EditorCamaraComponent>();
-					bool Reaccumulate = false;
-					camView.each(
-						[&](auto cam, EditorCamaraComponent& cmp) { 
-							if (cmp.Dirty) {
-								cmp.Dirty = false;
-								Reaccumulate = true;
-							}
-						});
-					auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
-					if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
-						auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
-						iblComp.IBL->Bind(shader);
+				auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+				auto camView = ecs->GetView<EditorCamaraComponent>();
+				bool Reaccumulate = false;
+				camView.each(
+					[&](auto cam, EditorCamaraComponent& cmp) {
+						if (cmp.Dirty) {
+							cmp.Dirty = false;
+							Reaccumulate = true;
+						}
+					});
+				auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+				if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
+					auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
+					iblComp.IBL->Bind(shader);
+				}
+
+				static bool BVHDirty = true;
+				auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+				std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
+				view.each(
+					[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+						int meshID = bvh.bvh->GetMeshId();
+						if (transform.Dirty) {
+							transform.Dirty = false; // TODO: Should not be here, but in inspector panel
+							bvh.bvh->ApplyTransform(transform.GetTransform());
+							tasks.emplace_back(bvh.bvh.get());
+							Reaccumulate = true;
+							BVHDirty = true;
+						}
+						if (material.Dirty) {
+							material.Dirty = false; // TODO: Should not be here, but in inspector panel
+							Reaccumulate = true;
+							material.mat.UpdateMaterialDescriptor();
+							SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
+						}
 					}
+				);
+				{
+					const auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
+					size_t siz = tasks.size();
+					g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+						[tasks](int64_t i) {
+							tasks[i]->Rebuild();
+						}, 1
+					);
+				}
+				// No need to update every blas everytime but for now it's fine
+				if (BVHDirty) {
+					BVHDirty = false;
+					auto sceneView = ecs->GetView<SceneBVHComponent>();
+					AHO_CORE_ASSERT(sceneView.size() <= 1);
+					sceneView.each(
+						[&](auto entity, SceneBVHComponent& sceneBvh) {
+							sceneBvh.bvh->UpdateTLAS();
+							const auto& tlas = sceneBvh.bvh;
+							SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
+							SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
+							SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
 
-					static bool BVHDirty = true;
-					auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
-					std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
-					view.each(
-						[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
-							int meshID = bvh.bvh->GetMeshId();
-							if (transform.Dirty) {
-								transform.Dirty = false; // TODO: Should not be here, but in inspector panel
-								bvh.bvh->ApplyTransform(transform.GetTransform());
-								tasks.emplace_back(bvh.bvh.get());
-								Reaccumulate = true;
-								BVHDirty = true;
-							}
-							if (material.Dirty) {
-								material.Dirty = false; // TODO: Should not be here, but in inspector panel
-								Reaccumulate = true;
-								material.mat.UpdateMaterialDescriptor();
-								SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
+							size_t nodesOffset = 0;
+							size_t primsOffset = 0;
+							const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
+							for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
+								const BVHi* blas = tlas->GetBLAS(i);
+								AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
+								AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+								SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
+								SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+								nodesOffset += blas->GetNodeCount();
+								primsOffset += blas->GetPrimsCount();
 							}
 						}
 					);
-					{
-						auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
-						size_t siz = tasks.size();
-						g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
-							[tasks](int64_t i) {
-								tasks[i]->Rebuild();
-							}, 1
-						);
-					}
-					// No need to update every blas everytime but for now it's fine
-					if (BVHDirty) {
-						BVHDirty = false;
-						auto sceneView = ecs->GetView<SceneBVHComponent>();
-						AHO_CORE_ASSERT(sceneView.size() <= 1);
-						sceneView.each(
-							[&](auto entity, SceneBVHComponent& sceneBvh) {
-								sceneBvh.bvh->UpdateTLAS();
-								const auto& tlas = sceneBvh.bvh;
-								SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
-								SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
-								SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
+				}
 
-								size_t nodesOffset = 0;
-								size_t primsOffset = 0;
-								const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
-								for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
-									const BVHi* blas = tlas->GetBLAS(i);
-									AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
-									AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
-									SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
-									SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
-									nodesOffset += blas->GetNodeCount();
-									primsOffset += blas->GetPrimsCount();
-								}
-							}
-						);
-					}
-
-					auto textureTarget = self.GetTextureAttachmentByIndex(0);
-					if (Reaccumulate) {
-						static constexpr float clearData[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-						m_Frame = 1;
-						textureTarget->ClearTextureData(clearData);
-					}
-					textureTarget->BindTextureImage(0);
-					shader->SetInt("u_Frame", m_Frame);
-					static int group = 16;
-					uint32_t width = textureTarget->GetWidth();
-					uint32_t height = textureTarget->GetHeight();
-					uint32_t workGroupCountX = (width + group - 1) / group;
-					uint32_t workGroupCountY = (height + group - 1) / group;
-					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
-					shader->Unbind();
+				auto textureTarget = self.GetTextureAttachmentByIndex(0);
+				if (Reaccumulate) {
+					m_Frame = 1;
+					textureTarget->ClearTextureData();
+				}
+				textureTarget->BindTextureImage(0);
+				shader->SetInt("u_Frame", m_Frame);
+				static int group = 16;
+				uint32_t width = textureTarget->GetWidth();
+				uint32_t height = textureTarget->GetHeight();
+				uint32_t workGroupCountX = (width + group - 1) / group;
+				uint32_t workGroupCountY = (height + group - 1) / group;
+				shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
+				shader->Unbind();
 				};
 			m_AccumulatePass = std::make_unique<RenderPassBase>();
 			m_AccumulatePass->Setup(cfg);
@@ -163,7 +162,7 @@ namespace Aho {
 			texCfg.DataType = DataType::Float;
 			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
 			m_TextureBuffers.push_back(res);
-			cfg.textureAttachments.push_back(res.get());
+			cfg.attachmentTargets.push_back(res.get());
 
 			cfg.func =
 				[&](RenderPassBase& self) {

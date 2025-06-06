@@ -53,7 +53,7 @@ namespace Aho {
 			uint32_t fmt = (uint32_t)attachment->GetDataFmt();
 			uint32_t type;
 			if (fmt == DataFormat::Depth || fmt == DataFormat::DepthStencil) {
-				type = fmt == DataFormat::Depth ? GL_DEPTH_COMPONENT : GL_DEPTH_STENCIL_ATTACHMENT;
+				type = fmt == DataFormat::Depth ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT;
 			}
 			else {
 				type = GL_COLOR_ATTACHMENT0 + offset++;
@@ -61,7 +61,10 @@ namespace Aho {
 			}
 			glFramebufferTexture2D(GL_FRAMEBUFFER, type, attachment->GetDim(), attachment->GetTextureID(), 0);
 		}
-		glDrawBuffers(drawBuffers.size(), drawBuffers.data());
+		if (drawBuffers.empty()) 
+			glDrawBuffer(GL_NONE);
+		else 
+			glDrawBuffers(drawBuffers.size(), drawBuffers.data());
 
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 			AHO_CORE_ASSERT(false, "Framebuffer is incomplete!");

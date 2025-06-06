@@ -8,10 +8,10 @@
 namespace Aho {
 	class OpenGLShader : public Shader {
 	public:
+		OpenGLShader() = default;
 		OpenGLShader(const std::string& filepath) {
 			AHO_CORE_ASSERT(false);
 		}
-		OpenGLShader() = default;
 		virtual ~OpenGLShader();
 		virtual bool TryCompile(const std::unordered_map<uint32_t, std::string>& src) override;
 		virtual void Delete() const override;
@@ -35,8 +35,6 @@ namespace Aho {
 		uint32_t TryCompileFromSource(const std::unordered_map<GLenum, std::string>& src);
 	private:
 		bool m_IsCompute{ false };
-	private:
-		std::unordered_map<GLenum, std::string> m_OpenGLSourceCode;
 	};
 
 }

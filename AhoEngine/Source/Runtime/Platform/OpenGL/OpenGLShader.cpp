@@ -25,7 +25,7 @@ namespace Aho {
 	bool OpenGLShader::TryCompile(const std::unordered_map<uint32_t, std::string>& src) {
 		uint32_t shaderID = TryCompileFromSource(src);
 		if (!shaderID) {
-			AHO_CORE_ERROR("Shader compilation failed for source code provided.");
+			AHO_CORE_ERROR("OpenGLShader::TryCompile: Shader compilation failed for source code provided.");
 			return false;
 		}
 		if (m_ShaderID) {
@@ -223,7 +223,7 @@ namespace Aho {
 	void OpenGLShader::DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const {
 		glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 		// TODO: customizable flags
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
+		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
 	}
 
 }

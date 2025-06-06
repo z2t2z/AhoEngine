@@ -12,7 +12,7 @@ layout(std140, binding = 0) uniform CameraUBO {
 	vec4 u_ViewPosition;
 };
 
-// TODO: support multiple light types 
+// TODO: Delete this
 const int MAX_LIGHT_CNT = 5;
 layout(std140, binding = 1) uniform LightUBO {
 	PointLight u_PointLight[MAX_LIGHT_CNT];

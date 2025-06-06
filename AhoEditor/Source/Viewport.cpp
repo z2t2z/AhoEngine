@@ -1,7 +1,6 @@
 #include "Viewport.h"
 #include "FileExplorer.h"
 #include "EditorUI/ImGuiHelpers.h"
-
 #include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
@@ -32,34 +31,24 @@ namespace Aho {
 		auto path		= fs::current_path();
 		auto ecs		= g_RuntimeGlobalCtx.m_EntityManager;
 		{
-			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "light-bulb.png").string()));
+			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "EngineAsset" / "Icons"/ "light-bulb.png").string()));
 			std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
 			m_LightIcon = tex.get();
 		}
 		{
-			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "plusicon.png").string()));
+			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "EngineAsset" / "Icons" / "plusicon.png").string()));
 			std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
 			m_AddIcon = tex.get();
 		}
 	}
 	
 	void Viewport::Draw() {
-		ImGuiWindowFlags window_flags = 0
-			| ImGuiWindowFlags_NoDecoration
-			| ImGuiWindowFlags_NoScrollWithMouse
-			//| ImGuiWindowFlags_NoDocking			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-			//| ImGuiWindowFlags_NoTitleBar
-			//| ImGuiWindowFlags_NoResize
-			| ImGuiWindowFlags_NoMove
-			//| ImGuiWindowFlags_NoScrollbar
-			;
-
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 		ImGui::Begin("Viewport", nullptr, window_flags);
 		ImGui::PopStyleVar();
 
 		DrawToolBarOverlay();
-
 		auto [width, height] = ImGui::GetWindowSize();
 		m_ViewportWidth = width, m_ViewportHeight = height;
 		if (m_Renderer->OnViewportResize(width, height)) {
@@ -79,13 +68,6 @@ namespace Aho {
 		if (m_ShouldPickObject) {
 			//m_ShouldPickObject = false;
 			if (IsCursorInViewport()) {
-				//m_Ray = GetRayFromScreenSpace(glm::vec2(float(MouseX), float(MouseY)),
-				//glm::vec2(float(m_ViewportWidth), float(m_ViewportHeight)),
-				//m_EditorCamera->GetPosition(),
-				//m_EditorCamera->GetProjectionInv(),
-				//m_EditorCamera->GetViewInv());
-				//m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading)->GetRenderPassTarget(RenderPassType::SSAOGeo)->Bind();
-				//s_PickPixelData = m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->ReadPixel(TexType::Entity, MouseX, MouseY);
 				//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
 			}
 		}
@@ -136,6 +118,9 @@ namespace Aho {
 			}
 			if (ImGui::MenuItem("Sky Atmospheric")) {
 				auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+				if (ecs->GetView<AtmosphereParametersComponent>().size() > 0) {
+					return;
+				}
 				auto skyEntity = ecs->CreateEntity();
 				glm::vec3 sunRotation(60.0f, -90.0f, 0.0f);
 				float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
@@ -179,17 +164,13 @@ namespace Aho {
 			fs::path file = FileExplorer::SelectFile(fs::current_path());
 			if (!file.empty()) {
 				showFileExplorer = false;
-				if (file != ".") {
-					AHO_CORE_INFO("{}", file.string());
-					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto resManager = g_RuntimeGlobalCtx.m_Resourcemanager;
-					auto assetManager = g_RuntimeGlobalCtx.m_AssetManager;
-					auto textureAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(file.string()));
-					Entity IBLEntity = resManager->LoadIBL(textureAsset);
-					g_RuntimeGlobalCtx.m_IBLManager->SetActiveIBL(IBLEntity);
-
-					EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_IBL, ShaderFeature::FEATURE_SKY_ATMOSPHERIC);
-				}
+				auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+				auto resManager = g_RuntimeGlobalCtx.m_Resourcemanager;
+				auto assetManager = g_RuntimeGlobalCtx.m_AssetManager;
+				auto textureAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(file.string()));
+				Entity IBLEntity = resManager->LoadIBL(textureAsset);
+				g_RuntimeGlobalCtx.m_IBLManager->SetActiveIBL(IBLEntity);
+				EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_IBL, ShaderFeature::FEATURE_SKY_ATMOSPHERIC);
 			}
 		}
 	}
@@ -250,8 +231,6 @@ namespace Aho {
 		if (m_LevelLayer->GetCurrentLevel()) {
 			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
 			if (entityManager->IsEntityIDValid(s_PickPixelData)) {
-				RendererGlobalState::g_SelectedEntityID = s_PickPixelData;
-				RendererGlobalState::g_IsEntityIDValid = true;
 
 				m_SelectedObject = Entity(static_cast<entt::entity>(s_PickPixelData));
 				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
@@ -278,9 +257,6 @@ namespace Aho {
 						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
 					}
 				}
-			}
-			else {
-				RendererGlobalState::g_IsEntityIDValid = false;
 			}
 		}
 	}

@@ -20,11 +20,11 @@ namespace Aho {
 
 			std::shared_ptr<TextureAsset> normalTex = nullptr;
 			// --- Metallic (scalar) ---
-			float metallic = 0.0f;
+			float metallic = 0.9f;
 			std::shared_ptr<TextureAsset> metallicTex = nullptr;
 
 			// --- Roughness (scalar) ---
-			float roughness = 1.0f;
+			float roughness = 0.1f;
 			std::shared_ptr<TextureAsset> roughnessTex = nullptr;
 
 			// --- Ambient Occlusion (scalar) ---

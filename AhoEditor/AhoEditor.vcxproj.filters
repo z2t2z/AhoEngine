@@ -61,6 +61,7 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\EditorUI\ImGuiHelpers.h" />
+    <ClInclude Include="Source\EditorUI\EditorGlobalContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -99,5 +100,6 @@
     <ClCompile Include="Source\Viewport.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\EditorUI\ImGuiHelpers.cpp" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,6 @@ namespace Aho {
 		virtual void Initialize() override;
 		virtual void Execute() override;
 		virtual bool Resize(uint32_t width, uint32_t height) const override;
-		void SetEnvMap(Texture* texture) {}
 	private:
 		std::unique_ptr<RenderPassBase> m_AccumulatePass;
 		std::unique_ptr<RenderPassBase> m_PresentPass;

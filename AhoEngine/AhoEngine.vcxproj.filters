@@ -324,9 +324,6 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.h">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
@@ -1694,6 +1691,7 @@
     <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h" />
     <ClInclude Include="Source\Runtime\Core\IndexAllocator.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1804,9 +1802,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderSkyPipeline.cpp">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
@@ -1887,5 +1882,6 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.cpp" />
   </ItemGroup>
 </Project>

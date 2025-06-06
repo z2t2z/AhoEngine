@@ -13,6 +13,7 @@ namespace Aho {
 	}
 
 	void OpenGLTexture2D::Invalidate() {
+		AHO_CORE_ASSERT(false);
 		auto target = Utils::GetGLParam(m_Specification.target);
 		auto internalFormat = Utils::GetGLParam(m_Specification.internalFormat);
 		auto dataFormat = Utils::GetGLParam(m_Specification.dataFormat);
@@ -77,7 +78,7 @@ namespace Aho {
 			return filename.find(ext) != std::string::npos;
 		});
 
-		stbi_set_flip_vertically_on_load(flipOnLoad);
+		//stbi_set_flip_vertically_on_load(flipOnLoad);
 		void* data = nullptr;
 		data = isHDR ? (void*)stbi_loadf(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, 0)	
 					 : (void*)stbi_load(path.c_str(), &m_Specification.width, &m_Specification.height, &m_Specification.channels, 0);
@@ -142,6 +143,7 @@ namespace Aho {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4); // 如果支持
 
 		stbi_image_free(data);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D() {
@@ -299,7 +301,7 @@ namespace Aho {
 						default: assert(0); break;
 					}
 				}
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return m_TextureID;
-	
 	}
 }

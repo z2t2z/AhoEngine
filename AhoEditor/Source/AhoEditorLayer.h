@@ -22,6 +22,7 @@ namespace Aho {
 		PropertiesPanel m_PropertiesPanel;
 		HierachicalPanel m_HierachicalPanel;
 		Viewport m_Viewport;
+		DebugPenal m_DbgPenal;
 		Entity m_EditorCamEntity;
 	private:
 		bool m_PickingPass{ false };
@@ -34,8 +35,5 @@ namespace Aho {
 		Renderer* m_Renderer{ nullptr };
 		EventManager* m_EventManager{ nullptr };
 		std::shared_ptr<CameraManager> m_CameraManager;
-	private:
-		Ray m_Ray;
-		DebugPenal m_DbgPenal;
 	};
 }

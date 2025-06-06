@@ -47,7 +47,7 @@ namespace Aho {
         void SetProjView(const glm::mat4& mat) { m_ProjView = mat; }
         glm::mat4 GetProjView() const { return m_ProjView; }
     private:
-        glm::vec3 m_Direction;
+        glm::vec3 m_Direction; // In euler angles
         glm::mat4 m_ProjView;
     };
 }

@@ -46,8 +46,8 @@ namespace Aho {
 					texBuffer.m_Texture->Bind(texOffset++);
 				}
 
-				shader->SetUint("u_SelectedEntityID", RendererGlobalState::g_SelectedEntityID);
-				shader->SetBool("u_IsEntityIDValid", RendererGlobalState::g_IsEntityIDValid);
+				//shader->SetUint("u_SelectedEntityID", RendererGlobalState::g_SelectedEntityID);
+				//shader->SetBool("u_IsEntityIDValid", RendererGlobalState::g_IsEntityIDValid);
 
 				for (const auto& data : renderData) {
 					data->Bind(shader);
@@ -80,18 +80,18 @@ namespace Aho {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				if (RendererGlobalState::g_IsEntityIDValid && RendererGlobalState::g_SelectedData) {
-					shader->Bind();
-					renderTarget->EnableAttachments(0);
-					RenderCommand::Clear(ClearFlags::Color_Buffer);
-					const auto& data = RendererGlobalState::g_SelectedData;
-					shader->SetUint("u_EntityID", data->GetEntityID());
-					data->Bind(shader);
-					data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
-					data->Unbind();
-					renderTarget->Unbind();
-					shader->Unbind();
-				}
+				//if (RendererGlobalState::g_IsEntityIDValid && RendererGlobalState::g_SelectedData) {
+				//	shader->Bind();
+				//	renderTarget->EnableAttachments(0);
+				//	RenderCommand::Clear(ClearFlags::Color_Buffer);
+				//	const auto& data = RendererGlobalState::g_SelectedData;
+				//	shader->SetUint("u_EntityID", data->GetEntityID());
+				//	data->Bind(shader);
+				//	data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
+				//	data->Unbind();
+				//	renderTarget->Unbind();
+				//	shader->Unbind();
+				//}
 			});
 
 		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("DrawSelectedPass");

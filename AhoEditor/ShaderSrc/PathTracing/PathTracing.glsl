@@ -20,11 +20,10 @@
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
 
-layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
     const TextureHandles handle = s_TextureHandles[p.meshId];
-    Material mat;// = InitMaterial();
+    Material mat;
     mat.baseColor = handle.baseColor;
     mat.metallic = handle.metallic;
     mat.emissive = handle.emissive;
@@ -131,13 +130,16 @@ vec3 PathTrace(Ray ray) {
         // TODO: Russian roulette
 
     }
-
     return L;
 }
 
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main() {
     InitRNG(gl_GlobalInvocationID.xy, u_Frame);
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 siz = imageSize(accumulatedImage);
+    if (pixelCoord.x >= siz.x || pixelCoord.y >= siz.y)
+		return;
     Ray ray = GetRayFromScreenSpace(
                 vec2(pixelCoord), 
                 vec2(imageSize(accumulatedImage))

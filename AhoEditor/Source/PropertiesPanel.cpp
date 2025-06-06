@@ -16,11 +16,6 @@ namespace Aho {
 
 	PropertiesPanel::PropertiesPanel() {
 	}
-
-	void PropertiesPanel::Initialize(LevelLayer* levelLayer, Renderer* renderer) {
-		m_LevelLayer = levelLayer;
-		m_Renderer = renderer;
-	}
 	
 	// TODO: Need reflction
 	void PropertiesPanel::Draw(const Entity& selectedEntity) {
@@ -39,7 +34,7 @@ namespace Aho {
 		ImGui::Text(goComp.name.c_str());
 		ImGui::PopFont();
 
-		DrawComponents<_TransformComponent, _MaterialComponent>(ecs, selectedEntity);
+		DrawComponents<_TransformComponent, _MaterialComponent, LightComponent>(ecs, selectedEntity);
 		ImGui::End();
 		return; 
 	}

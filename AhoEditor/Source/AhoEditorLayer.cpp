@@ -25,14 +25,8 @@ namespace Aho {
 	void AhoEditorLayer::OnAttach() {
 		AHO_INFO("EditorLayer on attach");
 		m_ContentBrowser.Initialize();
-		m_PropertiesPanel.Initialize(m_LevelLayer, m_Renderer);
 		m_HierachicalPanel.Initialize();
 		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
-
-		m_DbgPenal.m_LevelLayer			= m_LevelLayer;
-		m_DbgPenal.m_PtPipeline			= static_cast<PathTracingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_PathTracing));
-		m_DbgPenal.m_ShadingPipeline	= static_cast<DeferredShadingPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_DeferredShading));
-		m_DbgPenal.m_SkyPipeline		= static_cast<RenderSkyPipeline*>(m_Renderer->GetPipeline(RenderPipelineType::RPL_RenderSky));
 
 		m_EditorCamEntity = g_RuntimeGlobalCtx.m_EntityManager->CreateEntity();
 		g_RuntimeGlobalCtx.m_EntityManager->AddComponent<EditorCamaraComponent>(m_EditorCamEntity);
@@ -54,7 +48,6 @@ namespace Aho {
 			}
 			bool changed = m_CameraManager->Update(deltaTime, firstClick);
 			if (changed) {
-				m_Renderer->SetCameraDirty();
 				auto& cmp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<EditorCamaraComponent>(m_EditorCamEntity);
 				cmp.Dirty = true;
 			}
@@ -124,8 +117,6 @@ namespace Aho {
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
 					ImGui::MenuItem("ShowImGuiDemoWindow", NULL, &showDemo);
-					ImGui::MenuItem("DebugView", NULL, &RendererGlobalState::g_ShowDebug);
-					ImGui::MenuItem("PickingPass", NULL, &m_PickingPass);
 					if (ImGui::BeginMenu("Camera Options")) {
 						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
 						ImGui::SliderFloat("Camera Speed", &m_CameraManager->GetSpeed(), 0.0f, 100.0f);
@@ -158,8 +149,10 @@ namespace Aho {
 		m_ContentBrowser.Draw();
 		m_PropertiesPanel.Draw(selectedEntity);
 		m_Viewport.Draw();
-
 		m_DbgPenal.Draw();
+
+
+		//ImGui::ShowDemoWindow();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {

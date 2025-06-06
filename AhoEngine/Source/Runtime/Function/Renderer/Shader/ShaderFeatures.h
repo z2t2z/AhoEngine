@@ -38,5 +38,7 @@ namespace Aho {
         DeferredShading,
         PathTracing,
         GBuffer,
+        GenDepthPyramid,
+        SSSR,
     };
 }

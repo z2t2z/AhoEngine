@@ -4,11 +4,9 @@
 #include "Common.glsl"
 #include "../DeferredShading/BRDF.glsl"
 
-// TODO: Use this binding mechanism for input uniforms
+// TODO: Use this binding mechanism for input 
 // layout(binding = 0) uniform sampler2D u_EquirectangularMap;
-
-layout(binding = 0, rgba16f) uniform writeonly imageCube prefilterred;
-layout(local_size_x = 16, local_size_y = 16) in;
+layout(binding = 0, rgba16f) uniform imageCube prefilterred;
 
 uniform samplerCube u_CubeMap;
 uniform float u_Roughness;
@@ -43,6 +41,7 @@ vec3 PrefilterEnvMap(float Roughness, vec3 R) {
     return TotalWeight == 0.0 ? vec3(0) : prefilter / TotalWeight;
 }
 
+layout(local_size_x = 16, local_size_y = 16) in;
 void main() {
     uint faceIdx = gl_GlobalInvocationID.z;
     vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / u_Size;  // normalized [0,1]

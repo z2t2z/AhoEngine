@@ -10,6 +10,7 @@ namespace Aho {
 	};
 
 	enum InternalFormat : GLint {
+		R32F = GL_R32F,
 		RGBA8 = GL_RGBA8,
 		SRGB8_ALPHA8 = GL_SRGB8_ALPHA8,
 		RGBA16F = GL_RGBA16F,
@@ -17,6 +18,8 @@ namespace Aho {
 		RG16F = GL_RG16F,
 		RGBA32F = GL_RGBA32F,
 		Depth24Stencil8 = GL_DEPTH24_STENCIL8,
+		Depth24 = GL_DEPTH_COMPONENT24,
+		Depth32F = GL_DEPTH_COMPONENT32F,
 		// ...
 	};
 
@@ -27,7 +30,7 @@ namespace Aho {
 		BGR = GL_BGR,
 		RGBA = GL_RGBA,
 		BGRA = GL_BGRA,
-		Depth = GL_DEPTH,
+		Depth = GL_DEPTH_COMPONENT,
 		DepthStencil = GL_DEPTH_STENCIL,
 		// ...
 	};
@@ -53,17 +56,17 @@ namespace Aho {
 		DataFormat		DataFmt = DataFormat::BGRA;
 		DataType		DataType = DataType::UByte;
 
-		static TextureConfig GetDepthTextureConfig(const std::string& label = "Depth") {
+		static TextureConfig GetDepthTextureConfig(const std::string& label = "Depth", bool GenMip = false) {
 			TextureConfig depthConfig;
 			depthConfig.Usage = TextureUsage::Depth;
 			depthConfig.Label = label;
 			depthConfig.Width = 1600;
 			depthConfig.Height = 1600;
-			depthConfig.GenMips = false;
+			depthConfig.GenMips = GenMip;
 			depthConfig.Dim = TextureDim::Texture2D;
-			depthConfig.InternalFmt = InternalFormat::Depth24Stencil8;
-			depthConfig.DataFmt = DataFormat::DepthStencil;
-			depthConfig.DataType = DataType::UInt248;
+			depthConfig.InternalFmt = InternalFormat::Depth32F;
+			depthConfig.DataFmt = DataFormat::Depth;
+			depthConfig.DataType = DataType::Float;
 			return depthConfig;
 		}
 
@@ -95,5 +98,13 @@ namespace Aho {
 			return cubemapConfig;
 		}
 	};
-	
+
+	//class TextureResourceBuilder {
+	//public:
+	//	TextureResourceBuilder() = default;
+	//	TextureResourceBuilder& Name(const std::string& name);
+	//	TextureResourceBuilder& Usage(const TextureUsage usage);
+	//private:
+	//	TextureConfig m_Cfg;
+	//};
 }

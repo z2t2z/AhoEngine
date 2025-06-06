@@ -18,7 +18,7 @@ namespace Aho {
 		m_CurrentPath = m_AssetPath;
 
 		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-		std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((m_FolderPath / "Asset" / "Icons" / "back.png").string()));
+		std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((m_FolderPath / "Asset" / "EngineAsset" / "Icons" / "plusicon.png").string()));
 		std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
 		m_BackIcon = tex.get();
 	}

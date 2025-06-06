@@ -17,7 +17,6 @@ namespace Aho {
 	class PropertiesPanel {
 	public:
 		PropertiesPanel();
-		void Initialize(LevelLayer* levelLayer, Renderer* renderer);
 		void Draw(const Entity& selectedEntity);
 	private:
 		template<typename... Components>
@@ -25,18 +24,48 @@ namespace Aho {
 			([&] {
 				if (ecs->HasComponent<Components>(entity)) {
 					auto& comp = ecs->GetComponent<Components>(entity);
-					DrawComponentUI<Components>(ecs, comp);
+					DrawComponentUI<Components>(ecs, entity, comp);
 				}
 				}(), ...);
 		}
 
 		// --- Specializations for specific component types ---
 		template<typename T>
-		void DrawComponentUI(const std::shared_ptr<EntityManager>& ecs, T& component) {
+		void DrawComponentUI(const std::shared_ptr<EntityManager>& ecs, Entity entity, T& component) {
 			AHO_CORE_ASSERT(false, "DrawComponentUI not implemented for this component type.");
 		}
+		template<typename T>
+		void DrawComponentUI(const std::shared_ptr<EntityManager>& ecs, Entity entity, LightComponent& lightComp) {
+			auto light = lightComp.light;
+			bool changed = false;
+			if (ImGuiHelpers::DrawVec3Control("Color", light->GetColor())) changed = true;
+			ImGui::Separator();
+			if (ImGui::DragFloat("Intensity", &light->GetIntensity(), 0.01f, 0.0f, 1000.0f)) changed = true;
+			switch (light->GetType()) {
+				case LightType::Directional: {
+					std::shared_ptr<DirectionalLight> dirLight = std::static_pointer_cast<DirectionalLight>(light);
+					glm::vec3 dirEuler = Math::DirectionToEuler(dirLight->GetDirection());
+					if (ImGuiHelpers::DrawVec3Control("Direction", dirEuler)) {
+						dirLight->SetDirection(glm::normalize(Math::EulerToDirection(dirEuler)));
+						changed = true;
+					}
+					break;
+				}
+				case LightType::Point:
+					AHO_CORE_ASSERT(false, "Point light properties not implemented yet.");
+					break;
+				case LightType::Spot:
+					AHO_CORE_ASSERT(false, "Spot light properties not implemented yet.");
+					break;
+				default:
+					break;
+			}
+			if (changed && !ecs->HasComponent<LightDirtyTagComponent>(entity)) {
+				ecs->AddComponent<LightDirtyTagComponent>(entity);
+			}
+		}
 		template<>
-		void DrawComponentUI<_TransformComponent>(const std::shared_ptr<EntityManager>& ecs, _TransformComponent& transform) {
+		void DrawComponentUI<_TransformComponent>(const std::shared_ptr<EntityManager>& ecs, Entity entity, _TransformComponent& transform) {
 			ImGui::Separator();
 			ImGuiIO& io = ImGui::GetIO();
 			ImGui::PushFont(io.Fonts->Fonts[1]);
@@ -51,7 +80,7 @@ namespace Aho {
 			}
 		}
 		template<>
-		void DrawComponentUI<_MaterialComponent>(const std::shared_ptr<EntityManager>& ecs, _MaterialComponent& material) {
+		void DrawComponentUI<_MaterialComponent>(const std::shared_ptr<EntityManager>& ecs, Entity entity, _MaterialComponent& material) {
 			ImGui::Separator();
 			ImGuiIO& io = ImGui::GetIO();
 			ImGui::PushFont(io.Fonts->Fonts[1]);

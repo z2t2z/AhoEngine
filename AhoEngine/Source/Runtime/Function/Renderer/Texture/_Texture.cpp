@@ -42,15 +42,19 @@ namespace Aho {
 		glDeleteTextures(1, &m_TextureID);
 	}
 
-	void _Texture::BindTextureImage(uint32_t pos, uint32_t mipLevel) const {
-		glBindImageTexture(pos, m_TextureID, mipLevel, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, GL_WRITE_ONLY, m_InternalFmt);
+	void _Texture::BindTextureImage(uint32_t pos, uint32_t mipLevel, uint32_t operation) const {
+		glBindImageTexture(pos, m_TextureID, mipLevel, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, operation, m_InternalFmt);
+	}
+
+	void _Texture::ClearTextureData() const {
+		glClearTexImage(m_TextureID, 0, m_DataFmt, m_DataType, nullptr);
 	}
 
 	void _Texture::GenMipMap() {
 		if (!m_GenMips) {
 			m_GenMips = true;
 		}
-		m_MipLevels = (int)std::log2(std::max(m_Width, m_Height)) + 1;
+		m_MipLevels = 1 + static_cast<int>(std::floor(std::log2(std::max(m_Width, m_Height))));
 		glBindTexture(m_Dim, m_TextureID);
 		glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -58,15 +62,24 @@ namespace Aho {
 		glBindTexture(m_Dim, 0);
 	}
 
+	void _Texture::GetTextureWdithHeight(int& width, int& height, int mipLevel) const {
+		glBindTexture(m_Dim, m_TextureID);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_WIDTH, &width);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_HEIGHT, &height);
+		glBindTexture(m_Dim, 0);
+	}
+
 	// TODO: imutable storage
 	bool _Texture::Resize(uint32_t width, uint32_t height) {
 		if (m_Width == width && m_Height == height) {
+			//AHO_CORE_TRACE("Skip resize {}", m_Label.c_str());
 			return false;
 		}
 		m_Width = width; m_Height = height;
 
 		if (m_TextureID) {
 			glDeleteTextures(1, &m_TextureID);
+			m_TextureID = 0;
 		}
 
 		glCreateTextures(m_Dim, 1, &m_TextureID);
@@ -84,12 +97,6 @@ namespace Aho {
 			glTexImage2D(m_Dim, 0, m_InternalFmt, m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
 		}
 
-		//if (m_MipLevels != -1) {
-		//	int maxDim = std::max(m_Width, m_Height);
-		//	m_MipLevels = 1 + static_cast<int>(std::floor(std::log2(maxDim)));
-		//	glGenerateMipmap(GL_TEXTURE_2D);
-		//}
-
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		if (m_Dim == GL_TEXTURE_CUBE_MAP) {
@@ -100,6 +107,7 @@ namespace Aho {
 		if (m_GenMips) {
 			GenMipMap();
 		}
+		glBindTexture(m_Dim, 0);
 		return true;
 	}
 
@@ -218,7 +226,7 @@ namespace Aho {
 					default: assert(0); break;
 					}
 				}
-
+		glBindTexture(GL_TEXTURE_2D, 0);
 		m_TextureID = textureID;
 		// TODO, fill other properties
 	}
@@ -300,6 +308,8 @@ namespace Aho {
 		m_DataFmt		= (DataFormat)dataFormat;
 		m_InternalFmt	= (InternalFormat)internalFormat;
 		m_DataType		= m_IsHDR ? DataType::Float : DataType::UByte;
+
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 }

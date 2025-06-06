@@ -2,7 +2,6 @@
 
 #include "RenderPipeline/RenderPipeline.h"
 #include "RenderPipeline/PathTracing/PathTracingPipeline.h"
-#include "RenderPipeline/RenderSkyPipeline.h"
 #include "RenderPipeline/DeferredShadingPipeline.h"
 #include "RenderPipeline/IBLPipeline.h"
 #include "RenderPipeline/PostprocessPipeline.h"
@@ -25,50 +24,46 @@ namespace Aho {
 		PathTracing,
 		ModeCount
 	};
-	// TODO; Seems like a big bad way
-	struct RendererGlobalState {
-		static bool g_IsEntityIDValid;
-		static int g_SelectedEntityID;
-		static bool g_ShowDebug;
-		static std::shared_ptr<RenderData> g_SelectedData;
-	};
+
 	
 	class Renderer {
 	public:
 		Renderer();
 		void Initialize();
 		~Renderer() {
-			AHO_CORE_INFO("~Renderer Called");
-			//delete m_RP_Sky;
-			//delete m_RP_DeferredShading;
-			//delete m_RP_Postprocess;
 			delete m_RP_PathTracing;
 			delete m_RP_Derferred;
 			delete m_RP_SkyAtmospheric;
 			delete m_RP_IBLPipeline;
 		}
-		void SetRenderMode(RenderMode mode) { m_CurrentRenderMode = mode; }
-		RenderMode GetRenderMode() { return m_CurrentRenderMode; }
+		void SetRenderMode(RenderMode mode) { 
+			m_CurrentRenderMode = mode; 
+			if (mode == RenderMode::PathTracing) {
+				m_ActivePipelines = { m_RP_PathTracing };
+			} else {
+				m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred };
+			}
+		}
+		RenderMode GetRenderMode() const { return m_CurrentRenderMode; }
 		void Render(float deltaTime);
 		RenderPipeline* GetPipeline(RenderPipelineType type);
-		void SetCameraDirty();
 		bool OnViewportResize(uint32_t width, uint32_t height);
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 		uint32_t GetRenderResultTextureID();
-		float GetFrameTime() const { return m_FrameTime; } // Return render frame time in seconds
-		virtual void AddRenderData(const std::shared_ptr<RenderData>& data);
-		virtual void AddRenderData(const std::vector<std::shared_ptr<RenderData>>& data);
+		std::vector<RenderPassBase*> GetAllRenderPasses() const { return m_AllRenderPasses; }
+		void RegisterRenderPassBase(RenderPassBase* renderPassBase) { m_AllRenderPasses.push_back(renderPassBase); }
 	private:
 		void SetupUBOs() const;
 		void UpdateUBOs() const;
 	private:
-		RenderSkyPipeline* m_RP_Sky;
-		DeferredShadingPipeline* m_RP_DeferredShading;
-		PostprocessPipeline* m_RP_Postprocess;
+		DeferredShadingPipeline* m_RP_DeferredShading{ nullptr };
+		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
-		
+	private:
+		std::vector<RenderPipeline*> m_ActivePipelines;
 	// New System
 	public:
+		std::vector<RenderPassBase*> m_AllRenderPasses;
 		DeferredShading* GetDeferredShadingPipeline() { return m_RP_Derferred; }
 		SkyAtmosphericPipeline* GetSkyAtmosphericPipeline() { return m_RP_SkyAtmospheric; }
 		PathTracingPipeline* GetPathTracingPipeline() { return m_RP_PathTracing; }
@@ -77,10 +72,8 @@ namespace Aho {
 		DeferredShading* m_RP_Derferred{ nullptr };
 		SkyAtmosphericPipeline* m_RP_SkyAtmospheric{ nullptr };
 		PathTracingPipeline* m_RP_PathTracing{ nullptr };
-
 	private:
 		float m_FrameTime{ 0.0 }; // In seconds
-		bool m_CameraDirty{ false };
 		RenderMode m_CurrentRenderMode{ RenderMode::DefaultLit };
 	};
 }

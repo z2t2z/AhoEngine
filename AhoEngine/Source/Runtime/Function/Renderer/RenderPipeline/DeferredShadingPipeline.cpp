@@ -130,9 +130,9 @@ namespace Aho {
 					data->Bind(shader);
 
 					shader->SetUint("u_EntityID", data->GetEntityID());
-					if (RendererGlobalState::g_SelectedEntityID == data->GetEntityID()) {
-						RendererGlobalState::g_SelectedData = data;
-					}
+					//if (RendererGlobalState::g_SelectedEntityID == data->GetEntityID()) {
+						//RendererGlobalState::g_SelectedData = data;
+					//}
 
 					if (data->IsInstanced()) {
 						shader->SetBool("u_IsInstanced", true);

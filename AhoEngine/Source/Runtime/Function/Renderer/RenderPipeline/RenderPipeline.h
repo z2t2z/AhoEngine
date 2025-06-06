@@ -44,6 +44,7 @@ namespace Aho {
 	};
 
 	class _Texture;
+	class RenderPassBase;
 	class RenderPipeline {
 	public:
 		RenderPipeline() = default;
@@ -69,15 +70,18 @@ namespace Aho {
 			return nullptr;
 		}
 	protected:
-		std::vector<std::shared_ptr<_Texture>> m_TextureBuffers;
-	protected:
 		uint32_t m_ResultTextureID{ 0 };
 		_Texture* m_Result{ nullptr };
-		Texture* m_RenderResult{ nullptr };
-		Texture* m_Input{ nullptr };
+	protected:
+		RenderPipelineType m_Type = RenderPipelineType::RPL_Default;
+
+	//Delete these
 	protected:
 		std::vector<RenderTask> m_RenderTasks;
-		RenderPipelineType m_Type = RenderPipelineType::RPL_Default;
+		Texture* m_RenderResult{ nullptr };
+		Texture* m_Input{ nullptr };
+		std::vector<std::shared_ptr<_Texture>> m_TextureBuffers;
+
 	};
 
 } // namespace Aho

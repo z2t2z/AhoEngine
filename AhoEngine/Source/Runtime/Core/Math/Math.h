@@ -26,6 +26,23 @@ namespace Aho {
 	class BBox;
 	struct PrimitiveDesc;
 	struct IntersectResult;
+	class Math {
+	public:
+		static glm::vec3 EulerToDirection(const glm::vec3& eulerDegrees) {
+			float pitch = glm::radians(eulerDegrees.x); // elevation
+			float yaw = glm::radians(eulerDegrees.y); // azimuth
+			float x = glm::sin(pitch) * glm::cos(yaw);
+			float y = glm::cos(pitch);
+			float z = glm::sin(pitch) * glm::sin(yaw);
+			return glm::normalize(glm::vec3(x, y, z));
+		}
+		static glm::vec3 DirectionToEuler(const glm::vec3& dir) {
+			glm::vec3 d = glm::normalize(dir);
+			float pitch = glm::acos(glm::clamp(d.y, -1.0f, 1.0f)); // [0, pi]
+			float yaw = glm::atan(d.z, d.x); // [-pi, pi]
+			return glm::degrees(glm::vec3(pitch, yaw, 0.0f)); // Roll is fixed at 0
+		}
+	};
 
 	inline glm::vec3 QuaternionToEuler(const glm::quat& q) {
 		glm::vec3 euler;

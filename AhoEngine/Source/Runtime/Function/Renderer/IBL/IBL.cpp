@@ -62,7 +62,8 @@ namespace Aho {
 		const uint32_t channel = dataformat == GL_RGBA ? 4 : 3;
 
 		GLfloat* pixels = new GLfloat[width * height * channel];
-		glGetTexImage(GL_TEXTURE_2D, 0, dataformat, GL_FLOAT, pixels); // rgba?
+		glBindTexture(GL_TEXTURE_2D, m_EnvTexture->GetTextureID());
+		glGetTexImage(GL_TEXTURE_2D, 0, dataformat, m_EnvTexture->GetDataType(), pixels); // rgba?
 
 		std::vector<float> lum(width * height);
 		for (int v = 0; v < height; v++) {
@@ -121,12 +122,14 @@ namespace Aho {
 		glTexImage1D(GL_TEXTURE_1D, 0, GL_R32F, width, 0, GL_RED, GL_FLOAT, marginalCDF.data());
 		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_1D, 0);
 
 		glGenTextures(1, &m_2DCDF);
 		glBindTexture(GL_TEXTURE_2D, m_2DCDF);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, condCDF.data());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		delete[] pixels;
 	}
