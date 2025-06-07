@@ -58,9 +58,9 @@ namespace Aho {
 			size_t siz = meshes.size();
 			bvhs.resize(siz);
 			
-			ScopedTimer timer("Building BVH: " + opts.path);
 			g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
 				[&meshes, &bvhs, offset](int64_t i) {
+					ScopedTimer timer("Building BVH");
 					bvhs[i] = std::make_shared<BVHi>(meshes[i], i + offset);
 				}, 1);
 			

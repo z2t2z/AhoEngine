@@ -13,6 +13,7 @@
 
 #include <entt.hpp>
 #include <filesystem>
+
 namespace Aho {
 	namespace fs = std::filesystem;
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
@@ -23,7 +24,6 @@ namespace Aho {
 	}
 
 	void AhoEditorLayer::OnAttach() {
-		AHO_INFO("EditorLayer on attach");
 		m_ContentBrowser.Initialize();
 		m_HierachicalPanel.Initialize();
 		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
@@ -150,22 +150,8 @@ namespace Aho {
 		m_PropertiesPanel.Draw(selectedEntity);
 		m_Viewport.Draw();
 		m_DbgPenal.Draw();
-
-
-		//ImGui::ShowDemoWindow();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
-		// Handle all input events here
-		if (e.GetEventType() == EventType::MouseButtonPressed) {
-			e.SetHandled();
-			auto ee = (MouseButtonPressedEvent*)&e;
-			if (m_Viewport.IsCursorInViewport() && !m_IsClickingEventBlocked && ee->GetMouseButton() == AHO_MOUSE_BUTTON_1) {
-				m_ShouldPickObject = true;
-			}
-			else {
-				m_IsClickingEventBlocked = false;
-			}
-		}
 	}
 }

@@ -56,7 +56,7 @@ namespace Aho {
 		}
 
 		// TODO: Should be able to select any render result of any passes
-		uint32_t renderResult = m_Renderer->GetRenderResultTextureID();
+		uint32_t renderResult = m_Renderer->GetViewportDisplayTextureID();
 		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto [mouseX, mouseY] = ImGui::GetMousePos();
@@ -175,8 +175,9 @@ namespace Aho {
 		}
 	}
 
-	static int s_CurrentMode = RenderMode::DefaultLit;
 	void Viewport::DrawToolBarRenderModeSelectionBtn() {
+		static int s_CurrentMode = RenderMode::DefaultLit;
+		static int s_CurrentBufferIndex = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.1f); // alpha value
 		ImGui::SetNextWindowSize(ImVec2{ 0.0f, 0.0f });
 		ImGui::Begin("SelectRenderMode##Window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -193,30 +194,50 @@ namespace Aho {
 		ImGui::SetNextWindowPos(nxtPos, ImGuiCond_Always);
 
 		if (ImGui::BeginPopup("RenderModePopup")) {
-			for (int i = 0; i < (int)RenderMode::ModeCount; ++i) {
-				const char* modeName = nullptr;
-				switch (i) {
-				case Unlit:
-					modeName = "Unlit";
-					break;
-				case DefaultLit:
-					modeName = "Default Lit";
-					break;
-				case PathTracing:
-					modeName = "Path Tracing";
-					break;
-				}
+			// === DefaultLit ===
+			if (ImGui::Selectable("DefaultLit", s_CurrentMode == RenderMode::DefaultLit)) {
+				s_CurrentMode = RenderMode::DefaultLit;
+				m_Renderer->SetRenderMode(RenderMode::DefaultLit);
 
-				if (ImGui::Selectable(modeName, s_CurrentMode == i, ImGuiSelectableFlags_DontClosePopups)) {
-					s_CurrentMode = i;
-				}
-
-				if (s_CurrentMode == i) {
-					ImGui::SetItemDefaultFocus();
-				}
 			}
 
-			m_Renderer->SetRenderMode(RenderMode(s_CurrentMode));
+			// === PathTracing ===
+			if (ImGui::Selectable("PathTracing", s_CurrentMode == RenderMode::PathTracing)) {
+				s_CurrentMode = RenderMode::PathTracing;
+				m_Renderer->SetRenderMode(RenderMode::PathTracing);
+			}
+
+			// === BufferVisual (open sub-popup on hover) ===
+			ImGui::Separator();
+			bool hoveredBufferVisual = false;
+			if (ImGui::Selectable("BufferVisual", s_CurrentMode == RenderMode::BufferVisual)) {
+				// Don't select it yet ¡ª wait until buffer is chosen
+			}
+			
+			if (ImGui::IsItemHovered()) {
+				hoveredBufferVisual = true;
+				ImGui::OpenPopup("BufferVisualPopup");
+			}
+
+			ImGui::SetNextWindowPos(ImGui::GetItemRectMax());
+			// ==== Sub-Popup: BufferVisual Options ====
+			if (ImGui::BeginPopup("BufferVisualPopup")) {
+				ImGui::Text("Select Buffer:");
+				ImGui::Separator();
+
+				auto buffers = g_RuntimeGlobalCtx.m_Renderer->GetDeferredShadingPipeline()->GetBuffers();
+				for (int i = 0; i < buffers.size(); ++i) {
+					if (ImGui::Selectable(buffers[i]->GetLabel().c_str(), s_CurrentBufferIndex == i)) {
+						s_CurrentMode = RenderMode::BufferVisual;
+						s_CurrentBufferIndex = i;
+						ImGui::CloseCurrentPopup();             // Close buffer list
+						ImGui::CloseCurrentPopup();             // Close parent menu
+						g_RuntimeGlobalCtx.m_Renderer->SetViewportDisplayTextureID(buffers[i]->GetTextureID());
+					}
+				}
+				ImGui::EndPopup();
+			}
+
 			ImGui::EndPopup();
 		}
 		ImGui::End();

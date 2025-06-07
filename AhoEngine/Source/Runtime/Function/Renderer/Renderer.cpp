@@ -95,16 +95,6 @@ namespace Aho {
 		}
 	}
 
-	// TODO: Fix fxaa: it is appiled to all pixels
-	uint32_t Renderer::GetRenderResultTextureID() {
-		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
-			return m_RP_Derferred->GetRenderResultTextureID();
-		}
-		else if (m_CurrentRenderMode == RenderMode::PathTracing) {
-			return m_RP_PathTracing->GetRenderResultTextureID();
-		}
-	}
-
 	void Renderer::SetupUBOs() const {
 		UBOManager::RegisterUBO<CameraUBO>(0);
 		UBOManager::RegisterUBO<LightUBO>(1);

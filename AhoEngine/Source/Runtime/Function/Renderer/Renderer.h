@@ -20,9 +20,8 @@ namespace Aho {
 
 	enum RenderMode {
 		DefaultLit,
-		Unlit,
 		PathTracing,
-		ModeCount
+		BufferVisual
 	};
 
 	
@@ -40,8 +39,10 @@ namespace Aho {
 			m_CurrentRenderMode = mode; 
 			if (mode == RenderMode::PathTracing) {
 				m_ActivePipelines = { m_RP_PathTracing };
+				m_ViewportDisplayTextureID = m_RP_PathTracing->GetRenderResultTextureID();
 			} else {
 				m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred };
+				m_ViewportDisplayTextureID = m_RP_Derferred->GetRenderResultTextureID();
 			}
 		}
 		RenderMode GetRenderMode() const { return m_CurrentRenderMode; }
@@ -49,7 +50,8 @@ namespace Aho {
 		RenderPipeline* GetPipeline(RenderPipelineType type);
 		bool OnViewportResize(uint32_t width, uint32_t height);
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-		uint32_t GetRenderResultTextureID();
+		uint32_t GetViewportDisplayTextureID() const { return m_ViewportDisplayTextureID; }
+		void SetViewportDisplayTextureID(uint32_t id) { m_ViewportDisplayTextureID = id; }
 		std::vector<RenderPassBase*> GetAllRenderPasses() const { return m_AllRenderPasses; }
 		void RegisterRenderPassBase(RenderPassBase* renderPassBase) { m_AllRenderPasses.push_back(renderPassBase); }
 	private:
@@ -60,6 +62,7 @@ namespace Aho {
 		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
 	private:
+		uint32_t m_ViewportDisplayTextureID{ 0 };
 		std::vector<RenderPipeline*> m_ActivePipelines;
 	// New System
 	public:

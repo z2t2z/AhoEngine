@@ -29,6 +29,7 @@ namespace Aho {
 			}
 			return m_Handle; 
 		}
+		std::string GetLabel()			const { return m_Label; }
 		bool IsHDR()					const { return m_IsHDR; }
 		int GetMipLevels()				const { return m_MipLevels; }
 		TextureDim GetDim()				const { return m_Dim; }

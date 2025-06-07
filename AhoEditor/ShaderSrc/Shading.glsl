@@ -2,8 +2,6 @@
 #version 460 core
 #include "Common/UniformBufferObjects.glsl"
 
-out vec2 v_TexCoords;
-
 const vec3 gridPlane[6] = vec3[](
     vec3(1, 1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
     vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0)
@@ -14,8 +12,8 @@ out vec3 v_nearP;
 out vec3 v_farP;
 
 // To world space
-vec3 NDCToWorld(vec3 p) {
-    vec4 pos = u_ViewInv * u_ProjectionInv * vec4(p, 1.0);
+vec3 NDCToWorld(vec3 p, mat4 viewInv, mat4 projInv) {
+    vec4 pos = viewInv * projInv * vec4(p, 1.0);
     if (pos.w != 0.0) {
         pos /= pos.w;
     }
@@ -24,11 +22,9 @@ vec3 NDCToWorld(vec3 p) {
 
 void main() {
     vec3 p = gridPlane[gl_VertexID].xyz;
-    v_nearP = NDCToWorld(vec3(p.xy, -1.0));
-    v_farP = NDCToWorld(vec3(p.xy, 1.0));
+    v_nearP = NDCToWorld(vec3(p.xy, -1.0), u_ViewInv, u_ProjectionInv);
+    v_farP = NDCToWorld(vec3(p.xy, 1.0), u_ViewInv, u_ProjectionInv);
     gl_Position = vec4(p, 1.0);
-	float x = p.x, y = p.y;
-	v_TexCoords = (vec2(x, y) * 0.5) + 0.5;
 }
 
 #type fragment
@@ -43,8 +39,6 @@ void main() {
 #include "PathTracing/SSBO.glsl"
 
 layout(location = 0) out vec4 out_Color;
-
-in vec2 v_TexCoords;
 
 // TODO: Grid, remove this 
 in vec3 v_nearP;
@@ -124,10 +118,12 @@ vec4 GridColor(vec3 worldPos, float t) {
 }
 
 void main() {
-	vec3 fragPos = texture(u_gPosition, v_TexCoords).rgb; // View space
-	float d = texture(u_gDepth, v_TexCoords).r;
+	vec2 uv = (gl_FragCoord.xy) / vec2(textureSize(u_gAlbedo, 0));
+	ivec2 coord = ivec2(gl_FragCoord.xy);
+
+	vec3 fragPos = texelFetch(u_gPosition, coord, 0).xyz; // view space
+	float d = texelFetch(u_gDepth, coord, 0).r;
 	if (d == 1.0f) {
-		vec2 uv = v_TexCoords;
 		vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
 		vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
 		vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
@@ -161,12 +157,12 @@ void main() {
 		return;
 	}
 
-	vec3 baseColor = texture(u_gAlbedo, v_TexCoords).rgb;
+	vec3 baseColor = texelFetch(u_gAlbedo, coord, 0).rgb;
 	baseColor = pow(baseColor, vec3(2.2f)); // gamma correction
 
-	float metallic = texture(u_gPBR, v_TexCoords).r;
-	float roughness = texture(u_gPBR, v_TexCoords).g;
-	float AO = texture(u_gPBR, v_TexCoords).b;
+	float metallic = texelFetch(u_gPBR, coord, 0).r;
+	float roughness = texelFetch(u_gPBR, coord, 0).g;
+	float AO = texelFetch(u_gPBR, coord, 0).b;
 
 	Material mat;
 	mat.baseColor = baseColor;
@@ -174,8 +170,8 @@ void main() {
 	mat.metallic = metallic;
 	mat.roughness = roughness;
 
-	vec3 viewPos = u_ViewPosition.xyz;
-	vec3 N = normalize(texture(u_gNormal, v_TexCoords).rgb); 
+	vec3 viewPos = vec3(0); // in view space
+	vec3 N = normalize(texelFetch(u_gNormal, coord, 0).rgb); 
 	vec3 V = normalize(viewPos - fragPos);
 	vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
 	vec3 Lo = vec3(0.0f);

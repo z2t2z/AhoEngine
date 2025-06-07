@@ -19,7 +19,6 @@ out vec3 v_FragPosLight;
 out vec3 v_Normal;
 out vec3 v_Tangent;
 out vec2 v_TexCoords;
-out vec3 v_Ndc;
 
 void main() {
 	vec3 normal = a_Normal;
@@ -43,21 +42,17 @@ void main() {
 		skinningMatrix = mat4(1.0f);
 	}
 
-	mat4 finalModelMat = u_Model * skinningMatrix;
+	// Transform to view space
+	mat4 transform = u_View * u_Model * skinningMatrix;
+	vec4 PosViewSpace = transform * vec4(a_Position, 1.0f);
+	mat3 v_NormalMatrix = transpose(inverse(mat3(transform)));
 
-	// Positions are in view space
-	vec4 PosViewSpace = u_View * finalModelMat * vec4(a_Position, 1.0f);
-
-	// Normals are in world space
-	mat3 v_NormalMatrix = transpose(inverse(mat3(finalModelMat)));
-
-	v_FragPos = (finalModelMat * vec4(a_Position, 1.0f)).xyz;
+	v_FragPos = PosViewSpace.xyz;
+	// v_FragPos = (u_Model * skinningMatrix * vec4(a_Position, 1.0)).xyz;
 	gl_Position = u_Projection * PosViewSpace;
 	v_TexCoords = a_TexCoords;
 	v_Normal = v_NormalMatrix * a_Normal;
 	v_Tangent = v_NormalMatrix * a_Tangent;
-	v_Ndc = gl_Position.xyz / gl_Position.w;
-	v_Ndc = v_Ndc * 0.5f + 0.5f;
 	v_FragPosLight = v_FragPosLight;
 }
 
@@ -70,7 +65,6 @@ layout(location = 2) out vec3 g_Albedo;
 layout(location = 3) out vec3 g_PBR;
 
 in vec3 v_FragPos;
-in vec3 v_Ndc;
 in vec3 v_FragPosLight;
 in vec3 v_Normal;
 in vec3 v_Tangent;
@@ -96,9 +90,9 @@ uniform uint u_EntityID;
 
 void main() {
 	g_Position = v_FragPos;
-
-	// PBR
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_Albedo;
+	
+	// PBR
 	g_PBR.r = u_HasMetallic ? texture(u_MetallicMap, v_TexCoords).r : u_Metallic;
 	g_PBR.g = u_HasRoughness ? texture(u_RoughnessMap, v_TexCoords).r : u_Roughness;
 	g_PBR.b = u_HasAO ? texture(u_AOMap, v_TexCoords).r : 0.0f;
@@ -112,7 +106,7 @@ void main() {
 		T = normalize(T - dot(T, N) * N);
 		vec3 B = cross(N, T); // NOTE: right-handed
 		mat3 TBN = mat3(T, B, N);
-		vec3 normalMap = texture(u_NormalMap, vec2(v_TexCoords.x, v_TexCoords.y)).rgb;
+		vec3 normalMap = texture(u_NormalMap, v_TexCoords).rgb;
 		normalMap = normalize(normalMap * 2.0f - 1.0f); // rgb8
 		g_Normal = normalize(TBN * normalMap);
 	}

@@ -75,7 +75,7 @@ namespace Aho {
 		std::shared_ptr<_Texture> baseColor = std::make_shared<_Texture>(TextureConfig::GetColorTextureConfig("G_BaseColor")); // RGBA8
 		m_TextureBuffers.push_back(baseColor);
 
-		auto depthCfg = TextureConfig::GetColorTextureConfig("DethPyramid"); depthCfg.InternalFmt = InternalFormat::R32F; depthCfg.DataFmt = DataFormat::Red; depthCfg.DataType = DataType::Float; depthCfg.GenMips = true;
+		auto depthCfg = TextureConfig::GetColorTextureConfig("DethPyramid"); depthCfg.Width = 2048; depthCfg.Height = 2048; depthCfg.InternalFmt = InternalFormat::R32F; depthCfg.DataFmt = DataFormat::Red; depthCfg.DataType = DataType::Float; depthCfg.GenMips = true;
 		std::shared_ptr<_Texture> depthPyramid = std::make_shared<_Texture>(depthCfg);
 		m_TextureBuffers.push_back(depthPyramid);
 		m_SceneDepthPyramid = depthPyramid.get();
@@ -229,6 +229,7 @@ namespace Aho {
 				cfg.shaderPath = (shaderPathRoot / "ScreenSpaceReflection" / "SSR.glsl").string();
 				auto ssrTexCfg = TextureConfig::GetColorTextureConfig("SSR"); ssrTexCfg.InternalFmt = InternalFormat::RGBA16F; ssrTexCfg.DataFmt = DataFormat::RGBA; ssrTexCfg.DataType = DataType::Float;
 				std::shared_ptr<_Texture> ssrTex = std::make_shared<_Texture>(ssrTexCfg);
+				m_TextureBuffers.push_back(ssrTex);
 				m_SSRTex = ssrTex.get();
 
 				auto Func =

@@ -119,6 +119,9 @@ vec3 RayMarching() {
     vec2 screenSize = vec2(u_Width, u_Height);
     P0 = (P0 * 0.5 + 0.5) * screenSize;
     P1 = (P1 * 0.5 + 0.5) * screenSize;
+
+    // P1, P2: Screen space `coords` in float
+    // 
     
     // To avoid line degeneration
     P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 0.01 : 0.0);

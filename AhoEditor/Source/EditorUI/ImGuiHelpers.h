@@ -22,5 +22,6 @@ namespace Aho {
 		static bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 		
 		static void DrawStatisticOverlay(bool* p_open, const std::vector<std::pair<std::string, float>>& infos);
+
 	};
 }
