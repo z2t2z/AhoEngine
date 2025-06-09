@@ -12,7 +12,7 @@ namespace Aho {
 	void DebugVisualPipeline::Initialize() {
 		m_LightVisualPass = SetupLightVisualPass();
 		RegisterRenderPass(m_LightVisualPass.get(), RenderDataType::UnitCircle);
-		m_RenderResult = m_LightVisualPass->GetTextureBuffer(TexType::Result);
+		//m_RenderResult = m_LightVisualPass->GetTextureBuffer(TexType::Result);
 
 		m_InfiniteGridPass = SetupInfiniteGridPass();
 		RegisterRenderPass(m_InfiniteGridPass.get(), RenderDataType::Empty);

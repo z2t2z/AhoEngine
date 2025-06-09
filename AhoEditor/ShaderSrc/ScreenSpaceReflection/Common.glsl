@@ -1,15 +1,7 @@
 #ifndef SSR_COMMON_GLSL
 #define SSR_COMMON_GLSL
 
-float DistanceSquared(vec2 lhs, vec2 rhs) {
-    lhs -= rhs;
-    return dot(lhs, lhs);
-}
-void swap(out float lhs, out float rhs) {
-    float temp = lhs;
-    lhs = rhs;
-    rhs = temp;
-}
+#include "Sampling.glsl"
 
 // Errors
 vec3 ReconstructViewPosition(vec2 uv, float depth, mat4 invProj) {
@@ -51,9 +43,30 @@ vec3 ProjectVsDirToSsDir(vec3 vs_pos, vec3 vs_dir, vec3 ss_origin, mat4 camProj)
     vec3 offsetted = pj.xyz;
     return offsetted - ss_origin;
 }
-vec3 SampleReflectionVector(vec3 rayDir, vec3 normal) {
-    // TODO: GGXSampling to get reflected vector
-    return normalize(reflect(rayDir, normal));
+
+// Simple random, could use noise texture
+float Random1D(vec2 co) {
+    return fract(sin(dot(co ,vec2(12.9898,78.233))) * 43758.5453);
+}
+vec2 SampleRandom2D(vec2 uv) {
+    float rnd1 = Random1D(uv);
+    float rnd2 = Random1D(uv.yx);
+    return vec2(rnd1, rnd2);
+}
+
+// #define PERFECT_SSR_REFLECTION
+vec3 SampleReflectionVector(vec3 rayDir, vec3 normal, float roughness, vec2 uv) {
+#ifdef PERFECT_SSR_REFLECTION
+    return normalize(reflect(-rayDir, normal));
+#endif
+    mat3 tbn = ConstructTBN(normal);
+    vec3 V = normalize(WorldToLocal(rayDir, tbn));
+    float alpha_x = roughness * roughness;
+    float alpha_y = alpha_x;
+    vec2 rnd = SampleRandom2D(uv);
+    vec3 H = normalize(SampleGGXVNDF(V, alpha_x, alpha_y, rnd.x, rnd.y)); // V and H are in the same hemisphere
+    vec3 L = normalize(reflect(-V, H));
+    return LocalToWorld(L, tbn);
 }
 vec2 GetMipResolution(vec2 screen_size, int mip_level) {
     return screen_size * pow(0.5, mip_level);

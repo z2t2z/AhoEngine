@@ -39,7 +39,7 @@ namespace Aho {
 		RegisterRenderPass(m_BlurRPass.get(), RenderDataType::ScreenQuad);
 		RegisterRenderPass(m_ShadingPass.get(), RenderDataType::ScreenQuad);
 
-		m_RenderResult = m_ShadingPass->GetTextureBuffer(TexType::Result);
+		//m_RenderResult = m_ShadingPass->GetTextureBuffer(TexType::Result);
 	}
 
 	void DeferredShadingPipeline::SetEnvLightState(bool state) {

@@ -1,11 +1,13 @@
 #type compute
 #version 460
 
+#extension GL_NV_shader_thread_shuffle : enable
+#extension GL_NV_shader_thread_vote : enable
+
 #include "Common.glsl"
 #include "../Common/UniformBufferObjects.glsl"
 
 layout(binding = 0, rgba16f) uniform writeonly image2D outputImage;
-
 
 #define FLT_MAX 3.402823466e+38
 
@@ -16,15 +18,12 @@ uniform sampler2D u_gPBR;
 uniform sampler2D u_gDepth;
 uniform sampler2D u_gLitScene;
 
-uniform float u_MaxDisance = 128.0f; 
+uniform int u_MostDetailedMip = 0;
 uniform int u_MipLevelTotal;
+uniform int u_MaxIterations = 128;
+uniform float u_Thickness = 0.015;
 
-const int MAX_ITERATIONS = 100;
-const float stepSiz = 0.04f;
-const float thickNess = 0.01f;
-uniform int u_MaxIters = 128;
-
-// Low accuracy, only for testing
+// Ignore, only for testing
 bool NaiveRayMarching(vec3 beginPos, vec3 rayDir, out vec2 hitUV, int maxIterations = 256, float deltaStep = 0.04, float thickNess = 0.04) { 
     vec3 reflectDir = rayDir;
     for (int i = 0; i < maxIterations; i++) {  
@@ -41,6 +40,7 @@ bool NaiveRayMarching(vec3 beginPos, vec3 rayDir, out vec2 hitUV, int maxIterati
     }
     return false;
 }
+
 
 void InitAdvanceRay(vec3 ss_ray_origin, vec3 ss_ray_dir, vec3 ss_ray_dir_inv, vec2 curr_mip_resolution, 
         vec2 curr_mip_resolution_inv, vec2 uv_offset, vec2 floor_offset, out vec3 ss_pos, out float curr_t) {
@@ -80,7 +80,7 @@ bool AdvanceRay(vec3 ss_ray_origin, vec3 ss_ray_dir, vec3 ss_ray_dir_inv,
 }
 
 float ValidateHit(vec3 ss_hit_pos, vec3 vs_hit_pos, vec2 uv, vec3 vs_ray_dir, vec2 screen_size, float thickness) {
-    // [0, 1]
+    // Check if within [0, 1]
     if (!ValidUV(ss_hit_pos.xy)) {
         return 0.0;
     }
@@ -113,6 +113,7 @@ float ValidateHit(vec3 ss_hit_pos, vec3 vs_hit_pos, vec2 uv, vec3 vs_ray_dir, ve
     return confidence;
 }
 
+// Reference: https://github.com/GPUOpen-Effects/FidelityFX-SSSR/blob/34dcacd1feefcfab2855b82e76c7d711f2020a75/ffx-sssr/ffx_sssr.h#L86
 bool HierarchicalRayMarch(vec3 ss_ray_origin, vec3 ss_ray_dir, bool is_mirror, vec2 screen_size, 
     int most_detailed_mip, int max_mip_level, int max_iterations, inout vec3 ss_hit_pos) {
     const vec3 ss_ray_dir_inv = 1 / ss_ray_dir;
@@ -154,13 +155,14 @@ void main() {
 
     vec2 uv = (coords + 0.5) / vec2(screen_size);
     float d = texelFetch(u_gDepth, coords, 0).r;
+    vec4 sceneL = texelFetch(u_gLitScene, coords, 0); 
     if (d == 1.0) {
-        imageStore(outputImage, coords, vec4(1, 0, 0, 1)); // 1 is max depth, there is no mesh
+        imageStore(outputImage, coords, sceneL);
         return;
     }
 
-    int most_detailed_mip = 0;
     float z = d;
+    int most_detailed_mip = u_MostDetailedMip;
 
     //ss: screen space, vs: view space, ws: world space
     vec3 ss_ray_origin = vec3(uv, z);
@@ -168,21 +170,21 @@ void main() {
     vec3 vs_ray_dir = normalize(vs_ray_origin);
 
     vec3 vs_normal = normalize(texelFetch(u_gNormal, coords, 0).xyz);
-    vec3 vs_reflected_dir = SampleReflectionVector(vs_ray_dir, vs_normal);
+    float roughness = texelFetch(u_gPBR, coords, 0).g;
+    vec3 vs_reflected_dir = SampleReflectionVector(-vs_ray_dir, vs_normal, roughness, uv);
     vec3 ss_ray_dir = ProjectVsDirToSsDir(vs_ray_origin, vs_reflected_dir, ss_ray_origin, u_Projection);
 
     vec3 ss_hit_pos;
-    bool valid_hit = HierarchicalRayMarch(ss_ray_origin, ss_ray_dir, false, screen_size, most_detailed_mip, u_MipLevelTotal, u_MaxIters, ss_hit_pos);
+    bool valid_hit = HierarchicalRayMarch(ss_ray_origin, ss_ray_dir, false, screen_size, most_detailed_mip, u_MipLevelTotal, u_MaxIterations, ss_hit_pos);
     vec3 vs_hit_pos = ScreenSpaceToViewSpace(ss_hit_pos, u_ProjectionInv);
 
-    float thickness = 0.1;
-    float confidence = ValidateHit(ss_hit_pos, vs_hit_pos, uv, vs_hit_pos - vs_ray_origin, screen_size, thickness);
+    float confidence = ValidateHit(ss_hit_pos, vs_hit_pos, uv, vs_hit_pos - vs_ray_origin, screen_size, u_Thickness);
 
-    vec4 L = vec4(0, 0, 1, 1);
+    vec4 L = vec4(0, 0, 0, 0);
     if (valid_hit && confidence > 0) {
         L.rgb = texture(u_gLitScene, ss_hit_pos.xy).rgb;
     }
 
-    imageStore(outputImage, coords, L);
+    imageStore(outputImage, coords, L + sceneL);
     return;
 }

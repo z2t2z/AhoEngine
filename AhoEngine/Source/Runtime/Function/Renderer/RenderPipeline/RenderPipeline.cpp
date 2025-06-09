@@ -34,12 +34,6 @@ namespace Aho {
 		return m_Result->GetTextureID();
 	}
 
-	void RenderPipeline::SetRenderTarget(RenderPassType type, const std::shared_ptr<Framebuffer>& fbo) {
-		auto pass = GetRenderPass(type);
-		pass->SetRenderTarget(fbo);
-		m_RenderResult = pass->GetTextureBuffer(TexType::Result);
-	}
-
 	// delete this
 	bool RenderPipeline::ResizeRenderTarget(uint32_t width, uint32_t height) {
 		bool resized = false;

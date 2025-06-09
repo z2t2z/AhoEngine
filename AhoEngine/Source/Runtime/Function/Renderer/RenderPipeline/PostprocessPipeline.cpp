@@ -24,13 +24,9 @@ namespace Aho {
 		RegisterRenderPass(m_FXAAPass.get(), RenderDataType::ScreenQuad);
 
 		//m_RenderResult = m_FXAAPass->GetTextureBuffer(TexType::Result);
-		m_RenderResult = m_TestQuadPass->GetTextureBuffer(TexType::Result);
+		//m_RenderResult = m_TestQuadPass->GetTextureBuffer(TexType::Result);
 	}
 
-	void PostprocessPipeline::SetInput(Texture* tex) {
-		m_Input = tex;
-		m_DrawSelectedOutlinePass->RegisterTextureBuffer({ m_Input, TexType::Result });
-	}
 
 	std::unique_ptr<RenderPass> PostprocessPipeline::SetupDrawSelectedOutlinePass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();

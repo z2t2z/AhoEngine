@@ -9,7 +9,6 @@ namespace Aho {
 	public:
 		PostprocessPipeline() { Initialize(); }
 		virtual void Initialize() override;
-		virtual void SetInput(Texture* tex) override;
 	private:
 		std::unique_ptr<RenderPass> SetupDrawSelectedPass();
 		std::unique_ptr<RenderPass> SetupDrawSelectedOutlinePass();

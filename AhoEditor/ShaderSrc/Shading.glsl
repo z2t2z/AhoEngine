@@ -121,7 +121,9 @@ void main() {
 	vec2 uv = (gl_FragCoord.xy) / vec2(textureSize(u_gAlbedo, 0));
 	ivec2 coord = ivec2(gl_FragCoord.xy);
 
-	vec3 fragPos = texelFetch(u_gPosition, coord, 0).xyz; // view space
+	vec3 vs_Pos = texelFetch(u_gPosition, coord, 0).xyz; // view space
+	vec3 fragPos = (u_ViewInv * vec4(vs_Pos, 1)).xyz; // world space
+
 	float d = texelFetch(u_gDepth, coord, 0).r;
 	if (d == 1.0f) {
 		vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
@@ -170,8 +172,9 @@ void main() {
 	mat.metallic = metallic;
 	mat.roughness = roughness;
 
-	vec3 viewPos = vec3(0); // in view space
-	vec3 N = normalize(texelFetch(u_gNormal, coord, 0).rgb); 
+	vec3 viewPos = u_ViewPosition.xyz; // in view space
+	vec3 vs_N = normalize(texelFetch(u_gNormal, coord, 0).rgb); // view space normal
+	vec3 N = transpose(inverse(mat3(u_ViewInv))) * vs_N; // world space
 	vec3 V = normalize(viewPos - fragPos);
 	vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
 	vec3 Lo = vec3(0.0f);
