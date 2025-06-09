@@ -34,7 +34,8 @@ void main() {
 	if (hasAnimationInfo) {
 		finalPos = skinningMatrix * vec4(a_Position, 1.0f);
 	}
-	mat4 projViewMat = u_DirLight[0].lightProjView;
+	// mat4 projViewMat = u_DirLight[0].lightProjView;
+	mat4 projViewMat = u_DirectionalLight[0].lightProjView;
 	gl_Position = projViewMat * u_Model * finalPos;
 }
 

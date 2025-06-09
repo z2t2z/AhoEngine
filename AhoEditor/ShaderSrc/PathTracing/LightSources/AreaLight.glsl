@@ -6,6 +6,7 @@
 #include "../DisneyPrincipled.glsl"
 
 float RectangleAreaLightPdf(const AreaLight areaLight, vec3 litPos, vec3 lightPos) {
+    vec4 u_LightCount;
     float choosenPdf = 1.0 / float(u_LightCount.a);
     float w = areaLight.param.y, h = areaLight.param.z;
     float areaPdf = 1.0 / (w * h);

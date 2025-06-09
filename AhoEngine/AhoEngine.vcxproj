@@ -222,6 +222,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureConfig.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureUsage.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\_Texture.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArray.h" />
@@ -724,7 +725,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture\_Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Function\SkeletonViewer.cpp" />

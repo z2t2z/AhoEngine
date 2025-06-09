@@ -36,32 +36,18 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ContentBrowser.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\DebugPenal.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Source\EditorUI\PropertiesPanel.h">
       <Filter>Source\EditorUI</Filter>
     </ClInclude>
-    <ClInclude Include="Source\FileExplorer.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HierarchicalPenal.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PropertiesPanel.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SceneHierarchyPanel.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Viewport.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\EditorUI\ImGuiHelpers.h" />
+    <ClInclude Include="Source\ContentBrowser.h" />
+    <ClInclude Include="Source\DebugPenal.h" />
+    <ClInclude Include="Source\FileExplorer.h" />
+    <ClInclude Include="Source\HierarchicalPenal.h" />
+    <ClInclude Include="Source\PropertiesPanel.h" />
+    <ClInclude Include="Source\SceneHierarchyPanel.h" />
+    <ClInclude Include="Source\Viewport.h" />
     <ClInclude Include="Source\EditorUI\EditorGlobalContext.h" />
+    <ClInclude Include="Source\EditorUI\ImGuiHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -79,27 +65,13 @@
     <ClCompile Include="Source\CPURayTracing\RayTracingLayer.cpp">
       <Filter>Source\CPURayTracing</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ContentBrowser.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\DebugPenal.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\FileExplorer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\HierarchicalPenal.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PropertiesPanel.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SceneHierarchyPanel.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Viewport.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
+    <ClCompile Include="Source\ContentBrowser.cpp" />
+    <ClCompile Include="Source\DebugPenal.cpp" />
+    <ClCompile Include="Source\FileExplorer.cpp" />
+    <ClCompile Include="Source\HierarchicalPenal.cpp" />
+    <ClCompile Include="Source\PropertiesPanel.cpp" />
+    <ClCompile Include="Source\SceneHierarchyPanel.cpp" />
+    <ClCompile Include="Source\Viewport.cpp" />
     <ClCompile Include="Source\EditorUI\ImGuiHelpers.cpp" />
   </ItemGroup>
 </Project>

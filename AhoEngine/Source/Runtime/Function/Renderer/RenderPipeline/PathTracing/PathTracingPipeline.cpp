@@ -10,9 +10,7 @@
 #include "Runtime/Function/Level/EcS/Components.h"
 #include "Runtime/Function/Level/EcS/EntityManager.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
-#include "Runtime/Function/Renderer/Texture/TextureUsage.h"
-#include "Runtime/Function/Renderer/Texture/TextureConfig.h"
-#include "Runtime/Function/Renderer/Texture/_Texture.h"
+#include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 
@@ -34,117 +32,127 @@ namespace Aho {
 		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
 		SSBOManager::RegisterSSBO<MaterialDescriptor>(5, MAX_MESH, true);
 
+		std::shared_ptr<_Texture> accumulateTex = TextureResourceBuilder()
+			.Name("PathTracingAccumulate")
+			.Width(1280)
+			.Height(720)
+			.DataType(DataType::Float)
+			.DataFormat(DataFormat::RGBA)
+			.InternalFormat(InternalFormat::RGBA32F)
+			.Build();
+		std::shared_ptr<_Texture> presentTex = TextureResourceBuilder()
+			.Name("PathTracingPresent")
+			.Width(1280)
+			.Height(720)
+			.DataType(DataType::Float)
+			.DataFormat(DataFormat::RGBA)
+			.InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+
+		m_TextureBuffers.push_back(accumulateTex);
+		m_TextureBuffers.push_back(presentTex);
+		m_ResultTextureID = presentTex->GetTextureID();
+		m_Result = presentTex.get();
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing";
-
 		// --- Accumulate pass ---
 		{
 			RenderPassConfig cfg;
 			cfg.passName = "Path Tracing Accumulate Pass";
 			cfg.shaderPath = (shaderPathRoot / "PathTracing.glsl").string();
-
-			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("PathTracingAccumulate");
-			texCfg.InternalFmt = InternalFormat::RGBA32F;
-			texCfg.DataType = DataType::Float;
-			texCfg.Width = 1280; texCfg.Height = 720;
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
-			m_TextureBuffers.push_back(res);
-			cfg.attachmentTargets.push_back(res.get());
-
 			cfg.func =
-				[&](RenderPassBase& self) {
-				auto shader = self.GetShader();
-				shader->Bind();
+				[accumulateTex, this](RenderPassBase& self) {
+					auto shader = self.GetShader();
+					shader->Bind();
 
-				auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-				auto camView = ecs->GetView<EditorCamaraComponent>();
-				bool Reaccumulate = false;
-				camView.each(
-					[&](auto cam, EditorCamaraComponent& cmp) {
-						if (cmp.Dirty) {
-							cmp.Dirty = false;
-							Reaccumulate = true;
-						}
-					});
-				auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
-				if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
-					auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
-					iblComp.IBL->Bind(shader);
-				}
-
-				static bool BVHDirty = true;
-				auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
-				std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
-				view.each(
-					[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
-						int meshID = bvh.bvh->GetMeshId();
-						if (transform.Dirty) {
-							transform.Dirty = false; // TODO: Should not be here, but in inspector panel
-							bvh.bvh->ApplyTransform(transform.GetTransform());
-							tasks.emplace_back(bvh.bvh.get());
-							Reaccumulate = true;
-							BVHDirty = true;
-						}
-						if (material.Dirty) {
-							material.Dirty = false; // TODO: Should not be here, but in inspector panel
-							Reaccumulate = true;
-							material.mat.UpdateMaterialDescriptor();
-							SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
-						}
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					auto camView = ecs->GetView<EditorCamaraComponent>();
+					bool Reaccumulate = false;
+					camView.each(
+						[&](auto cam, EditorCamaraComponent& cmp) {
+							if (cmp.Dirty) {
+								cmp.Dirty = false;
+								Reaccumulate = true;
+							}
+						});
+					auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+					if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
+						auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
+						iblComp.IBL->Bind(shader);
 					}
-				);
-				{
-					const auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
-					size_t siz = tasks.size();
-					g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
-						[tasks](int64_t i) {
-							tasks[i]->Rebuild();
-						}, 1
-					);
-				}
-				// No need to update every blas everytime but for now it's fine
-				if (BVHDirty) {
-					BVHDirty = false;
-					auto sceneView = ecs->GetView<SceneBVHComponent>();
-					AHO_CORE_ASSERT(sceneView.size() <= 1);
-					sceneView.each(
-						[&](auto entity, SceneBVHComponent& sceneBvh) {
-							sceneBvh.bvh->UpdateTLAS();
-							const auto& tlas = sceneBvh.bvh;
-							SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
-							SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
-							SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
 
-							size_t nodesOffset = 0;
-							size_t primsOffset = 0;
-							const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
-							for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
-								const BVHi* blas = tlas->GetBLAS(i);
-								AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
-								AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
-								SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
-								SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
-								nodesOffset += blas->GetNodeCount();
-								primsOffset += blas->GetPrimsCount();
+					static bool BVHDirty = true;
+					auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+					std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
+					view.each(
+						[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+							int meshID = bvh.bvh->GetMeshId();
+							if (transform.Dirty) {
+								transform.Dirty = false; // TODO: Should not be here, but in inspector panel
+								bvh.bvh->ApplyTransform(transform.GetTransform());
+								tasks.emplace_back(bvh.bvh.get());
+								Reaccumulate = true;
+								BVHDirty = true;
+							}
+							if (material.Dirty) {
+								material.Dirty = false; // TODO: Should not be here, but in inspector panel
+								Reaccumulate = true;
+								material.mat.UpdateMaterialDescriptor();
+								SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
 							}
 						}
 					);
-				}
+					{
+						const auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
+						size_t siz = tasks.size();
+						g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+							[tasks](int64_t i) {
+								tasks[i]->Rebuild();
+							}, 1
+						);
+					}
+					// No need to update every blas everytime but for now it's fine
+					if (BVHDirty) {
+						BVHDirty = false;
+						auto sceneView = ecs->GetView<SceneBVHComponent>();
+						AHO_CORE_ASSERT(sceneView.size() <= 1);
+						sceneView.each(
+							[&](auto entity, SceneBVHComponent& sceneBvh) {
+								sceneBvh.bvh->UpdateTLAS();
+								const auto& tlas = sceneBvh.bvh;
+								SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
+								SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
+								SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
 
-				auto textureTarget = self.GetTextureAttachmentByIndex(0);
-				if (Reaccumulate) {
-					m_Frame = 1;
-					textureTarget->ClearTextureData();
-				}
-				textureTarget->BindTextureImage(0);
-				shader->SetInt("u_Frame", m_Frame);
-				static int group = 16;
-				uint32_t width = textureTarget->GetWidth();
-				uint32_t height = textureTarget->GetHeight();
-				uint32_t workGroupCountX = (width + group - 1) / group;
-				uint32_t workGroupCountY = (height + group - 1) / group;
-				shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
-				shader->Unbind();
+								size_t nodesOffset = 0;
+								size_t primsOffset = 0;
+								const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
+								for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
+									const BVHi* blas = tlas->GetBLAS(i);
+									AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
+									AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+									SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
+									SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+									nodesOffset += blas->GetNodeCount();
+									primsOffset += blas->GetPrimsCount();
+								}
+							}
+						);
+					}
+
+					if (Reaccumulate) {
+						m_Frame = 1;
+						accumulateTex->ClearTextureData();
+					}
+					accumulateTex->BindTextureImage(0);
+					shader->SetInt("u_Frame", m_Frame);
+					static int group = 16;
+					uint32_t width = accumulateTex->GetWidth();
+					uint32_t height = accumulateTex->GetHeight();
+					uint32_t workGroupCountX = (width + group - 1) / group;
+					uint32_t workGroupCountY = (height + group - 1) / group;
+					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
+					shader->Unbind();
 				};
 			m_AccumulatePass = std::make_unique<RenderPassBase>();
 			m_AccumulatePass->Setup(cfg);
@@ -155,42 +163,28 @@ namespace Aho {
 			RenderPassConfig cfg;
 			cfg.passName = "Path Tracing Present Pass";
 			cfg.shaderPath = (shaderPathRoot / "Present.glsl").string();
-
-			auto texCfg = TextureConfig::GetColorTextureConfig("PathTracingPresent");
-			texCfg.InternalFmt = InternalFormat::RGBA16F; // Use HDR format for shading result
-			texCfg.DataFmt = DataFormat::RGBA;
-			texCfg.DataType = DataType::Float;
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
-			m_TextureBuffers.push_back(res);
-			cfg.attachmentTargets.push_back(res.get());
-
+			cfg.attachmentTargets.push_back(presentTex.get());
 			cfg.func =
-				[&](RenderPassBase& self) {
+				[this](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto shader = self.GetShader();
 					shader->Bind();
 					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Color_Buffer);
-
 					// Uniforms
 					shader->SetInt("u_Frame", m_Frame++);
-
 					// Texture uniforms
 					uint32_t slot = 0;
 					self.BindRegisteredTextureBuffers(slot);
-					
 					// Draw screen quad
 					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
 					RenderCommand::DrawArray();
-
 					shader->Unbind();
 					self.GetRenderTarget()->Unbind();
 				};
 			m_PresentPass = std::make_unique<RenderPassBase>();
 			m_PresentPass->Setup(cfg);
-			m_PresentPass->RegisterTextureBuffer(m_AccumulatePass->GetTextureAttachmentByIndex(0), "u_PathTracingAccumulate");
-			m_ResultTextureID = res->GetTextureID();
-			m_Result = res.get();
+			m_PresentPass->RegisterTextureBuffer(accumulateTex.get(), "u_PathTracingAccumulate");
 		}
 	}
 

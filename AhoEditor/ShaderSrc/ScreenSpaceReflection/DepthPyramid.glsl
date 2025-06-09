@@ -4,7 +4,7 @@
 layout(binding = 0, r32f) uniform writeonly image2D depthPyramid;
 uniform sampler2D u_PrevMipDepth;
 uniform int u_CurrMipLevel;
-uniform uint u_MinMaxMode = 1; // 0: min, 1: max
+uniform uint u_MinMaxMode = 0; // 0: min, 1: max
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main() {

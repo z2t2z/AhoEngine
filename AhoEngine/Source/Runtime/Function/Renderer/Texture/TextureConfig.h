@@ -98,13 +98,4 @@ namespace Aho {
 			return cubemapConfig;
 		}
 	};
-
-	//class TextureResourceBuilder {
-	//public:
-	//	TextureResourceBuilder() = default;
-	//	TextureResourceBuilder& Name(const std::string& name);
-	//	TextureResourceBuilder& Usage(const TextureUsage usage);
-	//private:
-	//	TextureConfig m_Cfg;
-	//};
 }

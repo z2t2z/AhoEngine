@@ -6,9 +6,11 @@
 #include "RenderPipeline/IBLPipeline.h"
 #include "RenderPipeline/PostprocessPipeline.h"
 #include "RenderPipeline/DebugVisualPipeline.h"
-
 #include "RenderPipeline/DeferredPipeline.h"
 #include "RenderPipeline/SkyAtmosphericPipeline.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Function/Level/Ecs/Components.h"
+#include "Runtime/Function/Level/Ecs/EntityManager.h"
 
 #include <memory>
 #include <typeindex>
@@ -46,6 +48,10 @@ namespace Aho {
 			}
 		}
 		RenderMode GetRenderMode() const { return m_CurrentRenderMode; }
+		auto GetRenderableContext() const {
+			auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+			return ecs->GetView<VertexArrayComponent, _MaterialComponent, _TransformComponent>();
+		}
 		void Render(float deltaTime);
 		RenderPipeline* GetPipeline(RenderPipelineType type);
 		bool OnViewportResize(uint32_t width, uint32_t height);
@@ -58,7 +64,6 @@ namespace Aho {
 		void SetupUBOs() const;
 		void UpdateUBOs() const;
 	private:
-		DeferredShadingPipeline* m_RP_DeferredShading{ nullptr };
 		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
 	private:

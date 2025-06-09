@@ -55,6 +55,7 @@ namespace Aho {
 				vertices.push_back(vertex.tangent.z);
 			}
 		}
+
 		std::shared_ptr<VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
 		BufferLayout layout = {

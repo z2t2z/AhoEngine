@@ -35,12 +35,12 @@ vec3 SampleDirectLight(State state, const Ray ray) {
 #endif
 
     // Sample area lights
-    state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
-    uint areaLightCount = u_LightCount.a;
-    float choosenPdf = areaLightCount == 0u ? 1.0 : 1.0 / float(areaLightCount);
-    for (uint i = 0; i < areaLightCount; ++i) {
-        Ltot += SampleRectangleAreaLight(state, -ray.direction, u_AreaLight[i], choosenPdf);
-    }
+    // state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
+    // uint areaLightCount = u_LightCount.a;
+    // float choosenPdf = areaLightCount == 0u ? 1.0 : 1.0 / float(areaLightCount);
+    // for (uint i = 0; i < areaLightCount; ++i) {
+    //     Ltot += SampleRectangleAreaLight(state, -ray.direction, u_AreaLight[i], choosenPdf);
+    // }
 
     return Ltot;
 }

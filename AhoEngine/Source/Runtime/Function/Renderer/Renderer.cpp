@@ -2,10 +2,6 @@
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "RenderCommand.h"
-#include "Runtime/Core/GlobalContext/GlobalContext.h"
-#include "Runtime/Function/Level/Ecs/Components.h"
-#include "Runtime/Function/Level/Ecs/EntityManager.h"
-
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
 
@@ -33,34 +29,17 @@ namespace Aho {
 		SetRenderMode(RenderMode::DefaultLit);
 	}
 
-
-	using Clock = std::chrono::steady_clock;
-	constexpr double targetFPS = 60.0;
-	constexpr auto frameSecs = std::chrono::duration<double>(1.0 / targetFPS);
-	constexpr auto frameDur =
-		std::chrono::duration_cast<Clock::duration>(frameSecs);
-
-	static auto s_previous = Clock::now();
 	void Renderer::Render(float deltaTime) {
 		UpdateUBOs();
-
-		auto frameStart = Clock::now();
-		std::chrono::duration<double> dt = frameStart - s_previous;
-		m_FrameTime = dt.count();
-		s_previous = frameStart;
-
 		for (const auto& pipeline : m_ActivePipelines) {
 			pipeline->Execute();
 		}
-
-		auto nextFrameTime = frameStart + frameDur;
-		//std::this_thread::sleep_until(nextFrameTime);
 	}
 
 	RenderPipeline* Renderer::GetPipeline(RenderPipelineType type) {
 		switch (type) {
 			case RenderPipelineType::RPL_DeferredShading:
-				return m_RP_DeferredShading;
+				return m_RP_Derferred;
 			case RenderPipelineType::RPL_RenderSky:
 				return m_RP_SkyAtmospheric;
 			case RenderPipelineType::RPL_PostProcess:
@@ -78,30 +57,16 @@ namespace Aho {
 	}
 
 	bool Renderer::OnViewportResize(uint32_t width, uint32_t height) {
-		if (m_CurrentRenderMode == RenderMode::DefaultLit) {
+		if (m_CurrentRenderMode == RenderMode::DefaultLit)
 			return m_RP_Derferred->Resize(width, height);
-
-
-			if (m_RP_Postprocess->ResizeRenderTarget(width, height)) {
-				m_RP_DeferredShading->ResizeRenderTarget(width, height);
-				return true;
-			}
-			return false;
-		}
-		else {
+		else
 			return m_RP_PathTracing->Resize(width, height);
-
-			return m_RP_PathTracing->ResizeRenderTarget(width, height);
-		}
 	}
 
 	void Renderer::SetupUBOs() const {
 		UBOManager::RegisterUBO<CameraUBO>(0);
-		UBOManager::RegisterUBO<LightUBO>(1);
-		UBOManager::RegisterUBO<RandomKernelUBO>(2); RandomKernelUBO rndUBO; UBOManager::UpdateUBOData(2, rndUBO);
-		UBOManager::RegisterUBO<AnimationUBO>(3);
-		UBOManager::RegisterUBO<SkeletonUBO>(4);
-		UBOManager::RegisterUBO<GPU_DirectionalLight>(5);
+		UBOManager::RegisterUBO<GPU_DirectionalLight>(1);
+		UBOManager::RegisterUBO<AnimationUBO>(2);
 	}
 
 	void Renderer::UpdateUBOs() const {

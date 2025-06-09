@@ -6,12 +6,15 @@
 
 layout(binding = 0, rgba16f) uniform writeonly image2D outputImage;
 
+
+#define FLT_MAX 3.402823466e+38
+
 // G-Buffers
 uniform sampler2D u_gPosition; 
 uniform sampler2D u_gNormal;
-uniform sampler2D u_gAlbedo;
 uniform sampler2D u_gPBR;
 uniform sampler2D u_gDepth;
+uniform sampler2D u_gLitScene;
 
 uniform float u_MaxDisance = 128.0f; 
 uniform int u_MipLevelTotal;
@@ -19,116 +22,7 @@ uniform int u_MipLevelTotal;
 const int MAX_ITERATIONS = 100;
 const float stepSiz = 0.04f;
 const float thickNess = 0.01f;
-
-
-// start: (current_uv, invZ(ndc), ?)
-// dir: 
-vec4 AdvanceRay(vec4 start, vec4 dir, int currMipLevel) {
-    vec2 crossStep = vec2(dir.x >= 0 ? 1 : -1, dir.y >= 0 ? 1 : -1);
-    vec2 crossOffset = crossStep * 0.00001;
-    
-    ivec2 extent = textureSize(u_gDepth, currMipLevel);
-    vec2 invExtent = 1.0 / extent;
-    ivec2 cellIdx = ivec2(floor(start.xy) * extent);
-    vec2 planes = vec2(cellIdx) / extent + cellIdx * crossStep; // Try ray march one step in uv space
-
-    vec2 solutions = (planes - start.xy) / dir.xy;
-    vec4 isect = start + dir * min(solutions.x, solutions.y);
-    isect.xy += (solutions.x < solutions.y) ? vec2(crossOffset.x, 0) : vec2(0, crossOffset.y);
-
-    return isect;
-}
-
-
-// beginPos, rayDir must be in view space
-// Returns true if there is a valid hit
-bool RayMarchingHiZ(vec3 beginPos, vec3 rayDir, mat4 camProj, ivec2 screenSize, float maxDistance, float stride, float thickness, int mipLevelCount, vec2 hitUV, out vec4 debugL) {
-    vec3 endPos = beginPos + rayDir * maxDistance;
-    vec4 H0 = camProj * vec4(beginPos, 1.0);
-    vec4 H1 = camProj * vec4(endPos, 1.0);
-    float invW0 = 1.0 / H0.w;
-    float invW1 = 1.0 / H1.w;
-
-    // NDC
-    vec2 P0 = H0.xy * invW0;
-    vec2 P1 = H1.xy * invW1;
-
-    // For interpolation
-    vec3 Q0 = beginPos * invW0;
-    vec3 Q1 = endPos * invW1;
-
-    // Screen space
-    P0 = (P0 * 0.5f + 0.5f) * screenSize; // texel coord in float
-    P1 = (P1 * 0.5f + 0.5f) * screenSize;
-
-    // Avoid line degeneration
-    P1 += vec2((DistanceSquared(P0, P1) < 0.0001) ? 1.0 : 0.0);
-
-    // Permute the direction for DDA, make dir.x is the main direction
-    vec2 delta = P1 - P0;
-    bool permute = false;
-    if (abs(delta.x) < abs(delta.y)) {
-        permute = true;
-        delta = delta.yx;
-        P0 = P0.yx;
-        P1 = P1.yx;
-    }
-
-    float stepDir = sign(delta.x);
-    float invdx = stepDir / delta.x;
-
-    // Track the derivatives of Q and k
-    vec3 dQ = (Q1 - Q0) * invdx;
-    float dk = (invW1 - invW0) * invdx;
-    vec2 dP = vec2(stepDir, delta.y * invdx);
-
-    dP *= stride;
-    dQ *= stride;
-    dk *= stride;
-
-    vec2 P = P0;
-    vec3 Q = Q0;
-    float k = invW0;
-    float endX = P1.x * stepDir;
-
-    int mipLevel = 0;
-    for (int i = 0; i < MAX_ITERATIONS && P.x < endX && ValidUV(P); i++) {
-        float d = exp2(mipLevel);
-        P += dP * d;        // trace screen coords
-        Q.z += dQ.z * d;    // trace view space pos
-        k += dk * d;        // trace inv w
-
-        float rayDepth = Q.z / k;
-        vec2 hitPixel = permute ? P.yx : P;
-        ivec2 tryhitUV = ivec2(hitPixel);
-        hitPixel /= pow(2, mipLevel);
-        float sampleDepth = texelFetch(u_gDepth, ivec2(hitPixel), mipLevel).r;
-
-        if (rayDepth < sampleDepth) {
-            if (rayDepth + thickness > sampleDepth) {
-                if (mipLevel == 0 || true) {
-                    hitUV = tryhitUV / vec2(screenSize);
-                    debugL = vec4(0, 1, 0, 1);
-                    return true;
-                }
-            }
-            mipLevel = max(0, mipLevel - 1);
-            P -= dP * d;
-            Q.z -= dQ.z * d;
-            k -= dk * d;
-        }
-        else {
-            mipLevel = min(mipLevelCount - 1, mipLevel + 1);
-        }
-    }
-    vec2 rUV = permute ? P.yx : P.xy;
-    rUV /= screenSize;
-    debugL = vec4(1, 0, 0, 1);
-    if (ValidUV(rUV)) {
-        debugL = vec4(1, 1, 1, 1);
-    }
-    return false;
-}
+uniform int u_MaxIters = 128;
 
 // Low accuracy, only for testing
 bool NaiveRayMarching(vec3 beginPos, vec3 rayDir, out vec2 hitUV, int maxIterations = 256, float deltaStep = 0.04, float thickNess = 0.04) { 
@@ -148,46 +42,147 @@ bool NaiveRayMarching(vec3 beginPos, vec3 rayDir, out vec2 hitUV, int maxIterati
     return false;
 }
 
+void InitAdvanceRay(vec3 ss_ray_origin, vec3 ss_ray_dir, vec3 ss_ray_dir_inv, vec2 curr_mip_resolution, 
+        vec2 curr_mip_resolution_inv, vec2 uv_offset, vec2 floor_offset, out vec3 ss_pos, out float curr_t) {
+    vec2 curr_mip_pos = curr_mip_resolution * ss_ray_origin.xy; // [w,h]
+
+    vec2 xy_plane = floor(curr_mip_pos) + floor_offset; // [w,h]
+    xy_plane = xy_plane * curr_mip_resolution_inv + uv_offset; // [0,1]
+
+    // o + d * t == p
+    vec2 t = xy_plane * ss_ray_dir_inv.xy - ss_ray_origin.xy * ss_ray_dir_inv.xy;
+    curr_t = min(t.x, t.y);
+    ss_pos = ss_ray_origin + curr_t * ss_ray_dir;
+}
+bool AdvanceRay(vec3 ss_ray_origin, vec3 ss_ray_dir, vec3 ss_ray_dir_inv, 
+    vec2 curr_mip_pos, vec2 curr_mip_resolution_inv, vec2 floor_offset, vec2 uv_offset, float surface_z,
+    inout vec3 ss_pos, inout float curr_t) {
+    // Boundary planes
+    vec2 xy_plane = floor(curr_mip_pos) + floor_offset;
+    xy_plane = xy_plane * curr_mip_resolution_inv + uv_offset;
+    vec3 boundary_planes = vec3(xy_plane, surface_z);
+
+    vec3 t = boundary_planes * ss_ray_dir_inv - ss_ray_origin * ss_ray_dir_inv;
+
+    t.z = ss_ray_dir.z > 0 ? t.z : FLT_MAX;
+
+    // Choose nearset intersection with a boundary
+    float t_min = min(min(t.x, t.y), t.z);
+    bool above_surface = surface_z > ss_pos.z;
+
+    bool skipped_tile = floatBitsToUint(t_min) != floatBitsToUint(t.z) && above_surface; // asuint
+
+    curr_t = above_surface ? t_min : curr_t;
+
+    ss_pos = ss_ray_origin + curr_t * ss_ray_dir;
+
+    return skipped_tile;
+}
+
+float ValidateHit(vec3 ss_hit_pos, vec3 vs_hit_pos, vec2 uv, vec3 vs_ray_dir, vec2 screen_size, float thickness) {
+    // [0, 1]
+    if (!ValidUV(ss_hit_pos.xy)) {
+        return 0.0;
+    }
+
+    // Avoid self intersection
+    vec2 manhattan_dist = abs(ss_hit_pos.xy - uv);
+    vec2 inv_screen_size = 2 / screen_size;
+    if (manhattan_dist.x < inv_screen_size.x && manhattan_dist.y < inv_screen_size.y) {
+        return 0.0;
+    }
+
+    // Avoid hitting the background
+    ivec2 coords = ivec2(ss_hit_pos.xy * screen_size / 2.0); // Some scaling, why not read from detailed map?
+    float surface_z = texelFetch(u_gDepth, coords, 1).r; 
+    if (surface_z == 1.0) {
+        return 0.0;
+    }
+
+    // Avoid hitting from the back
+    vec3 vs_normal = texelFetch(u_gNormal, ivec2(ss_hit_pos.xy * screen_size), 0).xyz;
+    if (dot(vs_ray_dir, vs_normal) > 0) {
+        return 0.0;
+    }
+
+    // Test how close two points is in vs
+    vec3 vs_hit_surface = ScreenSpaceToViewSpace(vec3(ss_hit_pos.xy, surface_z), u_ProjectionInv);
+    float dist = length(vs_hit_pos - vs_hit_surface);
+
+    float confidence = 1 - smoothstep(0, thickness, dist);
+    return confidence;
+}
+
+bool HierarchicalRayMarch(vec3 ss_ray_origin, vec3 ss_ray_dir, bool is_mirror, vec2 screen_size, 
+    int most_detailed_mip, int max_mip_level, int max_iterations, inout vec3 ss_hit_pos) {
+    const vec3 ss_ray_dir_inv = 1 / ss_ray_dir;
+
+    int curr_mip = most_detailed_mip;
+    vec2 curr_mip_resolution = GetMipResolution(screen_size, curr_mip);   
+    vec2 curr_mip_resolution_inv = 1 / curr_mip_resolution;
+
+    vec2 uv_offset = 0.005 * exp2(most_detailed_mip) / screen_size;
+    uv_offset.x = ss_ray_dir.x < 0 ? -uv_offset.x : uv_offset.x;
+    uv_offset.y = ss_ray_dir.y < 0 ? -uv_offset.y : uv_offset.y;
+
+    vec2 floor_offset = vec2(ss_ray_dir.x < 0 ? 0 : 1, ss_ray_dir.y < 0 ? 0 : 1);
+
+    float curr_t;
+    InitAdvanceRay(ss_ray_origin, ss_ray_dir, ss_ray_dir_inv, curr_mip_resolution, curr_mip_resolution_inv, uv_offset, floor_offset, ss_hit_pos, curr_t);
+
+    int i = 0;
+    while (i < max_iterations && curr_mip >= most_detailed_mip) {
+        vec2 curr_mip_pos = curr_mip_resolution * ss_hit_pos.xy;
+        float surface_z = texelFetch(u_gDepth, ivec2(curr_mip_pos), curr_mip).r;
+        bool skipped_tile = AdvanceRay(ss_ray_origin, ss_ray_dir, ss_ray_dir_inv, curr_mip_pos, curr_mip_resolution_inv, floor_offset, uv_offset, surface_z, ss_hit_pos, curr_t);
+        curr_mip += skipped_tile ? 1 : -1;
+        curr_mip = min(curr_mip, max_mip_level);
+        curr_mip_resolution *= skipped_tile ? 0.5 : 2.0;
+        curr_mip_resolution_inv *= skipped_tile ? 2.0 : 0.5;
+        i += 1;
+    }
+    bool valid_hit = i < max_iterations;
+    return valid_hit;
+}
+
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main() {
-	ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
-	ivec2 siz = imageSize(outputImage);
-	if (coord.x >= siz.x || coord.y >= siz.y)
+	ivec2 coords = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 screen_size = textureSize(u_gLitScene, 0);
+	if (coords.x >= screen_size.x || coords.y >= screen_size.y)
 		return;
 
-    vec2 uv = (vec2(coord) + vec2(0.5)) / vec2(siz);
-
-    float d = texelFetch(u_gDepth, coord, 0).r;
+    vec2 uv = (coords + 0.5) / vec2(screen_size);
+    float d = texelFetch(u_gDepth, coords, 0).r;
     if (d == 1.0) {
-        imageStore(outputImage, coord, vec4(1, 0, 0, 1));
+        imageStore(outputImage, coords, vec4(1, 0, 0, 1)); // 1 is max depth, there is no mesh
         return;
     }
 
-    vec3 beginPos = texelFetch(u_gPosition, coord, 0).xyz; // in view space
-    float depth = texelFetch(u_gDepth, coord, 0).r;
-    vec3 view_pos_reconstructed = ReconstructViewPosition(uv, depth, u_ProjectionInv);
+    int most_detailed_mip = 0;
+    float z = d;
 
-    // Test error of position
-    vec3 error = abs(beginPos - view_pos_reconstructed);
-    vec4 dbgL = vec4(error * 100, 1);
+    //ss: screen space, vs: view space, ws: world space
+    vec3 ss_ray_origin = vec3(uv, z);
+    vec3 vs_ray_origin = ScreenSpaceToViewSpace(ss_ray_origin, u_ProjectionInv);
+    vec3 vs_ray_dir = normalize(vs_ray_origin);
 
-    // Ray march hiz
-    // beginPos = view_pos_reconstructed;
-    vec3 viewPos = vec3(0);
-    vec3 viewDir = beginPos - viewPos;
-    vec3 normal = texelFetch(u_gNormal, coord, 0).xyz;
-    vec3 rayDir = normalize(reflect(viewDir, normal));
-    
-    vec2 hitUV;
-    // vec4 hit_uv_L = vec4(texture(u_gPosition, hitUV).rgb, 1);
-    // bool naive_ok = NaiveRayMarching(beginPos, rayDir, hitUV);
-    // vec4 L = naive_ok ? vec4(texture(u_gAlbedo, hitUV).rgb, 1) : vec4(0, 0, 0, 1);
+    vec3 vs_normal = normalize(texelFetch(u_gNormal, coords, 0).xyz);
+    vec3 vs_reflected_dir = SampleReflectionVector(vs_ray_dir, vs_normal);
+    vec3 ss_ray_dir = ProjectVsDirToSsDir(vs_ray_origin, vs_reflected_dir, ss_ray_origin, u_Projection);
 
-// RayMarchingHiZ(vec3 beginPos, vec3 rayDir, mat4 camProj, ivec2 screenSize, float maxDistance, float stride, float thickNess, int mipLevelCount, vec2 hitUV, out vec4 debugL)
-    vec4 debugL;
-    bool hiz_ok = RayMarchingHiZ(beginPos, rayDir, u_Projection, siz, 10.0, 1.0, 0.1, u_MipLevelTotal, hitUV, debugL);
-    // vec4 L = hiz_ok ? vec4(texture(u_gAlbedo, hitUV).rgb, 1) : vec4(0, 0, 0, 1);
-    vec4 L = hiz_ok ? vec4(1, 1, 1, 1) : vec4(0, 0, 1, 1);
+    vec3 ss_hit_pos;
+    bool valid_hit = HierarchicalRayMarch(ss_ray_origin, ss_ray_dir, false, screen_size, most_detailed_mip, u_MipLevelTotal, u_MaxIters, ss_hit_pos);
+    vec3 vs_hit_pos = ScreenSpaceToViewSpace(ss_hit_pos, u_ProjectionInv);
 
-    imageStore(outputImage, coord, debugL);
+    float thickness = 0.1;
+    float confidence = ValidateHit(ss_hit_pos, vs_hit_pos, uv, vs_hit_pos - vs_ray_origin, screen_size, thickness);
+
+    vec4 L = vec4(0, 0, 1, 1);
+    if (valid_hit && confidence > 0) {
+        L.rgb = texture(u_gLitScene, ss_hit_pos.xy).rgb;
+    }
+
+    imageStore(outputImage, coords, L);
+    return;
 }
