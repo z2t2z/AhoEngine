@@ -11,33 +11,33 @@ namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
 
 	void DeferredShadingPipeline::Initialize() {
-		m_Type = RenderPipelineType::RPL_DeferredShading;
+		//m_Type = RenderPipelineType::RPL_DeferredShading;
 
-		m_ShadowMapPass = SetupShadowMapPass();
-		m_SSAOPass		= SetupSSAOPass();
-		m_GBufferPass	= SetupGBufferPass();
-		m_BlurRPass		= SetupBlurRPass();
-		m_ShadingPass	= SetupShadingPass();
+		//m_ShadowMapPass = SetupShadowMapPass();
+		//m_SSAOPass		= SetupSSAOPass();
+		//m_GBufferPass	= SetupGBufferPass();
+		//m_BlurRPass		= SetupBlurRPass();
+		//m_ShadingPass	= SetupShadingPass();
 	
-		m_SSAOPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
-		m_SSAOPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
-		m_SSAOPass->RegisterTextureBuffer({ Utils::CreateNoiseTexture(32), TexType::Noise });
+		//m_SSAOPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
+		//m_SSAOPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
+		//m_SSAOPass->RegisterTextureBuffer({ Utils::CreateNoiseTexture(32), TexType::Noise });
 
-		m_BlurRPass->RegisterTextureBuffer({ m_SSAOPass->GetTextureBuffer(TexType::AO), TexType::Result });
+		//m_BlurRPass->RegisterTextureBuffer({ m_SSAOPass->GetTextureBuffer(TexType::AO), TexType::Result });
 
-		m_ShadingPass->RegisterTextureBuffer({ m_ShadowMapPass->GetTextureBuffer(TexType::Depth), TexType::LightDepth });
-		m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
-		m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
-		m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
-		m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Albedo), TexType::Albedo });
-		m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::PBR), TexType::PBR });  // PBR param, metalic and roughness in rg channels respectively
-		m_ShadingPass->RegisterTextureBuffer({ m_BlurRPass->GetTextureBuffer(TexType::Result), TexType::AO });
+		//m_ShadingPass->RegisterTextureBuffer({ m_ShadowMapPass->GetTextureBuffer(TexType::Depth), TexType::LightDepth });
+		//m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Depth), TexType::Depth });
+		//m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Position), TexType::Position });
+		//m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Normal), TexType::Normal });
+		//m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::Albedo), TexType::Albedo });
+		//m_ShadingPass->RegisterTextureBuffer({ m_GBufferPass->GetTextureBuffer(TexType::PBR), TexType::PBR });  // PBR param, metalic and roughness in rg channels respectively
+		//m_ShadingPass->RegisterTextureBuffer({ m_BlurRPass->GetTextureBuffer(TexType::Result), TexType::AO });
 
-		RegisterRenderPass(m_ShadowMapPass.get(), RenderDataType::SceneData);
-		RegisterRenderPass(m_GBufferPass.get(), RenderDataType::SceneData);
-		RegisterRenderPass(m_SSAOPass.get(), RenderDataType::ScreenQuad);
-		RegisterRenderPass(m_BlurRPass.get(), RenderDataType::ScreenQuad);
-		RegisterRenderPass(m_ShadingPass.get(), RenderDataType::ScreenQuad);
+		//RegisterRenderPass(m_ShadowMapPass.get(), RenderDataType::SceneData);
+		//RegisterRenderPass(m_GBufferPass.get(), RenderDataType::SceneData);
+		//RegisterRenderPass(m_SSAOPass.get(), RenderDataType::ScreenQuad);
+		//RegisterRenderPass(m_BlurRPass.get(), RenderDataType::ScreenQuad);
+		//RegisterRenderPass(m_ShadingPass.get(), RenderDataType::ScreenQuad);
 
 		//m_RenderResult = m_ShadingPass->GetTextureBuffer(TexType::Result);
 	}
@@ -71,7 +71,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Depth_Buffer);
 				for (const auto& data : renderData) {
 					if (data->IsDebug() || !data->ShouldBeRendered()) {
@@ -208,7 +208,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[this](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				shader->SetVec3("u_SunDir", m_SunDir);
@@ -260,7 +260,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				uint32_t texOffset = 0u;
@@ -304,7 +304,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				uint32_t texOffset = 0u;

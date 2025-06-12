@@ -37,7 +37,6 @@ namespace Aho {
 		InfiniteGrid,
 		Test,
 	};
-	
 
 	// TODO, think of a better way
 	class TextureBuffer {
@@ -119,20 +118,6 @@ namespace Aho {
 			if (m_RenderCommandBuffer) {
 				m_RenderCommandBuffer->Execute(renderData, m_Shader, m_Framebuffer, m_TextureBuffers);
 			}
-		}
-
-		virtual Texture* GetTextureBuffer(TexType type) {
-			if (type == TexType::Depth) {
-				return m_Framebuffer->GetDepthTexture();
-			}
-
-			const auto& textureBuffer = m_Framebuffer->GetTextureAttachments();
-			auto it = std::find_if(textureBuffer.begin(), textureBuffer.end(), 
-				[&](const Texture* texBuffer) {
-					return texBuffer->GetTexType() == type;
-				});
-			AHO_CORE_ASSERT(it != textureBuffer.end(), "Does not have this texture buffer: {}");
-			return *it;
 		}
 
 		virtual void RegisterTextureBuffer(const TextureBuffer& buffer) { 

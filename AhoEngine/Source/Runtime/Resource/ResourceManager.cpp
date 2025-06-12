@@ -29,6 +29,16 @@ namespace Aho {
 		return texture;
 	}
 
+	void ResourceManager::RegisterBufferTexture(const std::string& name, const std::shared_ptr<_Texture>& buffer) {
+		AHO_CORE_ASSERT(!m_BufferTextures.count(name));
+		m_BufferTextures[name] = buffer;
+	}
+
+	std::shared_ptr<_Texture> ResourceManager::GetBufferTexture(const std::string& name) const {
+		AHO_CORE_ASSERT(m_BufferTextures.count(name));
+		return m_BufferTextures.at(name);
+	}
+
 	std::shared_ptr<VertexArray> ResourceManager::LoadVAO(const std::shared_ptr<MeshAsset>& meshAsset) {
 		if (m_VAOCached.count(meshAsset)) {
 			return m_VAOCached.at(meshAsset);
@@ -46,7 +56,7 @@ namespace Aho {
 		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 		auto shaderEntity = ecs->CreateEntity();
 		std::shared_ptr<Shader> shader{ nullptr };
-		AHO_CORE_ASSERT(m_ShaderVariantManager->LoadVariant(shader, shaderAsset, feature));
+		AHO_CORE_ASSERT(m_ShaderVariantManager->LoadVariant(shader, shaderAsset, feature), shaderAsset->GetPath());
 		ecs->AddComponent<ShaderResourceComponent>(shaderEntity, shaderAsset, shader, shaderAsset->GetUsage());
 		return shader;
 	}

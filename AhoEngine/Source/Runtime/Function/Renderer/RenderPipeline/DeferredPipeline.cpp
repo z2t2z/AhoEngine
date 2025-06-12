@@ -4,11 +4,6 @@
 #include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Function/Renderer/Renderer.h"
-#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
-#include "Runtime/Function/Level/EcS/Components.h"
-#include "Runtime/Function/Level/EcS/EntityManager.h"
-#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
 
@@ -16,79 +11,49 @@ namespace Aho {
 	void DeferredShading::Initialize() {
 		// Gbuffers
 		std::shared_ptr<_Texture> position = TextureResourceBuilder()
-			.Name("G_Position")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGB)
-			.InternalFormat(InternalFormat::RGB16F)
+			.Name("G_Position").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGB).InternalFormat(InternalFormat::RGB16F)
 			.Build();
 
 		std::shared_ptr<_Texture> normal = TextureResourceBuilder()
-			.Name("G_Normal")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGB)
-			.InternalFormat(InternalFormat::RGB16F)
+			.Name("G_Normal").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGB).InternalFormat(InternalFormat::RGB16F)
 			.Build();
 
 		std::shared_ptr<_Texture> pbr = TextureResourceBuilder()
-			.Name("G_PBR")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGB)
-			.InternalFormat(InternalFormat::RGB16F)
+			.Name("G_PBR").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGB).InternalFormat(InternalFormat::RGB16F)
 			.Build();
 
 		std::shared_ptr<_Texture> baseColor = TextureResourceBuilder()
-			.Name("G_BaseColor")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGB)
-			.InternalFormat(InternalFormat::RGB16F)
+			.Name("G_BaseColor").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGB).InternalFormat(InternalFormat::RGB16F)
 			.Build();
 
 		std::shared_ptr<_Texture> depth = TextureResourceBuilder()
-			.Name("Scene Depth")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::Depth)
-			.InternalFormat(InternalFormat::Depth32F)
+			.Name("Scene Depth").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth32F)
 			.Build();
 		m_SceneDepth = depth.get();
 
 		std::shared_ptr<_Texture> depthPyramid = TextureResourceBuilder()
-			.Name("Scene Deth Pyramid")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::Red)
-			.InternalFormat(InternalFormat::R32F)
-			.GenMip(true)
+			.Name("Scene Deth Pyramid").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::Red).InternalFormat(InternalFormat::R32F).GenMip(true)
 			.Build();
-		m_SceneDepthPyramid = depthPyramid.get();
 		
+		// Lit Scene Result
+		std::shared_ptr<_Texture> litScene = TextureResourceBuilder()
+			.Name("Lit Scene Result").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+
+		std::shared_ptr<_Texture> ssrTex = TextureResourceBuilder()
+			.Name("SSR").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+
+		m_SSRTex = ssrTex.get();
+		m_SceneDepthPyramid = depthPyramid.get();
 		m_TextureBuffers.push_back(position);
 		m_TextureBuffers.push_back(normal);
 		m_TextureBuffers.push_back(pbr);
 		m_TextureBuffers.push_back(depth);
 		m_TextureBuffers.push_back(baseColor);
 		m_TextureBuffers.push_back(depthPyramid);
-
-		// Lit Scene Result
-		std::shared_ptr<_Texture> litScene = TextureResourceBuilder()
-			.Name("Lit Scene Result")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGBA)
-			.InternalFormat(InternalFormat::RGBA16F)
-			.Build();
 		m_TextureBuffers.push_back(litScene);
+		m_TextureBuffers.push_back(ssrTex);
 
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc";
@@ -128,13 +93,11 @@ namespace Aho {
 		{
 			auto Func =
 				[](RenderPassBase& self) {
-					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto view = ecs->GetView<VertexArrayComponent, _MaterialComponent, _TransformComponent>();
 					auto shader = self.GetShader();
 					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
 					shader->Bind();
-					view.each(
+					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
 						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
 							vao.vao->Bind();
 							uint32_t slot = 0;
@@ -221,7 +184,6 @@ namespace Aho {
 				.Func(Func)
 				.Build());
 			
-			m_ResultTextureID = litScene->GetTextureID();
 			m_Result = litScene.get();
 		}
 
@@ -263,14 +225,6 @@ namespace Aho {
 
 			// --- SSSR ---
 			{
-				RenderPassConfig cfg;
-				cfg.passName = "Screen Space Reflection Pass";
-				cfg.shaderPath = (shaderPathRoot / "ScreenSpaceReflection" / "SSR.glsl").string();
-				auto ssrTexCfg = TextureConfig::GetColorTextureConfig("SSR"); ssrTexCfg.InternalFmt = InternalFormat::RGBA16F; ssrTexCfg.DataFmt = DataFormat::RGBA; ssrTexCfg.DataType = DataType::Float;
-				std::shared_ptr<_Texture> ssrTex = std::make_shared<_Texture>(ssrTexCfg);
-				m_TextureBuffers.push_back(ssrTex);
-				m_SSRTex = ssrTex.get();
-
 				auto Func =
 					[ssrTex, depthPyramid](RenderPassBase& self) {
 						auto shader = self.GetShader();

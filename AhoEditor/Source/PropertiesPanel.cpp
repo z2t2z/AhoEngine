@@ -1,6 +1,7 @@
 #include "PropertiesPanel.h"
 #include "IamAho.h"
 #include "HierarchicalPenal.h"
+#include "EditorUI/EditorGlobalContext.h"
 #include "EditorUI/ImGuiHelpers.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Function/Renderer/Renderer.h"
@@ -17,8 +18,9 @@ namespace Aho {
 	PropertiesPanel::PropertiesPanel() {
 	}
 	
-	// TODO: Need reflction
-	void PropertiesPanel::Draw(const Entity& selectedEntity) {
+	// TODO: Needs reflction
+	void PropertiesPanel::Draw() {
+		const Entity& selectedEntity = g_EditorGlobalCtx.GetSelectedEntity();
 		ImGui::Begin(ICON_FA_GEAR " Inspector");
 		if (!selectedEntity.Valid()) {
 			ImGui::End();

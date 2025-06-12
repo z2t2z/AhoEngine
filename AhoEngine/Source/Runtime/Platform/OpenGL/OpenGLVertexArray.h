@@ -9,8 +9,6 @@ namespace Aho {
 		OpenGLVertexArray(bool dynamicDraw = false);
 		virtual ~OpenGLVertexArray();
 		virtual void Init(const Mesh& mesh) override;
-		virtual void Init(const std::shared_ptr<LineInfo>& lineInfo) override;
-		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) override;
 		virtual void Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) override;
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
@@ -20,8 +18,6 @@ namespace Aho {
 		virtual void UpdateInstancedTransform(const std::vector<glm::mat4>& transform) override;
 		virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) override;
 		virtual void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) override;
-		//virtual std::vector<std::shared_ptr<VertexBuffer>> GetVertexBuffer() { return m_VertexBuffers; }
-
 		virtual const std::vector<std::shared_ptr<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; }
 		virtual const std::shared_ptr<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; }
 	private:

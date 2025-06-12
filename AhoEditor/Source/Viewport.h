@@ -19,6 +19,7 @@ namespace Aho {
 			return ImGui::IsWindowFocused();
 		}
 	private:
+		void DrawMainViewport();
 		void DrawToolBarOverlay();
 		void DrawToolBarAddObjectBtn();
 		void DrawToolBarRenderModeSelectionBtn();

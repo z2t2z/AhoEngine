@@ -20,7 +20,7 @@ namespace Aho {
 		TextureResourceBuilder& InternalFormat(InternalFormat fmt)	{ m_Cfg.InternalFmt = fmt; return *this; }
 		TextureResourceBuilder& DataFormat(DataFormat fmt)			{ m_Cfg.DataFmt = fmt; return *this; }
 		TextureResourceBuilder& DataType(DataType type)				{ m_Cfg.DataType = type; return *this; }
-		std::shared_ptr<_Texture> Build() const						{ return std::make_shared<_Texture>(m_Cfg); }
+		std::shared_ptr<_Texture> Build() const;
 	private:
 		TextureConfig m_Cfg;
 	};

@@ -5,15 +5,9 @@
 #include "DeferredPipeline.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Renderer/Lights.h"
-#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
-#include "Runtime/Function/Level/EcS/Components.h"
-#include "Runtime/Function/Level/EcS/EntityManager.h"
-#include "Runtime/Function/Renderer/RenderCommand.h"
-#include "Runtime/Function/Renderer/Texture/TextureUsage.h"
-#include "Runtime/Function/Renderer/Texture/TextureConfig.h"
-#include "Runtime/Function/Renderer/Texture/_Texture.h"
-
+#include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
 
 namespace Aho {
 	SkyAtmosphericPipeline::SkyAtmosphericPipeline() {
@@ -21,25 +15,28 @@ namespace Aho {
 	}
 
 	void SkyAtmosphericPipeline::Initialize() {
-		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "AtmosphericScattering";
+		// Buffers
+		std::shared_ptr<_Texture> transmittanceLUT = TextureResourceBuilder()
+			.Name("SkyTransmittanceLUT").Width(256).Height(64).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
 
+		std::shared_ptr<_Texture> multiScattLUT = TextureResourceBuilder()
+			.Name("SkyMultiScattLUT").Width(32).Height(32).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+
+		std::shared_ptr<_Texture> skyViewLUT = TextureResourceBuilder()
+			.Name("SkViewLUT").Width(192).Height(108).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+
+		m_TextureBuffers.push_back(transmittanceLUT);
+		m_TextureBuffers.push_back(multiScattLUT);
+		m_TextureBuffers.push_back(skyViewLUT);
+
+		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "AtmosphericScattering";
 		// -- Transmittiance lut pass --
 		{
-			RenderPassConfig cfg;
-			cfg.passName = "Sky Transmittance LUT Pass";
-			cfg.shaderPath = (shaderPathRoot / "Transmittance.glsl").string();
-
-			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("SkyTransmittanceLUT");
-			texCfg.InternalFmt = InternalFormat::RGBA16F;
-			texCfg.DataType = DataType::Float;
-			texCfg.Width = 256; texCfg.Height = 64;
-
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
-			m_TextureBuffers.push_back(res);
-			cfg.attachmentTargets.push_back(res.get());
-
-			cfg.func =
-				[&](RenderPassBase& self) {
+			auto Fnc =
+				[](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
@@ -61,25 +58,20 @@ namespace Aho {
 						}
 					);
 				};
-			m_TransmittanceLutPass = std::make_unique<RenderPassBase>();
-			m_TransmittanceLutPass->Setup(cfg);
+
+			m_TransmittanceLutPass = std::move(RenderPassBuilder()
+				.Name("SkyTransmittanceLUT Pass")
+				.Shader((shaderPathRoot / "Transmittance.glsl").string())
+				//.Usage(ShaderUsage::Transtim)
+				.AttachTarget(transmittanceLUT)
+				.Func(Fnc)
+				.Build());
 		}
 
 		// --- Mutiscattering pass ---
 		{
-			RenderPassConfig cfg;
-			cfg.passName = "Sky MultiScattLUT Pass";
-			cfg.shaderPath = (shaderPathRoot / "MutiScatt.glsl").string();
-			
-			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("SkyMultiScattLUT");
-			texCfg.InternalFmt = InternalFormat::RGBA16F;
-			texCfg.Width = 32; texCfg.Height = 32;
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
-
-			m_TextureBuffers.push_back(res);
-			cfg.attachmentTargets.push_back(res.get());
-			cfg.func =
-				[&](RenderPassBase& self) {
+			auto Func =
+				[](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
@@ -101,26 +93,21 @@ namespace Aho {
 						}
 					);
 				};
-			m_MutiScattLutPass = std::make_unique<RenderPassBase>();
-			m_MutiScattLutPass->Setup(cfg);
-			m_MutiScattLutPass->RegisterTextureBuffer(m_TextureBuffers[0].get(), "u_TransmittanceLUT");
+
+			m_MutiScattLutPass = std::move(RenderPassBuilder()
+				.Name("SkyMultiScattLUT Pass")
+				.Shader((shaderPathRoot / "MutiScatt.glsl").string())
+				//.Usage(ShaderUsage::DistantLightShadowMap)
+				.AttachTarget(multiScattLUT)
+				.Input("u_TransmittanceLUT", transmittanceLUT)
+				.Func(Func)
+				.Build());
 		}
 
 		// --- SkyView Pass ---
 		{
-			RenderPassConfig cfg;
-			cfg.passName = "Sky View LUT Pass";
-			cfg.shaderPath = (shaderPathRoot / "SkyView.glsl").string();
-
-			TextureConfig texCfg = TextureConfig::GetColorTextureConfig("SkyViewLUT");
-			texCfg.InternalFmt = InternalFormat::RGBA16F;
-			texCfg.Width = 192; texCfg.Height = 108;
-			std::shared_ptr<_Texture> res = std::make_shared<_Texture>(texCfg);
-			
-			m_TextureBuffers.push_back(res);
-			cfg.attachmentTargets.push_back(res.get());
-			cfg.func =
-				[res](RenderPassBase& self) {
+			auto Func =
+				[skyViewLUT](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto view = ecs->GetView<AtmosphereParametersComponent, LightComponent>();
 					view.each(
@@ -143,14 +130,20 @@ namespace Aho {
 							shader->Unbind();
 							self.GetRenderTarget()->Unbind();
 
-							atmosphere.SkyViewTextureID = res->GetTextureID();
+							atmosphere.SkyViewTextureID = skyViewLUT->GetTextureID();
 						}
 					);
 				};
-			m_SkyViewLutPass = std::make_unique<RenderPassBase>();
-			m_SkyViewLutPass->Setup(cfg);
-			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[0].get(), "u_TransmittanceLUT");
-			m_SkyViewLutPass->RegisterTextureBuffer(m_TextureBuffers[1].get(), "u_MultiScattLUT");
+
+			m_SkyViewLutPass = std::move(RenderPassBuilder()
+				.Name("SkyViewtLUT Pass")
+				.Shader((shaderPathRoot / "SkyView.glsl").string())
+				//.Usage(ShaderUsage::DistantLightShadowMap)
+				.AttachTarget(skyViewLUT)
+				.Input("u_TransmittanceLUT", transmittanceLUT)
+				.Input("u_MultiScattLUT", multiScattLUT)
+				.Func(Func)
+				.Build());
 		}
 	}
 

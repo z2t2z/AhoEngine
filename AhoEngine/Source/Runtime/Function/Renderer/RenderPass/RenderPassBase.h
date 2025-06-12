@@ -5,6 +5,7 @@
 #include <memory>
 
 namespace Aho {
+	class GpuTimer;
 	class Shader;
 	class _Texture;
 	class Framebuffer;
@@ -28,7 +29,6 @@ namespace Aho {
 			Setup(config);
 		}
 		~RenderPassBase();
-		void Setup(RenderPassConfig config);
 		void Execute();
 		bool Resize(uint32_t width, uint32_t height) const;
 		std::string GetPassName() const { return m_Name; }
@@ -44,8 +44,10 @@ namespace Aho {
 		}
 		void BindRegisteredTextureBuffers(uint32_t& slot) const;
 		Shader* GetShader() const { return m_Shader; }
+		void Setup(RenderPassConfig config);
 		static uint32_t s_DummyVAO;
 	protected:
+		std::unique_ptr<GpuTimer> m_GpuTimer{ nullptr };
 		float m_FrameTime{ 0.0f };
 		std::vector<std::pair<std::string, _Texture*>> m_InputTextures; // Uniforms 
 		std::string m_Name;

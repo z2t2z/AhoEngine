@@ -3,24 +3,30 @@
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 
 namespace Aho {
-	//class DeferredShadingPipeline;
-
+	class _Texture;
+	class RenderPassBase;
 	class PostprocessPipeline : public RenderPipeline {
 	public:
 		PostprocessPipeline() { Initialize(); }
 		virtual void Initialize() override;
+
+		virtual void Execute() override;
+		virtual bool Resize(uint32_t width, uint32_t height) const override;
 	private:
-		std::unique_ptr<RenderPass> SetupDrawSelectedPass();
+		std::shared_ptr<_Texture> m_SelectedDepth;
+		std::shared_ptr<_Texture> m_Outlined;
+	private:
+		std::unique_ptr<RenderPassBase> m_SingleDepthPass;
+		std::unique_ptr<RenderPassBase> m_OutlinePass;
+
+
+	// --- Delete these ---
+	private:
 		std::unique_ptr<RenderPass> SetupDrawSelectedOutlinePass();
 		std::unique_ptr<RenderPass> SetupFXAAPass();
-
 	private:
-		std::unique_ptr<RenderPass> m_DrawSelectedPass;
 		std::unique_ptr<RenderPass> m_DrawSelectedOutlinePass;
 		std::unique_ptr<RenderPass> m_FXAAPass;
-	private:
-		std::unique_ptr<RenderPass> SetupTestQuadPass();
-		std::unique_ptr<RenderPass> m_TestQuadPass;
 	};
 
 }

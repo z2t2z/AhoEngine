@@ -21,6 +21,9 @@ namespace Aho {
 	public:
 		operator bool() const { return m_EntityHandle != entt::null; }
 		bool operator==(const Entity& other) const { return other.m_EntityHandle == m_EntityHandle; }
+		bool operator!=(const Entity& other) const {
+			return !(*this == other);
+		}
 	private:
 		entt::entity m_EntityHandle{ entt::null };
 		UUID m_AssetUUID;

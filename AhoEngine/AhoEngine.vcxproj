@@ -192,6 +192,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\GpuTimer.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h" />
@@ -696,13 +697,13 @@
     <ClCompile Include="Source\Runtime\Core\GlobalContext\GlobalContext.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\Level.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\LevelLayer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Buffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\SSBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\DisneyPrincipled.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
@@ -725,6 +726,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\Shader.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture\_Texture.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArray.cpp" />
     <ClCompile Include="Source\Runtime\Function\SkeletonViewer.cpp" />

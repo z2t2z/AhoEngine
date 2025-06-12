@@ -17,7 +17,7 @@ namespace Aho {
 	class PropertiesPanel {
 	public:
 		PropertiesPanel();
-		void Draw(const Entity& selectedEntity);
+		void Draw();
 	private:
 		template<typename... Components>
 		void DrawComponents(const std::shared_ptr<EntityManager>& ecs, Entity entity) {

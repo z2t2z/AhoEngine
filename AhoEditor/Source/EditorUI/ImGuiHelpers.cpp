@@ -90,12 +90,22 @@ namespace Aho {
 	void ImGuiHelpers::DrawStatisticOverlay(bool* p_open, const std::vector<std::pair<std::string, float>>& infos) {
 		ImGuiIO& io = ImGui::GetIO();
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize /*| ImGuiWindowFlags_NoSavedSettings*/ | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav /*| ImGuiWindowFlags_NoMove*/;
+
+		static float rx = 0.0f, ry = 0.0f;
+		auto _dbgControlWindow = 
+			[]() {
+				ImGui::Begin("#dgb");
+				ImGui::DragFloat("Rounding x", &rx, 0.01, 0.0, 10.0f);
+				ImGui::DragFloat("Rounding y", &ry, 0.01, 0.0, 10.0f);
+				ImGui::End();
+			};
+
 		ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
 		if (ImGui::Begin("Statistic", p_open, window_flags)) {
 			ImGui::Text("Frame Time\n");
 			ImGui::Separator();
 			for (const auto& [name, value] : infos) {
-				ImGui::Text("%s: %.4f", name.c_str(), value);
+				ImGui::Text("%s: %.4f ms", name.c_str(), value);
 			}
 		}
 		ImGui::End();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Runtime/Function/Level/EcS/Entity.h"
 #include <string>
 #include <memory>
 #include <glm/glm.hpp>
@@ -8,12 +9,21 @@
 #include <ImGuizmo.h>
 
 namespace Aho {
-	class Entity;
-
 	class HierachicalPanel {
 	public:
 		HierachicalPanel() = default;
 		void Initialize();
-		Entity Draw();
+		void Draw();
+	private:
+		void UpdateDrawTree();
+	private:
+		struct TreeNode {
+			TreeNode(const Entity& entity, const std::string& name) 
+				: entity(entity), name(name) {}
+			Entity entity;
+			std::string name;
+			std::vector<TreeNode> children;
+		};
+		std::vector<TreeNode> m_Roots;
 	};
 }

@@ -1,15 +1,15 @@
 #include "Ahopch.h"
 #include "RenderPassBase.h"
-#include "Runtime/Core/Timer.h"
+#include "Runtime/Function/Renderer/GpuTimer.h"
+#include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/Texture/_Texture.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Resource/Asset/Asset.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/Asset/AssetManager.h"
 #include "Runtime/Resource/ResourceManager.h"
-#include "Runtime/Function/Renderer/Renderer.h"
-#include "Runtime/Function/Renderer/Texture/_Texture.h"
-#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Platform/OpenGL/OpenGLFramebuffer.h"
 
 namespace Aho {
@@ -40,24 +40,30 @@ namespace Aho {
 			m_Framebuffer = std::make_unique<OpenGLFramebuffer>(config.attachmentTargets, width, height);
 		}
 		else {
-			AHO_CORE_WARN("No texture attachments provided in pass: {}.", m_Name);
+			AHO_CORE_WARN("No texture attachments provided in pass: {}, won't create fb.", m_Name);
 		}
 		if (s_DummyVAO == 0) {
 			glGenVertexArrays(1, &s_DummyVAO);
 		}
+
+		m_GpuTimer = std::make_unique<GpuTimer>();
 	}
 
 	void RenderPassBase::Execute() {
-		Timer timer;
 		RenderCommand::PushDebugGroup(m_Name);
+
+		m_GpuTimer->Begin();
 		m_Execute(*this);
+		m_GpuTimer->End();
+
 		RenderCommand::PopDebugGroup();
-		m_FrameTime = timer.ElapsedMilliseconds();
+		m_GpuTimer->Update(); 
+		m_FrameTime = m_GpuTimer->GetLatestTime(); // ms
 	}
 
 	bool RenderPassBase::Resize(uint32_t width, uint32_t height) const {
 		if (m_Framebuffer) {
-			return m_Framebuffer->_Resize(width, height);
+			return m_Framebuffer->Resize(width, height);
 		}
 		return false;
 	}

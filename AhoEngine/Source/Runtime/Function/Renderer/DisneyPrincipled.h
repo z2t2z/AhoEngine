@@ -39,90 +39,6 @@ namespace Aho {
 		float padding0;
 		float padding1;
 
-		void SetHandles(uint64_t handleId, TexType type) {
-			AHO_CORE_ASSERT(handleId > 0);
-			switch (type) {
-			case TexType::Albedo:
-				albedoHandle = handleId;
-				break;
-			case TexType::Normal:
-				normalHandle = handleId;
-				break;
-			case TexType::Roughness:
-				roughnessHandle = handleId;
-				break;
-			case TexType::Metallic:
-				metallicHandle = handleId;
-				break;
-				AHO_CORE_WARN("Wrong texture type");
-			}
-		}
-
-		template<typename T>
-		void SetValue(T v, TexType type) {
-			if constexpr (std::is_same_v<T, std::shared_ptr<Texture2D>>) {
-				AHO_CORE_ASSERT(false);
-				return;
-			}
-			else if constexpr (std::is_same_v<T, glm::vec3>) {
-				switch (type) {
-				case TexType::Albedo:
-					baseColor = v;
-					break;
-				case TexType::Emissive:
-					emissive = v;
-					break;
-				}
-				return;
-			}
-			else {
-				switch (type) {
-				case TexType::Subsurface:
-					subsurface = v;
-					break;
-				case TexType::EmissiveScale:
-					emissiveScale = v;
-					break;
-				case TexType::Metallic:
-					metallic = v;
-					break;
-				case TexType::Specular:
-					specular = v;
-					break;
-				case TexType::SpecTint:
-					specTint = v;
-					break;
-				case TexType::Roughness:
-					roughness = v;
-					CalDistParams(anisotropic, roughness, alpha_x, alpha_y);
-					break;
-				case TexType::Anisotropic:
-					anisotropic = v;
-					CalDistParams(anisotropic, roughness, alpha_x, alpha_y);
-					break;
-				case TexType::Sheen:
-					sheen = v;
-					break;
-				case TexType::SheenTint:
-					sheenTint = v;
-					break;
-				case TexType::Clearcoat:
-					clearcoat = v;
-					break;
-				case TexType::ClearcoatGloss:
-					clearcoatGloss = v;
-					break;
-				case TexType::SpecTrans:
-					specTrans = v;
-					break;
-				case TexType::ior:
-					ior = v;
-					break;
-				default:
-					AHO_CORE_ASSERT(false);
-				}
-			}
-		}
 		void CalDistParams(float anisotropic, float roughness, float& ax, float& ay) {
 			float roughness2 = roughness * roughness;
 			if (anisotropic == 0) {
@@ -134,7 +50,6 @@ namespace Aho {
 			ax = std::max(0.0001f, roughness2 / aspect);
 			ay = std::max(0.0001f, roughness2 * aspect);
 		}
-		static std::unordered_map<TexType, std::string> s_Umap;
 	};
 
 }

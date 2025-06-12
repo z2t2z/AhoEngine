@@ -188,9 +188,9 @@ namespace Aho {
 		}
 	};
 
-	struct SelectedComponent {
-		Entity entity;
-		SelectedComponent() = default;
+	struct EditorSelectedTag {
+		bool tag;
+		EditorSelectedTag() = default;
 	};
 
 	// Root of meshes

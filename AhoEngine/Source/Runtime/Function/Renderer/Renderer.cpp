@@ -14,6 +14,17 @@ namespace Aho {
 	Renderer::Renderer() {
 	}
 
+	void Renderer::SetRenderMode(RenderMode mode) {
+		m_CurrentRenderMode = mode;
+		if (mode == RenderMode::PathTracing) {
+			m_ActivePipelines = { m_RP_PathTracing };
+		} else {
+			m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred };
+		}
+		m_ActivePipelines.push_back(m_RP_Postprocess);
+		SetViewportDisplayTextureBuffer(m_RP_Postprocess->GetRenderResultTextureBuffer());
+	}
+
 	void Renderer::Initialize() {
 		TextureBuffer::Init();
 		RenderTask::Init();
@@ -22,9 +33,10 @@ namespace Aho {
 
 		// --- New System ---
 		m_RP_SkyAtmospheric = new SkyAtmosphericPipeline();
-		m_RP_Derferred = new DeferredShading();
-		m_RP_PathTracing = new PathTracingPipeline();
-		m_RP_IBLPipeline = new _IBLPipeline();
+		m_RP_Derferred		= new DeferredShading();
+		m_RP_PathTracing	= new PathTracingPipeline();
+		m_RP_IBLPipeline	= new _IBLPipeline();
+		m_RP_Postprocess	= new PostprocessPipeline();
 
 		SetRenderMode(RenderMode::DefaultLit);
 	}
@@ -57,10 +69,11 @@ namespace Aho {
 	}
 
 	bool Renderer::OnViewportResize(uint32_t width, uint32_t height) {
-		if (m_CurrentRenderMode == RenderMode::DefaultLit)
-			return m_RP_Derferred->Resize(width, height);
-		else
-			return m_RP_PathTracing->Resize(width, height);
+		bool resized = false;
+		for (const auto& pipeline : m_ActivePipelines) {
+			resized |= pipeline->Resize(width, height);
+		}
+		return resized;
 	}
 
 	void Renderer::SetupUBOs() const {
@@ -78,7 +91,7 @@ namespace Aho {
 					GPU_DirectionalLight gpuLight;
 					auto dirLight = std::static_pointer_cast<DirectionalLight>(light);
 					FillDirectionalLightStruct(gpuLight, dirLight);
-					UBOManager::UpdateUBOData<GPU_DirectionalLight>(5, gpuLight, lcomp.index);
+					UBOManager::UpdateUBOData<GPU_DirectionalLight>(1, gpuLight, lcomp.index);
 					ecs->RemoveComponent<LightDirtyTagComponent>(entity);
 				}
 			}

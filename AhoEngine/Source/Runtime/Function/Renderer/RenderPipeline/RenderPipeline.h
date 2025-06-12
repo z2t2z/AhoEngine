@@ -53,8 +53,7 @@ namespace Aho {
 		virtual void Execute();
 		virtual RenderPass* GetRenderPass(RenderPassType type);
 		virtual RenderPipelineType GetType() { return m_Type; }
-		virtual uint32_t GetRenderResultTextureID() const;
-		virtual bool ResizeRenderTarget(uint32_t width, uint32_t height);
+		virtual _Texture* GetRenderResultTextureBuffer() const { return m_Result; }
 		virtual bool Resize(uint32_t width, uint32_t height) const { return false; }
 		virtual void RegisterRenderPass(RenderPass* renderPass, RenderDataType type) {
 			m_RenderTasks.emplace_back(renderPass, type);
@@ -68,7 +67,6 @@ namespace Aho {
 		}
 		virtual std::vector<std::shared_ptr<_Texture>> GetBuffers() const { return m_TextureBuffers; }
 	protected:
-		uint32_t m_ResultTextureID{ 0 };
 		_Texture* m_Result{ nullptr };
 	protected:
 		RenderPipelineType m_Type = RenderPipelineType::RPL_Default;

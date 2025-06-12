@@ -36,15 +36,11 @@
     <ClInclude Include="Source\CPURayTracing\RayTracingLayer.h">
       <Filter>Source\CPURayTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EditorUI\PropertiesPanel.h">
-      <Filter>Source\EditorUI</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ContentBrowser.h" />
     <ClInclude Include="Source\DebugPenal.h" />
     <ClInclude Include="Source\FileExplorer.h" />
     <ClInclude Include="Source\HierarchicalPenal.h" />
     <ClInclude Include="Source\PropertiesPanel.h" />
-    <ClInclude Include="Source\SceneHierarchyPanel.h" />
     <ClInclude Include="Source\Viewport.h" />
     <ClInclude Include="Source\EditorUI\EditorGlobalContext.h" />
     <ClInclude Include="Source\EditorUI\ImGuiHelpers.h" />
@@ -70,8 +66,8 @@
     <ClCompile Include="Source\FileExplorer.cpp" />
     <ClCompile Include="Source\HierarchicalPenal.cpp" />
     <ClCompile Include="Source\PropertiesPanel.cpp" />
-    <ClCompile Include="Source\SceneHierarchyPanel.cpp" />
     <ClCompile Include="Source\Viewport.cpp" />
     <ClCompile Include="Source\EditorUI\ImGuiHelpers.cpp" />
+    <ClCompile Include="Source\EditorUI\EditorGlobalContext.cpp" />
   </ItemGroup>
 </Project>

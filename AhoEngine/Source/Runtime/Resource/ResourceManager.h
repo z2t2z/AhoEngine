@@ -21,6 +21,8 @@ namespace Aho {
 		ResourceManager() { Initialize(); }
 		void Initialize();
 		std::shared_ptr<_Texture> LoadGPUTexture(const std::shared_ptr<TextureAsset>& textureAsset);
+		void RegisterBufferTexture(const std::string& name, const std::shared_ptr<_Texture>& buffer);
+		std::shared_ptr<_Texture> GetBufferTexture(const std::string& name) const;
 		std::shared_ptr<VertexArray> LoadVAO(const std::shared_ptr<MeshAsset>& textureAsset);
 		std::shared_ptr<Shader> LoadShaderResource(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature);
 	public:
@@ -32,5 +34,7 @@ namespace Aho {
 		std::unordered_map<std::string, int> m_GameObjects;
 		std::unordered_map<std::shared_ptr<Asset>, std::shared_ptr<_Texture>> m_TextureCached;
 		std::unordered_map<std::shared_ptr<Asset>, std::shared_ptr<VertexArray>> m_VAOCached;
+	private:
+		std::unordered_map<std::string, std::shared_ptr<_Texture>> m_BufferTextures;
 	};
 }

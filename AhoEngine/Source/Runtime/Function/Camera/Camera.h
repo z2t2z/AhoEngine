@@ -17,7 +17,9 @@ namespace Aho {
 		virtual glm::vec3 GetFront() const = 0;
 		virtual glm::vec3 GetRight() const = 0;
 
+		virtual void SetFOV(float fov) = 0;
 		virtual float GetFOV() const = 0;
+		virtual void SetAspectRatio(float ratio) = 0;
 		virtual float GetAspectRatio() const = 0;
 		virtual const float GetMoveSpeed() const = 0;
 		virtual const float GetRotationSpeed() const = 0;

@@ -47,7 +47,9 @@ namespace Aho {
         
         glm::vec3 GetFront()          const override { return m_Front; }
         glm::vec3 GetRight()          const override { return m_Right; }
+        virtual void SetFOV(float fov) override { m_Fov = fov;  m_ViewDirty = true; }
         virtual float GetFOV() const override { return m_Fov; }
+        virtual void SetAspectRatio(float ratio) override { m_AspectRatio = ratio; m_ViewDirty = true; }
         virtual float GetAspectRatio() const override { return m_AspectRatio; }
         
         const float GetMoveSpeed()                  const override { return m_Speed; }

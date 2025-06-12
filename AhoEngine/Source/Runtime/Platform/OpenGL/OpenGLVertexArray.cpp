@@ -78,64 +78,6 @@ namespace Aho {
 		SetIndexBuffer(indexBuffer);
 	}
 
-	void OpenGLVertexArray::Init(const std::shared_ptr<LineInfo>& lineInfo) {
-		auto& vertices = lineInfo->vertices;
-		auto& indices = lineInfo->indices;
-		std::shared_ptr<VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float), m_Dynamic));
-		BufferLayout layout = {
-			{ ShaderDataType::Float3, "a_Position" }
-		};
-		vertexBuffer->SetLayout(layout);
-		AddVertexBuffer(vertexBuffer);
-		std::shared_ptr<IndexBuffer> indexBuffer;
-		indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
-		SetIndexBuffer(indexBuffer);
-	}
-
-
-	void OpenGLVertexArray::Init(const std::shared_ptr<MeshInfo>& meshInfo) {
-		std::vector<float> vertices;
-		vertices.reserve(meshInfo->vertexBuffer.size() * 14u);
-		for (const auto& vertex : meshInfo->vertexBuffer) {
-			vertices.push_back(vertex.position.x);
-			vertices.push_back(vertex.position.y);
-			vertices.push_back(vertex.position.z);
-			if (meshInfo->hasNormal) {
-				vertices.push_back(vertex.normal.x);
-				vertices.push_back(vertex.normal.y);
-				vertices.push_back(vertex.normal.z);
-			}
-			if (meshInfo->hasUVs) {
-				vertices.push_back(vertex.u);
-				vertices.push_back(vertex.v);
-				// TODO;
-				vertices.push_back(vertex.tangent.x);
-				vertices.push_back(vertex.tangent.y);
-				vertices.push_back(vertex.tangent.z);
-			}
-		}
-		std::shared_ptr<VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
-		BufferLayout layout = {
-			{ ShaderDataType::Float3, "a_Position" }
-		};
-		if (meshInfo->hasNormal) {
-			layout.Push({ ShaderDataType::Float3, "a_Normal" });
-		}
-		if (meshInfo->hasUVs) {
-			layout.Push({ ShaderDataType::Float2, "a_TexCoords" });
-			// TODO;
-			layout.Push({ ShaderDataType::Float3, "a_Tangent" });
-		}
-		vertexBuffer->SetLayout(layout);
-		AddVertexBuffer(vertexBuffer);
-		
-		std::shared_ptr<IndexBuffer> indexBuffer;
-		indexBuffer.reset(IndexBuffer::Create(meshInfo->indexBuffer.data(), meshInfo->indexBuffer.size()));
-		SetIndexBuffer(indexBuffer);
-	}
-
 	void OpenGLVertexArray::Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) {
 		std::vector<float> vertices;
 		std::vector<int> verticesI;

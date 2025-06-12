@@ -8,6 +8,7 @@
 #include "RenderPipeline/DebugVisualPipeline.h"
 #include "RenderPipeline/DeferredPipeline.h"
 #include "RenderPipeline/SkyAtmosphericPipeline.h"
+#include "Runtime/Function/Renderer/GpuTimer.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Level/Ecs/Components.h"
 #include "Runtime/Function/Level/Ecs/EntityManager.h"
@@ -25,7 +26,6 @@ namespace Aho {
 		PathTracing,
 		BufferVisual
 	};
-
 	
 	class Renderer {
 	public:
@@ -36,17 +36,9 @@ namespace Aho {
 			delete m_RP_Derferred;
 			delete m_RP_SkyAtmospheric;
 			delete m_RP_IBLPipeline;
+			delete m_RP_Postprocess;
 		}
-		void SetRenderMode(RenderMode mode) { 
-			m_CurrentRenderMode = mode; 
-			if (mode == RenderMode::PathTracing) {
-				m_ActivePipelines = { m_RP_PathTracing };
-				m_ViewportDisplayTextureID = m_RP_PathTracing->GetRenderResultTextureID();
-			} else {
-				m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred };
-				m_ViewportDisplayTextureID = m_RP_Derferred->GetRenderResultTextureID();
-			}
-		}
+		void SetRenderMode(RenderMode mode);
 		RenderMode GetRenderMode() const { return m_CurrentRenderMode; }
 		auto GetRenderableContext() const {
 			auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
@@ -56,26 +48,27 @@ namespace Aho {
 		RenderPipeline* GetPipeline(RenderPipelineType type);
 		bool OnViewportResize(uint32_t width, uint32_t height);
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-		uint32_t GetViewportDisplayTextureID() const { return m_ViewportDisplayTextureID; }
-		void SetViewportDisplayTextureID(uint32_t id) { m_ViewportDisplayTextureID = id; }
+		uint32_t GetViewportDisplayTextureID() const { return m_ViewportDisplayBuffer->GetTextureID(); }
+		void SetViewportDisplayTextureBuffer(_Texture* buffer) { m_ViewportDisplayBuffer = buffer; }
 		std::vector<RenderPassBase*> GetAllRenderPasses() const { return m_AllRenderPasses; }
 		void RegisterRenderPassBase(RenderPassBase* renderPassBase) { m_AllRenderPasses.push_back(renderPassBase); }
 	private:
 		void SetupUBOs() const;
 		void UpdateUBOs() const;
 	private:
-		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		DebugVisualPipeline* m_RP_Dbg{ nullptr };
 	private:
-		uint32_t m_ViewportDisplayTextureID{ 0 };
+		_Texture* m_ViewportDisplayBuffer;
 		std::vector<RenderPipeline*> m_ActivePipelines;
 	// New System
 	public:
 		std::vector<RenderPassBase*> m_AllRenderPasses;
-		DeferredShading* GetDeferredShadingPipeline() { return m_RP_Derferred; }
-		SkyAtmosphericPipeline* GetSkyAtmosphericPipeline() { return m_RP_SkyAtmospheric; }
-		PathTracingPipeline* GetPathTracingPipeline() { return m_RP_PathTracing; }
+		DeferredShading* GetDeferredShadingPipeline()		const { return m_RP_Derferred; }
+		SkyAtmosphericPipeline* GetSkyAtmosphericPipeline() const { return m_RP_SkyAtmospheric; }
+		PathTracingPipeline* GetPathTracingPipeline()		const { return m_RP_PathTracing; }
+		PostprocessPipeline* GetPostprocessPipeline()		const { return m_RP_Postprocess; }
 	private:
+		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		_IBLPipeline* m_RP_IBLPipeline{ nullptr };
 		DeferredShading* m_RP_Derferred{ nullptr };
 		SkyAtmosphericPipeline* m_RP_SkyAtmospheric{ nullptr };

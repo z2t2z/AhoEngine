@@ -25,6 +25,11 @@ namespace Aho {
 			return m_Registry.get<T>(entity.GetEntityHandle());
 		}
 
+		template<typename... Components>
+		std::tuple<Components*...> TryGet(Entity entity) {
+			return m_Registry.try_get<Components...>(entity.GetEntityHandle());
+		}
+
 		template<typename T>
 		bool HasComponent(Entity entity) {
 			return m_Registry.all_of<T>(entity.GetEntityHandle());
@@ -46,29 +51,14 @@ namespace Aho {
 			return m_Registry.view<Include...>(std::forward<Filter>(filter));
 		}
 
-		Entity CreateEntity() {
-			Entity entity{ m_Registry.create() };
-			if (static_cast<uint32_t>(entity.GetEntityHandle()) == 0u) {
-				entity = m_Registry.create();
-			}
-			return entity;
-		}
-
-		void DestroyEntity(Entity entity) {
-			AHO_CORE_ASSERT(entity.Valid(), "Invalid entity!");
-			if (HasComponent<GameObjectComponent>(entity)) {
-				auto goComp = GetComponent<GameObjectComponent>(entity);
-				for (auto child : goComp.children) {
-					DestroyEntity(child);
-				}
-			}
-			m_Registry.destroy(entity.GetEntityHandle());
-		}
-
 		template <typename T>
 		void RemoveComponent(Entity entity) {
 			m_Registry.remove<T>(entity.GetEntityHandle());
 		}
+
+		Entity CreateEntity();
+
+		void DestroyEntity(Entity entity);
 
 		bool IsEntityIDValid(uint32_t id) {
 			return m_Registry.valid(static_cast<entt::entity>(id));

@@ -1,6 +1,5 @@
 #include "Ahopch.h"
 #include "GlobalContext.h"
-
 #include "Runtime/Core/IndexAllocator.h"
 #include "Runtime/Core/Log/Log.h"
 #include "Runtime/Core/Input/Input.h"

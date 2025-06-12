@@ -23,7 +23,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				//RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				static glm::vec3 lightPos(0.0);
@@ -64,7 +64,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				for (const auto& data : renderData) {
@@ -103,7 +103,7 @@ namespace Aho {
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				for (const auto& data : renderData) {

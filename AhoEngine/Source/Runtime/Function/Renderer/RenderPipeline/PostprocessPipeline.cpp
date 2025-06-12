@@ -1,7 +1,14 @@
 #include "Ahopch.h"
 #include "PostprocessPipeline.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Resource/ResourceManager.h"
 #include "Runtime/Resource/FileWatcher/FileWatcher.h"
+#include "Runtime/Function/Renderer/Shader/ShaderVariantManager.h"
 #include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
+#include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
+#include "../../../../../../AhoEditor/Source/EditorUI/EditorGlobalContext.h"
 
 namespace Aho {
 	static std::filesystem::path g_CurrentPath = std::filesystem::current_path();
@@ -9,31 +16,106 @@ namespace Aho {
 	void PostprocessPipeline::Initialize() {
 		m_Type = RenderPipelineType::RPL_PostProcess;
 
-		m_DrawSelectedPass = SetupDrawSelectedPass();
-		m_DrawSelectedOutlinePass = SetupDrawSelectedOutlinePass();
-		m_FXAAPass = SetupFXAAPass();
+		m_SelectedDepth = TextureResourceBuilder()
+			.Name("SelectedDepth").Width(1280).Height(720).DataType(DataType::UShort).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth16)
+			.Build();
 
-		m_DrawSelectedOutlinePass->RegisterTextureBuffer({ m_DrawSelectedPass->GetTextureBuffer(TexType::Result), TexType::Entity });
-		m_FXAAPass->RegisterTextureBuffer({ m_DrawSelectedOutlinePass->GetTextureBuffer(TexType::Result), TexType::Result });
+		m_Outlined = TextureResourceBuilder()
+			.Name("Outlined").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
+		m_TextureBuffers.push_back(m_SelectedDepth);
+		m_TextureBuffers.push_back(m_Outlined);
 
-		m_TestQuadPass = SetupTestQuadPass();
 
-		RegisterRenderPass(m_TestQuadPass.get(), RenderDataType::Empty);
-		RegisterRenderPass(m_DrawSelectedPass.get(), RenderDataType::ScreenQuad);
-		RegisterRenderPass(m_DrawSelectedOutlinePass.get(), RenderDataType::ScreenQuad);
-		RegisterRenderPass(m_FXAAPass.get(), RenderDataType::ScreenQuad);
+		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "Postprocessing";
+		// Draw selected object into a depth buffer for editor outline
+		{
+			auto Func =
+				[](RenderPassBase& self) {
+					if (!g_EditorGlobalCtx.HasActiveSelected()) 
+						return;
+					self.GetRenderTarget()->Bind();
+					RenderCommand::Clear(ClearFlags::Depth_Buffer);
+					auto shader = self.GetShader();
+					shader->Bind();
+					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+					Entity entity = g_EditorGlobalCtx.GetSelectedEntity();
 
-		//m_RenderResult = m_FXAAPass->GetTextureBuffer(TexType::Result);
-		//m_RenderResult = m_TestQuadPass->GetTextureBuffer(TexType::Result);
+					auto [vertexArray, transform] = ecs->TryGet<VertexArrayComponent, _TransformComponent>(entity);
+					if (vertexArray && transform) {
+						vertexArray->vao->Bind();
+						shader->SetMat4("u_Model", transform->GetTransform());
+						//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+						RenderCommand::DrawIndexed(vertexArray->vao);
+						vertexArray->vao->Unbind();
+					}
+
+					self.GetRenderTarget()->Unbind();
+					shader->Unbind();
+				};
+			m_SingleDepthPass = std::move(RenderPassBuilder()
+				.Name("SingleDepthPass")
+				.Shader((shaderPathRoot / "SingleDepth.glsl").string())
+				//.Usage(ShaderUsage::DistantLightShadowMap)
+				.AttachTarget(m_SelectedDepth)
+				.Func(Func)
+				.Build());
+		}
+
+		// Outline pass
+		{
+			auto Func =
+				[](RenderPassBase& self) {
+					RenderCommand::Clear(ClearFlags::Color_Buffer);
+					auto shader = self.GetShader();
+					self.GetRenderTarget()->Bind();
+					shader->Bind();
+					
+					uint32_t slot = 0;
+					self.BindRegisteredTextureBuffers(slot);
+
+					auto renderMode = g_RuntimeGlobalCtx.m_Renderer->GetRenderMode();
+					shader->SetInt("u_RenderMode", renderMode == RenderMode::PathTracing ? 1 : 0);
+
+					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
+					RenderCommand::DrawArray();
+
+					self.GetRenderTarget()->Unbind();
+					shader->Unbind();
+				};
+			m_OutlinePass = std::move(RenderPassBuilder()
+				.Name("OutlinePass")
+				.Shader((shaderPathRoot / "EditorOutline.glsl").string())
+				.AttachTarget(m_Outlined)
+				.Input("u_SelectedDepth", m_SelectedDepth)
+				.Input("u_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("Lit Scene Result"))
+				.Input("u_PT_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("PathTracingPresent"))
+				.Func(Func)
+				.Build());
+		}
+
+		m_Result = m_Outlined.get();
 	}
 
+	void PostprocessPipeline::Execute() {
+		m_SingleDepthPass->Execute();
+		m_OutlinePass->Execute();
+	}
 
+	bool PostprocessPipeline::Resize(uint32_t width, uint32_t height) const {
+		bool resized = false;
+		resized |= m_SelectedDepth->Resize(width, height);
+		resized |= m_Outlined->Resize(width, height);
+		return resized;
+	}
+
+	// ----- delete these -----
 	std::unique_ptr<RenderPass> PostprocessPipeline::SetupDrawSelectedOutlinePass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				uint32_t texOffset = 0u;
@@ -72,48 +154,12 @@ namespace Aho {
 		return pass;
 	}
 
-	std::unique_ptr<RenderPass> PostprocessPipeline::SetupDrawSelectedPass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				//if (RendererGlobalState::g_IsEntityIDValid && RendererGlobalState::g_SelectedData) {
-				//	shader->Bind();
-				//	renderTarget->EnableAttachments(0);
-				//	RenderCommand::Clear(ClearFlags::Color_Buffer);
-				//	const auto& data = RendererGlobalState::g_SelectedData;
-				//	shader->SetUint("u_EntityID", data->GetEntityID());
-				//	data->Bind(shader);
-				//	data->IsInstanced() ? RenderCommand::DrawIndexedInstanced(data->GetVAO(), data->GetVAO()->GetInstanceAmount()) : RenderCommand::DrawIndexed(data->GetVAO());
-				//	data->Unbind();
-				//	renderTarget->Unbind();
-				//	shader->Unbind();
-				//}
-			});
-
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("DrawSelectedPass");
-		pass->SetRenderCommand(std::move(cmdBuffer));
-
-		auto pickingShader = Shader::Create(g_CurrentPath / "ShaderSrc" / "DrawSelected.glsl");
-		pass->SetShader(pickingShader);
-		TexSpec spec;
-		spec.debugName = "DrawSelectedSeperately";
-		spec.internalFormat = TexInterFormat::UINT;
-		spec.dataFormat = TexDataFormat::UINT;
-		spec.dataType = TexDataType::UnsignedInt;
-		spec.type = TexType::Result;
-		FBSpec fbSpec(1280u, 720u, { spec });  // pick pass can use a low resolution. But ratio should be the same
-		auto fbo = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::DrawSelected);
-		return pass;
-	}
-
 	std::unique_ptr<RenderPass> PostprocessPipeline::SetupFXAAPass() {
 		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
 		cmdBuffer->AddCommand(
 			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
 				shader->Bind();
-				renderTarget->EnableAttachments(0);
+				renderTarget->Bind();
 				RenderCommand::Clear(ClearFlags::Color_Buffer);
 
 				uint32_t texOffset = 0u;
@@ -147,39 +193,5 @@ namespace Aho {
 		return pass;
 	}
 
-	std::unique_ptr<RenderPass> PostprocessPipeline::SetupTestQuadPass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				shader->Bind();
-				renderTarget->EnableAttachments(0);
-				RenderCommand::Clear(ClearFlags::Color_Buffer);
-
-				for (const auto& data : renderData) {
-					data->Bind(shader);
-					RenderCommand::DrawArray();
-					data->Unbind();
-				}
-
-				RenderCommand::CheckError();
-				renderTarget->Unbind();
-				shader->Unbind();
-			});
-
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("InfiniteGrid");
-		pass->SetRenderCommand(std::move(cmdBuffer));
-
-		auto shader = Shader::Create(g_CurrentPath / "ShaderSrc" / "infiniteGrid.glsl");
-		pass->SetShader(shader);
-
-		TexSpec texSpecColor; texSpecColor.type = TexType::Result;
-		texSpecColor.debugName = "InfiniteGrid";
-
-		FBSpec fbSpec(1280u, 720u, { texSpecColor });
-		auto fbo = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::Test);
-		return pass;
-	}
 
 }

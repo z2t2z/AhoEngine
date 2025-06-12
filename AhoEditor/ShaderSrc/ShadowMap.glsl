@@ -16,7 +16,7 @@ uniform mat4 u_Model;
 
 void main() {
 	vec4 finalPos = vec4(a_Position, 1.0f);
-	mat4 skinningMatrix = mat4(0.0f);
+	mat4 skinningMatrix = mat4(1.0f);
 	bool hasAnimationInfo = false;
 	for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
 		int id = a_BoneID[i];

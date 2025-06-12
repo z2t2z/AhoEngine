@@ -1,6 +1,7 @@
 #include "Viewport.h"
 #include "FileExplorer.h"
 #include "EditorUI/ImGuiHelpers.h"
+#include "EditorUI/EditorGlobalContext.h"
 #include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
@@ -41,40 +42,29 @@ namespace Aho {
 			m_AddIcon = tex.get();
 		}
 	}
-	
+
 	void Viewport::Draw() {
+		DrawMainViewport();
+		DrawToolBarOverlay();
+		DrawLightIcons(); // visual debug
+	}
+
+	void Viewport::DrawMainViewport() {
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 		ImGui::Begin("Viewport", nullptr, window_flags);
 		ImGui::PopStyleVar();
 
-		DrawToolBarOverlay();
 		auto [width, height] = ImGui::GetWindowSize();
 		m_ViewportWidth = width, m_ViewportHeight = height;
 		if (m_Renderer->OnViewportResize(width, height)) {
-			m_EditorCamera->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
+			m_EditorCamera->SetAspectRatio(width / height);
 		}
 
-		// TODO: Should be able to select any render result of any passes
 		uint32_t renderResult = m_Renderer->GetViewportDisplayTextureID();
-		ImGui::Image((ImTextureID)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-		auto [mouseX, mouseY] = ImGui::GetMousePos();
-		auto [windowPosX, windowPosY] = ImGui::GetWindowPos();
-		int MouseX = mouseX - windowPosX, MouseY = mouseY - windowPosY; // Lower left is[0, 0]
-		MouseY = height - MouseY;
-		std::swap(m_MouseX, MouseX);
-		std::swap(m_MouseY, MouseY);
-		if (m_ShouldPickObject) {
-			//m_ShouldPickObject = false;
-			if (IsCursorInViewport()) {
-				//m_Renderer->GetCurrentRenderPipeline()->GetRenderPassTarget(RenderPassType::SSAOGeo)->Unbind();
-			}
-		}
-
+		ImGui::Image((ImTextureID)(intptr_t)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		DrawGizmo();
 		TryGetDragDropTarget();
-		DrawLightIcons();
 		ImGui::End();
 	}
 
@@ -232,7 +222,7 @@ namespace Aho {
 						s_CurrentBufferIndex = i;
 						ImGui::CloseCurrentPopup();             // Close buffer list
 						ImGui::CloseCurrentPopup();             // Close parent menu
-						g_RuntimeGlobalCtx.m_Renderer->SetViewportDisplayTextureID(buffers[i]->GetTextureID());
+						g_RuntimeGlobalCtx.m_Renderer->SetViewportDisplayTextureBuffer(buffers[i].get());
 					}
 				}
 				ImGui::EndPopup();
@@ -243,42 +233,37 @@ namespace Aho {
 		ImGui::End();
 	}
 
-	static bool s_IsClickingEventBlocked = false;
-	static uint32_t s_PickPixelData = UINT_MAX;
 	void Viewport::DrawGizmo() {
-		bool m_Selected;
-		Entity m_SelectedObject;
-		m_Selected = false;
-		if (m_LevelLayer->GetCurrentLevel()) {
-			auto entityManager = m_LevelLayer->GetCurrentLevel()->GetEntityManager();
-			if (entityManager->IsEntityIDValid(s_PickPixelData)) {
+		if (!g_EditorGlobalCtx.HasActiveSelected()) 
+			return;
 
-				m_SelectedObject = Entity(static_cast<entt::entity>(s_PickPixelData));
-				if (entityManager->HasComponent<TransformComponent>(m_SelectedObject)) {
-					m_Selected = true;
-					auto& tc = entityManager->GetComponent<TransformComponent>(m_SelectedObject);
-					auto& translation = tc.GetTranslation();
-					auto& scale = tc.GetScale();
-					auto& rotation = tc.GetRotation();
-					auto transform = tc.GetTransform();
-					// Gizmo
-					const auto& viewMat = m_EditorCamera->GetView();
-					const auto& projMat = m_EditorCamera->GetProjection();
-					ImGuizmo::SetOrthographic(false);
-					ImGuizmo::SetDrawlist();
-					ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, m_ViewportWidth, m_ViewportHeight - ImGui::GetFrameHeight());
+		const Entity& selected = g_EditorGlobalCtx.GetSelectedEntity();
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		if (!ecs->HasComponent<_TransformComponent>(selected))
+			return;
 
-					// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
-					if (g_Operation != ImGuizmo::OPERATION::NONE) {
-						s_IsClickingEventBlocked |= ImGuizmo::IsOver();
-						ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
-							g_Operation,
-							ImGuizmo::MODE::LOCAL,
-							glm::value_ptr(transform));
-						ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
-					}
-				}
-			}
+
+		_TransformComponent& transformComp = ecs->GetComponent<_TransformComponent>(selected);
+		auto& translation = transformComp.Translation;
+		auto& scale = transformComp.Scale;
+		auto& rotation = transformComp.Rotation;
+		auto transform = transformComp.GetTransform();
+
+		// Gizmo
+		const auto& viewMat = m_EditorCamera->GetView();
+		const auto& projMat = m_EditorCamera->GetProjection();
+		ImGuizmo::SetOrthographic(false);
+		ImGuizmo::SetDrawlist();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, m_ViewportWidth, m_ViewportHeight - ImGui::GetFrameHeight());
+
+		// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
+		//s_IsClickingEventBlocked |= ImGuizmo::IsOver();
+		if (g_Operation != ImGuizmo::OPERATION::NONE) {
+			ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
+				g_Operation,
+				ImGuizmo::MODE::LOCAL,
+				glm::value_ptr(transform));
+			ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
 		}
 	}
 
@@ -340,7 +325,6 @@ namespace Aho {
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(btn0Align[0], btn0Align[1]));
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, frameRounding);
 
-		//BeginIconFont();
 		for (size_t i = 0; i < uiBtns.size(); i++) {
 			auto& btn = uiBtns[i];
 			activeBtnColor.w = (activeBtnIdx == i) ? 1.0f : 0.0f;
@@ -350,11 +334,9 @@ namespace Aho {
 				activeBtnIdx = i;
 				g_Operation = btn.oper;
 				m_ShouldPickObject = false;
-				s_IsClickingEventBlocked = true;
 			}
 			ImGui::PopStyleColor();
 		}
-		//EndIconFont();
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();

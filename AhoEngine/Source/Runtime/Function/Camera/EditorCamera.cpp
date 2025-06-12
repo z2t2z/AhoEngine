@@ -43,6 +43,5 @@ namespace Aho {
 	
 	void EditorCamera::RecalculateProjectionMatrix() {
 		m_ProjectionMatrix = glm::perspective(glm::radians(m_Fov), m_AspectRatio, m_NearPlane, m_FarPlane);
-		//m_ProjectionMatrixInv = glm::inverse(m_ProjectionMatrix);
 	}
 }

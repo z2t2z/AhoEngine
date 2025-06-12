@@ -4,21 +4,19 @@
 #include "Runtime/Core/Timer.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Geometry/BVH.h"
+#include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
-#include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
-#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
-#include "Runtime/Function/Level/EcS/Components.h"
-#include "Runtime/Function/Level/EcS/EntityManager.h"
-#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
 
 namespace Aho {
 	PathTracingPipeline::PathTracingPipeline() {
 		Initialize();
 	}
 
+	// TODO: Wave front, blas does not update per frame
 	void PathTracingPipeline::Initialize() {
 		constexpr int64_t MAX_MESH		= 1'280'0;
 		constexpr int64_t MAX_TLAS_NODE = 1'280'000;
@@ -33,34 +31,21 @@ namespace Aho {
 		SSBOManager::RegisterSSBO<MaterialDescriptor>(5, MAX_MESH, true);
 
 		std::shared_ptr<_Texture> accumulateTex = TextureResourceBuilder()
-			.Name("PathTracingAccumulate")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGBA)
-			.InternalFormat(InternalFormat::RGBA32F)
+			.Name("PathTracingAccumulate").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA32F)
 			.Build();
 		std::shared_ptr<_Texture> presentTex = TextureResourceBuilder()
-			.Name("PathTracingPresent")
-			.Width(1280)
-			.Height(720)
-			.DataType(DataType::Float)
-			.DataFormat(DataFormat::RGBA)
-			.InternalFormat(InternalFormat::RGBA16F)
+			.Name("PathTracingPresent").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
 			.Build();
 
 		m_TextureBuffers.push_back(accumulateTex);
 		m_TextureBuffers.push_back(presentTex);
-		m_ResultTextureID = presentTex->GetTextureID();
-		m_Result = presentTex.get();
 
+		m_Result = presentTex.get();
+		
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing";
 		// --- Accumulate pass ---
 		{
-			RenderPassConfig cfg;
-			cfg.passName = "Path Tracing Accumulate Pass";
-			cfg.shaderPath = (shaderPathRoot / "PathTracing.glsl").string();
-			cfg.func =
+			auto Func =
 				[accumulateTex, this](RenderPassBase& self) {
 					auto shader = self.GetShader();
 					shader->Bind();
@@ -154,17 +139,18 @@ namespace Aho {
 					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
 					shader->Unbind();
 				};
-			m_AccumulatePass = std::make_unique<RenderPassBase>();
-			m_AccumulatePass->Setup(cfg);
+
+			m_AccumulatePass = std::move(RenderPassBuilder()
+				.Name("PathTracingAccumulate Pass")
+				.Shader((shaderPathRoot / "PathTracing.glsl").string())
+				.Usage(ShaderUsage::PathTracing)
+				.Func(Func)
+				.Build());
 		}
 
 		// --- Present Pass ---
 		{
-			RenderPassConfig cfg;
-			cfg.passName = "Path Tracing Present Pass";
-			cfg.shaderPath = (shaderPathRoot / "Present.glsl").string();
-			cfg.attachmentTargets.push_back(presentTex.get());
-			cfg.func =
+			auto Func =
 				[this](RenderPassBase& self) {
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto shader = self.GetShader();
@@ -182,9 +168,15 @@ namespace Aho {
 					shader->Unbind();
 					self.GetRenderTarget()->Unbind();
 				};
-			m_PresentPass = std::make_unique<RenderPassBase>();
-			m_PresentPass->Setup(cfg);
-			m_PresentPass->RegisterTextureBuffer(accumulateTex.get(), "u_PathTracingAccumulate");
+
+			m_PresentPass = std::move(RenderPassBuilder()
+				.Name("PathTracingPresent Pass")
+				.Shader((shaderPathRoot / "Present.glsl").string())
+				//.Usage(ShaderUsage::PathTracing)
+				.AttachTarget(presentTex)
+				.Input("u_PathTracingAccumulate", accumulateTex)
+				.Func(Func)
+				.Build());
 		}
 	}
 

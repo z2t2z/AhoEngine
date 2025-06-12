@@ -12,9 +12,7 @@ namespace Aho {
 	public:
 		virtual ~VertexArray() {}
 		virtual void Init(const Mesh& mesh) = 0;
-		virtual void Init(const std::shared_ptr<MeshInfo>& meshInfo) = 0;
 		virtual void Init(const std::shared_ptr<SkeletalMeshInfo>& meshInfo) = 0;
-		virtual void Init(const std::shared_ptr<LineInfo>& lineInfo) = 0;
 		virtual void SetInstancedTransform(const std::vector<glm::mat4>& transform, bool dynamicDraw) = 0;
 		virtual void UpdateInstancedTransform(const std::vector<glm::mat4>& transform) = 0;
 		virtual uint32_t GetInstanceAmount() const = 0;

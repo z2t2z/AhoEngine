@@ -1,5 +1,6 @@
 #include "AhoEditorLayer.h"
 #include "FileExplorer.h"
+#include "EditorUI/EditorGlobalContext.h"
 #include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
@@ -141,15 +142,24 @@ namespace Aho {
 			}
 		}
 
-		static Entity selectedEntity;
-		Entity entity = m_HierachicalPanel.Draw();
-		if (entity.Valid()) {
-			selectedEntity = entity;
-		}
 		m_ContentBrowser.Draw();
-		m_PropertiesPanel.Draw(selectedEntity);
 		m_Viewport.Draw();
+		m_HierachicalPanel.Draw();
+		m_PropertiesPanel.Draw();
 		m_DbgPenal.Draw();
+
+		static bool pOpen = true;
+		auto debugOverlay =
+			[&]() -> void {
+				ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize /*| ImGuiWindowFlags_NoSavedSettings*/ | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav /*| ImGuiWindowFlags_NoMove*/;
+				ImGui::Begin("##DebugOverlayInEditorLayer", &pOpen, window_flags);
+				auto e = g_EditorGlobalCtx;
+				int64_t id0 = static_cast<int64_t>(g_EditorGlobalCtx.GetSelectedEntity().GetEntityHandle());
+				ImVec4 color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+				ImGui::TextColored(color, "Id: %d, Address: %p", id0, (void*)&g_EditorGlobalCtx);
+				ImGui::End();
+			};
+		debugOverlay();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {
