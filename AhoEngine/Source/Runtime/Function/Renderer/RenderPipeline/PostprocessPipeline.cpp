@@ -23,11 +23,63 @@ namespace Aho {
 		m_Outlined = TextureResourceBuilder()
 			.Name("Outlined").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
 			.Build();
+		m_ObjectID = TextureResourceBuilder()
+			.Name("ObjectID").Width(1280).Height(720).DataType(DataType::UInt).DataFormat(DataFormat::RedInteger).InternalFormat(InternalFormat::R32UI)
+			.Build();
+		m_PickingDepth = TextureResourceBuilder()
+			.Name("PickingPassDepth").Width(1280).Height(720).DataType(DataType::UShort).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth16)
+			.Build();
+
 		m_TextureBuffers.push_back(m_SelectedDepth);
 		m_TextureBuffers.push_back(m_Outlined);
+		m_TextureBuffers.push_back(m_ObjectID);
+		m_TextureBuffers.push_back(m_PickingDepth);
 
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "Postprocessing";
+		
+		// Picking Pass, draw object id into a buffer for reading
+		{
+
+			auto Func =
+				[](RenderPassBase& self) {
+					auto [shouldPick, x, y] = g_EditorGlobalCtx.PickInfoAtThisFrame();
+					if (!shouldPick)
+						return;
+
+					auto shader = self.GetShader();
+					self.GetRenderTarget()->Bind();
+					RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
+					shader->Bind();
+					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
+						[&shader](const Entity& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
+							vao.vao->Bind();
+							shader->SetUint("u_ObjectID", static_cast<uint32_t>(entity.GetEntityHandle()));
+							shader->SetMat4("u_Model", transform.GetTransform());
+							RenderCommand::DrawIndexed(vao.vao);
+							vao.vao->Unbind();
+						}
+					);
+
+					uint32_t pickedID;
+					glReadBuffer(GL_COLOR_ATTACHMENT0);
+					glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pickedID);
+					g_EditorGlobalCtx.SetSelected(pickedID);
+
+					self.GetRenderTarget()->Unbind();
+					shader->Unbind();
+				};
+
+			m_PickingPass = std::move(RenderPassBuilder()
+				.Name("PickingPass")
+				.Shader((shaderPathRoot / "DrawObjectID.glsl").string())
+				//.Usage(ShaderUsage::DistantLightShadowMap)
+				.AttachTarget(m_ObjectID)
+				.AttachTarget(m_PickingDepth)
+				.Func(Func)
+				.Build());
+		}
+
 		// Draw selected object into a depth buffer for editor outline
 		{
 			auto Func =
@@ -45,7 +97,6 @@ namespace Aho {
 					if (vertexArray && transform) {
 						vertexArray->vao->Bind();
 						shader->SetMat4("u_Model", transform->GetTransform());
-						//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 						RenderCommand::DrawIndexed(vertexArray->vao);
 						vertexArray->vao->Unbind();
 					}
@@ -98,60 +149,17 @@ namespace Aho {
 	}
 
 	void PostprocessPipeline::Execute() {
+		m_PickingPass->Execute();
 		m_SingleDepthPass->Execute();
 		m_OutlinePass->Execute();
 	}
 
 	bool PostprocessPipeline::Resize(uint32_t width, uint32_t height) const {
 		bool resized = false;
+		resized |= m_PickingPass->Resize(width, height);
 		resized |= m_SelectedDepth->Resize(width, height);
 		resized |= m_Outlined->Resize(width, height);
 		return resized;
-	}
-
-	// ----- delete these -----
-	std::unique_ptr<RenderPass> PostprocessPipeline::SetupDrawSelectedOutlinePass() {
-		std::unique_ptr<RenderCommandBuffer> cmdBuffer = std::make_unique<RenderCommandBuffer>();
-		cmdBuffer->AddCommand(
-			[](const std::vector<std::shared_ptr<RenderData>>& renderData, const std::shared_ptr<Shader>& shader, const std::vector<TextureBuffer>& textureBuffers, const std::shared_ptr<Framebuffer>& renderTarget) {
-				shader->Bind();
-				renderTarget->Bind();
-				RenderCommand::Clear(ClearFlags::Color_Buffer);
-
-				uint32_t texOffset = 0u;
-				for (const auto& texBuffer : textureBuffers) {
-					shader->SetInt(TextureBuffer::GetTexBufferUniformName(texBuffer.m_Type), texOffset);
-					texBuffer.m_Texture->Bind(texOffset++);
-				}
-
-				//shader->SetUint("u_SelectedEntityID", RendererGlobalState::g_SelectedEntityID);
-				//shader->SetBool("u_IsEntityIDValid", RendererGlobalState::g_IsEntityIDValid);
-
-				for (const auto& data : renderData) {
-					data->Bind(shader);
-					RenderCommand::DrawIndexed(data->GetVAO());
-					data->Unbind();
-				}
-				renderTarget->Unbind();
-				shader->Unbind();
-			});
-
-		std::unique_ptr<RenderPass> pass = std::make_unique<RenderPass>("Postprocessing");
-		pass->SetRenderCommand(std::move(cmdBuffer));
-
-		auto shaderPath = g_CurrentPath / "ShaderSrc" / "Postprocessing.glsl";
-		auto shader = Shader::Create(shaderPath);
-
-		pass->SetShader(shader);
-		TexSpec texSpecColor;
-		texSpecColor.debugName = "drawOutline";
-
-		texSpecColor.type = TexType::Result;
-		FBSpec fbSpec(1280u, 720u, { texSpecColor });  // pick pass can use a low resolution. But ratio should be the same
-		auto fbo = Framebuffer::Create(fbSpec);
-		pass->SetRenderTarget(fbo);
-		pass->SetRenderPassType(RenderPassType::PostProcessing);
-		return pass;
 	}
 
 	std::unique_ptr<RenderPass> PostprocessPipeline::SetupFXAAPass() {
@@ -192,6 +200,5 @@ namespace Aho {
 		pass->SetRenderPassType(RenderPassType::FXAA);
 		return pass;
 	}
-
 
 }

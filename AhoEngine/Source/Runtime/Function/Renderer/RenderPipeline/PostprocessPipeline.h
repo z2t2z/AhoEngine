@@ -15,17 +15,18 @@ namespace Aho {
 	private:
 		std::shared_ptr<_Texture> m_SelectedDepth;
 		std::shared_ptr<_Texture> m_Outlined;
+		std::shared_ptr<_Texture> m_ObjectID;
+		std::shared_ptr<_Texture> m_PickingDepth;
 	private:
+		std::unique_ptr<RenderPassBase> m_PickingPass;
 		std::unique_ptr<RenderPassBase> m_SingleDepthPass;
 		std::unique_ptr<RenderPassBase> m_OutlinePass;
 
 
 	// --- Delete these ---
 	private:
-		std::unique_ptr<RenderPass> SetupDrawSelectedOutlinePass();
 		std::unique_ptr<RenderPass> SetupFXAAPass();
 	private:
-		std::unique_ptr<RenderPass> m_DrawSelectedOutlinePass;
 		std::unique_ptr<RenderPass> m_FXAAPass;
 	};
 

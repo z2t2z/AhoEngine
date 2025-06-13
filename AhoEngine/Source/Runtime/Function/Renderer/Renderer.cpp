@@ -14,6 +14,14 @@ namespace Aho {
 	Renderer::Renderer() {
 	}
 
+	Renderer::~Renderer() {
+		delete m_RP_PathTracing;
+		delete m_RP_Derferred;
+		delete m_RP_SkyAtmospheric;
+		delete m_RP_IBLPipeline;
+		delete m_RP_Postprocess;
+	}
+
 	void Renderer::SetRenderMode(RenderMode mode) {
 		m_CurrentRenderMode = mode;
 		if (mode == RenderMode::PathTracing) {

@@ -68,10 +68,16 @@ bool IntersectPrimitive(Ray ray, PrimitiveDesc p, inout TempHitInfo tinfo) {
     return true;
 }
 
+void RayToLocal(inout Ray ray, mat3 inv3x3, mat4 transform) {
+
+}
 
 void RayTracePrimitive(Ray ray, int id, inout HitInfo info) {
     int nodeOffset = s_OffsetInfo[id].nodeOffset;
     int primOffset = s_OffsetInfo[id].primtiveOffset;
+    mat4 transform = s_OffsetInfo[id].transform;
+    mat3 invTransform = s_OffsetInfo[id].invTransform;
+
     int stk[BLAS_STACK_DEPTH];
     int ptr = -1;
     stk[++ptr] = 0;

@@ -98,7 +98,7 @@ namespace Aho {
 					RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
 					shader->Bind();
 					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
-						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
+						[&shader](const Entity& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
 							vao.vao->Bind();
 							uint32_t slot = 0;
 							mat.mat.ApplyToShader(shader, slot);
@@ -266,6 +266,8 @@ namespace Aho {
 		m_SSRPass->Execute();
 	}
 
+	//Resize framebuffer if there is(along with all its attachments)
+	//For passes that don't have framebuffer(compute shader pass), resize those buffers directly
 	bool DeferredShading::Resize(uint32_t width, uint32_t height) const {
 		bool resized = false;
 		resized |= m_GBufferPass->Resize(width, height);

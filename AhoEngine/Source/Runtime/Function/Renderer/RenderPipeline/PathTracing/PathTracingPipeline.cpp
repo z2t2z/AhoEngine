@@ -51,20 +51,10 @@ namespace Aho {
 					shader->Bind();
 
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto camView = ecs->GetView<EditorCamaraComponent>();
+
 					bool Reaccumulate = false;
-					camView.each(
-						[&](auto cam, EditorCamaraComponent& cmp) {
-							if (cmp.Dirty) {
-								cmp.Dirty = false;
-								Reaccumulate = true;
-							}
-						});
-					auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
-					if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
-						auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
-						iblComp.IBL->Bind(shader);
-					}
+					Reaccumulate |= SyncSceneDirtyFlags(ecs);
+					Reaccumulate |= SyncActiveIBLLighting(ecs, shader);
 
 					static bool BVHDirty = true;
 					auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
@@ -191,5 +181,60 @@ namespace Aho {
 		return resized;
 	}
 
+	bool PathTracingPipeline::SyncActiveIBLLighting(const std::shared_ptr<EntityManager>& ecs, const Shader* shader) const {
+		auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+		if (ecs->HasComponent<IBLComponent>(activeIBLEntity)) {
+			auto& iblComp = ecs->GetComponent<IBLComponent>(activeIBLEntity);
+			iblComp.IBL->Bind(shader);
+		}
+		return false;
+	}
 
+	bool PathTracingPipeline::SyncSceneDirtyFlags(const std::shared_ptr<EntityManager>& ecs) const {
+		// Camera movement
+		bool sceneChanged = false;
+		for (auto [entity, cam] : ecs->GetView<EditorCamaraComponent>().each()) {
+			if (cam.Dirty) {
+				cam.Dirty = false;
+				sceneChanged = true;
+			}
+		}
+
+		// Material
+		auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+		std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
+		view.each(
+			[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+				int meshID = bvh.bvh->GetMeshId();
+				if (material.Dirty) {
+					material.Dirty = false; // TODO: Should not be here, but in inspector panel
+					sceneChanged = true;
+					material.mat.UpdateMaterialDescriptor();
+					SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
+				}
+			}
+		);
+
+
+		// 
+		//for (auto [entity, bvh, transform, material] :
+		//	ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>().each()) {
+
+		//	if (transform.Dirty) {
+		//		transform.Dirty = false;
+		//		bvh.bvh->ApplyTransform(transform.GetTransform());
+		//		sceneChanged = true;
+		//		m_BlasToRebuild.emplace_back(bvh.bvh.get());
+		//		m_BVHDirty = true;
+		//	}
+
+		//	if (material.Dirty) {
+		//		material.Dirty = false;
+		//		material.mat.UpdateMaterialDescriptor();
+		//		SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, bvh.bvh->GetMeshId());
+		//		sceneChanged = true;
+		//	}
+		//}
+		return sceneChanged;
+	}
 }

@@ -15,6 +15,8 @@ namespace Aho {
 		bool IsCursorInViewport() {
 			return (m_MouseX >= 0 && m_MouseY >= 0 && m_MouseX < m_ViewportWidth && m_MouseY < m_ViewportHeight);
 		}
+		std::pair<int, int> GetMousePos() const { return std::make_pair(m_MouseX, m_MouseY); }
+		std::pair<int, int> GetMousePosYFliped() const { return std::make_pair(m_MouseX, m_ViewportHeight - m_MouseY); }
 		bool IsViewportFocused() {
 			return ImGui::IsWindowFocused();
 		}

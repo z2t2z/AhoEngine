@@ -69,6 +69,15 @@ namespace Aho {
 		glBindTexture(m_Dim, 0);
 	}
 
+	// TODO: Collapes in renderdoc
+	uint64_t _Texture::GetTextureHandle() {
+		if (m_Handle == 0) {
+			m_Handle = glGetTextureHandleARB(m_TextureID);
+			glMakeTextureHandleResidentARB(m_Handle);
+		}
+		return m_Handle;
+	}
+
 	// TODO: imutable storage
 	bool _Texture::Resize(uint32_t width, uint32_t height) {
 		if (m_Width == width && m_Height == height) {

@@ -59,5 +59,7 @@ namespace Aho {
 		int offset;
 		int nodeOffset;
 		int primOffset;
+		glm::mat4 transform;
+		glm::mat3 invTransform;
 	};
 }

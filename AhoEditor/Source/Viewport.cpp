@@ -61,6 +61,16 @@ namespace Aho {
 			m_EditorCamera->SetAspectRatio(width / height);
 		}
 
+		ImVec2 localPos = ImGui::GetMousePos() - ImGui::GetWindowPos();
+		int x = localPos.x, y = localPos.y;
+		m_MouseX = x, m_MouseY = y;
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) 
+			&& !ImGui::IsAnyItemHovered() 
+			&& !ImGuizmo::IsOver() 
+			&& x >= 0 && y >= 0 && x < m_ViewportWidth && y < m_ViewportHeight) {
+			g_EditorGlobalCtx.RequestPicking(x, m_ViewportHeight - y);
+		}
+
 		uint32_t renderResult = m_Renderer->GetViewportDisplayTextureID();
 		ImGui::Image((ImTextureID)(intptr_t)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		DrawGizmo();
@@ -421,14 +431,12 @@ namespace Aho {
 				GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(go);
 
 				// TODO: Put these in resource manager??                         
-				std::vector<std::pair<Entity, std::shared_ptr<MeshAsset>>> tasks; tasks.reserve(20);
 				auto view = ecs->GetView<MeshAssetComponent, MaterialRefComponent>(Exclude<VertexArrayComponent>); // Need testing
 				view.each(
 					[&](Entity entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {
 						goComp.children.push_back(entity);
 						GameObjectComponent& childGoComp = ecs->AddComponent<GameObjectComponent>(entity, mc.asset->GetName());
 						childGoComp.parent = go;
-						tasks.emplace_back(entity, mc.asset);
 						std::shared_ptr<VertexArray> vao = resourceManager->LoadVAO(mc.asset);
 						ecs->AddComponent<VertexArrayComponent>(entity, vao.get());
 						auto& matAssetComponent = ecs->GetComponent<MaterialAssetComponent>(matRefc.MaterialRefEntity);
@@ -436,13 +444,6 @@ namespace Aho {
 						ecs->AddComponent<_TransformComponent>(entity);
 					}
 				);
-
-				//size_t siz = tasks.size();
-				//g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz, 
-				//	[&](size_t i) {
-				//		auto vao = resourceManager->LoadVAO(tasks[i].second);
-				//		ecs->AddComponent<VertexArrayComponent>(tasks[i].first, vao.get());
-				//	}, 1);
 
 				ImGui::CloseCurrentPopup();
 				droppedString.clear();

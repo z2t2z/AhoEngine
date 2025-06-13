@@ -7,11 +7,14 @@ namespace Aho {
 	public:
 		bool HasActiveSelected() const { return m_Selected.Valid(); }
 		const Entity& GetSelectedEntity() const;
+		void RequestPicking(int x, int y);
 		void SetSelected(Entity selected);
+		void SetSelected(uint32_t id);
+		std::tuple<bool, int, int> PickInfoAtThisFrame() const { return m_PickInfo; }
 	private:
-		uint64_t m_Frame{ 0 };
+		std::tuple<bool, int, int> m_PickInfo = { false, -1, -1 };
 		Entity m_Selected;
 	};
 
-	extern EditorGlobalContext g_EditorGlobalCtx;
+	inline EditorGlobalContext g_EditorGlobalCtx;
 }

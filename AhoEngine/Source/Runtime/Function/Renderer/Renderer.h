@@ -31,13 +31,7 @@ namespace Aho {
 	public:
 		Renderer();
 		void Initialize();
-		~Renderer() {
-			delete m_RP_PathTracing;
-			delete m_RP_Derferred;
-			delete m_RP_SkyAtmospheric;
-			delete m_RP_IBLPipeline;
-			delete m_RP_Postprocess;
-		}
+		~Renderer();
 		void SetRenderMode(RenderMode mode);
 		RenderMode GetRenderMode() const { return m_CurrentRenderMode; }
 		auto GetRenderableContext() const {

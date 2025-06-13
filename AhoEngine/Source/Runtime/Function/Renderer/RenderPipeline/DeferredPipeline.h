@@ -24,13 +24,16 @@ namespace Aho {
 		std::unique_ptr<RenderPassBase> m_DepthPyramidPass;
 		std::unique_ptr<RenderPassBase> m_SSRPass;
 	private:
+		std::unique_ptr<RenderPassBase> m_DrawObjectIDPass;
+	private:
 		// G_Buffers
 		std::shared_ptr<_Texture> m_Position;
 		std::shared_ptr<_Texture> m_Depth;
 		std::shared_ptr<_Texture> m_Normal;
 		std::shared_ptr<_Texture> m_PBRPack;
 		std::shared_ptr<_Texture> m_Albedo;
-
+		// For mouse picking
+		std::shared_ptr<_Texture> m_ObjectID;
 
 		std::shared_ptr<_Texture> m_DepthPyramid;
 

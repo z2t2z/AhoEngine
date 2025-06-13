@@ -11,6 +11,7 @@ namespace Aho {
 
 	enum InternalFormat : GLint {
 		R32F = GL_R32F,
+		R32UI = GL_R32UI,
 		RGBA8 = GL_RGBA8,
 		SRGB8_ALPHA8 = GL_SRGB8_ALPHA8,
 		RGBA16F = GL_RGBA16F,
@@ -26,6 +27,7 @@ namespace Aho {
 
 	enum DataFormat : GLenum {
 		Red = GL_RED,
+		RedInteger = GL_RED_INTEGER,
 		RG = GL_RG,
 		RGB = GL_RGB,
 		BGR = GL_BGR,

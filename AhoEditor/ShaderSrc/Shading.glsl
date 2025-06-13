@@ -30,13 +30,9 @@ void main() {
 #type fragment
 #version 460 core
 
-#extension GL_ARB_gpu_shader_int64 : enable
-#extension GL_ARB_bindless_texture : enable
-
 #include "Common/UniformBufferObjects.glsl"
 #include "AtmosphericScattering/AtmosphericCommon.glsl"
 #include "DeferredShading/DirectLight.glsl"
-#include "PathTracing/SSBO.glsl"
 
 layout(location = 0) out vec4 out_Color;
 

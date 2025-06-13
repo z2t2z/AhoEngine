@@ -57,7 +57,7 @@ namespace Aho {
 		}
 
 		std::shared_ptr<VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+		vertexBuffer.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float), true));
 		BufferLayout layout = {
 			{ ShaderDataType::Float3, "a_Position" }
 		};

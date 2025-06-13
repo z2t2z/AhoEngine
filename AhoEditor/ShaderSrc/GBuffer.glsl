@@ -86,8 +86,6 @@ uniform vec3 u_Albedo = vec3(1.0);
 uniform float u_Metallic = 0.95f;
 uniform float u_Roughness = 0.0f;
 
-uniform uint u_EntityID;
-
 void main() {
 	g_Position = v_FragPos;
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_Albedo;

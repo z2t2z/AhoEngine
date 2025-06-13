@@ -22,13 +22,13 @@ namespace Aho {
 	void PropertiesPanel::Draw() {
 		const Entity& selectedEntity = g_EditorGlobalCtx.GetSelectedEntity();
 		ImGui::Begin(ICON_FA_GEAR " Inspector");
-		if (!selectedEntity.Valid()) {
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		if (!selectedEntity.Valid() || !ecs->HasComponent<GameObjectComponent>(selectedEntity)) {
 			ImGui::End();
 			return;
 		}
 
 		ImGuiIO& io = ImGui::GetIO();
-		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 		GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(selectedEntity);
 
 		ImFont* boldFont = io.Fonts->Fonts[0];

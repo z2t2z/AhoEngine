@@ -13,6 +13,8 @@ struct OffsetInfo {
     int offset;
     int nodeOffset;
     int primtiveOffset;
+    mat4 transform;
+    mat3 invTransform;
 };
 
 struct BVHNode {
