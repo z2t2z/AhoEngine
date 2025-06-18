@@ -23,6 +23,7 @@ namespace Aho {
 		std::shared_ptr<_Texture> LoadGPUTexture(const std::shared_ptr<TextureAsset>& textureAsset);
 		void RegisterBufferTexture(const std::string& name, const std::shared_ptr<_Texture>& buffer);
 		std::shared_ptr<_Texture> GetBufferTexture(const std::string& name) const;
+		std::vector<_Texture*> GetAllBufferTextures() const;
 		std::shared_ptr<VertexArray> LoadVAO(const std::shared_ptr<MeshAsset>& textureAsset);
 		std::shared_ptr<Shader> LoadShaderResource(const std::shared_ptr<ShaderAsset>& shaderAsset, ShaderFeature feature);
 	public:

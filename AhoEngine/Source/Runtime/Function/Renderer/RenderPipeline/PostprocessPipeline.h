@@ -17,11 +17,12 @@ namespace Aho {
 		std::shared_ptr<_Texture> m_Outlined;
 		std::shared_ptr<_Texture> m_ObjectID;
 		std::shared_ptr<_Texture> m_PickingDepth;
+		std::shared_ptr<_Texture> m_Grid;
 	private:
 		std::unique_ptr<RenderPassBase> m_PickingPass;
 		std::unique_ptr<RenderPassBase> m_SingleDepthPass;
 		std::unique_ptr<RenderPassBase> m_OutlinePass;
-
+		std::unique_ptr<RenderPassBase> m_DrawGridPass;
 
 	// --- Delete these ---
 	private:

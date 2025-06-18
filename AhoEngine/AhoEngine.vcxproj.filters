@@ -1881,5 +1881,6 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.ixx" />
   </ItemGroup>
 </Project>

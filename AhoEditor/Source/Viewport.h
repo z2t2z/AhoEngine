@@ -33,7 +33,6 @@ namespace Aho {
 	private:
 		Entity m_EnvEntity;
 	private:
-		bool m_ShouldPickObject{ false };
 		uint32_t m_ViewportWidth, m_ViewportHeight;
 		int m_MouseX, m_MouseY;
 	private:

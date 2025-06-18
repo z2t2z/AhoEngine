@@ -16,9 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Aho {
-	namespace fs = std::filesystem;
 	static ImGuizmo::OPERATION g_Operation = ImGuizmo::OPERATION::NONE;
-	static const float g_ToolBarIconSize = 22.0f;
 
 	Viewport::Viewport() {
 	}
@@ -29,6 +27,7 @@ namespace Aho {
 		m_EventManager	= manager;
 		m_EditorCamera	= camera;
 
+		namespace fs = std::filesystem;
 		auto path		= fs::current_path();
 		auto ecs		= g_RuntimeGlobalCtx.m_EntityManager;
 		{
@@ -49,6 +48,7 @@ namespace Aho {
 		DrawLightIcons(); // visual debug
 	}
 
+	// Handle object picking here
 	void Viewport::DrawMainViewport() {
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
@@ -58,7 +58,8 @@ namespace Aho {
 		auto [width, height] = ImGui::GetWindowSize();
 		m_ViewportWidth = width, m_ViewportHeight = height;
 		if (m_Renderer->OnViewportResize(width, height)) {
-			m_EditorCamera->SetAspectRatio(width / height);
+			//m_EditorCamera->SetAspectRatio(width / height);
+			m_EditorCamera->SetProjection(45, width / height, 0.1f, 1000.0f);  // TODO: camera settings
 		}
 
 		ImVec2 localPos = ImGui::GetMousePos() - ImGui::GetWindowPos();
@@ -91,6 +92,7 @@ namespace Aho {
 
 		ImGuiStyle& style = ImGui::GetStyle();
 
+		static const float g_ToolBarIconSize = 22.0f;
 		if (ImGui::ImageButton("add", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
 			ImGui::OpenPopup("popup_menu");
 		}
@@ -185,6 +187,7 @@ namespace Aho {
 
 		ImGuiStyle& style = ImGui::GetStyle();
 
+		static const float g_ToolBarIconSize = 22.0f;
 		if (ImGui::ImageButton("SelectRenderMode##Button", (ImTextureID)m_AddIcon->GetTextureID(), ImVec2{ g_ToolBarIconSize, g_ToolBarIconSize })) {
 			ImGui::OpenPopup("RenderModePopup");
 		}
@@ -224,15 +227,14 @@ namespace Aho {
 			if (ImGui::BeginPopup("BufferVisualPopup")) {
 				ImGui::Text("Select Buffer:");
 				ImGui::Separator();
-
-				auto buffers = g_RuntimeGlobalCtx.m_Renderer->GetDeferredShadingPipeline()->GetBuffers();
+				auto buffers = g_RuntimeGlobalCtx.m_Resourcemanager->GetAllBufferTextures();
 				for (int i = 0; i < buffers.size(); ++i) {
 					if (ImGui::Selectable(buffers[i]->GetLabel().c_str(), s_CurrentBufferIndex == i)) {
 						s_CurrentMode = RenderMode::BufferVisual;
 						s_CurrentBufferIndex = i;
 						ImGui::CloseCurrentPopup();             // Close buffer list
 						ImGui::CloseCurrentPopup();             // Close parent menu
-						g_RuntimeGlobalCtx.m_Renderer->SetViewportDisplayTextureBuffer(buffers[i].get());
+						g_RuntimeGlobalCtx.m_Renderer->SetViewportDisplayTextureBuffer(buffers[i]);
 					}
 				}
 				ImGui::EndPopup();
@@ -252,7 +254,6 @@ namespace Aho {
 		if (!ecs->HasComponent<_TransformComponent>(selected))
 			return;
 
-
 		_TransformComponent& transformComp = ecs->GetComponent<_TransformComponent>(selected);
 		auto& translation = transformComp.Translation;
 		auto& scale = transformComp.Scale;
@@ -266,14 +267,15 @@ namespace Aho {
 		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, m_ViewportWidth, m_ViewportHeight - ImGui::GetFrameHeight());
 
-		// test these: ImGui::IsWindowHovered() && ImGui::IsWindowFocused()
-		//s_IsClickingEventBlocked |= ImGuizmo::IsOver();
 		if (g_Operation != ImGuizmo::OPERATION::NONE) {
-			ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
+			bool changed = ImGuizmo::Manipulate(glm::value_ptr(viewMat), glm::value_ptr(projMat),
 				g_Operation,
 				ImGuizmo::MODE::LOCAL,
 				glm::value_ptr(transform));
-			ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+			if (changed) {
+				ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(translation), glm::value_ptr(rotation), glm::value_ptr(scale));
+				transformComp.Dirty = true;
+			}
 		}
 	}
 
@@ -343,7 +345,6 @@ namespace Aho {
 			if (ImGui::Button(btn.name.c_str(), ImVec2{ btnSize[0], btnSize[1] })) {
 				activeBtnIdx = i;
 				g_Operation = btn.oper;
-				m_ShouldPickObject = false;
 			}
 			ImGui::PopStyleColor();
 		}

@@ -31,7 +31,7 @@ vec2 BRDFIntegrate(float NoV, float Roughness) {
         if (LoN > 0.0) {
             float G = G_Smith(NoV, NoL, Roughness);
             float G_Vis = (G * VoH) / (NoH * NoV);
-            float Fc = pow(1.0 - VoH, 5.0);
+            float Fc = pow(1.0 - VoH, 5.0); // FresnelSchlick
             A += (1.0 - Fc) * G_Vis;
             B += Fc * G_Vis;
         }

@@ -11,11 +11,6 @@
 #include "Runtime/Core/Timer.h"
 
 namespace Aho {
-	bool BVHi::Intersect(const Ray& ray) {
-		float t = -1.0f;
-		return IntersectNearest_loop(ray, t);
-	}
-
 	void BVHi::ApplyTransform(const glm::mat4& transform) {
 		AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::BLAS);
 		AHO_CORE_ASSERT(m_PrimitiveComp.size() == m_Primitives.size());
@@ -27,10 +22,6 @@ namespace Aho {
 				m_Primitives[i].ApplyTransform(transform, m_PrimitiveComp[m_Primitives[i].GetPrimId()]);
 			}, 1024
 		);
-		//for (size_t i = 0; i < m_Primitives.size(); i++) {
-		//	AHO_CORE_ASSERT(m_Primitives[i].GetPrimId() >= 0 && m_Primitives[i].GetPrimId() <= m_PrimitiveComp.size());
-		//	m_Primitives[i].ApplyTransform(transform, m_PrimitiveComp[m_Primitives[i].GetPrimId()]);
-		//}
 	}
 
 	void BVHi::Rebuild() {
@@ -52,12 +43,7 @@ namespace Aho {
 		m_OffsetMap.clear();
 		s_NodeOffset = 0;
 		s_PrimOffset = 0;
-		//for (PrimitiveDesc& blasPrim : m_Primitives) {
-		//	const BVHi* blas = m_BLAS[blasPrim.GetPrimId()];
-		//	m_OffsetMap.emplace_back(blas->GetMeshId(), s_NodeOffset, s_PrimOffset);
-		//	s_NodeOffset += blas->GetNodeCount();
-		//	s_PrimOffset += blas->GetPrimsCount();
-		//}
+
 		for (size_t i = 0; i < m_BLAS.size(); i++) {
 			const BVHi* blas = m_BLAS[i];
 			AHO_CORE_ASSERT(blas->GetMeshId() == i);
@@ -86,83 +72,6 @@ namespace Aho {
 		return nullptr;
 	}
 
-	bool BVHi::IntersectNearest_recursion(const Ray& ray, int root) {
-		AHO_CORE_ASSERT(root >= 0 && root < m_Nodes.size());
-		const BVHNodei& node = m_Nodes[root];
-		if (!node.bbox.Intersect(ray)) {
-			return false;
-		}
-
-		if (node.IsLeaf()) {
-			for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
-				AHO_CORE_ASSERT(i < m_Primitives.size());
-				const PrimitiveDesc& p = m_Primitives[i];
-				if (p.Intersect(ray)) {
-					return true;
-				}
-			}
-			return false;
-		}
-		return IntersectNearest_recursion(ray, node.left) ? true : IntersectNearest_recursion(ray, node.right);
-	}
-
-	bool BVHi::IntersectNearest_loop(const Ray& ray, float& candidate_t) {
-		int n = m_Nodes.size();
-		std::stack<int> stk;
-		stk.push(m_Root);
-
-		int find = -1;
-		while (!stk.empty()) {
-			int u = stk.top();
-			stk.pop();
-
-			const BVHNodei& node = m_Nodes[u];
-
-			float t0 = -1.0f;
-			if (!node.bbox.IntersectNearest(ray, t0)) {
-				continue;
-			}
-			if (candidate_t > 0.0f && t0 > candidate_t) {
-				continue;
-			}
-
-			if (node.IsLeaf()) {
-				if (m_BvhLevel == BVHLevel::BLAS) {
-
-					for (int i = node.firstPrimsIdx, cnt = 0; cnt < node.primsCnt; i++, cnt++) {
-						AHO_CORE_ASSERT(i < m_Primitives.size());
-						const PrimitiveDesc& p = m_Primitives[i];
-						float t1 = -1.0f;
-						if (p.IntersectNearest(ray, t1)) {
-							if (candidate_t > 0.0f) {
-								if (candidate_t > t1) {
-									candidate_t = t1;
-								}
-							}
-							else {
-								candidate_t = t1;
-							}
-						}
-					}
-				
-				}
-				else {
-					int id = m_Primitives[node.firstPrimsIdx].GetPrimId();
-					AHO_CORE_ASSERT(id >= 0 && id <= m_BLAS.size());
-					auto p = m_BLAS[id];
-					//p->GetBBox().IntersectNearest(ray, candidate_t);
-					p->IntersectNearest_loop(ray, candidate_t);
-				}
-			}
-			else {
-				stk.push(node.right);
-				stk.push(node.left);
-			}
-		}
-
-		return candidate_t > 0.0f;
-	}
-
 	void BVHi::Build(const Mesh& mesh) {
 		const auto& vertices = mesh.vertexBuffer;
 		const auto& indices = mesh.indexBuffer;
@@ -181,32 +90,6 @@ namespace Aho {
 
 		m_Nodes.reserve(m_Primitives.size() * 5);
 		//AHO_CORE_TRACE("Mesh primitive count: {}", m_Primitives.size());
-		m_Root = BuildTreeRecursion(0, m_Primitives.size());
-		m_Nodes.shrink_to_fit();
-
-		AHO_CORE_ASSERT(m_Root == 0);
-		m_Nodes[m_Root].meshId = m_MeshId;
-	}
-	
-	void BVHi::Build(const std::shared_ptr<MeshInfo>& info) {
-		// Delete this when we use the new mesh system
-		AHO_CORE_ASSERT(false);
-
-		const auto& vertices = info->vertexBuffer;
-		const auto& indices = info->indexBuffer;
-		size_t siz = indices.size();
-		AHO_CORE_ASSERT(siz % 3 == 0);
-
-		m_Primitives.reserve(siz);
-		for (size_t i = 0; i < siz; i += 3) {
-			const Vertex& v0 = vertices[indices[i]];
-			const Vertex& v1 = vertices[indices[i + 1]];
-			const Vertex& v2 = vertices[indices[i + 2]];
-			m_Primitives.emplace_back(v0, v1, v2, i / 3, m_MeshId);
-			m_PrimitiveComp.emplace_back(v0, v1, v2);
-		}
-
-		m_Nodes.reserve(2 * m_Primitives.size());
 		m_Root = BuildTreeRecursion(0, m_Primitives.size());
 		m_Nodes.shrink_to_fit();
 

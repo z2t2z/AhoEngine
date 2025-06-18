@@ -64,9 +64,9 @@ namespace Aho {
 			m_TextureBuffers.push_back(depth);
 			auto Func =
 				[](RenderPassBase& self) {
+					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Depth_Buffer);
 					auto shader = self.GetShader();
-					self.GetRenderTarget()->Bind();
 					shader->Bind();
 					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
 						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {

@@ -11,6 +11,8 @@ namespace Aho {
 	enum class ShaderFeature : uint32_t;
 	namespace EngineEvents {
 		inline _Event<const std::string, const std::shared_ptr<ShaderAsset>> OnShaderAssetReload;
+
+		//Shader ssage, features to add, features to remove
 		inline _Event<ShaderUsage, ShaderFeature, ShaderFeature> OnShaderFeatureChanged;
 	}
 }

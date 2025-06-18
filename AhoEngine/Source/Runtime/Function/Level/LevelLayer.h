@@ -28,14 +28,11 @@ namespace Aho {
 		void AddLevel(const std::shared_ptr<Level>& scene) { m_Levels.push_back(scene); }
 		void SetPlayMode(bool state) { m_PlayMode = state; }
 		void SetSimulateMode(bool state) { m_SimulateMode = state; }
-		void UpdatePathTracingTextureHandlesSSBO();
-		bool& GetBuildBvhState() { return m_BuildBVH; }
 		MaterialDescriptor& GetMaterialDescriptor(int meshId) { return m_TextureHandles.at(meshId); }
 		void AddStaticMeshToScene(const std::shared_ptr<StaticMesh>& asset, const std::string& name, const std::shared_ptr<Light>& light = nullptr);
 	private:
 		void UpdateAnimation(float deltaTime);
 		void AddAnimation(const std::shared_ptr<AnimationAsset>& anim);
-		void AddLightSource(LightType lt);
 		void UpdataUBOData();
 		void AsyncLoadStaticMesh(const std::shared_ptr<StaticMesh> rawData) { std::thread(&LevelLayer::LoadStaticMeshAsset, this, rawData).detach(); }
 		void LoadStaticMeshAsset(std::shared_ptr<StaticMesh> asset);

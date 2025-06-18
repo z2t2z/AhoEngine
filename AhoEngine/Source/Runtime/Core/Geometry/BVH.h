@@ -3,14 +3,11 @@
 #include "Runtime/Core/Core.h"
 #include "BVHNode.h"
 #include "Primitive.h"
-#include "Runtime/Core/Math/Math.h"
 
 #include <stack>
 #include <variant>
 
 namespace Aho {
-	class StaticMesh;
-	class MeshInfo;
 	struct Mesh;
 	class BVHi {
 	public:
@@ -21,13 +18,8 @@ namespace Aho {
 			: m_MeshId(meshId), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
 			Build(mesh);
 		}
-		BVHi(const std::shared_ptr<MeshInfo>& info, int meshId, SplitMethod splitMethod = SplitMethod::SAH)
-			: m_MeshId(meshId), m_SplitMethod(splitMethod), m_BvhLevel(BVHLevel::BLAS) {
-			Build(info);
-		}
 		size_t GetNodeCount() const { return m_Nodes.size(); }
 		size_t GetPrimsCount() const { return m_Primitives.size(); }
-		bool Intersect(const Ray& ray);
 		void ApplyTransform(const glm::mat4& transform);
 		void Rebuild();
 		void UpdateTLAS();
@@ -40,10 +32,7 @@ namespace Aho {
 		const std::vector<OffsetInfo>& GetOffsetMap() const { AHO_CORE_ASSERT(m_BvhLevel == BVHLevel::TLAS); return m_OffsetMap; }
 		const BVHi* GetBLAS(int id) const;
 	private:
-		bool IntersectNearest_recursion(const Ray& ray, int root);
-		bool IntersectNearest_loop(const Ray& ray, float& t);
 		void Build(const Mesh& mesh);
-		void Build(const std::shared_ptr<MeshInfo>& mesh);
 		// Build tree for primitives of intervals [indexL, indexR)
 		int BuildTreeRecursion(int indexL, int indexR);
 	private:

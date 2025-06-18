@@ -696,6 +696,11 @@
     <ClCompile Include="Source\Runtime\Function\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\Runtime\Core\GlobalContext\GlobalContext.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.ixx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\Level.cpp" />

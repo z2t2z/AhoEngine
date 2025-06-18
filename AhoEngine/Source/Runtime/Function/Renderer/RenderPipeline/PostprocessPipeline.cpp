@@ -23,6 +23,9 @@ namespace Aho {
 		m_Outlined = TextureResourceBuilder()
 			.Name("Outlined").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
 			.Build();
+		m_Grid = TextureResourceBuilder()
+			.Name("SceneWithDbgGrid").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
+			.Build();
 		m_ObjectID = TextureResourceBuilder()
 			.Name("ObjectID").Width(1280).Height(720).DataType(DataType::UInt).DataFormat(DataFormat::RedInteger).InternalFormat(InternalFormat::R32UI)
 			.Build();
@@ -37,10 +40,9 @@ namespace Aho {
 
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "Postprocessing";
-		
+
 		// Picking Pass, draw object id into a buffer for reading
 		{
-
 			auto Func =
 				[](RenderPassBase& self) {
 					auto [shouldPick, x, y] = g_EditorGlobalCtx.PickInfoAtThisFrame();
@@ -84,7 +86,7 @@ namespace Aho {
 		{
 			auto Func =
 				[](RenderPassBase& self) {
-					if (!g_EditorGlobalCtx.HasActiveSelected()) 
+					if (!g_EditorGlobalCtx.HasActiveSelected())
 						return;
 					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Depth_Buffer);
@@ -117,11 +119,11 @@ namespace Aho {
 		{
 			auto Func =
 				[](RenderPassBase& self) {
+					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Color_Buffer);
 					auto shader = self.GetShader();
-					self.GetRenderTarget()->Bind();
 					shader->Bind();
-					
+
 					uint32_t slot = 0;
 					self.BindRegisteredTextureBuffers(slot);
 
@@ -145,6 +147,36 @@ namespace Aho {
 				.Build());
 		}
 
+		// Draw an infinite grid in the scene for good looking
+		{
+			auto Func =
+				[](RenderPassBase& self) {
+					self.GetRenderTarget()->Bind();
+					RenderCommand::Clear(ClearFlags::Color_Buffer);
+					
+					auto shader = self.GetShader();
+					shader->Bind();
+
+					uint32_t slot = 0;
+					self.BindRegisteredTextureBuffers(slot);
+					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
+					RenderCommand::DrawArray();
+
+					self.GetRenderTarget()->Unbind();
+					shader->Unbind();
+				};
+			m_DrawGridPass = std::move(RenderPassBuilder()
+				.Name("DrawInfiniteGrid"))
+				.Shader((shaderPathRoot / "InfiniteGrid.glsl").string())
+				.AttachTarget(m_Grid)
+				.Input("u_Scene", m_Outlined)
+				.Input("u_SceneDepth", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("Scene Depth"))
+				.Func(Func)
+				.Build();
+		}
+
+		//m_Result = m_Grid.get();
+
 		m_Result = m_Outlined.get();
 	}
 
@@ -152,6 +184,7 @@ namespace Aho {
 		m_PickingPass->Execute();
 		m_SingleDepthPass->Execute();
 		m_OutlinePass->Execute();
+		m_DrawGridPass->Execute();
 	}
 
 	bool PostprocessPipeline::Resize(uint32_t width, uint32_t height) const {
@@ -159,6 +192,7 @@ namespace Aho {
 		resized |= m_PickingPass->Resize(width, height);
 		resized |= m_SelectedDepth->Resize(width, height);
 		resized |= m_Outlined->Resize(width, height);
+		resized |= m_Grid->Resize(width, height);
 		return resized;
 	}
 

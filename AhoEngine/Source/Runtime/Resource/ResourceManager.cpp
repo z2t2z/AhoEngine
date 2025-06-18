@@ -39,6 +39,17 @@ namespace Aho {
 		return m_BufferTextures.at(name);
 	}
 
+	std::vector<_Texture*> ResourceManager::GetAllBufferTextures() const {
+		static std::vector<_Texture*> ans;
+		if (ans.empty()) {
+			ans.reserve(m_BufferTextures.size());
+			for (const auto& [_, texture] : m_BufferTextures) {
+				ans.push_back(texture.get());
+			}
+		}
+		return ans;
+	}
+
 	std::shared_ptr<VertexArray> ResourceManager::LoadVAO(const std::shared_ptr<MeshAsset>& meshAsset) {
 		if (m_VAOCached.count(meshAsset)) {
 			return m_VAOCached.at(meshAsset);

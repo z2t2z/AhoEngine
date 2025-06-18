@@ -1,7 +1,7 @@
 #type vertex
 #version 460 core
 
-#include "Common/UniformBufferObjects.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 out vec3 v_nearP;
 out vec3 v_farP;
@@ -30,7 +30,7 @@ void main() {
 #type fragment
 #version 460 core
 
-#include "Common/UniformBufferObjects.glsl"
+#include "../Common/UniformBufferObjects.glsl"
 
 layout(location = 0) out vec4 out_Color;
 
@@ -70,7 +70,8 @@ float Grid(vec2 uv) {
 // Set as a constant for now
 const float camFarPlane = 1000.0f;
 
-uniform sampler2D u_Depth;
+uniform sampler2D u_SceneDepth;
+uniform sampler2D u_Scene;
 
 void main() {
     float t = -v_nearP.y / (v_farP.y - v_nearP.y);

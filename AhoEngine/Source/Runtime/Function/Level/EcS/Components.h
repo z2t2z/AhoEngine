@@ -22,13 +22,6 @@
 #include <string>
 
 namespace Aho {
-	struct TagComponent {
-		std::string Tag;
-		TagComponent() = default;
-		TagComponent(const TagComponent&) = default;
-		TagComponent(const std::string& tag) : Tag(tag) {}
-	};
-
 	struct RootComponent {
 		std::vector<entt::entity> entities;
 		RootComponent() = default;
@@ -47,15 +40,6 @@ namespace Aho {
 		}
 	};
 
-	struct MeshComponent {
-		std::shared_ptr<RenderData> renderData;
-		MeshComponent() = default;
-		MeshComponent(const MeshComponent&) = default;
-		MeshComponent(const std::shared_ptr<RenderData>& renderData)
-			: renderData(renderData) {
-		}
-	};
-
 	struct TransformComponent {
 		TransformParam* transformPara{ nullptr };
 		TransformComponent(const TransformComponent&) = default;
@@ -69,16 +53,6 @@ namespace Aho {
 		void SetTranslation(glm::vec3 translation) { transformPara->Translation = translation; }
 		void SetScale(glm::vec3 scale) { transformPara->Scale = scale; }
 		void SetRotation(glm::vec3 rotation) { transformPara->Rotation = rotation; }
-	};
-
-	struct MaterialComponent {
-		std::shared_ptr<Material> material;
-		// For path tracing 
-		int32_t meshId{ -1 };
-		MaterialComponent() = default;
-		MaterialComponent(std::shared_ptr<Material>& _material, int32_t meshid)
-			: material(_material), meshId(meshid) { }
-		MaterialComponent(const MaterialComponent&) = default;
 	};
 
 	struct AnimatorComponent {
@@ -143,6 +117,26 @@ namespace Aho {
 		static int s_PointLightCnt;
 	};
 
+	struct DirectionalLightComponent {
+		std::shared_ptr<DirectionalLight> light;
+		uint32_t index;
+		DirectionalLightComponent() = default;
+		DirectionalLightComponent(const std::shared_ptr<DirectionalLight>& light)
+			: light(light) {
+		}
+		DirectionalLightComponent(const DirectionalLightComponent&) = default;
+	};
+
+	struct AreaLightComponent {
+		std::shared_ptr<AreaLight> light;
+		uint32_t index;
+		AreaLightComponent() = default;
+		AreaLightComponent(const std::shared_ptr<AreaLight>& light)
+			: light(light) {
+		}
+		AreaLightComponent(const AreaLightComponent&) = default;
+	};
+
 	struct LightComponent {
 		std::shared_ptr<Light> light;
 		uint32_t index;
@@ -164,13 +158,6 @@ namespace Aho {
 			DirectionXYZ = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
 		}
 		SkyComponent(const SkyComponent&) = default;
-	};
-
-	struct TextureComponent {
-		TextureComponent() = default;
-		TextureComponent(const Texture* tex) : texture(tex) {}
-		TextureComponent(const TextureComponent&) = default;
-		const Texture* texture{ nullptr };
 	};
 
 	struct _TransformComponent {
@@ -256,15 +243,7 @@ namespace Aho {
 		_MaterialComponent(const std::shared_ptr<MaterialAsset>& matAsset) 
 			: mat(matAsset) {}
 	};
-	struct MeshResourceComponent {
-		std::string name{ "MeshResourceComponent" };
-		MeshResourceComponent() = default;
-	};
-	struct AssetRefComponent {
-		Entity AssetRefEntity;
-		explicit AssetRefComponent(const Entity& AssetRefEntity) : AssetRefEntity(AssetRefEntity) {}
-		AssetRefComponent(const AssetRefComponent&) = default;
-	};
+
 	struct MaterialRefComponent {
 		Entity MaterialRefEntity;
 		explicit MaterialRefComponent(const Entity& MaterialRefEntity) : MaterialRefEntity(MaterialRefEntity) {}
@@ -284,28 +263,8 @@ namespace Aho {
 	struct _BVHComponent {
 		bool Dirty = true;
 		std::shared_ptr<BVHi> bvh{ nullptr };
-		static std::vector<int> s_FreeIds;
-		static int s_Id;
 		explicit _BVHComponent(const std::shared_ptr<BVHi>& _bvh) {
 			bvh = _bvh;
-		}
-
-		// TODO: Fix this
-		explicit _BVHComponent(const Mesh& mesh) {
-			int id = -1;
-			if (false && !s_FreeIds.empty()) {
-				id = s_FreeIds.back();
-				s_FreeIds.pop_back();
-			}
-			else {
-				id = s_Id++;
-			}
-			bvh = std::make_shared<BVHi>(mesh, id);
-		}
-		~_BVHComponent() {
-			if (bvh) {
-				s_FreeIds.push_back(bvh->GetMeshId());
-			}
 		}
 	};
 

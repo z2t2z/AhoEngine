@@ -66,11 +66,6 @@ namespace Aho {
 		AHO_CORE_WARN("Pushing a UploadRenderDataEvent!");
 		m_EventManager->PushBack(newEv);
 	}
-
-	void LevelLayer::UpdatePathTracingTextureHandlesSSBO() {
-		SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, m_TextureHandles);
-	}
-
 	void LevelLayer::UpdateAnimation(float deltaTime) {
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		auto view = entityManager->GetView<AnimatorComponent, SkeletalComponent, AnimationComponent, SkeletonViewerComponent>();
@@ -134,58 +129,20 @@ namespace Aho {
 
 	}
 
-	// BIG TODO
-	void LevelLayer::AddLightSource(LightType lt) {
-		auto entityManager = m_CurrentLevel->GetEntityManager();
-		auto view = entityManager->GetView<PointLightComponent>();
-		auto gameObject = entityManager->CreateEntity();
-		entityManager->AddComponent<GameObjectComponent>(gameObject, "PointLight " + std::to_string(view.size()));
-		auto root = entityManager->AddComponent<RootComponent>(gameObject);
-		auto& pc = entityManager->AddComponent<PointLightComponent>(gameObject);
-		pc.index = PointLightComponent::s_PointLightCnt++;
-		if (pc.index == 0) {
-			// Only the first light can cast shadow now
-			pc.castShadow = true;
-		}
-
-		TransformParam* param = new TransformParam();
-		param->Translation = glm::vec3(0.0f, 1.0f, 0.0f);
-		g_Param = param;
-		entityManager->AddComponent<TransformComponent>(gameObject, param); // transform component handle the the transformparam's lifetime
-		
-
-		//std::vector<std::shared_ptr<RenderData>> renderDataAll;
-		//for (const auto& meshInfo : *m_ResourceLayer->GetSphere()) {
-		//	std::shared_ptr<VertexArray> vao;
-		//	vao.reset(VertexArray::Create());
-		//	vao->Init(meshInfo);
-		//	std::shared_ptr<RenderData> renderData = std::make_shared<RenderData>();
-		//	renderData->SetVAOs(vao);
-		//	uint32_t entityID = (uint32_t)gameObject.GetEntityHandle();
-		//	renderData->SetTransformParam(param);
-		//	renderData->SetDebug(true);
-		//	renderData->SetEntityID(entityID);
-		//	renderDataAll.push_back(renderData);
-		//}
-		//UploadRenderDataEventTrigger(renderDataAll);
-	}
-
 	// TODO: Subdata update
 	// TODO: Maybe put this inside render layer
 	void LevelLayer::UpdataUBOData() {
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
-		if (m_CameraManager->IsDirty() || true) {
-			CameraUBO camUBO;
-			camUBO.u_View = cam->GetView();
-			camUBO.u_Projection = cam->GetProjection();
-			camUBO.u_ProjectionInv = cam->GetProjectionInv();
-			camUBO.u_ViewInv = cam->GetViewInv();
-			camUBO.u_ProjView = cam->GetProjection() * cam->GetView();
-			camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
-			UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
-		}
-
+		CameraUBO camUBO;
+		camUBO.u_View = cam->GetView();
+		camUBO.u_Projection = cam->GetProjection();
+		camUBO.u_ProjectionInv = cam->GetProjectionInv();
+		camUBO.u_ViewInv = cam->GetViewInv();
+		camUBO.u_ProjView = cam->GetProjection() * cam->GetView();
+		camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+		UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 		return;
+
 		auto entityManager = m_CurrentLevel->GetEntityManager();
 		{
 			LightUBO* lightubo = new LightUBO();

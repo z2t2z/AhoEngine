@@ -1,9 +1,6 @@
 #type compute
 #version 460
 
-#extension GL_NV_shader_thread_shuffle : enable
-#extension GL_NV_shader_thread_vote : enable
-
 #include "Common.glsl"
 #include "../Common/UniformBufferObjects.glsl"
 
@@ -21,7 +18,7 @@ uniform sampler2D u_gLitScene;
 uniform int u_MostDetailedMip = 0;
 uniform int u_MipLevelTotal;
 uniform int u_MaxIterations = 128;
-uniform float u_Thickness = 0.015;
+uniform float u_Thickness = 0.088;
 
 // Ignore, only for testing
 bool NaiveRayMarching(vec3 beginPos, vec3 rayDir, out vec2 hitUV, int maxIterations = 256, float deltaStep = 0.04, float thickNess = 0.04) { 
@@ -58,10 +55,12 @@ bool AdvanceRay(vec3 ss_ray_origin, vec3 ss_ray_dir, vec3 ss_ray_dir_inv,
     vec2 curr_mip_pos, vec2 curr_mip_resolution_inv, vec2 floor_offset, vec2 uv_offset, float surface_z,
     inout vec3 ss_pos, inout float curr_t) {
     // Boundary planes
-    vec2 xy_plane = floor(curr_mip_pos) + floor_offset;
+    vec2 xy_plane = floor(curr_mip_pos) + floor_offset; // fucking下取整
     xy_plane = xy_plane * curr_mip_resolution_inv + uv_offset;
     vec3 boundary_planes = vec3(xy_plane, surface_z);
-
+    
+    // Intersect ray with the half box that is pointing away from the ray origin.
+    // o + d * t = p' => t = (p' - o) / d
     vec3 t = boundary_planes * ss_ray_dir_inv - ss_ray_origin * ss_ray_dir_inv;
 
     t.z = ss_ray_dir.z > 0 ? t.z : FLT_MAX;
@@ -133,8 +132,18 @@ bool HierarchicalRayMarch(vec3 ss_ray_origin, vec3 ss_ray_dir, bool is_mirror, v
 
     int i = 0;
     while (i < max_iterations && curr_mip >= most_detailed_mip) {
-        vec2 curr_mip_pos = curr_mip_resolution * ss_hit_pos.xy;
+        vec2 curr_mip_pos = curr_mip_resolution * ss_hit_pos.xy; 
         float surface_z = texelFetch(u_gDepth, ivec2(curr_mip_pos), curr_mip).r;
+        // 结合AdvanceRay的逻辑：
+        // ss_hit_pos是当前光线步进到的位置。现在的目标是，AdvanceRay中想在当前mipLevel下，步进掉当前的tile。
+        // 采样此时的深度值surface_z，它表示当前tile的深度最小值（最靠近相机的值）。那么如果可以步进当前这个tile，就必须保证光线穿过时，深度值要比surface_z更小。
+        // AdvanceRay中构造了一个boundary_planes，是下一个tile的xy边界及surface_z。用它求解光线的交点。
+        // 看着很有道理，但总感觉有点怪怪的，反正不是完全理解吧。如果用下一个tile的surface_z就会出现错误。
+        // {
+        //     // Boundary planes
+        //     vec2 xy_plane = floor(curr_mip_pos) + floor_offset;
+        //     surface_z = texelFetch(u_gDepth, ivec2(xy_plane), curr_mip).r;
+        // }
         bool skipped_tile = AdvanceRay(ss_ray_origin, ss_ray_dir, ss_ray_dir_inv, curr_mip_pos, curr_mip_resolution_inv, floor_offset, uv_offset, surface_z, ss_hit_pos, curr_t);
         curr_mip += skipped_tile ? 1 : -1;
         curr_mip = min(curr_mip, max_mip_level);
@@ -180,11 +189,12 @@ void main() {
 
     float confidence = ValidateHit(ss_hit_pos, vs_hit_pos, uv, vs_hit_pos - vs_ray_origin, screen_size, u_Thickness);
 
-    vec4 L = vec4(0, 0, 0, 0);
+    vec4 L = sceneL;
     if (valid_hit && confidence > 0) {
-        L.rgb = texture(u_gLitScene, ss_hit_pos.xy).rgb;
+        vec3 reflectedL = texture(u_gLitScene, ss_hit_pos.xy).rgb;
+        L.rgb = mix(sceneL.rgb, reflectedL, confidence);
     }
 
-    imageStore(outputImage, coords, L + sceneL);
+    imageStore(outputImage, coords, L);
     return;
 }

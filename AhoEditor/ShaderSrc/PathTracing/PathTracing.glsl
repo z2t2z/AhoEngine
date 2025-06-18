@@ -20,58 +20,9 @@
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
 
+void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv);
 
-void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
-    const TextureHandles handle = s_TextureHandles[p.meshId];
-    Material mat;
-    mat.baseColor = handle.baseColor;
-    mat.metallic = handle.metallic;
-    mat.emissive = handle.emissive;
-    mat.emissiveScale = handle.emissiveScale;
-    mat.subsurface = handle.subsurface;
-    mat.specular = handle.specular;
-    mat.specTint = handle.specTint;
-    mat.specTrans = handle.specTrans;
-    mat.ior = handle.ior;
-    mat.clearcoat = handle.clearcoat;
-    mat.clearcoatGloss = handle.clearcoatGloss;
-    mat.anisotropic = handle.anisotropic;
-    mat.sheenTint = handle.sheenTint;
-    mat.sheen = handle.sheen;
-    mat.roughness = handle.roughness;
-    mat.ax = handle.ax;
-    mat.ay = handle.ay;
-
-    float u = uv.x, v = uv.y, w = 1.0 - u - v;
-    vec3 N = normalize(w * p.v[0].normal + u * p.v[1].normal + v * p.v[2].normal);
-    vec3 hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;  // Don't use ray.origin + info.t * ray.direction
-    state.pos = hitPos;
-    vec2 TextureUV = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u, w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
-    if (int64_t(handle.albedoHandle) != 0) {
-        mat.baseColor = texture(handle.albedoHandle, TextureUV).rgb;
-    }
-    mat.baseColor = pow(mat.baseColor, vec3(2.2));
-    if (int64_t(handle.normalHandle) != 0) {
-        vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
-        T = normalize(T);
-        T = normalize(T - dot(T, N) * N);
-        vec3 B = cross(N, T); // Right-handed
-        mat3 TBN = mat3(T, B, N);
-        vec3 n = texture(handle.normalHandle, TextureUV).xyz * 2.0 - 1.0;
-        N = normalize(TBN * n);
-    } 
-    state.N = N;    
-    if (int64_t(handle.roughnessHandle) != 0) {
-        mat.roughness = texture(handle.roughnessHandle, TextureUV).r;
-        CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); 
-    }
-    if (int64_t(handle.metallicHandle) != 0) {
-        mat.metallic = texture(handle.metallicHandle, TextureUV).r;
-    }
-    state.material = mat;
-}
-
-#define MAX_PATHTRACE_DEPTH 5
+#define MAX_PATHTRACE_DEPTH 8
 vec3 PathTrace(Ray ray) {
     vec3 L = vec3(0.0);
     vec3 beta = vec3(1.0);  // throughput
@@ -127,8 +78,13 @@ vec3 PathTrace(Ray ray) {
         ray.direction = Lworld;
         ray.origin = state.pos + EPS * Lworld;
 
-        // TODO: Russian roulette
-
+        // Russian roulette
+        {
+            float p = max(beta.r, max(beta.g, beta.b));
+            p = clamp(p, 0.05, 1.0);
+            if (rand() > p) break;
+            beta /= p;
+        }
     }
     return L;
 }
@@ -148,4 +104,54 @@ void main() {
     vec4 accumulated = imageLoad(accumulatedImage, pixelCoord);
     accumulated += vec4(resColor, 1.0);
     imageStore(accumulatedImage, pixelCoord, accumulated);
+}
+
+void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv) {
+    const TextureHandles handle = s_TextureHandles[p.meshId];
+    Material mat;
+    mat.baseColor = handle.baseColor;
+    mat.metallic = handle.metallic;
+    mat.emissive = handle.emissive;
+    mat.emissiveScale = handle.emissiveScale;
+    mat.subsurface = handle.subsurface;
+    mat.specular = handle.specular;
+    mat.specTint = handle.specTint;
+    mat.specTrans = handle.specTrans;
+    mat.ior = handle.ior;
+    mat.clearcoat = handle.clearcoat;
+    mat.clearcoatGloss = handle.clearcoatGloss;
+    mat.anisotropic = handle.anisotropic;
+    mat.sheenTint = handle.sheenTint;
+    mat.sheen = handle.sheen;
+    mat.roughness = handle.roughness;
+    mat.ax = handle.ax;
+    mat.ay = handle.ay;
+
+    float u = uv.x, v = uv.y, w = 1.0 - u - v;
+    vec3 N = normalize(w * p.v[0].normal + u * p.v[1].normal + v * p.v[2].normal);
+    vec3 hitPos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;  // Don't use ray.origin + info.t * ray.direction
+    state.pos = hitPos;
+    vec2 TextureUV = vec2(w * p.v[0].u + u * p.v[1].u + v * p.v[2].u, w * p.v[0].v + u * p.v[1].v + v * p.v[2].v); 
+    if (int64_t(handle.albedoHandle) != 0) {
+        mat.baseColor = texture(handle.albedoHandle, TextureUV).rgb;
+    }
+    mat.baseColor = pow(mat.baseColor, vec3(2.2));
+    if (int64_t(handle.normalHandle) != 0) {
+        vec3 T = w * p.v[0].tangent + u * p.v[1].tangent + v * p.v[2].tangent;
+        T = normalize(T);
+        T = normalize(T - dot(T, N) * N);
+        vec3 B = cross(N, T); // Right-handed
+        mat3 TBN = mat3(T, B, N);
+        vec3 n = texture(handle.normalHandle, TextureUV).xyz * 2.0 - 1.0;
+        N = normalize(TBN * n);
+    } 
+    state.N = N;    
+    if (int64_t(handle.roughnessHandle) != 0) {
+        mat.roughness = texture(handle.roughnessHandle, TextureUV).r;
+        CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay); 
+    }
+    if (int64_t(handle.metallicHandle) != 0) {
+        mat.metallic = texture(handle.metallicHandle, TextureUV).r;
+    }
+    state.material = mat;
 }

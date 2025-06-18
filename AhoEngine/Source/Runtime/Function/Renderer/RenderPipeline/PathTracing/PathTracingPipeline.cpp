@@ -202,7 +202,6 @@ namespace Aho {
 
 		// Material
 		auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
-		std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
 		view.each(
 			[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
 				int meshID = bvh.bvh->GetMeshId();
@@ -214,27 +213,53 @@ namespace Aho {
 				}
 			}
 		);
+		return sceneChanged;
 
+		// Objects transform
+		static bool BVHDirty = true;
+		std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
+		view.each(
+			[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+				int meshID = bvh.bvh->GetMeshId();
+				if (transform.Dirty) {
+					transform.Dirty = false; // TODO: Should not be here, but in inspector panel
+					bvh.bvh->ApplyTransform(transform.GetTransform());
+					tasks.emplace_back(bvh.bvh.get());
+					sceneChanged = true;
+					BVHDirty = true;
+				}
+			}
+		);
 
-		// 
-		//for (auto [entity, bvh, transform, material] :
-		//	ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>().each()) {
+		// No need to update every blas everytime but for now it's fine
+		if (BVHDirty) {
+			BVHDirty = false;
+			auto sceneView = ecs->GetView<SceneBVHComponent>();
+			AHO_CORE_ASSERT(sceneView.size() <= 1);
+			sceneView.each(
+				[&](auto entity, SceneBVHComponent& sceneBvh) {
+					sceneBvh.bvh->UpdateTLAS();
+					const auto& tlas = sceneBvh.bvh;
+					SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
+					SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
+					SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
 
-		//	if (transform.Dirty) {
-		//		transform.Dirty = false;
-		//		bvh.bvh->ApplyTransform(transform.GetTransform());
-		//		sceneChanged = true;
-		//		m_BlasToRebuild.emplace_back(bvh.bvh.get());
-		//		m_BVHDirty = true;
-		//	}
+					size_t nodesOffset = 0;
+					size_t primsOffset = 0;
+					const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
+					for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
+						const BVHi* blas = tlas->GetBLAS(i);
+						AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
+						AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+						SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
+						SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+						nodesOffset += blas->GetNodeCount();
+						primsOffset += blas->GetPrimsCount();
+					}
+				}
+			);
+		}
 
-		//	if (material.Dirty) {
-		//		material.Dirty = false;
-		//		material.mat.UpdateMaterialDescriptor();
-		//		SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, bvh.bvh->GetMeshId());
-		//		sceneChanged = true;
-		//	}
-		//}
 		return sceneChanged;
 	}
 }

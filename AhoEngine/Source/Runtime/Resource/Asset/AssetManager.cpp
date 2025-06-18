@@ -14,7 +14,7 @@ namespace Aho {
 		}
 
 		std::vector<Mesh> meshes;
-		std::vector<MaterialPaths> mats;
+		std::vector<MaterialPaths> mats; // TODO
 		bool success = AssetLoader::MeshLoader(opts, meshes, mats);
 		AHO_CORE_ASSERT(success && meshes.size() == mats.size());
 
@@ -26,15 +26,7 @@ namespace Aho {
 			emg->AddComponent<MaterialAssetComponent>(matEnts.back(), matAsset);
 		}
 
-		if (opts.BuildBVH) {
-			if (emg->GetView<SceneBVHComponent>().empty()) {
-				auto scene = emg->CreateEntity();
-				emg->AddComponent<SceneBVHComponent>(scene);
-			}
-		}
-
 		std::shared_ptr<MeshAsset> firstMeshAsset; 
-		std::vector<std::shared_ptr<BVHi>> bvhs; bvhs.reserve(meshes.size());
 		std::vector<Entity> meshAssetEntities; meshAssetEntities.reserve(meshes.size());
 		for (size_t i = 0; i < meshes.size(); i++) {
 			std::shared_ptr<MeshAsset> meshAsset = std::make_shared<MeshAsset>(opts.path, meshes[i].name, meshes[i]);
@@ -44,16 +36,28 @@ namespace Aho {
 			Entity meshAssetEntity = emg->CreateEntity();
 			emg->AddComponent<MeshAssetComponent>(meshAssetEntity, meshAsset);
 			emg->AddComponent<MaterialRefComponent>(meshAssetEntity, matEnts[i]);
-			if (opts.BuildBVH) {
-				meshAssetEntities.push_back(meshAssetEntity);
-			}
+			meshAssetEntities.push_back(meshAssetEntity);
 		}
+
 		if (opts.BuildBVH) {
+			// Add a TLAS bvh first
+			if (opts.BuildBVH) {
+				if (emg->GetView<SceneBVHComponent>().empty()) {
+					auto scene = emg->CreateEntity();
+					emg->AddComponent<SceneBVHComponent>(scene);
+				}
+			}
+
+			std::vector<std::shared_ptr<BVHi>> bvhs; bvhs.reserve(meshes.size());
 			auto view = emg->GetView<SceneBVHComponent>();
 			AHO_CORE_ASSERT(view.size() <= 1);
 			Entity sceneBVHEntity;
 			size_t offset = 0;
-			view.each([&sceneBVHEntity, &offset](Entity entity, SceneBVHComponent& sbc) { sceneBVHEntity = entity; offset = sbc.bvh->GetPrimsCount(); });
+			view.each(
+				[&sceneBVHEntity, &offset](Entity entity, SceneBVHComponent& sbc) { 
+					sceneBVHEntity = entity; 
+					offset = sbc.bvh->GetPrimsCount(); 
+				});
 
 			size_t siz = meshes.size();
 			bvhs.resize(siz);

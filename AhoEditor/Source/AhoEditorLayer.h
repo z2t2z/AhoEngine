@@ -25,10 +25,7 @@ namespace Aho {
 		DebugPenal m_DbgPenal;
 		Entity m_EditorCamEntity;
 	private:
-		bool m_PickingPass{ false };
 		bool m_CursorLocked{ false };
-		bool m_ShouldPickObject{ false };
-		bool m_IsClickingEventBlocked{ false };
 		float m_DeltaTime{ 0.0f };
 	private:
 		LevelLayer* m_LevelLayer{ nullptr }; 
