@@ -142,7 +142,8 @@ namespace Aho {
 				.AttachTarget(m_Outlined)
 				.Input("u_SelectedDepth", m_SelectedDepth)
 				.Input("u_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("Lit Scene Result"))
-				.Input("u_PT_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("PathTracingPresent"))
+				//.Input("u_PT_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("PathTracingPresent"))
+				.Input("u_PT_Scene", g_RuntimeGlobalCtx.m_Resourcemanager->GetBufferTexture("WaveFrontPathTracingPresent"))
 				.Func(Func)
 				.Build());
 		}
@@ -175,9 +176,7 @@ namespace Aho {
 				.Build();
 		}
 
-		//m_Result = m_Grid.get();
-
-		m_Result = m_Outlined.get();
+		m_Result = m_Grid.get();
 	}
 
 	void PostprocessPipeline::Execute() {

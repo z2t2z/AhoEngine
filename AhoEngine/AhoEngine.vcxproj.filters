@@ -1694,6 +1694,10 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\GpuTimer.h" />
+    <ClInclude Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.h" />
+    <ClInclude Include="Source\Runtime\Core\Geometry\BoundingSphere.h" />
+    <ClInclude Include="Source\Runtime\Core\Geometry\BSphere.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1881,6 +1885,8 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.cpp" />
     <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Level\EcS\Components.ixx" />
+    <ClCompile Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.cpp" />
+    <ClCompile Include="Source\Runtime\Core\Geometry\BSphere.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.cpp" />
   </ItemGroup>
 </Project>

@@ -132,6 +132,8 @@ namespace Aho {
 	// TODO: Subdata update
 	// TODO: Maybe put this inside render layer
 	void LevelLayer::UpdataUBOData() {
+		return;
+
 		const auto& cam = m_CameraManager->GetMainEditorCamera();
 		CameraUBO camUBO;
 		camUBO.u_View = cam->GetView();

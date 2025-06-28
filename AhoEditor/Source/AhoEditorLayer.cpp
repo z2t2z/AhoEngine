@@ -30,7 +30,7 @@ namespace Aho {
 		m_Viewport.Initialize(m_Renderer, m_LevelLayer, m_EventManager, m_CameraManager->GetMainEditorCamera());
 
 		m_EditorCamEntity = g_RuntimeGlobalCtx.m_EntityManager->CreateEntity();
-		g_RuntimeGlobalCtx.m_EntityManager->AddComponent<EditorCamaraComponent>(m_EditorCamEntity);
+		g_RuntimeGlobalCtx.m_EntityManager->AddComponent<EditorCamaraComponent>(m_EditorCamEntity, m_CameraManager->GetMainEditorCamera());
 	}
 	
 	void AhoEditorLayer::OnDetach() {

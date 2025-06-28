@@ -118,4 +118,14 @@ namespace Aho {
 		virtual void* GetData() = 0;
 		static ShaderStorageBuffer* Create(uint32_t size, const void* data = nullptr);
 	};
+
+	class DispatchIndirectBuffer {
+	public:
+		DispatchIndirectBuffer(uint32_t bufferId);
+		~DispatchIndirectBuffer();
+		void Bind() const;
+		void Unbind() const;
+	private:
+		uint32_t m_BufferId;
+	};
 }

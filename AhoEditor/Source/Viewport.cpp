@@ -3,6 +3,7 @@
 #include "EditorUI/ImGuiHelpers.h"
 #include "EditorUI/EditorGlobalContext.h"
 #include "Runtime/Core/Events/EngineEvents.h"
+#include "Runtime/Core/Geometry/VirtualMesh/VirtualMesh.h"
 #include "Runtime/Core/Gui/IconsFontAwesome6.h"
 #include "Runtime/Resource/Asset/AssetLoadOptions.h"
 #include "Runtime/Resource/ResourceManager.h"
@@ -402,12 +403,15 @@ namespace Aho {
 		if (ImGui::BeginPopup("Load Settings")) {
 			static bool staticMesh{ true };
 			static bool buildBvh{ true };
+			static bool virtualMesh{ false };
 			std::string prompt = "Mesh Type: " + std::string(staticMesh ? "Static Mesh" : "Skeletal Mesh");
 			ImGui::Text(prompt.c_str());
 			ImGui::Separator();
 			ImGui::Checkbox("Static Mesh", &staticMesh);
 			ImGui::Separator();
 			ImGui::Checkbox("Build BVH", &buildBvh);
+			ImGui::Separator();
+			ImGui::Checkbox("Build Virtual Mesh", &virtualMesh);
 			ImGui::Separator();
 
 			static glm::vec3 translation(0.0f);
@@ -426,7 +430,28 @@ namespace Aho {
 
 				auto& ecs = g_RuntimeGlobalCtx.m_EntityManager;
 				auto resourceManager = g_RuntimeGlobalCtx.m_Resourcemanager;
-				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions);
+				
+				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions); 
+
+
+				// ---- Virtual Mesh Loading Debug Test ----
+				//const Mesh& mesh = ms->GetMesh();
+				//std::vector<Meshlet> meshlets = VirtualMeshBuilder::BuildMeshlets(mesh.indexBuffer);
+				////VirtualMeshBuilder::ExportMeshletsAsOBJ(meshlets, mesh.vertexBuffer, loadPath + "_meshlet.obj");
+
+				//auto lod1 = VirtualMeshBuilder::BuildLODLevel(meshlets, 4);
+				//VirtualMeshBuilder::ExportMeshletsAsOBJ(lod1, mesh.vertexBuffer, loadPath + "_lod1.obj");
+
+				//auto lod2 = VirtualMeshBuilder::BuildLODLevel(lod1, 4);
+				//VirtualMeshBuilder::ExportMeshletsAsOBJ(lod2, mesh.vertexBuffer, loadPath + "_lod2.obj");
+
+				//auto lod3 = VirtualMeshBuilder::BuildLODLevel(lod2, 4);
+				//VirtualMeshBuilder::ExportMeshletsAsOBJ(lod3, mesh.vertexBuffer, loadPath + "_lod3.obj");
+
+				//auto lod4 = VirtualMeshBuilder::BuildLODLevel(lod3, 4);
+				//VirtualMeshBuilder::ExportMeshletsAsOBJ(lod4, mesh.vertexBuffer, loadPath + "_lod4.obj");
+				// ------------------------------------------
+
 				std::string name = "GO_" + ms->GetName();
 				Entity go = resourceManager->CreateGameObject(name);
 				GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(go);

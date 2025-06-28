@@ -20,11 +20,11 @@ namespace Aho {
 
 			std::shared_ptr<TextureAsset> normalTex = nullptr;
 			// --- Metallic (scalar) ---
-			float metallic = 0.9f;
+			float metallic = 0.1f;
 			std::shared_ptr<TextureAsset> metallicTex = nullptr;
 
 			// --- Roughness (scalar) ---
-			float roughness = 0.1f;
+			float roughness = 0.6f;
 			std::shared_ptr<TextureAsset> roughnessTex = nullptr;
 
 			// --- Ambient Occlusion (scalar) ---
@@ -32,7 +32,7 @@ namespace Aho {
 			std::shared_ptr<TextureAsset> aoTex = nullptr;
 
 			// --- Emissive Color ---
-			glm::vec3 emissive = { 0.0f,0.0f,0.0f };
+			glm::vec3 emissive = { 0.0f, 0.0f, 0.0f };
 			std::shared_ptr<TextureAsset> emissiveTex = nullptr;
 		};
         MaterialAsset() = default;

@@ -97,4 +97,27 @@ namespace Aho {
 		//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
+	DispatchIndirectBuffer::DispatchIndirectBuffer(uint32_t bufferId) {
+		m_BufferId = bufferId;
+		Bind();
+		struct DispatchIndirectCommand {
+			GLuint num_groups_x;
+			GLuint num_groups_y;
+			GLuint num_groups_z;
+		};
+		glBufferData(GL_DISPATCH_INDIRECT_BUFFER, sizeof(DispatchIndirectCommand), nullptr, GL_DYNAMIC_DRAW);
+		Unbind();
+	}
+
+	DispatchIndirectBuffer::~DispatchIndirectBuffer() {
+		//glDeleteBuffers(1, &m_BufferId);
+	}
+
+	void DispatchIndirectBuffer::Bind() const {
+		glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, m_BufferId);
+	}
+
+	void DispatchIndirectBuffer::Unbind() const {
+		glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, 0);
+	}
 }

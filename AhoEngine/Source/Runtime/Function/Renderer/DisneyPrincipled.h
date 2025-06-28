@@ -19,10 +19,10 @@ namespace Aho {
 		glm::vec3 emissive{ 0.0 };
 		float emissiveScale{ 0.0f };
 
-		float metallic{ 0.9 };
+		float metallic{ 0.1 };
 		float specular{ 0 };
 		float specTint{ 0 };
-		float roughness{ 0.1 };
+		float roughness{ 0.5 };
 
 		float anisotropic{ 0 };
 		float sheen{ 0 };
@@ -39,7 +39,7 @@ namespace Aho {
 		float padding0;
 		float padding1;
 
-		void CalDistParams(float anisotropic, float roughness, float& ax, float& ay) {
+		static inline void CalDistParams(float anisotropic, float roughness, float& ax, float& ay) {
 			float roughness2 = roughness * roughness;
 			if (anisotropic == 0) {
 				ax = std::max(0.0001f, roughness2);

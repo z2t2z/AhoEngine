@@ -23,5 +23,18 @@ layout(std140, binding = 5) buffer Textures {
     TextureHandles s_TextureHandles[];
 };
 
+// wavefront
+layout(std430, binding = 6) buffer QueueCounter {
+    uint s_QueueCounter;
+};
+layout(std430, binding = 7) buffer PayloadQueue0 {
+    Payload s_Payload0[];
+};
+layout(std430, binding = 8) buffer PayloadQueue1 {
+    Payload s_Payload1[];
+};
+layout(std430, binding = 9) buffer DispatchIndirectBuffer {
+    DispatchBuffer s_DispatchParams[];
+};
 
 #endif

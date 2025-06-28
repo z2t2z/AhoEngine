@@ -19,6 +19,7 @@
 #include "DisneyPrincipled.glsl"
 
 layout(binding = 0, rgba32f) uniform image2D accumulatedImage;
+uniform int u_Frame;
 
 void RetrievePrimInfo(out State state, in PrimitiveDesc p, vec2 uv);
 

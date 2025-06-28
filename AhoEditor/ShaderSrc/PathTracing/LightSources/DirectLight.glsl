@@ -9,6 +9,7 @@
 vec3 SampleDirectLight(State state, const Ray ray) {
     vec3 Ltot = vec3(0.0);
 
+// --- 1. Sample environment light from environment map/uniform sky ---
 #ifdef OPT_INFINITE_LIGHT    
     float envPdf = 0.0;
     vec3 EnvDir = vec3(0.0);
@@ -32,8 +33,9 @@ vec3 SampleDirectLight(State state, const Ray ray) {
             }
         }
     }
+#else
+    //TODO: sample uniform sky here
 #endif
-
     // Sample area lights
     // state.cosTheta = dot(state.N, -ray.direction); // cosTheta changed during ibl sampling, so set it again
     // uint areaLightCount = u_LightCount.a;
@@ -41,7 +43,6 @@ vec3 SampleDirectLight(State state, const Ray ray) {
     // for (uint i = 0; i < areaLightCount; ++i) {
     //     Ltot += SampleRectangleAreaLight(state, -ray.direction, u_AreaLight[i], choosenPdf);
     // }
-
     return Ltot;
 }
 

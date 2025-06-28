@@ -257,7 +257,11 @@ namespace Aho {
 	};
 	struct EditorCamaraComponent {
 		bool Dirty{ true };
+		std::shared_ptr<Camera> camera{ nullptr };
 		EditorCamaraComponent() = default;
+		explicit EditorCamaraComponent(const std::shared_ptr<Camera>& _camera)
+			: camera(_camera) {
+		}
 	};
 
 	struct _BVHComponent {

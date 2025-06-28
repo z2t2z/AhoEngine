@@ -7,7 +7,6 @@
 
 namespace Aho {
 	DebugPenal::DebugPenal() {
-
 	}
 
 	void DebugPenal::Draw() {

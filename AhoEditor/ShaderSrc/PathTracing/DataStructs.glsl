@@ -140,4 +140,30 @@ struct TextureHandles {
     float padding1;
 };
 
+struct Payload {
+    vec3 origin;
+    bool alive; //4 bytes
+    
+    vec3 direction;
+    uint bounce;
+    
+    vec3 throughput;
+    uint pixelIndex;
+
+    vec3 radiance;
+    float pdf;
+
+    vec3 N; // normal
+    float cosTheta;
+    
+    vec3 pos; // hit pos through interpolation, accurate than origin+direction*hitT
+    float eta;
+};
+
+struct DispatchBuffer {
+    uint numx;
+    uint numy;
+    uint numz;
+};
+
 #endif

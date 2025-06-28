@@ -86,7 +86,6 @@ vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 #endif
 vec4 EvalBackground(vec2 uv, vec3 viewPos, mat4 viewInv, mat4 projInv) {
     vec3 clipSpace = vec3(uv * 2.0 - vec2(1.0), 1.0);
-    // vec4 ppworldDir = u_ViewInv * u_ProjectionInv * vec4(clipSpace, 1.0);
     vec4 ppworldDir = viewInv * projInv * vec4(clipSpace, 1.0);
     vec3 worldDir = normalize(vec3(ppworldDir.x, ppworldDir.y, ppworldDir.z) / ppworldDir.w);
 
@@ -103,8 +102,8 @@ vec4 EvalBackground(vec2 uv, vec3 viewPos, mat4 viewInv, mat4 projInv) {
     vec2 sampleUV;
     vec3 sunDir = u_SunDir;
     SampleSkyViewLut(worldPos, worldDir, sunDir, sampleUV);
-    vec3 lum = 50 * texture(u_SkyviewLUT, sampleUV).rgb;
-    lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
+    vec3 lum = 20 * texture(u_SkyviewLUT, sampleUV).rgb;
+    // lum /= (smoothstep(0.0, 0.2, clamp(sunDir.y, 0.0, 1.0)) * 2.0 + 0.15);
     lum = jodieReinhardTonemap(lum);
     lum = pow(lum, vec3(1.0 / 2.2)) + GetSunLuminance(worldPos, worldDir, sunDir, Rground);
     return vec4(lum, 1.0);

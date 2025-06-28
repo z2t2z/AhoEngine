@@ -5,6 +5,7 @@
 #include "Runtime/Platform/OpenGL/OpenGLTexture.h"
 #include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
 
+#include <glad/glad.h>
 #include <chrono>
 #include <thread>
 
@@ -102,6 +103,20 @@ namespace Aho {
 					UBOManager::UpdateUBOData<GPU_DirectionalLight>(1, gpuLight, lcomp.index);
 					ecs->RemoveComponent<LightDirtyTagComponent>(entity);
 				}
+			}
+		);
+
+		ecs->GetView<EditorCamaraComponent>().each(
+			[&ecs](Entity entity, const EditorCamaraComponent& camComp) {
+				const auto& cam = camComp.camera;
+				CameraUBO camUBO;
+				camUBO.u_View = cam->GetView();
+				camUBO.u_Projection = cam->GetProjection();
+				camUBO.u_ProjectionInv = cam->GetProjectionInv();
+				camUBO.u_ViewInv = cam->GetViewInv();
+				camUBO.u_ProjView = cam->GetProjection() * cam->GetView();
+				camUBO.u_ViewPosition = glm::vec4(cam->GetPosition(), 1.0f);
+				UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 			}
 		);
 	}

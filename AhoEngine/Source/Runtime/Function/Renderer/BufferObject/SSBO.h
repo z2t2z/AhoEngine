@@ -8,8 +8,16 @@ namespace Aho {
     class SSBOBase {
     public:
         virtual ~SSBOBase() = default;
+        uint32_t GetBufferID() const {
+            return m_BufferID;
+        }
+        uint32_t GetBindingPoint() const {
+            return m_BindingPoint;
+        }
+    protected:
+        uint32_t m_BufferID;
+        uint32_t m_BindingPoint;
     };
-
 
     template <typename T>
     class SSBO : public SSBOBase {
@@ -17,8 +25,8 @@ namespace Aho {
         SSBO(const SSBO&) = delete;
         SSBO& operator=(const SSBO&) = delete;
 
-        SSBO(uint32_t bindingPoint, size_t maxElements, bool staticDraw = false)
-                : m_BindingPoint(bindingPoint), m_BufferID(0) {
+        SSBO(uint32_t bindingPoint, size_t maxElements, bool staticDraw = false) {
+            m_BindingPoint = bindingPoint;
             glGenBuffers(1, &m_BufferID);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
             glBufferData(GL_SHADER_STORAGE_BUFFER, maxElements * sizeof(T), nullptr, staticDraw ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
@@ -68,11 +76,59 @@ namespace Aho {
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         }
+    };
 
-        uint32_t GetBindingPoint() const { return m_BindingPoint; }
+
+    template<typename T>
+    class SSBOScalar : public SSBOBase {
+    public:
+        ~SSBOScalar() {
+            if (m_MappedPtr) {
+                glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+                m_MappedPtr = nullptr;
+            }
+            if (m_BufferID) {
+                glDeleteBuffers(1, &m_BufferID);
+            }
+        }
+
+        SSBOScalar(uint32_t bindingPoint) {
+            m_BindingPoint = bindingPoint;
+
+            glGenBuffers(1, &m_BufferID);
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
+
+            // Persistent mapped storage, CPU-readable
+            glBufferStorage(
+                GL_SHADER_STORAGE_BUFFER,
+                sizeof(T),
+                nullptr,
+                GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_DYNAMIC_STORAGE_BIT
+            );
+
+            m_MappedPtr = reinterpret_cast<T*>(glMapBufferRange(
+                GL_SHADER_STORAGE_BUFFER,
+                0,
+                sizeof(T),
+                GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+            ));
+
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, m_BufferID);
+        }
+
+        void Set(const T& value) {
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_BufferID);
+            glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(T), &value);
+        }
+
+        T Get() const {
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT); // 确保SSBO写入完成
+            glFinish(); // 强制CPU等待GPU完成（仅调试用）
+            return *m_MappedPtr;
+        }
 
     private:
-        uint32_t m_BufferID;
-        uint32_t m_BindingPoint;
+        T* m_MappedPtr = nullptr;
     };
+
 }

@@ -45,7 +45,8 @@ namespace Aho {
 		uint32_t GetViewportDisplayTextureID() const { return m_ViewportDisplayBuffer->GetTextureID(); }
 		void SetViewportDisplayTextureBuffer(_Texture* buffer) { m_ViewportDisplayBuffer = buffer; }
 		std::vector<RenderPassBase*> GetAllRenderPasses() const { return m_AllRenderPasses; }
-		void RegisterRenderPassBase(RenderPassBase* renderPassBase) { m_AllRenderPasses.push_back(renderPassBase); }
+		RenderPassBase* GetRenderPass(const std::string& name) const { return m_RenderPasses.at(name); }
+		void RegisterRenderPassBase(RenderPassBase* rp) { m_AllRenderPasses.push_back(rp); m_RenderPasses[rp->GetPassName()] = rp; }
 	private:
 		void SetupUBOs() const;
 		void UpdateUBOs() const;
@@ -56,6 +57,7 @@ namespace Aho {
 		std::vector<RenderPipeline*> m_ActivePipelines;
 	// New System
 	public:
+		std::unordered_map<std::string, RenderPassBase*> m_RenderPasses;
 		std::vector<RenderPassBase*> m_AllRenderPasses;
 		DeferredShading* GetDeferredShadingPipeline()		const { return m_RP_Derferred; }
 		SkyAtmosphericPipeline* GetSkyAtmosphericPipeline() const { return m_RP_SkyAtmospheric; }
