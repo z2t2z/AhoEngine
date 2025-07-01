@@ -37,6 +37,8 @@ namespace Aho {
         DistantLightShadowMap,
         DeferredShading,
         PathTracing,
+        PathTracingCamRayGen,
+        PathTracingPresent,
         GBuffer,
         GenDepthPyramid,
         SSSR,

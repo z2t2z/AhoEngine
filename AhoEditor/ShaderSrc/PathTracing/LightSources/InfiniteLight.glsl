@@ -5,6 +5,9 @@
 
 #include "../Math.glsl"
 
+const vec3 uniformSky = vec3(0.529f, 0.808f, 0.922f);
+float EnvIntensity = 1.0f;
+
 struct EnvironmentMap {
     sampler2D EnvLight;
     sampler1D Env1DCDF;
@@ -83,7 +86,6 @@ vec2 BinarySearch(float value) {
     int x = clamp(lower, 0, envMapResInt.x - 1);
     return vec2(x, y) / envMapRes;
 }
-const vec3 uniformSky = vec3(0.529f, 0.808f, 0.922f);
 
 // Sample environment light
 vec3 SampleIBL(out float pdf, out vec3 sampleDir) {
@@ -112,7 +114,6 @@ vec3 SampleIBL(out float pdf, out vec3 sampleDir) {
     return color;
 }
 
-float EnvIntensity = 1.0f;
 vec4 EvalEnvMap(const vec3 dir) {
     float theta = acos(dir.y);
     vec2 uv = vec2(0.5f + atan(dir.z, dir.x) * Inv2PI, theta * InvPI);
@@ -120,17 +121,6 @@ vec4 EvalEnvMap(const vec3 dir) {
     float pdf = Luminance(L) / u_EnvMap.EnvTotalLum;
     pdf = (pdf * u_EnvMap.EnvSize.x * u_EnvMap.EnvSize.y) / (2.0f * PI * PI * sin(theta));
     return vec4(EnvIntensity * L, pdf);
-}
-
-vec4 SampleInfiniteLight(const Ray ray) {
-#ifdef OPT_INFINITE_LIGHT
-    if (u_EnvMap.EnvSize.x == 0 || u_EnvMap.EnvSize.y == 0) {
-        return vec4(EnvIntensity * uniformSky, -1.0f);
-    }
-    return EvalEnvMap(ray.direction);
-#else
-    return vec4(0.0, 0.0, 0.0, 1.0);
-#endif
 }
 
 #endif

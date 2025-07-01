@@ -8,6 +8,7 @@
 #include "RenderPipeline/DebugVisualPipeline.h"
 #include "RenderPipeline/DeferredPipeline.h"
 #include "RenderPipeline/SkyAtmosphericPipeline.h"
+#include "RenderPipeline/DDGI/DDGIPipeline.h"
 #include "Runtime/Function/Renderer/GpuTimer.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Level/Ecs/Components.h"
@@ -64,6 +65,7 @@ namespace Aho {
 		PathTracingPipeline* GetPathTracingPipeline()		const { return m_RP_PathTracing; }
 		PostprocessPipeline* GetPostprocessPipeline()		const { return m_RP_Postprocess; }
 	private:
+		DDGIPipeline* m_DDGIPipeline{ nullptr };
 		PostprocessPipeline* m_RP_Postprocess{ nullptr };
 		_IBLPipeline* m_RP_IBLPipeline{ nullptr };
 		DeferredShading* m_RP_Derferred{ nullptr };

@@ -15,108 +15,31 @@
 namespace Aho {
 	PathTracingPipeline::PathTracingPipeline() {
 		Initialize();
-		Init();
 	}
 
 	// TODO: Wave front, blas does not update per frame
 	void PathTracingPipeline::Initialize() {
-		constexpr int64_t MAX_MESH		= 1'280'00;
-		constexpr int64_t MAX_TLAS_NODE = 1'280'000'0;
-		constexpr int64_t MAX_BLAS_NODE = 1'280'000'0;
-		constexpr int64_t MAX_PRIMITIVE = 1'280'000'0;
+		constexpr int64_t MAX_MESH = 1'280'0;
+		constexpr int64_t MAX_TLAS_NODE = 1'280'000;
+		constexpr int64_t MAX_BLAS_NODE = 1'280'000;
+		constexpr int64_t MAX_PRIMITIVE = 1'280'000;
+		constexpr uint32_t MAX_PAYLOAD_SIZE = 2560 * 1440;
 
+		struct DispatchIndirectCommand {
+			GLuint num_groups_x;
+			GLuint num_groups_y;
+			GLuint num_groups_z;
+		};
 		SSBOManager::RegisterSSBO<BVHNodei>(0, MAX_TLAS_NODE, true);
 		SSBOManager::RegisterSSBO<PrimitiveDesc>(1, MAX_MESH, true);
 		SSBOManager::RegisterSSBO<BVHNodei>(2, MAX_BLAS_NODE, true);
 		SSBOManager::RegisterSSBO<PrimitiveDesc>(3, MAX_PRIMITIVE, true);
 		SSBOManager::RegisterSSBO<OffsetInfo>(4, MAX_MESH, true);
 		SSBOManager::RegisterSSBO<MaterialDescriptor>(5, MAX_MESH, true);
-
-		return;
-
-		std::shared_ptr<_Texture> accumulateTex = TextureResourceBuilder()
-			.Name("PathTracingAccumulate").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA32F)
-			.Build();
-		std::shared_ptr<_Texture> presentTex = TextureResourceBuilder()
-			.Name("PathTracingPresent").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
-			.Build();
-
-		m_TextureBuffers.push_back(accumulateTex);
-		m_TextureBuffers.push_back(presentTex);
-
-		m_Result = presentTex.get();
-		
-		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing";
-		// --- Accumulate pass ---
-		{
-			auto Func =
-				[accumulateTex, this](RenderPassBase& self) {
-					auto shader = self.GetShader();
-					shader->Bind();
-
-					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					bool Reaccumulate = false;
-					Reaccumulate |= SyncActiveIBLLighting(ecs, shader);
-					Reaccumulate |= UpdateSceneSSBOData();
-
-					if (Reaccumulate) {
-						m_Frame = 1;
-						accumulateTex->ClearTextureData();
-					}
-
-					accumulateTex->BindTextureImage(0);
-					shader->SetInt("u_Frame", m_Frame);
-					static int group = 16;
-					uint32_t width = accumulateTex->GetWidth();
-					uint32_t height = accumulateTex->GetHeight();
-					uint32_t workGroupCountX = (width + group - 1) / group;
-					uint32_t workGroupCountY = (height + group - 1) / group;
-					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
-					shader->Unbind();
-				};
-
-			m_AccumulatePass = std::move(RenderPassBuilder()
-				.Name("PathTracingAccumulate Pass")
-				.Shader((shaderPathRoot / "PathTracing.glsl").string())
-				.Usage(ShaderUsage::PathTracing)
-				.Func(Func)
-				.Build());
-		}
-
-		// --- Present Pass ---
-		{
-			auto Func =
-				[this](RenderPassBase& self) {
-					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
-					auto shader = self.GetShader();
-					shader->Bind();
-					self.GetRenderTarget()->Bind();
-					RenderCommand::Clear(ClearFlags::Color_Buffer);
-					// Uniforms
-					shader->SetInt("u_Frame", m_Frame++);
-					// Texture uniforms
-					uint32_t slot = 0;
-					self.BindRegisteredTextureBuffers(slot);
-					// Draw screen quad
-					glBindVertexArray(self.s_DummyVAO); // Draw a screen quad for shading
-					RenderCommand::DrawArray();
-					shader->Unbind();
-					self.GetRenderTarget()->Unbind();
-				};
-
-			m_PresentPass = std::move(RenderPassBuilder()
-				.Name("PathTracingPresent Pass")
-				.Shader((shaderPathRoot / "Present.glsl").string())
-				//.Usage(ShaderUsage::PathTracing)
-				.AttachTarget(presentTex)
-				.Input("u_PathTracingAccumulate", accumulateTex)
-				.Func(Func)
-				.Build());
-		}
-	}
-
-	void PathTracingPipeline::Init() {
-		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing" / "Wavefront";
+		SSBOManager::RegisterScalar<uint32_t>(6);
+		SSBOManager::RegisterSSBO<Payload>(7, MAX_PAYLOAD_SIZE, false);
+		SSBOManager::RegisterSSBO<Payload>(8, MAX_PAYLOAD_SIZE, false);
+		SSBOManager::RegisterSSBO<DispatchIndirectCommand>(9, 1, false);
 
 		std::shared_ptr<_Texture> accumulateTex = TextureResourceBuilder()
 			.Name("WaveFrontPathTracingAccumulate").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA32F)
@@ -128,17 +51,7 @@ namespace Aho {
 		m_AccumulateTex = accumulateTex.get();
 		m_PresentTex = presentTex.get();
 
-		SSBOManager::RegisterScalar<uint32_t>(6);
-		constexpr uint32_t MAX_PAYLOAD_SIZE = 2560 * 1440;
-		SSBOManager::RegisterSSBO<Payload>(7, MAX_PAYLOAD_SIZE, false);
-		SSBOManager::RegisterSSBO<Payload>(8, MAX_PAYLOAD_SIZE, false);
-
-		struct DispatchIndirectCommand {
-			GLuint num_groups_x;
-			GLuint num_groups_y;
-			GLuint num_groups_z;
-		};
-		SSBOManager::RegisterSSBO<DispatchIndirectCommand>(9, 1, false);
+		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "PathTracing" / "Wavefront";
 		m_DispatchBuffer = std::make_shared<DispatchIndirectBuffer>(SSBOManager::GetBufferId(9));
 
 		// --- Generate Camera Ray Pass ---
@@ -154,20 +67,20 @@ namespace Aho {
 					shader->SetInt("u_SrcHeight", height);
 					shader->SetInt("u_WriteIndex", m_WriteIndex);
 
-					//SSBOManager::SetScalar<uint32_t>(6, width * height);
+					SSBOManager::SetScalar<uint32_t>(6, width * height);
 
 					static int group = 32;
 					uint32_t workGroupCountX = (width + group - 1) / group;
 					uint32_t workGroupCountY = (height + group - 1) / group;
 					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
-					
+
 					shader->Unbind();
 				};
 
 			m_CameraRayGenPass = std::move(RenderPassBuilder()
 				.Name("CameraRayGen Pass")
 				.Shader((shaderPathRoot / "RayGen.glsl").string())
-				//.Usage(ShaderUsage::PathTracing)
+				.Usage(ShaderUsage::PathTracingCamRayGen)
 				.Func(Func)
 				.Build());
 		}
@@ -191,17 +104,22 @@ namespace Aho {
 					bool Reaccumulate = false;
 					Reaccumulate |= SyncActiveIBLLighting(ecs, shader);
 
-
 					m_AccumulateTex->BindTextureImage(0);
-					//glMemoryBarrier(GL_COMMAND_BARRIER_BIT); // 等 dispatch buffer 可用
-					//m_DispatchBuffer->Bind();
-					//glDispatchComputeIndirect(0);
-					//m_DispatchBuffer->Unbind();
 
-					static int group = 32;
-					uint32_t workGroupCountX = (width + group - 1) / group;
-					uint32_t workGroupCountY = (height + group - 1) / group;
-					shader->DispatchCompute(workGroupCountX, workGroupCountY, 1);
+					// Indirect dispatch
+					{
+						//glMemoryBarrier(GL_COMMAND_BARRIER_BIT); // 等 dispatch buffer 可用
+						//m_DispatchBuffer->Bind();
+						//glDispatchComputeIndirect(0);
+						//m_DispatchBuffer->Unbind();
+					}
+
+					{
+						constexpr static int group = 32;
+						int gx = (width + group - 1) / group;
+						int gy = (height + group - 1) / group;
+						glDispatchCompute(gx, gy, 1);
+					}
 
 					shader->Unbind();
 				};
@@ -218,14 +136,10 @@ namespace Aho {
 		// --- Dispatch Prep Pass ---
 		{
 			auto Func =
-				[this](RenderPassBase& self) {
+				[](RenderPassBase& self) {
 					auto shader = self.GetShader();
 					shader->Bind();
 					shader->DispatchCompute(1, 1, 1);
-
-					//std::vector<DispatchIndirectCommand> data(1);
-					//SSBOManager::GetSubData<DispatchIndirectCommand>(9, data, 0);
-
 					shader->Unbind();
 				};
 
@@ -241,6 +155,11 @@ namespace Aho {
 		{
 			auto Func =
 				[this](RenderPassBase& self) {
+					static int m_LastFrame = 0;
+					if (m_Frame != 1 && m_LastFrame == m_Frame) {
+						return; // Skip if the frame is not changed
+					}
+					m_LastFrame = m_Frame;
 					auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 					auto shader = self.GetShader();
 					shader->Bind();
@@ -261,52 +180,20 @@ namespace Aho {
 			m_PresentPass = std::move(RenderPassBuilder()
 				.Name("WaveFrontPathTracingPresent Pass")
 				.Shader((shaderPathRoot / "Present.glsl").string())
-				//.Usage(ShaderUsage::PathTracing)
+				.Usage(ShaderUsage::PathTracingPresent)
 				.AttachTarget(presentTex)
 				.Input("u_PathTracingAccumulate", accumulateTex)
 				.Func(Func)
 				.Build());
 		}
-	}
-	
-	void PathTracingPipeline::_Execute() {
-		bool sceneDirty = UpdateSceneSSBOData();
-		m_CurrBounce += 1;
-		bool regenCamRay = sceneDirty || m_CurrBounce > m_MaxBounce;
-		if (regenCamRay) {
-			//Case 1: Scene is dirty, clear texture data and begin a new accumulate process starting from frame 1
-			if (sceneDirty) {
-				m_AccumulateTex->ClearTextureData();
-				m_CurrBounce = 1;
-				m_Frame = 1;
-			} 
-			//Case 2: Maximum bounce reached, start a new frmae
-			else {
-				m_CurrBounce = 1;
-				m_Frame += 1;
-			}
-			m_WriteIndex = m_WriteIndex ^ 1;
-			m_ReadIndex = m_WriteIndex ^ 1;
-			m_CameraRayGenPass->Execute();
-		}
 
-		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-		//m_DispatchPrepPass->Execute();
-		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-		m_WriteIndex = m_WriteIndex ^ 1;
-		m_ReadIndex = m_WriteIndex ^ 1;
-		AHO_CORE_ASSERT(m_WriteIndex != m_ReadIndex);
-		m_IntersectionPass->Execute();
-
-		m_PresentPass->Execute();
 	}
 
 	bool PathTracingPipeline::UpdateSceneSSBOData() const {
 		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 
 		bool Reaccumulate = SyncSceneDirtyFlags(ecs);
-		
+
 		static bool BVHDirty = true;
 		auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
 		std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
@@ -370,17 +257,41 @@ namespace Aho {
 
 	void PathTracingPipeline::Execute() {
 		g_RuntimeGlobalCtx.m_Renderer->GetRenderPass("G-Buffer Pass")->Execute();
-		//m_AccumulatePass->Execute();
-		//m_PresentPass->Execute();
+		m_CurrBounce += 1;
 
-		_Execute();
+		bool sceneDirty = UpdateSceneSSBOData();
+		bool regenCamRay = sceneDirty || m_CurrBounce > m_MaxBounce;
+		if (regenCamRay) {
+			//Case 1: Scene is dirty, clear texture data and begin a new accumulate process starting from frame 1
+			if (sceneDirty) {
+				m_AccumulateTex->ClearTextureData();
+				m_CurrBounce = 1;
+				m_Frame = 1;
+			}
+			//Case 2: Maximum bounce reached, start a new frmae
+			else {
+				m_CurrBounce = 1;
+				m_Frame += 1;
+			}
+			m_WriteIndex = m_WriteIndex ^ 1;
+			m_ReadIndex = m_WriteIndex ^ 1;
+			m_CameraRayGenPass->Execute();
+		}
+
+		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		//m_DispatchPrepPass->Execute();
+
+		m_WriteIndex = m_WriteIndex ^ 1;
+		m_ReadIndex = m_WriteIndex ^ 1;
+		AHO_CORE_ASSERT(m_WriteIndex != m_ReadIndex);
+		m_IntersectionPass->Execute();
+
+		m_PresentPass->Execute();
 	}
 
 	bool PathTracingPipeline::Resize(uint32_t width, uint32_t height) const {
-		//bool resized = m_AccumulatePass->Resize(width, height);
 		bool resized = false;
 		resized |= m_PresentPass->Resize(width, height);
-		//resized |= m_PresentTex->Resize(width, height);
 		resized |= m_AccumulateTex->Resize(width, height);
 		resized |= g_RuntimeGlobalCtx.m_Renderer->GetRenderPass("G-Buffer Pass")->Resize(width, height);
 		return resized;

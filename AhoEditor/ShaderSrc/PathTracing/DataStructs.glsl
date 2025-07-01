@@ -150,7 +150,7 @@ struct Payload {
     vec3 throughput;
     uint pixelIndex;
 
-    vec3 radiance;
+    vec3 radiance; // not used
     float pdf;
 
     vec3 N; // normal
@@ -158,6 +158,19 @@ struct Payload {
     
     vec3 pos; // hit pos through interpolation, accurate than origin+direction*hitT
     float eta;
+};
+
+struct PackedPayload {
+    vec3 origin;             // 12 bytes
+    vec3 pos;                // 12 bytes
+    
+    uint packedDir;          // 4: direction octahedral
+    uint packedNormal;       // 4: N octahedral
+
+    uint packedThroughput;   // 4: RGB10A2
+    uint pdf_eta;            // 4: half(pdf), half(eta)
+    
+    uint cosTheta_bounce_alive_pixel; // 4: cosTheta (float16) + bounce (8) + alive (1) + pixelIndex (7 bits+)
 };
 
 struct DispatchBuffer {

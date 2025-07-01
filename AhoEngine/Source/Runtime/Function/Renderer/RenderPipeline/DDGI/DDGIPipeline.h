@@ -7,7 +7,7 @@
 namespace Aho {
     struct alignas(16) DDGIVolumeDesc {
         glm::vec3 origin = {};              // volume 起点（world-space）
-        glm::vec3 probeSpacing = {};        // 每个探针之间的间距
+        float probeSpacing = {};        // 每个探针之间的间距
         glm::ivec3 probeCounts = { -1, -1, -1 }; // 每轴上的 probe 数量
 
         // --- Ray Tracing ---
@@ -28,13 +28,27 @@ namespace Aho {
         bool debugIrradiance = false;       // 是否渲染 irradiance atlas debug 图
     };
 
+    class VertexArray;
     class DDGIPipeline : public RenderPipeline {
     public:
+        ~DDGIPipeline();
+        DDGIPipeline() { Initialize(); }
         virtual void Initialize() override final;
+        virtual void Execute() override final;
+        virtual bool Resize(uint32_t width, uint32_t height) const override final;
     private:
         //void ClearProbes();
         //void RayTrace(uint32_t tlas, uint32_t frameIndex);
         //void Blend();
+    private:
+        std::shared_ptr<VertexArray> m_ProbeVAO{ nullptr };
+        _Texture* m_ProbeVisualTex{ nullptr };
+        _Texture* m_ProbeDepthTex{ nullptr };
+
+    private:
+        std::unique_ptr<RenderPassBase> m_CompositePass{ nullptr };
+        std::unique_ptr<RenderPassBase> m_ProbeRayTracePass{ nullptr };
+        std::unique_ptr<RenderPassBase> m_ProbeVisualizationPass{ nullptr };
     private:
         DDGIVolumeDesc m_Desc;
         _Texture* m_ProbeIrradianceTex = 0;

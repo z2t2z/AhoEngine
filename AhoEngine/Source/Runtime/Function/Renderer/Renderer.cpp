@@ -28,7 +28,7 @@ namespace Aho {
 		if (mode == RenderMode::PathTracing) {
 			m_ActivePipelines = { m_RP_PathTracing };
 		} else {
-			m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred };
+			m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_DDGIPipeline, m_RP_Derferred };
 		}
 		m_ActivePipelines.push_back(m_RP_Postprocess);
 		SetViewportDisplayTextureBuffer(m_RP_Postprocess->GetRenderResultTextureBuffer());
@@ -46,6 +46,7 @@ namespace Aho {
 		m_RP_PathTracing	= new PathTracingPipeline();
 		m_RP_IBLPipeline	= new _IBLPipeline();
 		m_RP_Postprocess	= new PostprocessPipeline();
+		m_DDGIPipeline		= new DDGIPipeline();
 
 		SetRenderMode(RenderMode::DefaultLit);
 	}

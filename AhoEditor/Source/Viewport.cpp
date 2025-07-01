@@ -129,7 +129,7 @@ namespace Aho {
 				float theta = glm::radians(sunRotation.x), phi = glm::radians(sunRotation.y);
 				glm::vec3 sunDir = normalize(glm::vec3(glm::sin(theta) * glm::cos(phi), glm::cos(theta), glm::sin(theta) * glm::sin(phi)));
 				ecs->AddComponent<AtmosphereParametersComponent>(skyEntity);
-				ecs->AddComponent<GameObjectComponent>(skyEntity, "GO_Sky_Atmospheric");
+				ecs->AddComponent<GameObjectComponent>(skyEntity, "GO_SkyAtmosphere");
 
 				LightComponent& lcomp = ecs->AddComponent<LightComponent>(skyEntity);
 				lcomp.index = g_RuntimeGlobalCtx.m_IndexAllocator->AcquireIndex<DirectionalLight>();
@@ -138,6 +138,7 @@ namespace Aho {
 				lcomp.light = std::move(light);
 				ecs->AddComponent<LightDirtyTagComponent>(skyEntity);
 
+				// Modify shader features(add #defines accordingly) and recompile shaders
 				EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_SKY_ATMOSPHERIC, ShaderFeature::FEATURE_IBL);
 			}
 
@@ -173,7 +174,9 @@ namespace Aho {
 				auto textureAsset = assetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions(file.string()));
 				Entity IBLEntity = resManager->LoadIBL(textureAsset);
 				g_RuntimeGlobalCtx.m_IBLManager->SetActiveIBL(IBLEntity);
+
 				EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::DeferredShading, ShaderFeature::FEATURE_IBL, ShaderFeature::FEATURE_SKY_ATMOSPHERIC);
+				EngineEvents::OnShaderFeatureChanged.Dispatch(ShaderUsage::PathTracing, ShaderFeature::FEATURE_IBL, ShaderFeature::FEATURE_SKY_ATMOSPHERIC);
 			}
 		}
 	}

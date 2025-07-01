@@ -27,6 +27,7 @@ namespace Aho {
 		RPL_PostProcess,
 		RPL_DeferredShading,
 		RPL_DebugVisual,
+		RPL_DDGI,
 	};
 
 	struct RenderTask {

@@ -36,10 +36,6 @@ namespace Aho {
 		virtual void Initialize() override;
 		virtual void Execute() override;
 		virtual bool Resize(uint32_t width, uint32_t height) const override;
-	public:
-		void Init();
-		void _Execute();
-		bool UpdateSceneSSBOData() const;
 	private:
 		std::shared_ptr<DispatchIndirectBuffer> m_DispatchBuffer;
 		std::unique_ptr<RenderPassBase> m_CameraRayGenPass;
@@ -51,6 +47,7 @@ namespace Aho {
 		_Texture* m_AccumulateTex{ nullptr };
 		_Texture* m_PresentTex{ nullptr };
 	private:
+		bool UpdateSceneSSBOData() const;
 		bool SyncSceneDirtyFlags(const std::shared_ptr<EntityManager>& ecs) const;
 		bool SyncActiveIBLLighting(const std::shared_ptr<EntityManager>& ecs, const Shader* shader) const;
 	private:

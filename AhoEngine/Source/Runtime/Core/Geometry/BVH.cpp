@@ -112,7 +112,8 @@ namespace Aho {
 		}
 
 		int primsCnt = indexR - indexL;
-		if (primsCnt <= MAX_LEAF_PRIMS) {
+		const int _MAX_LEAF_PRIMS = m_BvhLevel == BVHLevel::BLAS ? 16 : 1;
+		if (primsCnt <= _MAX_LEAF_PRIMS) {
 			m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, bbox);
 		}
 		else {
@@ -171,8 +172,6 @@ namespace Aho {
 					if (splitPos != -1 && costs.at(splitPos) < leafCost) {
 						int mid;
 						{
-							//std::string display = std::to_string(indexL) + " " + std::to_string(indexR);
-							//ScopedTimer timer(display);
 							mid = std::partition(m_Primitives.begin() + indexL, m_Primitives.begin() + indexR,
 								[&centroid, &axis, &splitPos](const PrimitiveDesc& p) {
 									int b = SAH_SPLIT_BUCKETS_NUM *
@@ -188,6 +187,7 @@ namespace Aho {
 						m_Nodes[nodeIndex].InitInterior(nodeIndex, l, r, bbox, axis);
 					}
 					else { // create leaf directly, ignoring MAX_LEAF_PRIMS
+						AHO_CORE_INFO("Leaf info: indexL = {}, indexR = {}, primsCnt = {}", indexL, indexR, primsCnt);
 						m_Nodes[nodeIndex].InitLeaf(nodeIndex, indexL, primsCnt, bbox);
 					}
 					break;

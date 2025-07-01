@@ -36,9 +36,9 @@ vec3 SampleRectangleAreaLight(inout State state, vec3 V, const AreaLight areaLig
 
     float cosTheta = dot(state.N, L);
 
-    if (cosTheta <= 0.0 || !VisibilityTest(state.pos, samplePos)) {
-        return vec3(0.0);
-    }
+    // if (cosTheta <= 0.0 || !VisibilityTest(state.pos, samplePos)) {
+    //     return vec3(0.0);
+    // }
 
     mat3 tbn = ConstructTBN(state.N);
     L = WorldToLocal(L, tbn);
