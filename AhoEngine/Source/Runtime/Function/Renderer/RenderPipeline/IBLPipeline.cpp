@@ -5,6 +5,7 @@
 #include "Runtime/Function/Renderer/Texture/TextureConfig.h"
 #include "Runtime/Function/Renderer/Texture/_Texture.h"
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
 
 namespace Aho {
 	void _IBLPipeline::Initialize() {

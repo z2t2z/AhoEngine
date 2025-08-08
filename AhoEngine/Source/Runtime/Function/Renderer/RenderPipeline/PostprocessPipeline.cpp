@@ -41,6 +41,11 @@ namespace Aho {
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "Postprocessing";
 
+		// --- Tone Mapping Pass --
+		{
+
+		}
+
 		// Picking Pass, draw object id into a buffer for reading
 		{
 			auto Func =

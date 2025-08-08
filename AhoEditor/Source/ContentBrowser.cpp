@@ -40,7 +40,11 @@ namespace Aho {
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 				auto relativePath = entry.path().string();
 				std::string identifier = "CONTENT_BROWSER_MESH";
-				if (entry.path().extension() != ".obj" && entry.path().extension() != ".fbx") {
+				const static std::unordered_set<std::string> meshExtensions = { ".obj", ".fbx", ".gltf", ".glb" };
+				/*if (entry.path().extension() != ".obj" && entry.path().extension() != ".fbx") {
+					identifier = "CONTENT_BROWSER_TEXTURE";
+				}*/
+				if (!meshExtensions.count(entry.path().extension().string())) {
 					identifier = "CONTENT_BROWSER_TEXTURE";
 				}
 				const char* itemPayload = relativePath.c_str();

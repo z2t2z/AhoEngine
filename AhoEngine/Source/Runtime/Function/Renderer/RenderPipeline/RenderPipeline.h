@@ -66,7 +66,7 @@ namespace Aho {
 			}
 			return nullptr;
 		}
-		virtual std::vector<std::shared_ptr<_Texture>> GetBuffers() const { return m_TextureBuffers; }
+		virtual std::vector<std::shared_ptr<_Texture>> GetBuffers() const { AHO_CORE_ASSERT(false); return m_TextureBuffers; }
 	protected:
 		_Texture* m_Result{ nullptr };
 	protected:

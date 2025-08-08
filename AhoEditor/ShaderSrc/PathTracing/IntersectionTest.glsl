@@ -205,9 +205,6 @@ bool AnyHit(Ray ray, const float tNearest) {
 }
 
 bool IsOccluded(const Ray ray, const float t) {
-#ifndef OPT_SHADOW_TEST
-    return false;
-#endif
     return AnyHit(ray, t);
 }
 

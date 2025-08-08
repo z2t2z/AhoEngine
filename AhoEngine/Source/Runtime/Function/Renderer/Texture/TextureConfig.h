@@ -6,6 +6,7 @@
 namespace Aho {
 	enum TextureDim : GLenum {
 		Texture2D = GL_TEXTURE_2D,
+		Texture2DArray = GL_TEXTURE_2D_ARRAY,
 		CubeMap = GL_TEXTURE_CUBE_MAP
 	};
 
@@ -47,17 +48,39 @@ namespace Aho {
 		// ...
 	};
 
+	enum WrapMode : GLenum {
+		ClampToEdge = GL_CLAMP_TO_EDGE,
+		Repeat = GL_REPEAT,
+		MirroredRepeat = GL_MIRRORED_REPEAT,
+		// ...
+	};
+
+	enum Filtering : GLenum {
+		Nearest = GL_NEAREST,
+		Linear = GL_LINEAR,
+		NearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
+		LinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
+		NearestMipmapLinear = GL_NEAREST_MIPMAP_LINEAR,
+		LinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR,
+		// ...
+	};
+
 	struct TextureConfig {
 		TextureUsage	Usage{ TextureUsage::Custom };
 		std::string		Label;
 		uint32_t		Width{ 1600 };
 		uint32_t		Height{ 900 };
+		uint32_t		Layers{ 0 };
 		bool			GenMips{ false };
 
 		TextureDim		Dim = TextureDim::Texture2D;
 		InternalFormat	InternalFmt = InternalFormat::RGBA8;
 		DataFormat		DataFmt = DataFormat::BGRA;
 		DataType		DataType = DataType::UByte;
+		WrapMode		WrapS = WrapMode::Repeat;
+		WrapMode		WrapT = WrapMode::Repeat;
+		Filtering		MinFiltering{ Filtering::Linear };
+		Filtering		MagFiltering{ Filtering::Linear };
 
 		static TextureConfig GetDepthTextureConfig(const std::string& label = "Depth", bool GenMip = false) {
 			TextureConfig depthConfig;

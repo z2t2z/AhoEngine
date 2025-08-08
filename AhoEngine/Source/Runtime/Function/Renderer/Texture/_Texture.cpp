@@ -11,15 +11,23 @@
 
 namespace Aho {
 	_Texture::_Texture(const TextureConfig& cfg) {
-		m_Usage		  = cfg.Usage;
-		m_Label		  = cfg.Label;
-		m_Dim		  = cfg.Dim;
-		m_DataFmt	  = cfg.DataFmt;
-		m_DataType	  = cfg.DataType;
-		m_InternalFmt = cfg.InternalFmt;
-		m_GenMips     = cfg.GenMips;
+		m_Usage			= cfg.Usage;
+		m_Label			= cfg.Label;
+		m_Dim			= cfg.Dim;
+		m_DataFmt		= cfg.DataFmt;
+		m_DataType		= cfg.DataType;
+		m_InternalFmt	= cfg.InternalFmt;
+		m_GenMips		= cfg.GenMips;
+		m_MinFiltering	= cfg.MinFiltering;
+		m_MagFiltering	= cfg.MagFiltering;
+		m_WrapModeS		= cfg.WrapS;
+		m_WrapModeT		= cfg.WrapT;
+		if (m_GenMips) {
+			m_MinFiltering = m_MinFiltering == Linear ? LinearMipmapLinear : NearestMipmapLinear;
+		}
+		// Is this hdr?
 		m_IsHDR		  = m_DataType == DataType::Float && (m_InternalFmt == InternalFormat::RGB16F || m_InternalFmt == InternalFormat::RGBA16F);
-		Resize(cfg.Width, cfg.Height);
+		Resize(cfg.Width, cfg.Height, cfg.Layers);
 	}
 
 	_Texture::_Texture(const std::shared_ptr<TextureAsset>& texAsset) {
@@ -43,7 +51,8 @@ namespace Aho {
 	}
 
 	void _Texture::BindTextureImage(uint32_t pos, uint32_t mipLevel, uint32_t operation) const {
-		glBindImageTexture(pos, m_TextureID, mipLevel, (m_Dim == TextureDim::Texture2D ? GL_FALSE : GL_TRUE), 0, operation, m_InternalFmt);
+		bool layered = (m_Dim != GL_TEXTURE_2D); // Texture2DArray 和 CubeMap 为 true
+		glBindImageTexture(pos, m_TextureID, mipLevel, (layered ? GL_TRUE : GL_FALSE), 0, operation, m_InternalFmt);
 	}
 
 	void _Texture::ClearTextureData() const {
@@ -64,8 +73,8 @@ namespace Aho {
 
 	void _Texture::GetTextureWdithHeight(int& width, int& height, int mipLevel) const {
 		glBindTexture(m_Dim, m_TextureID);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_WIDTH, &width);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_HEIGHT, &height);
+		glGetTexLevelParameteriv(m_Dim, mipLevel, GL_TEXTURE_WIDTH, &width);
+		glGetTexLevelParameteriv(m_Dim, mipLevel, GL_TEXTURE_HEIGHT, &height);
 		glBindTexture(m_Dim, 0);
 	}
 
@@ -79,12 +88,15 @@ namespace Aho {
 	}
 
 	// TODO: imutable storage
-	bool _Texture::Resize(uint32_t width, uint32_t height) {
-		if (m_Width == width && m_Height == height) {
-			//AHO_CORE_TRACE("Skip resize {}", m_Label.c_str());
+	bool _Texture::Resize(uint32_t width, uint32_t height, uint32_t layers) {
+		if (m_Width == width && m_Height == height && (m_Dim != GL_TEXTURE_2D_ARRAY || m_Layers == layers)) 
 			return false;
-		}
+
 		m_Width = width; m_Height = height;
+		if (m_Dim == GL_TEXTURE_2D_ARRAY) {
+			AHO_CORE_ASSERT(layers > 0 && "Texture array layers must be greater than 0");
+			m_Layers = layers;
+		}
 
 		if (m_TextureID) {
 			glDeleteTextures(1, &m_TextureID);
@@ -93,31 +105,59 @@ namespace Aho {
 
 		glCreateTextures(m_Dim, 1, &m_TextureID);
 		glBindTexture(m_Dim, m_TextureID);
-		if (!m_Label.empty()) {
+		if (!m_Label.empty())
 			glObjectLabel(GL_TEXTURE, m_TextureID, -1, m_Label.c_str());
+
+		switch (m_Dim) {
+			case GL_TEXTURE_2D:
+				Resize2DTexture();
+				break;
+			case GL_TEXTURE_CUBE_MAP:
+				ResizeCubeMap();
+				break;
+			case GL_TEXTURE_2D_ARRAY:
+				ResizeTextureArray();
+				break;
+			default:
+				AHO_CORE_ASSERT(false && "Unsupported texture dimension in Resize()");
+				break;
 		}
 
-		if (m_Dim == GL_TEXTURE_CUBE_MAP) {
-			for (int i = 0; i < 6; i++) {
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, m_InternalFmt, m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
-			}
-		}
-		else {
-			glTexImage2D(m_Dim, 0, m_InternalFmt, m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
-		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_WrapModeS);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_WrapModeT);
 
-		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(m_Dim, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		if (m_Dim == GL_TEXTURE_CUBE_MAP) {
+		//glTexParameteri(m_Dim, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(m_Dim, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (m_Dim == GL_TEXTURE_CUBE_MAP) 
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		}
-		glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, m_MipLevels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-		glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		if (m_GenMips) {
+
+		//glTexParameteri(m_Dim, GL_TEXTURE_MIN_FILTER, m_MipLevels > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+		//glTexParameteri(m_Dim, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_MinFiltering);  // 或 GL_LINEAR_MIPMAP_NEAREST 如果你生成 mipmap
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_MagFiltering);  // 可用 GL_LINEAR 但需配合 padding
+
+		if (m_GenMips)
 			GenMipMap();
-		}
+
 		glBindTexture(m_Dim, 0);
 		return true;
+	}
+
+	void _Texture::Resize2DTexture() {
+		glTexImage2D(m_Dim, 0, m_InternalFmt, m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
+	}
+
+	void _Texture::ResizeCubeMap() {
+		for (int i = 0; i < 6; ++i) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, m_InternalFmt,
+				m_Width, m_Height, 0, m_DataFmt, m_DataType, nullptr);
+		}
+	}
+
+	void _Texture::ResizeTextureArray() {
+		glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, m_InternalFmt,
+			m_Width, m_Height, m_Layers, 0, m_DataFmt, m_DataType, nullptr);
 	}
 
 	// TODO: Fill other member properties
@@ -304,10 +344,15 @@ namespace Aho {
 		
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		stbi_image_free(data);
 

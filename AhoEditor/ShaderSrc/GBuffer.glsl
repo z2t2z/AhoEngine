@@ -86,9 +86,27 @@ uniform vec3 u_Albedo = vec3(1.0);
 uniform float u_Metallic = 0.95f;
 uniform float u_Roughness = 0.0f;
 
+
+vec3 LessThan(vec3 f, float value) {
+    return vec3(
+        (f.x < value) ? 1.f : 0.f,
+        (f.y < value) ? 1.f : 0.f,
+        (f.z < value) ? 1.f : 0.f);
+}
+vec3 SRGBToLinear(vec3 rgb) {
+    rgb = clamp(rgb, 0.f, 1.f);
+    return mix(
+        pow((rgb + 0.055f) / 1.055f, vec3(2.4f)),
+        rgb / 12.92f,
+        LessThan(rgb, 0.04045f)
+    );
+}
+
+
 void main() {
 	g_Position = v_FragPos;
 	g_Albedo = u_HasAlbedo ? texture(u_AlbedoMap, v_TexCoords).rgb : u_Albedo;
+	// g_Albedo = SRGBToLinear(g_Albedo); // Convert to linear space
 	
 	// PBR
 	g_PBR.r = u_HasMetallic ? texture(u_MetallicMap, v_TexCoords).r : u_Metallic;

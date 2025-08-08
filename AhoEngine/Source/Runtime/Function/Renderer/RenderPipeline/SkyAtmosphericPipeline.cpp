@@ -6,6 +6,7 @@
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Renderer/Lights.h"
 #include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
 

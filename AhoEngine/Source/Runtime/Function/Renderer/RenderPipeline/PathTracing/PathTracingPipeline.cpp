@@ -5,6 +5,7 @@
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Core/Geometry/BVH.h"
 #include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/Buffer.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"

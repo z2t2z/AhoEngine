@@ -4,6 +4,7 @@
 #include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
 #include "Runtime/Function/Renderer/DisneyPrincipled.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
 
 namespace Aho {
 	DebugPenal::DebugPenal() {

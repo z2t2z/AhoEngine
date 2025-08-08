@@ -4,37 +4,6 @@
 #include "Math.glsl"
 #include "Sampling.glsl"
 
-void CalDistParams(float anisotropic, float roughness, out float ax, out float ay) {
-    float roughness2 = roughness * roughness;
-    if (anisotropic == 0) {
-        ax = max(0.001, roughness2);
-        ay = ax;
-        return;
-    }
-    float aspect = sqrt(1.0 - 0.9 * anisotropic);
-    ax = max(0.001, roughness2 / aspect);
-    ay = max(0.001, roughness2 * aspect);
-}
-
-Material InitMaterial() {
-    Material mat;
-    mat.ior = 1.5; // glass
-    mat.baseColor = vec3(1.0);
-    mat.roughness = 0.5;
-    mat.sheenTint = 0.1;
-    mat.metallic = 0.1;
-    mat.subsurface = 0.0;
-    mat.specular = 0.0;
-    mat.specTrans = 0.0;
-    mat.specTint = 0.0;
-    mat.anisotropic = 0.0;
-    mat.sheen = 0.0;
-    mat.clearcoat = 0.0;
-    mat.clearcoatGloss = 0.0;
-    CalDistParams(mat.anisotropic, mat.roughness, mat.ax, mat.ay);
-    return mat;
-}
-
 // Evaluation of diffuse, retro reflection, fake subsurface and sheen
 vec3 eval_diffuse(const State state, const DotProducts dp, const vec3 V, const vec3 L, const vec3 H, out float pdf) {
     const Material mat = state.material;

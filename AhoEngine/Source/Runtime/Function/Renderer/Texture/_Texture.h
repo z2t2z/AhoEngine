@@ -20,7 +20,7 @@ namespace Aho {
 		void ClearTextureData() const;
 		void GenMipMap();
 		void GetTextureWdithHeight(int& width, int& height, int mipLevel = 0) const;
-		bool Resize(uint32_t width, uint32_t height);
+		bool Resize(uint32_t width, uint32_t height, uint32_t layers = 0);
 		void SetUsage(const TextureUsage usage) { m_Usage = usage; }
 		uint64_t GetTextureHandle();
 		std::string GetLabel()			const { return m_Label; }
@@ -35,6 +35,9 @@ namespace Aho {
 		uint32_t GetHeight()			const { return m_Height; }
 		TextureUsage GetUsage()			const { return m_Usage; }
 	private:
+		void Resize2DTexture();
+		void ResizeCubeMap();
+		void ResizeTextureArray();
 		void GliLoader(const std::shared_ptr<TextureAsset>& texAsset);
 		void STBImageLoader(const std::shared_ptr<TextureAsset>& texAsset);
 	private:
@@ -45,6 +48,7 @@ namespace Aho {
 		bool			m_GenMips{ false };
 		uint32_t		m_Width{ 0 };
 		uint32_t		m_Height{ 0 };
+		uint32_t		m_Layers{ 0 }; // For texture array
 		int				m_MipLevels{ -1 };
 		uint32_t		m_Handle{ 0 };
 		uint32_t		m_TextureID{ 0 };
@@ -53,5 +57,9 @@ namespace Aho {
 		InternalFormat	m_InternalFmt;
 		DataFormat		m_DataFmt;
 		DataType		m_DataType;
+		WrapMode		m_WrapModeS{ WrapMode::Repeat };
+		WrapMode		m_WrapModeT{ WrapMode::Repeat };
+		Filtering		m_MinFiltering{ Filtering::Linear };
+		Filtering		m_MagFiltering{ Filtering::Linear };
 	};
 }

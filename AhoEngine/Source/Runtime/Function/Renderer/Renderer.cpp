@@ -2,8 +2,19 @@
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "RenderCommand.h"
-#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
+#include "Runtime/Core/Parallel.h"
+#include "Runtime/Core/GlobalContext/GlobalContext.h"
 #include "Runtime/Function/Renderer/BufferObject/UBOManager.h"
+#include "Runtime/Function/Renderer/BufferObject/SSBOManager.h"
+#include "Runtime/Platform/OpenGL/OpenGLTexture.h"
+#include "RenderPipeline/DDGI/DDGIPipeline.h"
+#include "RenderPipeline/PostprocessPipeline.h"
+#include "RenderPipeline/DeferredShadingPipeline.h"
+#include "RenderPipeline/PathTracing/PathTracingPipeline.h"
+#include "RenderPipeline/SkyAtmosphericPipeline.h"
+#include "RenderPipeline/DeferredPipeline.h"
+#include "RenderPipeline/IBLPipeline.h"
+#include "RenderPipeline/DebugVisualPipeline.h"
 
 #include <glad/glad.h>
 #include <chrono>
@@ -28,7 +39,7 @@ namespace Aho {
 		if (mode == RenderMode::PathTracing) {
 			m_ActivePipelines = { m_RP_PathTracing };
 		} else {
-			m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_DDGIPipeline, m_RP_Derferred };
+			m_ActivePipelines = { m_RP_IBLPipeline, m_RP_SkyAtmospheric, m_RP_Derferred, m_DDGIPipeline }; //this is wrong!!
 		}
 		m_ActivePipelines.push_back(m_RP_Postprocess);
 		SetViewportDisplayTextureBuffer(m_RP_Postprocess->GetRenderResultTextureBuffer());
@@ -53,6 +64,7 @@ namespace Aho {
 
 	void Renderer::Render(float deltaTime) {
 		UpdateUBOs();
+		UpdateSSBOs();
 		for (const auto& pipeline : m_ActivePipelines) {
 			pipeline->Execute();
 		}
@@ -86,12 +98,18 @@ namespace Aho {
 		return resized;
 	}
 
+	void Renderer::RegisterRenderPassBase(RenderPassBase* rp) {
+		m_AllRenderPasses.push_back(rp); 
+		m_RenderPasses[rp->GetPassName()] = rp;
+	}
+
 	void Renderer::SetupUBOs() const {
 		UBOManager::RegisterUBO<CameraUBO>(0);
 		UBOManager::RegisterUBO<GPU_DirectionalLight>(1);
 		UBOManager::RegisterUBO<AnimationUBO>(2);
 	}
 
+	// Camera, light data
 	void Renderer::UpdateUBOs() const {
 		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 		ecs->GetView<LightComponent, LightDirtyTagComponent>().each(
@@ -120,5 +138,75 @@ namespace Aho {
 				UBOManager::UpdateUBOData<CameraUBO>(0, camUBO);
 			}
 		);
+	}
+
+	// Basically bvh data
+	// Needs big refactor
+	void Renderer::UpdateSSBOs() const {
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+		bool dirty = false;
+		static bool BVHDirty = true;
+		auto view = ecs->GetView<_BVHComponent, _TransformComponent, _MaterialComponent>();
+		std::vector<BVHi*> tasks; //tasks.reserve(view.size()); // ?
+		view.each(
+			[&](auto entity, _BVHComponent& bvh, _TransformComponent& transform, _MaterialComponent& material) {
+				int meshID = bvh.bvh->GetMeshId();
+				if (transform.Dirty) {
+					transform.Dirty = false; // TODO: Should not be here, but in inspector panel
+					dirty = true;
+					bvh.bvh->ApplyTransform(transform.GetTransform());
+					tasks.emplace_back(bvh.bvh.get());
+					BVHDirty = true;
+				}
+				if (material.Dirty) {
+					material.Dirty = false; // TODO: Should not be here, but in inspector panel
+					dirty = true;
+					material.mat.UpdateMaterialDescriptor();
+					SSBOManager::UpdateSSBOData<MaterialDescriptor>(5, { material.mat.GetMatDescriptor() }, meshID);
+				}
+			}
+		);
+		{
+			const auto& executor = g_RuntimeGlobalCtx.m_ParallelExecutor;
+			size_t siz = tasks.size();
+			g_RuntimeGlobalCtx.m_ParallelExecutor->ParallelFor(siz,
+				[tasks](int64_t i) {
+					tasks[i]->Rebuild();
+				}, 1
+			);
+		}
+		// No need to update every blas everytime but for now it's fine
+		if (BVHDirty) {
+			dirty = true;
+			BVHDirty = false;
+			auto sceneView = ecs->GetView<SceneBVHComponent>();
+			AHO_CORE_ASSERT(sceneView.size() <= 1);
+			sceneView.each(
+				[&](auto entity, SceneBVHComponent& sceneBvh) {
+					sceneBvh.bvh->UpdateTLAS();
+					const auto& tlas = sceneBvh.bvh;
+					SSBOManager::UpdateSSBOData<BVHNodei>(0, tlas->GetNodesArr());
+					SSBOManager::UpdateSSBOData<PrimitiveDesc>(1, tlas->GetPrimsArr());
+					SSBOManager::UpdateSSBOData<OffsetInfo>(4, tlas->GetOffsetMap());
+
+					size_t nodesOffset = 0;
+					size_t primsOffset = 0;
+					const std::vector<OffsetInfo>& info = tlas->GetOffsetMap();
+					for (size_t i = 0; i < tlas->GetPrimsCount(); i++) {
+						const BVHi* blas = tlas->GetBLAS(i);
+						AHO_CORE_ASSERT(nodesOffset == info[i].nodeOffset);
+						AHO_CORE_ASSERT(primsOffset == info[i].primOffset);
+						SSBOManager::UpdateSSBOData<BVHNodei>(2, blas->GetNodesArr(), nodesOffset);
+						SSBOManager::UpdateSSBOData<PrimitiveDesc>(3, blas->GetPrimsArr(), primsOffset);
+						nodesOffset += blas->GetNodeCount();
+						primsOffset += blas->GetPrimsCount();
+					}
+				}
+			);
+		}
+
+		if (dirty) {
+
+		}
 	}
 }

@@ -23,6 +23,7 @@ namespace Aho {
 		std::unique_ptr<RenderPassBase> m_SingleDepthPass;
 		std::unique_ptr<RenderPassBase> m_OutlinePass;
 		std::unique_ptr<RenderPassBase> m_DrawGridPass;
+		std::unique_ptr<RenderPassBase> m_ToneMapPass;
 
 	// --- Delete these ---
 	private:

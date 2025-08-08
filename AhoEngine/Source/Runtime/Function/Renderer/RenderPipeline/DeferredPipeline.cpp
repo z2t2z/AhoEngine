@@ -4,11 +4,18 @@
 #include "Runtime/Core/Events/EngineEvents.h"
 #include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Function/Renderer/Renderer.h"
+#include "Runtime/Function/Renderer/RenderCommand.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
+#include "DDGI/DDGIPipeline.h"
 
 namespace Aho {
 	void DeferredShading::Initialize() {
+		// Shadow map light depth
+		std::shared_ptr<_Texture> lightDepth = TextureResourceBuilder()
+			.Name("Light Depth").Width(1080).Height(1080).DataType(DataType::Float).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth32F).GenMip(false)
+			.Build();
+
 		// Gbuffers
 		std::shared_ptr<_Texture> position = TextureResourceBuilder()
 			.Name("G_Position").Width(1280).Height(720).DataType(DataType::Float).DataFormat(DataFormat::RGB).InternalFormat(InternalFormat::RGB16F)
@@ -55,13 +62,9 @@ namespace Aho {
 		m_TextureBuffers.push_back(litScene);
 		m_TextureBuffers.push_back(ssrTex);
 
-
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc";
 		// ---- Shadow Map ----
 		{
-			auto lightDepthCfg = TextureConfig::GetDepthTextureConfig("Light Depth");
-			std::shared_ptr<_Texture> depth = std::make_shared<_Texture>(lightDepthCfg);
-			m_TextureBuffers.push_back(depth);
 			auto Func =
 				[](RenderPassBase& self) {
 					self.GetRenderTarget()->Bind();
@@ -84,7 +87,7 @@ namespace Aho {
 				.Name("Shadow Map")
 				.Shader((shaderPathRoot / "ShadowMap.glsl").string())
 				.Usage(ShaderUsage::DistantLightShadowMap)
-				.AttachTarget(depth)
+				.AttachTarget(lightDepth)
 				.Func(Func)
 				.Build());
 		}
@@ -166,10 +169,15 @@ namespace Aho {
 							}
 						);
 					}
+
+					auto ddgiPipeline = g_RuntimeGlobalCtx.m_Renderer->GetDDGIPipeline();
+					ddgiPipeline->SetUniforms(shader, slot);
+
 					RenderCommand::DrawArray();
 					shader->Unbind();
 					self.GetRenderTarget()->Unbind();
 				};
+
 
 			m_ShadingPass = std::move(RenderPassBuilder()
 				.Name("Shading Pass")
@@ -181,6 +189,7 @@ namespace Aho {
 				.Input("u_gAlbedo", baseColor)
 				.Input("u_gPBR", pbr)
 				.Input("u_gDepth", depth)
+				.Input("u_gLightDepth", lightDepth)
 				.Func(Func)
 				.Build());
 			

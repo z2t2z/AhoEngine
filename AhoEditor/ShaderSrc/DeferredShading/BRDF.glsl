@@ -8,6 +8,10 @@ const float TwoPI = 2 * PI;
 const float InvPI = 0.31830988618379067154;
 #endif
 
+vec3 DiffuseBRDF(vec3 diffuse) {
+    return diffuse * InvPI;
+}
+
 // Reference:
 // https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf?
 

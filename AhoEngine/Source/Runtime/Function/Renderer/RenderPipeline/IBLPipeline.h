@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Runtime/Function/Renderer/RenderPass/RenderPass.h"
+#include "Runtime/Function/Renderer/RenderPass/RenderPassBase.h"
 #include "Runtime/Function/Renderer/RenderPipeline/RenderPipeline.h"
 
 namespace Aho {

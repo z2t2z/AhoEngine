@@ -263,6 +263,11 @@ namespace Aho {
 			: camera(_camera) {
 		}
 	};
+	struct InactiveComponent {
+		bool Inactive{ true };
+		InactiveComponent() = default;
+		InactiveComponent(bool inactive) : Inactive(inactive) {}
+	};
 
 	struct _BVHComponent {
 		bool Dirty = true;

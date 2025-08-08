@@ -3,6 +3,8 @@
 #extension GL_ARB_gpu_shader_int64 : enable
 #extension GL_ARB_bindless_texture : enable
 
+#define PATH_TRACING
+
 #include "../SSBO.glsl"
 #include "../PathTracingCommon.glsl"
 

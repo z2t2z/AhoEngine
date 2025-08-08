@@ -16,6 +16,15 @@
     <Filter Include="Source\Runtime\Core\Events">
       <UniqueIdentifier>{4581E0DD-3191-8CAE-9A4A-F1CC86797B47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Core\Geometry">
+      <UniqueIdentifier>{FCDE24AB-E899-1457-9151-8DA17DEB5EE7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Core\Geometry\VirtualMesh">
+      <UniqueIdentifier>{3F06C784-2B83-BAC7-5400-BBDB40DC565B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Core\GlobalContext">
+      <UniqueIdentifier>{E6A5A92B-5214-FFAA-9BFD-B9AA07ABF446}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Core\Gui">
       <UniqueIdentifier>{55EC8124-C123-CABB-CA2D-2EDF36E4F0B4}</UniqueIdentifier>
     </Filter>
@@ -55,14 +64,29 @@
     <Filter Include="Source\Runtime\Function\Renderer\BufferObject">
       <UniqueIdentifier>{A480FB6C-10F1-FDE5-D90F-786E453F36E7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\IBL">
+      <UniqueIdentifier>{8AE2B9C0-76C9-7BB8-1F1A-E2D50BE0F41E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\RenderContext">
+      <UniqueIdentifier>{38BBDF98-2439-3032-0D31-EEC9F94D725A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Function\Renderer\RenderPass">
       <UniqueIdentifier>{0A6DBA87-76D2-4D0E-FFAA-EFE66B0F437D}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline">
       <UniqueIdentifier>{49FDEFE9-B538-50AD-BE2D-CD3C2AE8D4DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI">
+      <UniqueIdentifier>{10A7374E-FCE5-E1C9-A568-BEFB91869734}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing">
       <UniqueIdentifier>{ED0FD21E-59CD-7A55-E297-66BD4E54EDA9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\Shader">
+      <UniqueIdentifier>{8AC262C8-F651-24B3-FF4D-05CB6B5C5FBF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Runtime\Function\Renderer\Texture">
+      <UniqueIdentifier>{C4145F1C-B091-525F-D90E-5373C5EAEEF2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Platform">
       <UniqueIdentifier>{FD947116-69CC-B9AD-72D6-1DD1DE8CE0A6}</UniqueIdentifier>
@@ -88,17 +112,14 @@
     <Filter Include="Source\Runtime\Resource\Asset\Animation">
       <UniqueIdentifier>{FE66B032-6AF6-711D-73F2-5235DF00AD29}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Runtime\Resource\Asset\Importer">
-      <UniqueIdentifier>{30DE8BD9-1C30-63C9-054F-A0D9F13F7CB2}</UniqueIdentifier>
+    <Filter Include="Source\Runtime\Resource\Asset\Mesh">
+      <UniqueIdentifier>{6B5E7213-579A-757D-C0AC-8D74AC071E98}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\AssetCreator">
       <UniqueIdentifier>{7FA65513-6B8D-170B-14DE-7D2800A49071}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\FileWatcher">
       <UniqueIdentifier>{7D75C683-E92E-312E-728E-4B08DE46E79D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Runtime\Resource\Model">
-      <UniqueIdentifier>{00B48B14-6CCC-723E-3579-02D8A15007D8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Runtime\Resource\ResourceType">
       <UniqueIdentifier>{B9E97780-A5D0-3978-4E21-A0953AE7B2DE}</UniqueIdentifier>
@@ -156,32 +177,74 @@
     <ClInclude Include="Source\Runtime\Core\App\EntryPoint.h">
       <Filter>Source\Runtime\Core\App</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Geometry\BBox.h">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Geometry\BVH.h">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Core.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Events\ApplicationEvent.h">
       <Filter>Source\Runtime\Core\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\EngineEvents.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Events\Event.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\EventBus.h">
       <Filter>Source\Runtime\Core\Events</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Events\KeyEvent.h">
       <Filter>Source\Runtime\Core\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Events\MouseEvent.h">
       <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Events\_Event.h">
+      <Filter>Source\Runtime\Core\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\BBox.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\BSphere.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\BVH.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\BVHNode.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\BoundingSphere.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\Mesh.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\Primitive.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\Ray.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\Vertex.h">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.h">
+      <Filter>Source\Runtime\Core\Geometry\VirtualMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\GlobalContext\GlobalContext.h">
+      <Filter>Source\Runtime\Core\GlobalContext</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Gui\IconsFontAwesome6.h">
       <Filter>Source\Runtime\Core\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Gui\ImGuiLayer.h">
       <Filter>Source\Runtime\Core\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Core\IndexAllocator.h">
+      <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\Input\Input.h">
       <Filter>Source\Runtime\Core\Input</Filter>
@@ -207,10 +270,7 @@
     <ClInclude Include="Source\Runtime\Core\MortonEncoder.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Geometry\Primitive.h">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\Geometry\Ray.h">
+    <ClInclude Include="Source\Runtime\Core\Parallel.h">
       <Filter>Source\Runtime\Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Core\SingletonBase.h">
@@ -267,14 +327,26 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.h">
       <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\DisneyPrincipled.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Framebuffer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\GpuTimer.h">
+      <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\GraphicsContext.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBL.h">
+      <Filter>Source\Runtime\Function\Renderer\IBL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h">
+      <Filter>Source\Runtime\Function\Renderer\IBL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -288,6 +360,9 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderContext\RenderContext.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderContext</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderData.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
@@ -297,7 +372,19 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBase.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\DDGI</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.h">
@@ -312,9 +399,6 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\Common.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBL.h">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClInclude>
@@ -324,6 +408,9 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.h">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.h">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Renderer.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
@@ -331,10 +418,28 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Shader\Shader.h">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
+      <Filter>Source\Runtime\Function\Renderer\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderFeatures.h">
+      <Filter>Source\Runtime\Function\Renderer\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h">
+      <Filter>Source\Runtime\Function\Renderer\Shader</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\Texture.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureConfig.h">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.h">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureUsage.h">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\_Texture.h">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Function\Renderer\VertexArray.h">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -378,13 +483,25 @@
     <ClInclude Include="Source\Runtime\Resource\Asset\Asset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetLoadOptions.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\AssetLoaders.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\AssetManager.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\MaterialAsset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\Mesh\MeshAsset.h">
+      <Filter>Source\Runtime\Resource\Asset\Mesh</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\SceneAsset.h">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\Asset\ShaderAsset.h">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\Asset\TextureAsset.h">
@@ -398,6 +515,12 @@
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\FileWatcher\FileWatcher.h">
       <Filter>Source\Runtime\Resource\FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\ResourceManager.h">
+      <Filter>Source\Runtime\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Runtime\Resource\ResourceType\Mesh\MeshData.h">
+      <Filter>Source\Runtime\Resource\ResourceType\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="Source\Runtime\Resource\ResourceType\ResourceType.h">
       <Filter>Source\Runtime\Resource\ResourceType</Filter>
@@ -1665,39 +1788,6 @@
     <ClInclude Include="Vendor\stb_image\stb_image.h">
       <Filter>Vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Runtime\Core\GlobalContext\GlobalContext.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBase.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderContext\RenderContext.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetLoadOptions.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\Mesh\MeshAsset.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\AssetLoaders.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\Vertex.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureUsage.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\_Texture.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\Mesh.h" />
-    <ClInclude Include="Source\Runtime\Resource\ResourceManager.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureConfig.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\BVHNode.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Shader\ShaderFeatures.h" />
-    <ClInclude Include="Source\Runtime\Resource\Asset\ShaderAsset.h" />
-    <ClInclude Include="Source\Runtime\Core\Parallel.h" />
-    <ClInclude Include="Source\Runtime\Core\Events\_Event.h" />
-    <ClInclude Include="Source\Runtime\Core\Events\EventBus.h" />
-    <ClInclude Include="Source\Runtime\Core\Events\EngineEvents.h" />
-    <ClInclude Include="Source\Runtime\Core\Events\MainThreadDispatcher.h" />
-    <ClInclude Include="Source\Runtime\Core\IndexAllocator.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\GpuTimer.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\BoundingSphere.h" />
-    <ClInclude Include="Source\Runtime\Core\Geometry\BSphere.h" />
-    <ClInclude Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Ahopch.cpp">
@@ -1706,14 +1796,26 @@
     <ClCompile Include="Source\Runtime\Core\App\Application.cpp">
       <Filter>Source\Runtime\Core\App</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\Geometry\BBox.cpp">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\Geometry\BVH.cpp">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Core.cpp">
       <Filter>Source\Runtime\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Geometry\BBox.cpp">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Geometry\BSphere.cpp">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Geometry\BVH.cpp">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Geometry\Primitive.cpp">
+      <Filter>Source\Runtime\Core\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.cpp">
+      <Filter>Source\Runtime\Core\Geometry\VirtualMesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Core\GlobalContext\GlobalContext.cpp">
+      <Filter>Source\Runtime\Core\GlobalContext</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Core\Gui\ImGuiBuild.cpp">
       <Filter>Source\Runtime\Core\Gui</Filter>
@@ -1733,9 +1835,6 @@
     <ClCompile Include="Source\Runtime\Core\Math\Math.cpp">
       <Filter>Source\Runtime\Core\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\Geometry\Primitive.cpp">
-      <Filter>Source\Runtime\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Runtime\Core\SingletonBase.cpp">
       <Filter>Source\Runtime\Core</Filter>
     </ClCompile>
@@ -1749,6 +1848,9 @@
       <Filter>Source\Runtime\Function\Level\EcS</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Level\EcS\Entity.cpp">
+      <Filter>Source\Runtime\Function\Level\EcS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp">
       <Filter>Source\Runtime\Function\Level\EcS</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Level\Level.cpp">
@@ -1766,8 +1868,17 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOManager.cpp">
       <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp">
+      <Filter>Source\Runtime\Function\Renderer\BufferObject</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBL.cpp">
+      <Filter>Source\Runtime\Function\Renderer\IBL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp">
+      <Filter>Source\Runtime\Function\Renderer\IBL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
@@ -1784,7 +1895,19 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPass.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBase.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\DDGI</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DebugVisualPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredShadingPipeline.cpp">
@@ -1792,9 +1915,6 @@
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\IBLPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBL.cpp">
-      <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\PathTracing\PathTracingPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline\PathTracing</Filter>
@@ -1805,6 +1925,9 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\RenderPipeline.cpp">
       <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp">
+      <Filter>Source\Runtime\Function\Renderer\RenderPipeline</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Renderer.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
@@ -1812,10 +1935,22 @@
       <Filter>Source\Runtime\Function\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\Shader\Shader.cpp">
-      <Filter>Source\Runtime\Function\Renderer</Filter>
+      <Filter>Source\Runtime\Function\Renderer\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp">
+      <Filter>Source\Runtime\Function\Renderer\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.cpp">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\Renderer\Texture\_Texture.cpp">
+      <Filter>Source\Runtime\Function\Renderer\Texture</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Function\Renderer\VertexArray.cpp">
       <Filter>Source\Runtime\Function\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Function\SkeletonViewer.cpp">
+      <Filter>Source\Runtime\Function</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Platform\OpenGL\OpenGLBuffer.cpp">
       <Filter>Source\Runtime\Platform\OpenGL</Filter>
@@ -1853,11 +1988,26 @@
     <ClCompile Include="Source\Runtime\Resource\Asset\Asset.cpp">
       <Filter>Source\Runtime\Resource\Asset</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\AssetLoaders.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManager.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\MaterialAsset.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp">
+      <Filter>Source\Runtime\Resource\Asset</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\AssetCreator\AssetCreator.cpp">
       <Filter>Source\Runtime\Resource\AssetCreator</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\FileWatcher\FileWatcher.cpp">
       <Filter>Source\Runtime\Resource\FileWatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Runtime\Resource\ResourceManager.cpp">
+      <Filter>Source\Runtime\Resource</Filter>
     </ClCompile>
     <ClCompile Include="Source\Runtime\Resource\UUID\UUID.cpp">
       <Filter>Source\Runtime\Resource\UUID</Filter>
@@ -1868,25 +2018,5 @@
     <ClCompile Include="Vendor\stb_image\stb_image.cpp">
       <Filter>Vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Runtime\Core\GlobalContext\GlobalContext.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBase.cpp" />
-    <ClCompile Include="Source\Runtime\Function\SkeletonViewer.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\AssetLoaders.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\Texture\_Texture.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DeferredPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\MaterialAsset.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\ResourceManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\SkyAtmosphericPipeline.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\AssetManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
-    <ClCompile Include="Source\Runtime\Resource\Asset\ShaderAsset.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\Shader\ShaderVariantManager.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\BufferObject\UBOStructs.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPass\RenderPassBuilder.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\Texture\TextureResourceBuilder.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Level\EcS\EntityManager.cpp" />
-    <ClCompile Include="Source\Runtime\Core\Geometry\VirtualMesh\VirtualMesh.cpp" />
-    <ClCompile Include="Source\Runtime\Core\Geometry\BSphere.cpp" />
-    <ClCompile Include="Source\Runtime\Function\Renderer\RenderPipeline\DDGI\DDGIPipeline.cpp" />
   </ItemGroup>
 </Project>

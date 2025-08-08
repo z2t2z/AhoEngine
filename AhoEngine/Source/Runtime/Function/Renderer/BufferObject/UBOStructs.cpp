@@ -7,6 +7,6 @@ namespace Aho {
 		gpu_light.color = light->GetColor();
 		gpu_light.intensity = light->GetIntensity();
 		gpu_light.direction = light->GetDirection();
-		//gpu_light.lightProjView = TODO;
+		gpu_light.lightProjView = light->GetProjView();
 	}
 }

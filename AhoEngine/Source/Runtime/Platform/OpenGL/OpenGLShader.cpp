@@ -175,6 +175,15 @@ namespace Aho {
 		glUniform2i(location, value.x, value.y);
 	}
 
+	void OpenGLShader::SetIvec3(const std::string& name, const glm::ivec3& value) const {
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location == -1) {
+			//AHO_CORE_WARN("Could not find uniform: {}", name);
+			return;
+		}
+		glUniform3i(location, value.x, value.y, value.z);
+	}
+
 	void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) const {
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		if (location == -1) {
@@ -223,7 +232,7 @@ namespace Aho {
 	void OpenGLShader::DispatchCompute(uint32_t num_groups_x, uint32_t num_groups_y, uint32_t num_groups_z) const {
 		glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 		// TODO: customizable flags
-		//glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // Ensure the compute shader finishes
 	}
 
 }
