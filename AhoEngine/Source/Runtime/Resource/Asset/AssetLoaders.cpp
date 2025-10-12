@@ -98,7 +98,7 @@ namespace Aho {
 			[&mats](aiMesh* mesh, const aiScene* scene) -> void {
 				aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 				std::vector<std::pair<TextureUsage, std::string>> UsagePaths;
-				for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, /*aiTextureType_HEIGHT,*/ aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE, aiTextureType_SHININESS, /*aiTextureType_SPECULAR,*/ aiTextureType_METALNESS, aiTextureType_DIFFUSE_ROUGHNESS, aiTextureType_AMBIENT_OCCLUSION }) {
+				for (const auto& type : { aiTextureType_DIFFUSE, aiTextureType_NORMALS, aiTextureType_HEIGHT, aiTextureType_EMISSION_COLOR, aiTextureType_EMISSIVE, aiTextureType_SHININESS, /*aiTextureType_SPECULAR,*/ aiTextureType_METALNESS, aiTextureType_DIFFUSE_ROUGHNESS, aiTextureType_AMBIENT_OCCLUSION }) {
 					for (size_t i = 0; i < material->GetTextureCount(type); i++) {
 						aiString path;
 						material->GetTexture(type, i, &path);

@@ -94,7 +94,7 @@ vec2 GetProbeUV(const DDGIVolumeDescGPU volume, ivec3 probeCoords, vec3 directio
  * the set, but the set of directions is always the same.
  */
 vec3 SampleSphericalFibonacci(float i, float n) {
-#ifdef ADRIA
+#if 0
     float sampleIndex = i;
     float numSamples = n;
     const float b = (sqrt(5.f) * 0.5f + 0.5f) - 1.f;
@@ -182,12 +182,13 @@ vec3 SampleDDGIIrradiance(const DDGIVolumeDescGPU volume, vec3 worldPosition, ve
 
         float weight = 1;
         
+    //TODO: Why dirty?
     #if 0
-        // weight *= saturate(dot(probeDirection, direction));
+        weight *= saturate(dot(probeDirection, direction));
     #else
         // NVIDIA Implementation
         const float wrapShading = dot(normalize(probePosition - unbiasedPosition), direction) * 0.5f + 0.5f;
-        // weight *= (wrapShading * wrapShading) + 0.2f;        
+        weight *= (wrapShading * wrapShading) + 0.2f;        
     #endif
 
         vec2 distanceUV = GetProbeUV(volume, probeCoords, -probeDirection, DDGI_DISTANCE_TEXSIZE);
@@ -206,15 +207,15 @@ vec3 SampleDDGIIrradiance(const DDGIVolumeDescGPU volume, vec3 worldPosition, ve
 
         const float crushThreshold = 0.2;
         if (weight < crushThreshold) {
-            // weight *= (weight * weight) * (1.0 / (crushThreshold * crushThreshold));
+            weight *= (weight * weight) * (1.0 / (crushThreshold * crushThreshold));
         }
 
         weight *= trilinearWeight;
 
         vec2 uv = GetProbeUV(volume, probeCoords, direction, DDGI_IRRADIANCE_TEXSIZE);
         vec3 irradiance = textureLod(volume.DDGIIrradiance, uv, 0).rgb;
-        if (gammaCorrect)
-            irradiance = pow(irradiance, vec3(2.5));
+        // if (gammaCorrect || true)
+        //     irradiance = pow(irradiance, vec3(2.5));
 
         testIrradiance += irradiance;
 

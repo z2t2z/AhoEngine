@@ -18,7 +18,7 @@ namespace Aho {
 	struct TextureOptions : AssetLoadOptions {
 		bool flipUV = false;
 		bool genMipmaps = false;
-		TextureOptions(const std::string& p) : AssetLoadOptions(p) {}
+		TextureOptions(const std::string& p, bool flipped = false) : AssetLoadOptions(p), flipUV(flipped) {}
 		TextureOptions& setFlipUV(bool f) { flipUV = f; return *this; }
 	};
 

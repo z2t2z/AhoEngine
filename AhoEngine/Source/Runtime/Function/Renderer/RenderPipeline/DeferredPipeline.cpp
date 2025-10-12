@@ -5,6 +5,7 @@
 #include "Runtime/Core/Events/MainThreadDispatcher.h"
 #include "Runtime/Function/Renderer/Renderer.h"
 #include "Runtime/Function/Renderer/RenderCommand.h"
+#include "Runtime/Function/Renderer/IBL/IBLManager.h"
 #include "Runtime/Function/Renderer/Texture/TextureResourceBuilder.h"
 #include "Runtime/Function/Renderer/RenderPass/RenderPassBuilder.h"
 #include "DDGI/DDGIPipeline.h"
@@ -102,12 +103,15 @@ namespace Aho {
 					shader->Bind();
 					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
 						[&shader](const Entity& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
-							vao.vao->Bind();
-							uint32_t slot = 0;
-							mat.mat.ApplyToShader(shader, slot);
-							shader->SetMat4("u_Model", transform.GetTransform());
-							RenderCommand::DrawIndexed(vao.vao);
-							vao.vao->Unbind();
+							auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+							if (ecs->IsEntityIDValid(entity)) {
+								vao.vao->Bind();
+								uint32_t slot = 0;
+								mat.mat.ApplyToShader(shader, slot);
+								shader->SetMat4("u_Model", transform.GetTransform());
+								RenderCommand::DrawIndexed(vao.vao);
+								vao.vao->Unbind();
+							}
 						}
 					);
 					self.GetRenderTarget()->Unbind();
@@ -151,7 +155,7 @@ namespace Aho {
 								RenderCommand::BindTextureUnit(slot++, atmosphere.SkyViewTextureID);
 							}
 						);
-						auto iblView = ecs->GetView<IBLComponent>();
+						/*auto iblView = ecs->GetView<IBLComponent>();
 						shader->SetBool("u_SampleEnvLight", !iblView.empty());
 						iblView.each(
 							[&](auto _, const IBLComponent& iblComp) {
@@ -167,8 +171,10 @@ namespace Aho {
 									shader->SetFloat("u_PrefilterMaxMipLevel", iblComp.Prefilter->GetMipLevels());
 								}
 							}
-						);
+						);*/
 					}
+					auto iblManager = g_RuntimeGlobalCtx.m_IBLManager;
+					iblManager->BindActiveIBLDeferred(shader, slot);
 
 					auto ddgiPipeline = g_RuntimeGlobalCtx.m_Renderer->GetDDGIPipeline();
 					ddgiPipeline->SetUniforms(shader, slot);

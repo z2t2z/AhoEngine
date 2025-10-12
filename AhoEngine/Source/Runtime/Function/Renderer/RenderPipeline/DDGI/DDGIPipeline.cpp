@@ -133,7 +133,7 @@ namespace Aho {
 		m_Desc.probeCounts = glm::ivec3(24, 12, 14);
 		
 		//m_Desc.probeCounts = glm::ivec3(2, 3, 4);
-		m_Desc.probeSpacing = 1;
+		m_Desc.probeSpacing = 1.0;
 		m_Desc.raysPerProbe = 64;
 
 		std::filesystem::path shaderPathRoot = std::filesystem::current_path() / "ShaderSrc" / "DDGI";
@@ -161,7 +161,7 @@ namespace Aho {
 			.Name("DDGIProbeRadianceDistance").Width(m_Desc.raysPerProbe).Height(probeCounts).Dimension(TextureDim::Texture2D)
 			.DataType(DataType::Float).DataFormat(DataFormat::RGBA).InternalFormat(InternalFormat::RGBA16F)
 			.WrapModeS(WrapMode::ClampToEdge).WrapModeT(WrapMode::ClampToEdge)
-			.FilterMin(Filtering::Linear).FilterMag(Filtering::Linear)
+			.FilterMin(Filtering::Nearest).FilterMag(Filtering::Nearest)
 			.Build();
 
 		// --- Probe Ray Trace Pass ---

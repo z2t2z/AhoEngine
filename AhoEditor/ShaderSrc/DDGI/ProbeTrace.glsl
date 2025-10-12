@@ -59,8 +59,8 @@ void main() {
 
 // payload.t = -1.0; it??
 void Miss(inout DDGIPayload payload, const Ray ray, const HitInfo info) {
-    // payload.radiance = vec3(0.01);
-    payload.t = -2;
+    payload.radiance = vec3(0.01);
+    // payload.t = -2;
 }
 
 void CloestHit(inout DDGIPayload payload, const Ray ray, const HitInfo info, const DDGIVolumeDescGPU volume) {
@@ -73,12 +73,12 @@ void CloestHit(inout DDGIPayload payload, const Ray ray, const HitInfo info, con
     vec3 N = normalize(normal);
     vec2 uv = info.uv;
     float u = uv.x, v = uv.y, w = 1.0 - u - v;
-    vec3 pos = ray.origin + info.t * ray.direction;
-    // vec3 pos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;  // Don't use ray.origin + info.t * ray.direction
+    // vec3 pos = ray.origin + info.t * ray.direction;
+    vec3 pos = w * p.v[0].position + u * p.v[1].position + v * p.v[2].position;  // Don't use ray.origin + info.t * ray.direction
 
     bool front_face = bool(dot(ray.direction, N) < 0.0);
     if (!front_face) {
-        payload.t = -2;
+        // payload.t = -2;
         N = -N; // Flip normal
         return;
     }

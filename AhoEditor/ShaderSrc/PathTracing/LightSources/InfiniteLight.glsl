@@ -5,7 +5,12 @@
 
 #include "../Math.glsl"
 
+// #ifdef OPT_UNIFORM_SKY
 const vec3 uniformSky = vec3(0.529f, 0.808f, 0.922f);
+// #else
+// const vec3 uniformSky = vec3(0);
+// #endif
+
 float EnvIntensity = 1.0f;
 
 struct EnvironmentMap {

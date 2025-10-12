@@ -15,6 +15,8 @@ namespace Aho {
 		void Draw();
 	private:
 		_Texture* m_BackIcon{ nullptr };
+		_Texture* m_FolderIcon{ nullptr };
+		_Texture* m_FileIcon{ nullptr };
 	private:
 		std::filesystem::path m_FolderPath;
 		std::filesystem::path m_AssetPath;

@@ -40,7 +40,7 @@ namespace Aho {
 					return std::static_pointer_cast<TextureAsset>(m_Assets.at(opts.path));
 				}
 
-				std::shared_ptr<TextureAsset> texAsset = std::make_shared<TextureAsset>(opts.path);
+				std::shared_ptr<TextureAsset> texAsset = std::make_shared<TextureAsset>(opts);
 				emg->AddComponent<TextureAssetComponent>(emg->CreateEntity(), texAsset);
 				m_Assets[opts.path] = texAsset;
 				return texAsset;

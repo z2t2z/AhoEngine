@@ -21,7 +21,6 @@ namespace Aho {
 
 	AhoEditorLayer::AhoEditorLayer(LevelLayer* levellayer, EventManager* eventManager, Renderer* renderer, const std::shared_ptr<CameraManager>& cameraManager)
 		: Layer("EditorLayer"), m_LevelLayer(levellayer), m_EventManager(eventManager), m_Renderer(renderer), m_CameraManager(cameraManager) {
-	
 	}
 
 	void AhoEditorLayer::OnAttach() {
@@ -32,7 +31,7 @@ namespace Aho {
 		m_EditorCamEntity = g_RuntimeGlobalCtx.m_EntityManager->CreateEntity();
 		g_RuntimeGlobalCtx.m_EntityManager->AddComponent<EditorCamaraComponent>(m_EditorCamEntity, m_CameraManager->GetMainEditorCamera());
 	}
-	
+
 	void AhoEditorLayer::OnDetach() {
 	}
 
@@ -51,8 +50,7 @@ namespace Aho {
 				auto& cmp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<EditorCamaraComponent>(m_EditorCamEntity);
 				cmp.Dirty = true;
 			}
-		}
-		else if (m_CursorLocked) {
+		} else if (m_CursorLocked) {
 			m_CursorLocked = false;
 			Input::UnlockCursor();
 		}
@@ -82,8 +80,7 @@ namespace Aho {
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 				window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 				window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-			}
-			else {
+			} else {
 				dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
 			}
 

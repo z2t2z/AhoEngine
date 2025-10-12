@@ -13,7 +13,9 @@ namespace Aho {
 		Entity GetActiveIBL() const {
 			return m_ActiveIBLEntity;
 		}
-		void BindActiveIBL(const Shader* shader) const;
+		void BindActiveIBL(const Shader* shader) const; // For PT
+		void BindActiveIBLDeferred(const Shader* shader, uint32_t& slot) const; // For deferred
+
 	private:
 		Entity m_ActiveIBLEntity;
 	};

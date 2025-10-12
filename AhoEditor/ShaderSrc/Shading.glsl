@@ -108,8 +108,8 @@ void main() {
 		vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
 		vec3 Lo = vec3(0.0f);
 		// Direct lighting
-		// Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
-		Lo += EvaluateDirectionalLight(mat, fragPos, N, V);
+		Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
+		// Lo += EvaluateDirectionalLight(mat, fragPos, N, V);
 		// Indirect lighting
 		vec3 indirect = GetIndirectLighting(u_DDGIVolumeDesc, u_ViewPosition.xyz, fragPos, N, mat.baseColor, mat.ao);
 		Lo += indirect;

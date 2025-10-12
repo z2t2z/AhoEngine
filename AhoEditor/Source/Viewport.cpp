@@ -23,16 +23,16 @@ namespace Aho {
 	}
 
 	void Viewport::Initialize(Renderer* renderer, LevelLayer* levelLayer, EventManager* manager, const std::shared_ptr<Camera>& camera) {
-		m_Renderer		= renderer;
-		m_LevelLayer	= levelLayer;
-		m_EventManager	= manager;
-		m_EditorCamera	= camera;
+		m_Renderer = renderer;
+		m_LevelLayer = levelLayer;
+		m_EventManager = manager;
+		m_EditorCamera = camera;
 
 		namespace fs = std::filesystem;
-		auto path		= fs::current_path();
-		auto ecs		= g_RuntimeGlobalCtx.m_EntityManager;
+		auto path = fs::current_path();
+		auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
 		{
-			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "EngineAsset" / "Icons"/ "light-bulb.png").string()));
+			std::shared_ptr<TextureAsset> textureAsset = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<TextureAsset>(ecs, TextureOptions((path / "Asset" / "EngineAsset" / "Icons" / "light-bulb.png").string()));
 			std::shared_ptr<_Texture> tex = g_RuntimeGlobalCtx.m_Resourcemanager->LoadGPUTexture(textureAsset);
 			m_LightIcon = tex.get();
 		}
@@ -66,14 +66,23 @@ namespace Aho {
 		ImVec2 localPos = ImGui::GetMousePos() - ImGui::GetWindowPos();
 		int x = localPos.x, y = localPos.y;
 		m_MouseX = x, m_MouseY = y;
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) 
-			&& !ImGui::IsAnyItemHovered() 
-			&& !ImGuizmo::IsOver() 
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+			&& !ImGui::IsAnyItemHovered()
+			&& !ImGuizmo::IsOver()
 			&& x >= 0 && y >= 0 && x < m_ViewportWidth && y < m_ViewportHeight) {
 			g_EditorGlobalCtx.RequestPicking(x, m_ViewportHeight - y);
 		}
 
 		uint32_t renderResult = m_Renderer->GetViewportDisplayTextureID();
+
+		// Some debugs here
+		auto iblManager = g_RuntimeGlobalCtx.m_IBLManager;
+		auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+		if (g_RuntimeGlobalCtx.m_EntityManager->HasComponent<IBLComponent>(activeIBLEntity)) {
+			auto& iblComp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<IBLComponent>(activeIBLEntity);
+			renderResult = iblComp.Prefilter->GetTextureID();
+		}
+
 		ImGui::Image((ImTextureID)(intptr_t)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		DrawGizmo();
 		TryGetDragDropTarget();
@@ -104,7 +113,6 @@ namespace Aho {
 		static bool showFileExplorer = false;
 		if (ImGui::BeginPopup("popup_menu")) {
 			if (ImGui::MenuItem("Point Light")) {
-
 			}
 			if (ImGui::MenuItem("Area Light")) {
 				// TODO
@@ -144,21 +152,16 @@ namespace Aho {
 
 			if (ImGui::MenuItem("Environment Light")) {
 				showFileExplorer = true;
-			}
-			else {
+			} else {
 				showFileExplorer = false;
 			}
 			if (ImGui::MenuItem("Cube")) {
-
 			}
 			if (ImGui::MenuItem("Sphere")) {
-
 			}
 			if (ImGui::MenuItem("Plane")) {
-
 			}
 			if (ImGui::MenuItem("Cylinder")) {
-
 			}
 			ImGui::EndPopup();
 		}
@@ -205,7 +208,6 @@ namespace Aho {
 			if (ImGui::Selectable("DefaultLit", s_CurrentMode == RenderMode::DefaultLit)) {
 				s_CurrentMode = RenderMode::DefaultLit;
 				m_Renderer->SetRenderMode(RenderMode::DefaultLit);
-
 			}
 
 			// === PathTracing ===
@@ -220,7 +222,7 @@ namespace Aho {
 			if (ImGui::Selectable("BufferVisual", s_CurrentMode == RenderMode::BufferVisual)) {
 				// Don't select it yet ¡ª wait until buffer is chosen
 			}
-			
+
 			if (ImGui::IsItemHovered()) {
 				hoveredBufferVisual = true;
 				ImGui::OpenPopup("BufferVisualPopup");
@@ -250,7 +252,7 @@ namespace Aho {
 	}
 
 	void Viewport::DrawGizmo() {
-		if (!g_EditorGlobalCtx.HasActiveSelected()) 
+		if (!g_EditorGlobalCtx.HasActiveSelected())
 			return;
 
 		const Entity& selected = g_EditorGlobalCtx.GetSelectedEntity();
@@ -287,7 +289,7 @@ namespace Aho {
 		static float windowPadding[2] = { 13.15f, -0.01f };
 		static float windowBorderSize = 0.1f;
 		static float windowRounding = 20.0f;
-		static float windowMinSize[2] = {0.0, 0.0};
+		static float windowMinSize[2] = { 0.0, 0.0 };
 		static float btnSize[2] = { 25.0f, 27.5f };
 		static float btn0Align[2] = { 2.450f, 0.750f };
 		static float frameRounding = 0.0f;
@@ -303,19 +305,20 @@ namespace Aho {
 			ImGui::DragFloat2("_btn0Align", &btn0Align[0], 0.01, 0.0);
 			ImGui::DragFloat2("_sameLineParam", &sameLineParam[0], 0.01, -1.0, 1.0);
 			ImGui::End();
-		};
+			};
 		//_Debug();
 
 		static ImVec4 activeBtnColor = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
 
 		struct UI_Button {
 			UI_Button(const std::string& name, const ImGuizmo::OPERATION& oper)
-				: name(name), oper(oper) { }
+				: name(name), oper(oper) {
+			}
 			std::string name;
 			ImGuizmo::OPERATION oper;
 		};
-		
-		const static std::vector<UI_Button> uiBtns = { 
+
+		const static std::vector<UI_Button> uiBtns = {
 			UI_Button(ICON_FA_ARROW_POINTER, ImGuizmo::OPERATION::NONE),
 			UI_Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ImGuizmo::OPERATION::TRANSLATE),
 			UI_Button(ICON_FA_ROTATE, ImGuizmo::OPERATION::ROTATE),
@@ -385,7 +388,7 @@ namespace Aho {
 			}
 			});
 	}
-	
+
 	void Viewport::TryGetDragDropTarget() {
 		bool showPopup = false;
 		static std::string droppedString;
@@ -433,9 +436,8 @@ namespace Aho {
 
 				auto& ecs = g_RuntimeGlobalCtx.m_EntityManager;
 				auto resourceManager = g_RuntimeGlobalCtx.m_Resourcemanager;
-				
-				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions); 
 
+				std::shared_ptr<MeshAsset> ms = g_RuntimeGlobalCtx.m_AssetManager->_LoadAsset<MeshAsset>(ecs, loadOptions);
 
 				// ---- Virtual Mesh Loading Debug Test ----
 				//const Mesh& mesh = ms->GetMesh();
@@ -459,7 +461,7 @@ namespace Aho {
 				Entity go = resourceManager->CreateGameObject(name);
 				GameObjectComponent& goComp = ecs->GetComponent<GameObjectComponent>(go);
 
-				// TODO: Put these in resource manager??                         
+				// TODO: Put these in resource manager??
 				auto view = ecs->GetView<MeshAssetComponent, MaterialRefComponent>(Exclude<VertexArrayComponent>); // Need testing
 				view.each(
 					[&](Entity entity, MeshAssetComponent& mc, MaterialRefComponent& matRefc) {

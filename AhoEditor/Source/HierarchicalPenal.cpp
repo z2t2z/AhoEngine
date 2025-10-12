@@ -30,7 +30,8 @@ namespace Aho {
 				// Right-click context menu, TODO: Destroy logic
 				if (ImGui::BeginPopupContextItem()) {
 					if (ImGui::MenuItem("Delete")) {
-						//ecs->DestroyEntity(node.entity);
+						auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
+						ecs->DestroyEntity(node.entity);
 						ImGui::EndPopup();
 						return;
 					}

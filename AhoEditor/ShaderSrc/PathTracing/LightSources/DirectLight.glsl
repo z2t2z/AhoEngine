@@ -49,6 +49,9 @@ vec3 _SampleEnvironmentLight(State state, const Ray ray) {
         }
     }
 #else
+    if (uniformSky == vec3(0.0))
+        return Ltot;
+    
     float sampledPdf = Inv4PI; 
     vec3 Ld = uniformSky * EnvIntensity;
     vec3 sampledDir = SampleUniformSphere();

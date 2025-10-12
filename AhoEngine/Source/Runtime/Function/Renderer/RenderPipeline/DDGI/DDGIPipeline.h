@@ -5,7 +5,7 @@
 
 //Reference: https://github.com/NVIDIAGameWorks/RTXGI-DDGI
 namespace Aho {
-    static constexpr uint32_t PROBE_IRRADIANCE_TEXELS = 6;
+    static constexpr uint32_t PROBE_IRRADIANCE_TEXELS = 14;
     static constexpr uint32_t PROBE_DISTANCE_TEXELS = 14;
     struct DDGIVolumeDesc {
         glm::vec3 origin = {-150, -5.0, -150};                 

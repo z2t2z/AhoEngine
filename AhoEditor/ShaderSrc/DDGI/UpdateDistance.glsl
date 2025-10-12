@@ -44,7 +44,7 @@ void main() {
         if (dist == -2.0) {
             continue; // Skip backface hits
         }        
-        // dist = min(abs(dist), length(vec3(volume.probeSpacing, volume.probeSpacing, volume.probeSpacing)) * 1.5);
+        dist = min(abs(dist), length(vec3(volume.probeSpacing, volume.probeSpacing, volume.probeSpacing)) * 1.5);
         vec3 rayDir = DDGIGetProbeRayDirection(rayIndex, volume);
         rayDir = normalize(rayDir); // Ensure direction is normalized
 
@@ -60,7 +60,7 @@ void main() {
 
     // --- Blending ---
     float blendWeight = 1.0 - volume.hysteresis;
-    vec2 prevDist = imageLoad(ProbeDistance, texelCoords).rg;
+    vec2 prevDist = imageLoad(ProbeDistance, texelCoords).xy;
     if (dot(result, prevDist) == 0.0) {
         blendWeight = 1.0;
     }
