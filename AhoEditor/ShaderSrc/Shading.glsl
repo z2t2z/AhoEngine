@@ -19,7 +19,7 @@ void main() {
 #extension GL_ARB_bindless_texture : enable
 
 #define ACES
-#define FEATURE_RAY_TRACE_SHADOW
+// #define FEATURE_RAY_TRACE_SHADOW
 
 layout(location = 0) out vec4 out_Color;
 
@@ -107,6 +107,7 @@ void main() {
 		vec3 V = normalize(viewPos - fragPos);
 		vec3 F0 = mix(vec3(0.04f), mat.baseColor, mat.metallic); 
 		vec3 Lo = vec3(0.0f);
+		
 		// Direct lighting
 		Lo += EvalDirectionalLight(mat, fragPos, F0, V, N);
 		// Lo += EvaluateDirectionalLight(mat, fragPos, N, V);

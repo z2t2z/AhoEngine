@@ -44,11 +44,47 @@ namespace Aho {
 			switch (light->GetType()) {
 				case LightType::Directional: {
 					std::shared_ptr<DirectionalLight> dirLight = std::static_pointer_cast<DirectionalLight>(light);
+
 					glm::vec3 dirEuler = Math::DirectionToEuler(dirLight->GetDirection());
 					if (ImGuiHelpers::DrawVec3Control("Direction", dirEuler)) {
 						dirLight->SetDirection(glm::normalize(Math::EulerToDirection(dirEuler)));
 						changed = true;
 					}
+
+					ImGui::Separator();
+					glm::vec3 ws = dirLight->GetWorldCenter();
+					if (ImGuiHelpers::DrawVec3Control("World Center", ws)) {
+						dirLight->SetWorldCenter(ws);
+						changed = true;
+					}
+
+					float lightDistance = dirLight->GetLightDistance();
+					if (ImGui::DragFloat("Light Distance", &lightDistance, 0.1f, 0.1f, 1000.0f)) {
+						dirLight->SetLightDistance(lightDistance);
+						changed = true;
+					}
+
+					ImGui::Separator();
+					float orthoSize = dirLight->GetOrthoSize();
+					if (ImGui::DragFloat("Ortho Size", &orthoSize, 0.1f, 0.1f, 1000.0f)) {
+						dirLight->SetOrthoSize(orthoSize);
+						changed = true;
+					}
+
+					ImGui::Separator();
+					float nearPlane = dirLight->GetNearPlane();
+					if (ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 1000.0f)) {
+						dirLight->SetNearPlane(nearPlane);
+						changed = true;
+					}	
+
+					ImGui::Separator();
+					float farPlane = dirLight->GetFarPlane();
+					if (ImGui::DragFloat("Far Plane", &farPlane, 0.1f, 0.1f, 1000.0f)) {
+						dirLight->SetFarPlane(farPlane);
+						changed = true;
+					}
+
 					break;
 				}
 				case LightType::Point:

@@ -61,7 +61,6 @@ namespace Aho {
 	void AhoEditorLayer::OnImGuiRender() {
 		// Dock space settings and some basic settings
 		{
-			static bool showDemo = false;
 			// Dockspace
 			static bool opt_fullscreen = true;
 			static bool opt_padding = false;
@@ -109,16 +108,24 @@ namespace Aho {
 			}
 			static bool camSpeed = false;
 			static bool sens = false;
+
+			static bool showDemo = false;
+			static bool showRenderSettings = false;
+			static bool showFrameTimePenal = false;
+
 			ImGui::GetStyle().FramePadding.x = padding;
 			ImGui::PushFont(io.Fonts->Fonts[0]);
 			if (ImGui::BeginMenuBar()) {
 				if (ImGui::BeginMenu("Options")) {
-					ImGui::MenuItem("ShowImGuiDemoWindow", NULL, &showDemo);
 					if (ImGui::BeginMenu("Camera Options")) {
 						ImGui::SliderFloat("Mouse Sensitivity", &m_CameraManager->GetSensitivity(), 0.0f, 5.0f);
 						ImGui::SliderFloat("Camera Speed", &m_CameraManager->GetSpeed(), 0.0f, 100.0f);
 						ImGui::EndMenu();
 					}
+
+					ImGui::MenuItem("ShowImGuiDemoWindow", NULL, &showDemo);
+					ImGui::MenuItem("Render Settings", NULL, &showRenderSettings);
+					ImGui::MenuItem("Frame Time", NULL, &showFrameTimePenal);
 
 					ImGui::Separator();
 
@@ -133,8 +140,15 @@ namespace Aho {
 			ImGui::PopFont();
 			ImGui::End();
 			ImGui::GetStyle().TabRounding = 0.0f;
+
 			if (showDemo) {
 				ImGui::ShowDemoWindow();
+			}
+			if (showRenderSettings) {
+				m_RenderSettingsPenal.Draw();
+			}
+			if (showFrameTimePenal) {
+				m_DbgPenal.Draw();
 			}
 		}
 
@@ -142,7 +156,6 @@ namespace Aho {
 		m_Viewport.Draw();
 		m_HierachicalPanel.Draw();
 		m_PropertiesPanel.Draw();
-		m_DbgPenal.Draw();
 	}
 
 	void AhoEditorLayer::OnEvent(Event& e) {

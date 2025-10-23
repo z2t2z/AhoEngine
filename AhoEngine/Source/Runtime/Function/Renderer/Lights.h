@@ -41,12 +41,37 @@ namespace Aho {
     class DirectionalLight : public Light {
     public:
         DirectionalLight()
-            : Light(LightType::Directional, glm::vec3(1.0f), 1.0f, true), m_Direction(glm::vec3(0.0f, 1.0f, 0.0f)) { }
-        glm::vec3 GetDirection() const { return m_Direction; }
-        void SetDirection(const glm::vec3& dir) { m_Direction = dir; }
+            : Light(LightType::Directional, glm::vec3(1.0f), 1.0f, true), m_Direction(glm::vec3(0.0f, 1.0f, 0.0f)) {
+            CalProjViewMat();
+        }
+        // Getters
+        glm::vec3 GetDirection()    const { return m_Direction; }
+		glm::vec3 GetWorldCenter()  const { return m_WorldCenter; }  
+		float GetLightDistance()    const { return m_LightDistance; }
+		float GetOrthoSize()        const { return m_OrthoSize; }
+        float GetNearPlane()        const { return m_Near; }
+		float GetFarPlane()         const { return m_Far; } 
+
+        // Setters
+        void SetDirection(const glm::vec3& dir)         { m_Direction = dir; }
+		void SetWorldCenter(const glm::vec3& center)    { m_WorldCenter = center; }
+		void SetLightDistance(float distance)           { m_LightDistance = distance; }
+		void SetOrthoSize(float size)                   { m_OrthoSize = size; }
+		void SetNearPlane(float nearPlane)              { m_Near = nearPlane; }
+		void SetFarPlane(float farPlane)                { m_Far = farPlane; }
+
         void SetProjView(const glm::mat4& mat) { m_ProjView = mat; }
-        glm::mat4 GetProjView() const { return m_ProjView; }
+        glm::mat4 GetProjView() { CalProjViewMat(); return m_ProjView; }
     private:
+        void CalProjViewMat();
+    private:
+        // TODO: Needs reflection
+        glm::vec3 m_WorldCenter{ 0 };
+		float m_LightDistance{ 20.0f };
+		float m_OrthoSize{ 10.0f };
+        float m_Near{ 1.0f };
+        float m_Far{ 500.0f };
+        float m_LightSize{ 10.0f }; // PCSS
         glm::vec3 m_Direction; // In euler angles
         glm::mat4 m_ProjView;
     };

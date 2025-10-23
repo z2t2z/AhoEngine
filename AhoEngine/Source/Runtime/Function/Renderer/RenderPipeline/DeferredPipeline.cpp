@@ -13,8 +13,9 @@
 namespace Aho {
 	void DeferredShading::Initialize() {
 		// Shadow map light depth
+		constexpr int shadowMapSize = 2048;
 		std::shared_ptr<_Texture> lightDepth = TextureResourceBuilder()
-			.Name("Light Depth").Width(1080).Height(1080).DataType(DataType::Float).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth32F).GenMip(false)
+			.Name("Light Depth").Width(2048).Height(2048).DataType(DataType::Float).DataFormat(DataFormat::Depth).InternalFormat(InternalFormat::Depth32F).GenMip(false)
 			.Build();
 
 		// Gbuffers
@@ -72,14 +73,19 @@ namespace Aho {
 					RenderCommand::Clear(ClearFlags::Depth_Buffer);
 					auto shader = self.GetShader();
 					shader->Bind();
+					glEnable(GL_CULL_FACE);
+					glCullFace(GL_FRONT);     
+					glFrontFace(GL_CCW);      // 逆时针为正面
 					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
 						[&shader](const auto& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
+
 							vao.vao->Bind();
 							shader->SetMat4("u_Model", transform.GetTransform());
 							RenderCommand::DrawIndexed(vao.vao);
 							vao.vao->Unbind();
 						}
 					);
+					glDisable(GL_CULL_FACE);
 					self.GetRenderTarget()->Unbind();
 					shader->Unbind();
 				};
@@ -93,7 +99,7 @@ namespace Aho {
 				.Build());
 		}
 
-		// --- G buffer Pass --
+		// --- G-buffer Pass --
 		{
 			auto Func =
 				[](RenderPassBase& self) {
@@ -101,6 +107,11 @@ namespace Aho {
 					self.GetRenderTarget()->Bind();
 					RenderCommand::Clear(ClearFlags::Depth_Buffer | ClearFlags::Color_Buffer);
 					shader->Bind();
+
+					glEnable(GL_CULL_FACE);
+					glCullFace(GL_BACK);
+					glFrontFace(GL_CCW);
+
 					g_RuntimeGlobalCtx.m_Renderer->GetRenderableContext().each(
 						[&shader](const Entity& entity, const VertexArrayComponent& vao, const _MaterialComponent& mat, const _TransformComponent& transform) {
 							auto ecs = g_RuntimeGlobalCtx.m_EntityManager;
@@ -114,6 +125,8 @@ namespace Aho {
 							}
 						}
 					);
+					glDisable(GL_CULL_FACE);
+
 					self.GetRenderTarget()->Unbind();
 					shader->Unbind();
 				};

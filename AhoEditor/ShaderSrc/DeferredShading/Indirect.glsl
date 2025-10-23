@@ -10,7 +10,7 @@ vec3 GetIndirectLighting(const DDGIVolumeDescGPU volume, vec3 camPos, vec3 world
 	int ddgiVolumesIdx = 0; // TODO, put this in a uniform buffer
 	if (ddgiVolumesIdx >= 0) {
 		vec3 Wo = normalize(camPos - worldPosition);
-		indirectLighting = DiffuseBRDF(diffuseColor) * SampleDDGIIrradiance(volume, worldPosition, worldNormal, -Wo);
+		indirectLighting = 0.5f * DiffuseBRDF(diffuseColor) * SampleDDGIIrradiance(volume, worldPosition, worldNormal, -Wo);
 	} else {
 		// TODO: Handle case when no DDGI volumes
 		const vec3 ambientColor = vec3(0.1f, 0.1f, 0.1f);

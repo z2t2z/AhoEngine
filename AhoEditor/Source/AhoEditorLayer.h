@@ -5,6 +5,7 @@
 #include "PropertiesPanel.h"
 #include "Viewport.h"
 #include "DebugPenal.h"
+#include "RenderSettingsPenal.h"
 
 namespace Aho {
 	class Entity;
@@ -18,6 +19,7 @@ namespace Aho {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
+		RenderSettingsPenal m_RenderSettingsPenal;
 		ContentBrowser m_ContentBrowser;
 		PropertiesPanel m_PropertiesPanel;
 		HierachicalPanel m_HierachicalPanel;

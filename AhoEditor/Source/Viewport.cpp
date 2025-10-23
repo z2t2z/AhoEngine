@@ -76,12 +76,12 @@ namespace Aho {
 		uint32_t renderResult = m_Renderer->GetViewportDisplayTextureID();
 
 		// Some debugs here
-		auto iblManager = g_RuntimeGlobalCtx.m_IBLManager;
-		auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
-		if (g_RuntimeGlobalCtx.m_EntityManager->HasComponent<IBLComponent>(activeIBLEntity)) {
-			auto& iblComp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<IBLComponent>(activeIBLEntity);
-			renderResult = iblComp.Prefilter->GetTextureID();
-		}
+		//auto iblManager = g_RuntimeGlobalCtx.m_IBLManager;
+		//auto activeIBLEntity = g_RuntimeGlobalCtx.m_IBLManager->GetActiveIBL();
+		//if (g_RuntimeGlobalCtx.m_EntityManager->HasComponent<IBLComponent>(activeIBLEntity)) {
+		//	auto& iblComp = g_RuntimeGlobalCtx.m_EntityManager->GetComponent<IBLComponent>(activeIBLEntity);
+		//	renderResult = iblComp.Prefilter->GetTextureID();
+		//}
 
 		ImGui::Image((ImTextureID)(intptr_t)renderResult, ImGui::GetWindowSize(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		DrawGizmo();

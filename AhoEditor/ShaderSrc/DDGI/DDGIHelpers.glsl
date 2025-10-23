@@ -214,8 +214,8 @@ vec3 SampleDDGIIrradiance(const DDGIVolumeDescGPU volume, vec3 worldPosition, ve
 
         vec2 uv = GetProbeUV(volume, probeCoords, direction, DDGI_IRRADIANCE_TEXSIZE);
         vec3 irradiance = textureLod(volume.DDGIIrradiance, uv, 0).rgb;
-        // if (gammaCorrect || true)
-        //     irradiance = pow(irradiance, vec3(2.5));
+        if (gammaCorrect || true)
+            irradiance = pow(irradiance, vec3(2.5));
 
         testIrradiance += irradiance;
 

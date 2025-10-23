@@ -202,6 +202,7 @@
     <ClInclude Include="Source\Runtime\Function\Renderer\IBL\IBLManager.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Lights.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\Material.h" />
+    <ClInclude Include="Source\Runtime\Function\Renderer\RenderSettings.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RHI.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderCommand.h" />
     <ClInclude Include="Source\Runtime\Function\Renderer\RenderContext\RenderContext.h" />
@@ -714,6 +715,7 @@
     <ClCompile Include="Source\Runtime\Function\Renderer\Framebuffer.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBL.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\IBL\IBLManager.cpp" />
+    <ClCompile Include="Source\Runtime\Function\Renderer\Lights.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\Material.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderCommand.cpp" />
     <ClCompile Include="Source\Runtime\Function\Renderer\RenderData.cpp" />

@@ -60,6 +60,7 @@
     <ClInclude Include="Source\Viewport.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderSettingsPenal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\AhoEngine\Vendor\ImGuizmo\ImGuizmo.cpp">
@@ -101,5 +102,6 @@
     <ClCompile Include="Source\Viewport.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderSettingsPenal.cpp" />
   </ItemGroup>
 </Project>

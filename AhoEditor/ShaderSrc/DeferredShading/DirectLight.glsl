@@ -21,13 +21,13 @@ vec3 EvalDirectionalLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N)
         }
         vec3 L = light.direction; //Pointing towards the light source
 
-#ifdef FEATURE_RAY_TRACE_SHADOW
-        Ray shadowRay;
-        shadowRay.origin = pos + 0.01 * N; // Avoid self-occluded
-        shadowRay.direction = L;
-        if (IsOccluded(shadowRay, FLT_MAX))
-            continue;       
-#endif
+// #ifdef FEATURE_RAY_TRACE_SHADOW
+//         Ray shadowRay;
+//         shadowRay.origin = pos + 0.01 * N; // Avoid self-occluded
+//         shadowRay.direction = L;
+//         if (IsOccluded(shadowRay, FLT_MAX))
+//             continue;       
+// #endif
 
         float LoN = dot(L, N);
         if (LoN < 0.0) {
@@ -47,8 +47,12 @@ vec3 EvalDirectionalLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N)
         vec3 brdf = (Kd * baseColor * InvPI) + (Ks * D * G / denom);
         
         vec3 L_light = light.color * light.intensity;
-        
-        L_out += L_light * brdf * LoN; // * PCSS(vec4(pos, 1.0f), LoN, light.lightProjView);
+
+        float shadow = 1.0;
+// #ifdef FEATURE_SHADOW_MAPPING
+        shadow = GetShadowAttenuation(vec4(pos, 1.0f), LoN, light.lightProjView);   
+// #endif
+        L_out += L_light * brdf * LoN * shadow; // * PCSS(vec4(pos, 1.0f), LoN, light.lightProjView);
     }
     return L_out;
 }
@@ -110,11 +114,13 @@ vec3 EvalPointLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 
 // ---- Environment Light ----
 // IBL
+#ifdef FEATURE_ENABLE_IBL		
 uniform float u_PrefilterMaxMipLevel;
 uniform samplerCube u_gCubeMap;
 uniform samplerCube u_gIrradiance;
 uniform samplerCube u_gPrefilter;
 uniform sampler2D u_gBRDFLUT;
+
 vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
 	vec3 L_out      = vec3(0.0);
     vec3 baseColor  = mat.baseColor;
@@ -137,6 +143,8 @@ vec3 EvalEnvLight(const Material mat, vec3 pos, vec3 F0, vec3 V, vec3 N) {
     L_out = Kd * diffuse + specular;
     return L_out;
 }
+#endif
+
 // ---- Evaluate infinite background ----
 // Atmospheric 
 #ifdef FEATURE_ENABLE_SKYATMOSPHERIC
@@ -157,6 +165,7 @@ vec4 EvalBackground(vec2 uv, vec3 viewPos, mat4 viewInv, mat4 projInv) {
 
 #ifdef FEATURE_ENABLE_IBL				
     vec3 cubemap = texture(u_gCubeMap, worldDir).rgb;
+    // vec3 cubemap = vec3(1,0,0);
     return vec4(cubemap, 1.0f);
 #endif
 

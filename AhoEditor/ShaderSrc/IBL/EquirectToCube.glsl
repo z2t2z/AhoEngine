@@ -6,7 +6,7 @@
 // TODO: Use this binding mechanism
 // layout(binding = 0) uniform sampler2D u_EquirectangularMap;
 
-layout(binding = 0, rgba16f) uniform writeonly imageCube o_Cubemap;
+layout(binding = 0, rgba16f) uniform imageCube o_Cubemap;
 layout(local_size_x = 16, local_size_y = 16) in;
 
 uniform sampler2D u_EquirectangularMap;
